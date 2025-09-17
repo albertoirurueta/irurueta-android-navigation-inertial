@@ -17,78 +17,58 @@ package com.irurueta.android.navigation.inertial.collectors
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.interpolators.*
+import com.irurueta.android.navigation.inertial.collectors.interpolators.AccelerometerDirectSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.AccelerometerQuadraticSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.AttitudeLinearSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.GravityDirectSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.GravityQuadraticSensorMeasurementInterpolator
+import com.irurueta.android.navigation.inertial.collectors.interpolators.GyroscopeQuadraticSensorMeasurementInterpolator
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.capture
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
-import java.util.*
+import java.util.ArrayDeque
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accuracyChangedListener:
             SensorMeasurementSyncer.OnAccuracyChangedListener<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var bufferFilledListener:
             SensorMeasurementSyncer.OnBufferFilledListener<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var syncedMeasurementListener:
             SensorMeasurementSyncer.OnSyncedMeasurementsListener<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staleDetectedMeasurementsListener:
             SensorMeasurementSyncer.OnStaleDetectedMeasurementsListener<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement, AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncer>
-
-    @Captor
-    private lateinit var attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor: ArgumentCaptor<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {
@@ -373,13 +353,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         assertNull(syncer.attitudeSensor)
-        verify(attitudeSensorCollectorSpy, only()).sensor
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.sensor }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.sensor }
     }
 
     @Test
@@ -390,13 +368,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         assertNull(syncer.accelerometerSensor)
-        verify(accelerometerSensorCollectorSpy, only()).sensor
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.sensor }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.sensor }
     }
 
     @Test
@@ -407,13 +383,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         assertNull(syncer.gravitySensor)
-        verify(gravitySensorCollectorSpy, only()).sensor
-//        verify(exactly = 1) { gravitySensorCollectorSpy.sensor }
+        verify(exactly = 1) { gravitySensorCollectorSpy.sensor }
     }
 
     @Test
@@ -424,13 +398,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertNull(syncer.gyroscopeSensor)
-        verify(gyroscopeSensorCollectorSpy, only()).sensor
-//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.sensor }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.sensor }
     }
 
     @Test
@@ -441,13 +413,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         assertFalse(syncer.attitudeSensorAvailable)
-        verify(attitudeSensorCollectorSpy, only()).sensorAvailable
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.sensorAvailable }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.sensorAvailable }
     }
 
     @Test
@@ -458,13 +428,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         assertFalse(syncer.accelerometerSensorAvailable)
-        verify(accelerometerSensorCollectorSpy, only()).sensorAvailable
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.sensorAvailable }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.sensorAvailable }
     }
 
     @Test
@@ -475,13 +443,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         assertFalse(syncer.gravitySensorAvailable)
-        verify(gravitySensorCollectorSpy, only()).sensorAvailable
-//        verify(exactly = 1) { gravitySensorCollectorSpy.sensorAvailable }
+        verify(exactly = 1) { gravitySensorCollectorSpy.sensorAvailable }
     }
 
     @Test
@@ -492,13 +458,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.gyroscopeSensorAvailable)
-        verify(gyroscopeSensorCollectorSpy, only()).sensorAvailable
-//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.sensorAvailable }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.sensorAvailable }
     }
 
     @Test
@@ -509,13 +473,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         assertNull(syncer.attitudeStartOffset)
-        verify(attitudeSensorCollectorSpy, only()).startOffset
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.startOffset }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.startOffset }
     }
 
     @Test
@@ -526,13 +488,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         assertNull(syncer.accelerometerStartOffset)
-        verify(accelerometerSensorCollectorSpy, only()).startOffset
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.startOffset }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.startOffset }
     }
 
     @Test
@@ -543,13 +503,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         assertNull(syncer.gravityStartOffset)
-        verify(gravitySensorCollectorSpy, only()).startOffset
-//        verify(exactly = 1) { gravitySensorCollectorSpy.startOffset }
+        verify(exactly = 1) { gravitySensorCollectorSpy.startOffset }
     }
 
     @Test
@@ -560,13 +518,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertNull(syncer.gyroscopeStartOffset)
-        verify(gyroscopeSensorCollectorSpy, only()).startOffset
-//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.startOffset }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.startOffset }
     }
 
     @Test
@@ -577,13 +533,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         assertEquals(0.0f, syncer.attitudeCollectorUsage, 0.0f)
-        verify(attitudeSensorCollectorSpy, only()).usage
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.usage }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.usage }
     }
 
     @Test
@@ -594,13 +548,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         assertEquals(0.0f, syncer.accelerometerCollectorUsage, 0.0f)
-        verify(accelerometerSensorCollectorSpy, only()).usage
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.usage }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.usage }
     }
 
     @Test
@@ -611,13 +563,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         assertEquals(0.0f, syncer.gravityCollectorUsage, 0.0f)
-        verify(gravitySensorCollectorSpy, only()).usage
-//        verify(exactly = 1) { gravitySensorCollectorSpy.usage }
+        verify(exactly = 1) { gravitySensorCollectorSpy.usage }
     }
 
     @Test
@@ -628,13 +578,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertEquals(0.0f, syncer.gyroscopeCollectorUsage, 0.0f)
-        verify(gyroscopeSensorCollectorSpy, only()).usage
-//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.usage }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.usage }
     }
 
     @Test
@@ -933,34 +881,26 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(false).whenever(attitudeSensorCollectorSpy).start(any())
-//        every { attitudeSensorCollectorSpy.start(any()) }.returns(false)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.start(any()) }.returns(false)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doReturn(true).whenever(accelerometerSensorCollectorSpy).start(any())
-//        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doReturn(true).whenever(gravitySensorCollectorSpy).start(any())
-//        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        doReturn(true).whenever(gyroscopeSensorCollectorSpy).start(any())
-//        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
@@ -973,14 +913,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
-        verify(attitudeSensorCollectorSpy, times(1)).start(timestamp)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
-        verify(accelerometerSensorCollectorSpy, never()).start(timestamp)
-//        verify(exactly = 0) { accelerometerSensorCollectorSpy.start(timestamp) }
-        verify(gravitySensorCollectorSpy, never()).start(any())
-//        verify(exactly = 0) { gravitySensorCollectorSpy.start(any()) }
-        verify(gyroscopeSensorCollectorSpy, never()).start(any())
-//        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 0) { accelerometerSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 0) { gravitySensorCollectorSpy.start(any()) }
+        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
     }
 
     @Test
@@ -991,34 +927,26 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(true).whenever(attitudeSensorCollectorSpy).start(any())
-//        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doReturn(false).whenever(accelerometerSensorCollectorSpy).start(any())
-//        every { accelerometerSensorCollectorSpy.start(any()) }.returns(false)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start(any()) }.returns(false)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doReturn(true).whenever(gravitySensorCollectorSpy).start(any())
-//        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        doReturn(true).whenever(gyroscopeSensorCollectorSpy).start(any())
-//        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
@@ -1031,14 +959,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
-        verify(attitudeSensorCollectorSpy, times(1)).start(timestamp)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
-        verify(accelerometerSensorCollectorSpy, times(1)).start(timestamp)
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
-        verify(gravitySensorCollectorSpy, never()).start(any())
-//        verify(exactly = 0) { gravitySensorCollectorSpy.start(any()) }
-        verify(gyroscopeSensorCollectorSpy, never()).start(any())
-//        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 0) { gravitySensorCollectorSpy.start(any()) }
+        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
     }
 
     @Test
@@ -1049,34 +973,26 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(true).whenever(attitudeSensorCollectorSpy).start(any())
-//        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doReturn(true).whenever(accelerometerSensorCollectorSpy).start(any())
-//        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doReturn(false).whenever(gravitySensorCollectorSpy).start(any())
-//        every { gravitySensorCollectorSpy.start(any()) }.returns(false)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.start(any()) }.returns(false)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        doReturn(true).whenever(gyroscopeSensorCollectorSpy).start(any())
-//        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
@@ -1089,14 +1005,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
-        verify(attitudeSensorCollectorSpy, times(1)).start(timestamp)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
-        verify(accelerometerSensorCollectorSpy, times(1)).start(timestamp)
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
-        verify(gravitySensorCollectorSpy, times(1)).start(any())
-//        verify(exactly = 1) { gravitySensorCollectorSpy.start(any()) }
-        verify(gyroscopeSensorCollectorSpy, never()).start(any())
-//        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 1) { gravitySensorCollectorSpy.start(any()) }
+        verify(exactly = 0) { gyroscopeSensorCollectorSpy.start(any()) }
     }
 
     @Test
@@ -1107,34 +1019,26 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(true).whenever(attitudeSensorCollectorSpy).start(any())
-//        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doReturn(true).whenever(accelerometerSensorCollectorSpy).start(any())
-//        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doReturn(true).whenever(gravitySensorCollectorSpy).start(any())
-//        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        doReturn(false).whenever(gyroscopeSensorCollectorSpy).start(any())
-//        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(false)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(false)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
@@ -1147,14 +1051,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
-        verify(attitudeSensorCollectorSpy, times(1)).start(timestamp)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
-        verify(accelerometerSensorCollectorSpy, times(1)).start(timestamp)
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
-        verify(gravitySensorCollectorSpy, times(1)).start(any())
-//        verify(exactly = 1) { gravitySensorCollectorSpy.start(any()) }
-        verify(gyroscopeSensorCollectorSpy, times(1)).start(any())
-//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 1) { gravitySensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start(any()) }
     }
 
     @Test
@@ -1165,34 +1065,26 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(true).whenever(attitudeSensorCollectorSpy).start(any())
-//        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doReturn(true).whenever(accelerometerSensorCollectorSpy).start(any())
-//        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doReturn(true).whenever(gravitySensorCollectorSpy).start(any())
-//        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        doReturn(true).whenever(gyroscopeSensorCollectorSpy).start(any())
-//        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         assertFalse(syncer.running)
@@ -1205,14 +1097,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertFalse(syncer.processing)
         assertEquals(timestamp, syncer.startTimestamp)
 
-        verify(attitudeSensorCollectorSpy, only()).start(timestamp)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
-        verify(accelerometerSensorCollectorSpy, only()).start(timestamp)
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
-        verify(gravitySensorCollectorSpy, only()).start(any())
-//        verify(exactly = 1) { gravitySensorCollectorSpy.start(any()) }
-        verify(gyroscopeSensorCollectorSpy, only()).start(any())
-//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start(timestamp) }
+        verify(exactly = 1) { gravitySensorCollectorSpy.start(any()) }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.start(any()) }
     }
 
     @Test
@@ -1223,28 +1111,23 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(true).whenever(attitudeSensorCollectorSpy).start(any())
-//        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.start(any()) }.returns(true)
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val attitudeMeasurements: ArrayDeque<AttitudeSensorMeasurement>? =
@@ -1341,14 +1224,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         syncer.stop()
 
         // check
-        verify(attitudeSensorCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.stop() }
-        verify(accelerometerSensorCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
-        verify(gravitySensorCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
-        verify(gyroscopeSensorCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.stop() }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
+        verify(exactly = 1) { gyroscopeSensorCollectorSpy.stop() }
         assertEquals(1, attitudeMeasurements.size)
         assertEquals(1, accelerometerMeasurements.size)
         assertEquals(1, gravityMeasurements.size)
@@ -1460,18 +1339,13 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(listener)
         listener.onAccuracyChanged(attitudeSensorCollector, SensorAccuracy.HIGH)
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(
-            syncer,
-            SensorType.ABSOLUTE_ATTITUDE,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 syncer,
                 SensorType.ABSOLUTE_ATTITUDE,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -1522,16 +1396,12 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onBufferFilled(attitudeSensorCollector)
 
-        verify(bufferFilledListener, only()).onBufferFilled(
-            syncer,
-            SensorType.ABSOLUTE_ATTITUDE
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 syncer,
                 SensorType.ABSOLUTE_ATTITUDE
             )
-        }*/
+        }
         assertTrue(syncer.running)
     }
 
@@ -1547,12 +1417,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(ArrayDeque<AttitudeSensorMeasurement>()).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             ArrayDeque<AttitudeSensorMeasurement>()
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
 
@@ -1561,12 +1429,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(attitudeSensorCollectorSpy, AttitudeSensorMeasurement(), 0)
 
-        verify(attitudeSensorCollectorSpy, never()).getMeasurementsBeforePosition(0)
-/*        verify(exactly = 0) {
+        verify(exactly = 0) {
             attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0)
-        }*/
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        }
+        verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
@@ -1581,12 +1447,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
-        doReturn(ArrayDeque<AttitudeSensorMeasurement>()).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             ArrayDeque<AttitudeSensorMeasurement>()
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         val listener = attitudeSensorCollector.measurementListener
@@ -1594,12 +1458,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(attitudeSensorCollectorSpy, AttitudeSensorMeasurement(), 0)
 
-        verify(attitudeSensorCollectorSpy, only()).getMeasurementsBeforePosition(0)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0)
-        }*/
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        }
+        verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
@@ -1620,8 +1482,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
         val randomizer = UniformRandomizer()
@@ -1637,10 +1498,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         val listener = attitudeSensorCollector.measurementListener
@@ -1648,10 +1508,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(attitudeSensorCollectorSpy, AttitudeSensorMeasurement(), 0)
 
-        verify(attitudeSensorCollectorSpy, only()).getMeasurementsBeforePosition(0)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0)
-        }*/
+        }
         assertEquals(timestamp, syncer.mostRecentTimestamp)
 
         val attitudeMeasurements: ArrayDeque<AttitudeSensorMeasurement>? =
@@ -1689,8 +1548,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(alreadyProcessedGyroscopeMeasurements)
         assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
 
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertTrue(syncer.running)
     }
 
@@ -1724,18 +1582,13 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(listener)
         listener.onAccuracyChanged(accelerometerSensorCollector, SensorAccuracy.HIGH)
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(
-            syncer,
-            SensorType.ACCELEROMETER_UNCALIBRATED,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 syncer,
                 SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -1787,16 +1640,12 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onBufferFilled(accelerometerSensorCollector)
 
-        verify(bufferFilledListener, only()).onBufferFilled(
-            syncer,
-            SensorType.ACCELEROMETER_UNCALIBRATED
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 syncer,
                 SensorType.ACCELEROMETER_UNCALIBRATED
             )
-        }*/
+        }
         assertTrue(syncer.running)
     }
 
@@ -1812,8 +1661,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
 
@@ -1822,10 +1670,8 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(accelerometerSensorCollectorSpy, AccelerometerSensorMeasurement(), 0)
 
-        verifyNoInteractions(accelerometerSensorCollectorSpy)
-//        verify { accelerometerSensorCollectorSpy wasNot Called }
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { accelerometerSensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
@@ -1840,8 +1686,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val listener = accelerometerSensorCollector.measurementListener
@@ -1849,10 +1694,8 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(accelerometerSensorCollectorSpy, AccelerometerSensorMeasurement(), 0)
 
-        verifyNoInteractions(accelerometerSensorCollectorSpy)
-//        verify { accelerometerSensorCollectorSpy wasNot Called }
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { accelerometerSensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
@@ -1867,12 +1710,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doReturn(ArrayDeque<AccelerometerSensorMeasurement>()).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             ArrayDeque<AccelerometerSensorMeasurement>()
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         // set most recent timestamp
@@ -1889,16 +1730,12 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(accelerometerSensorCollectorSpy, AccelerometerSensorMeasurement(), 0)
 
-        verify(accelerometerSensorCollectorSpy, only()).getMeasurementsBeforeTimestamp(
-            mostRecentTimestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
-        }*/
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        }
+        verify { syncedMeasurementListener wasNot Called }
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
     }
 
@@ -1919,8 +1756,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val randomizer = UniformRandomizer()
         val ax = randomizer.nextFloat()
@@ -1944,10 +1780,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         val measurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         measurementsBeforeTimestamp.add(accelerometerMeasurement)
-        doReturn(measurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             measurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         // set most recent timestamp
@@ -1964,14 +1799,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(accelerometerSensorCollectorSpy, AccelerometerSensorMeasurement(), 0)
 
-        verify(accelerometerSensorCollectorSpy, only()).getMeasurementsBeforeTimestamp(
-            mostRecentTimestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
-        }*/
+        }
 
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
         val accelerometerMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
@@ -2005,8 +1837,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(alreadyProcessedGravityMeasurements)
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertTrue(syncer.running)
     }
 
@@ -2040,18 +1871,13 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(listener)
         listener.onAccuracyChanged(gravitySensorCollector, SensorAccuracy.HIGH)
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(
-            syncer,
-            SensorType.GRAVITY,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 syncer,
                 SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -2103,16 +1929,12 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onBufferFilled(gravitySensorCollector)
 
-        verify(bufferFilledListener, only()).onBufferFilled(
-            syncer,
-            SensorType.GRAVITY
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 syncer,
                 SensorType.GRAVITY
             )
-        }*/
+        }
         assertTrue(syncer.running)
     }
 
@@ -2128,8 +1950,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
 
@@ -2138,11 +1959,8 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
 
-        verifyNoInteractions(gravitySensorCollectorSpy)
-//        verify { gravitySensorCollectorSpy wasNot Called }
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
-        assertNull(syncer.mostRecentTimestamp)
+        verify { gravitySensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
     }
 
     @Test
@@ -2156,8 +1974,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val listener = gravitySensorCollector.measurementListener
@@ -2165,10 +1982,8 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
 
-        verifyNoInteractions(gravitySensorCollectorSpy)
-//        verify { gravitySensorCollectorSpy wasNot Called }
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { gravitySensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
@@ -2183,12 +1998,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doReturn(ArrayDeque<GravitySensorMeasurement>()).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             ArrayDeque<GravitySensorMeasurement>()
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         // set most recent timestamp
@@ -2205,16 +2018,12 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
 
-        verify(gravitySensorCollectorSpy, only()).getMeasurementsBeforeTimestamp(
-            mostRecentTimestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
-        }*/
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        }
+        verify { syncedMeasurementListener wasNot Called }
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
     }
 
@@ -2235,8 +2044,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextFloat()
@@ -2247,10 +2055,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             GravitySensorMeasurement(gx, gy, gz, timestamp, SensorAccuracy.HIGH)
         val measurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         measurementsBeforeTimestamp.add(gravityMeasurement)
-        doReturn(measurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             measurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         // set most recent timestamp
@@ -2267,14 +2074,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gravitySensorCollectorSpy, GravitySensorMeasurement(), 0)
 
-        verify(gravitySensorCollectorSpy, only()).getMeasurementsBeforeTimestamp(
-            mostRecentTimestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
-        }*/
+        }
 
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
         val gravityMeasurements: ArrayDeque<GravitySensorMeasurement>? =
@@ -2304,8 +2108,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(alreadyProcessedGravityMeasurements)
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertTrue(syncer.running)
     }
 
@@ -2339,18 +2142,13 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(listener)
         listener.onAccuracyChanged(gyroscopeSensorCollector, SensorAccuracy.HIGH)
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(
-            syncer,
-            SensorType.GYROSCOPE_UNCALIBRATED,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 syncer,
                 SensorType.GYROSCOPE_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -2403,16 +2201,12 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onBufferFilled(gyroscopeSensorCollector)
 
-        verify(bufferFilledListener, only()).onBufferFilled(
-            syncer,
-            SensorType.GYROSCOPE_UNCALIBRATED
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 syncer,
                 SensorType.GYROSCOPE_UNCALIBRATED
             )
-        }*/
+        }
         assertTrue(syncer.running)
     }
 
@@ -2428,8 +2222,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
         setPrivateProperty(SensorMeasurementSyncer::class, syncer, "processing", true)
 
@@ -2438,10 +2231,8 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
 
-        verifyNoInteractions(gyroscopeSensorCollectorSpy)
-//        verify { gyroscopeSensorCollectorSpy wasNot Called }
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { gyroscopeSensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
@@ -2456,8 +2247,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val listener = gyroscopeSensorCollector.measurementListener
@@ -2465,10 +2255,8 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
 
-        verifyNoInteractions(gyroscopeSensorCollectorSpy)
-//        verify { gyroscopeSensorCollectorSpy wasNot Called }
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { gyroscopeSensorCollectorSpy wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertNull(syncer.mostRecentTimestamp)
     }
 
@@ -2483,12 +2271,10 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
-        doReturn(ArrayDeque<GyroscopeSensorMeasurement>()).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             ArrayDeque<GyroscopeSensorMeasurement>()
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         // set most recent timestamp
@@ -2505,16 +2291,12 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
 
-        verify(gyroscopeSensorCollectorSpy, only()).getMeasurementsBeforeTimestamp(
-            mostRecentTimestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
-        }*/
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        }
+        verify { syncedMeasurementListener wasNot Called }
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
     }
 
@@ -2535,8 +2317,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val randomizer = UniformRandomizer()
         val wx = randomizer.nextFloat()
@@ -2559,10 +2340,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         measurementsBeforeTimestamp.add(gyroscopeMeasurement)
-        doReturn(measurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             measurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         // set most recent timestamp
@@ -2579,14 +2359,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
 
         listener.onMeasurement(gyroscopeSensorCollectorSpy, GyroscopeSensorMeasurement(), 0)
 
-        verify(gyroscopeSensorCollectorSpy, only()).getMeasurementsBeforeTimestamp(
-            mostRecentTimestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(
                 mostRecentTimestamp
             )
-        }*/
+        }
 
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
         val gyroscopeMeasurements: ArrayDeque<GyroscopeSensorMeasurement>? =
@@ -2620,8 +2397,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         requireNotNull(alreadyProcessedGyroscopeMeasurements)
         assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
 
-        verifyNoInteractions(syncedMeasurementListener)
-//        verify { syncedMeasurementListener wasNot Called }
+        verify { syncedMeasurementListener wasNot Called }
         assertTrue(syncer.running)
     }
 
@@ -2653,8 +2429,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextFloat()
@@ -2670,17 +2445,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gravityMeasurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         gravityMeasurementsBeforeTimestamp.add(gravityMeasurement1)
-        doReturn(gravityMeasurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gravityMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
@@ -2701,17 +2474,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val accelerometerMeasurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         accelerometerMeasurementsBeforeTimestamp.add(accelerometerMeasurement1)
-        doReturn(accelerometerMeasurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             accelerometerMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
@@ -2733,17 +2504,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        doReturn(gyroscopeMeasurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gyroscopeMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
         val headingAccuracyRadians =
@@ -2757,10 +2526,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement1)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         val attitudeListener = attitudeSensorCollectorSpy.measurementListener
@@ -2883,8 +2651,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(attitudeTimestamp, syncer.mostRecentTimestamp)
         assertEquals(1, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
-        verify(attitudeSensorCollectorSpy, times(1)).getMeasurementsBeforePosition(0)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
 
         val attitudeMeasurements: ArrayDeque<AttitudeSensorMeasurement>? =
             syncer.getPrivateProperty("attitudeMeasurements")
@@ -2898,20 +2665,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(alreadyProcessedAttitudeMeasurements.isEmpty())
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
-        verify(syncedMeasurementListener, only()).onSyncedMeasurements(
-            eq(syncer),
-            capture(attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor)
-        )
-/*        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
                 capture(slot)
             )
-        }*/
+        }
 
-        val syncedMeasurement = attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor.value
-//        val syncedMeasurement = slot.captured
+        val syncedMeasurement = slot.captured
         assertEquals(gyroscopeTimestamp, syncedMeasurement.timestamp)
         val syncedAttitudeMeasurement = syncedMeasurement.attitudeMeasurement
         requireNotNull(syncedAttitudeMeasurement)
@@ -3058,8 +2820,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val gx = randomizer.nextFloat()
         val gy = randomizer.nextFloat()
@@ -3074,17 +2835,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gravityMeasurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         gravityMeasurementsBeforeTimestamp.add(gravityMeasurement1)
-        doReturn(gravityMeasurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gravityMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
@@ -3102,17 +2861,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val accelerometerMeasurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         accelerometerMeasurementsBeforeTimestamp.add(accelerometerMeasurement1)
-        doReturn(accelerometerMeasurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             accelerometerMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
@@ -3131,17 +2888,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        doReturn(gyroscopeMeasurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gyroscopeMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
         val headingAccuracyRadians =
@@ -3155,10 +2910,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement1)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         // set previous measurements
@@ -3304,8 +3058,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(attitudeTimestamp, syncer.mostRecentTimestamp)
         assertEquals(2, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
-        verify(attitudeSensorCollectorSpy, times(1)).getMeasurementsBeforePosition(0)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
 
         assertTrue(attitudeMeasurements.isEmpty())
         assertTrue(accelerometerMeasurements.isEmpty())
@@ -3320,18 +3073,13 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(alreadyProcessedAccelerometerMeasurements.isEmpty())
         assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
 
-        verify(staleDetectedMeasurementsListener, only()).onStaleMeasurements(
-            eq(syncer),
-            eq(SensorType.ABSOLUTE_ATTITUDE),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             staleDetectedMeasurementsListener.onStaleMeasurements(
                 syncer,
                 SensorType.ABSOLUTE_ATTITUDE,
                 any()
             )
-        }*/
+        }
     }
 
     @Test
@@ -3442,8 +3190,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val gx = randomizer.nextFloat()
         val gy = randomizer.nextFloat()
@@ -3458,17 +3205,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gravityMeasurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         gravityMeasurementsBeforeTimestamp.add(gravityMeasurement1)
-        doReturn(gravityMeasurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gravityMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
@@ -3486,17 +3231,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val accelerometerMeasurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         accelerometerMeasurementsBeforeTimestamp.add(accelerometerMeasurement1)
-        doReturn(accelerometerMeasurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             accelerometerMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
@@ -3515,17 +3258,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        doReturn(gyroscopeMeasurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gyroscopeMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
         val headingAccuracyRadians =
@@ -3539,10 +3280,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement1)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         // set previous measurements
@@ -3690,8 +3430,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(attitudeTimestamp, syncer.mostRecentTimestamp)
         assertEquals(2, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
-        verify(attitudeSensorCollectorSpy, times(1)).getMeasurementsBeforePosition(0)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
 
         assertEquals(1, attitudeMeasurements.size)
         val attitudeMeasurement2 = attitudeMeasurements.first()
@@ -3709,8 +3448,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(alreadyProcessedGyroscopeMeasurements.isEmpty())
         assertFalse(alreadyProcessedGravityMeasurements.isEmpty())
 
-        verifyNoInteractions(staleDetectedMeasurementsListener)
-//        verify { staleDetectedMeasurementsListener wasNot Called }
+        verify { staleDetectedMeasurementsListener wasNot Called }
     }
 
     @Test
@@ -3773,8 +3511,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val wx2 = randomizer.nextFloat()
         val wy2 = randomizer.nextFloat()
@@ -3793,10 +3530,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        doReturn(gyroscopeMeasurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gyroscopeMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val previousAccelerometerMeasurement: AccelerometerSensorMeasurement? =
@@ -3820,8 +3556,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val ax2 = randomizer.nextFloat()
         val ay2 = randomizer.nextFloat()
@@ -3839,10 +3574,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val accelerometerMeasurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         accelerometerMeasurementsBeforeTimestamp.add(accelerometerMeasurement1)
-        doReturn(accelerometerMeasurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             accelerometerMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val previousGravityMeasurement: GravitySensorMeasurement? =
@@ -3860,8 +3594,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val gx2 = randomizer.nextFloat()
         val gy2 = randomizer.nextFloat()
@@ -3876,17 +3609,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gravityMeasurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         gravityMeasurementsBeforeTimestamp.add(gravityMeasurement1)
-        doReturn(gravityMeasurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gravityMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
         val headingAccuracyRadians =
@@ -3900,10 +3631,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement1)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         val attitudeListener = attitudeSensorCollectorSpy.measurementListener
@@ -4026,8 +3756,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(attitudeTimestamp, syncer.mostRecentTimestamp)
         assertEquals(1, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
-        verify(attitudeSensorCollectorSpy, times(1)).getMeasurementsBeforePosition(0)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
 
         val attitudeMeasurements: ArrayDeque<AttitudeSensorMeasurement>? =
             syncer.getPrivateProperty("attitudeMeasurements")
@@ -4042,21 +3771,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(alreadyProcessedAttitudeMeasurements.isEmpty())
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
-        verify(syncedMeasurementListener, only()).onSyncedMeasurements(
-            eq(syncer),
-            capture(attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor)
-        )
-
-/*        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
                 capture(slot)
             )
-        }*/
+        }
 
-        val syncedMeasurement = attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor.value
-//        val syncedMeasurement = slot.captured
+        val syncedMeasurement = slot.captured
         assertEquals(attitudeTimestamp, syncedMeasurement.timestamp)
         val syncedAttitudeMeasurement = syncedMeasurement.attitudeMeasurement
         requireNotNull(syncedAttitudeMeasurement)
@@ -4156,8 +3879,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val wx2 = randomizer.nextFloat()
         val wy2 = randomizer.nextFloat()
@@ -4175,10 +3897,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        doReturn(gyroscopeMeasurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gyroscopeMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val previousAccelerometerMeasurement: AccelerometerSensorMeasurement? =
@@ -4202,8 +3923,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val ax2 = randomizer.nextFloat()
         val ay2 = randomizer.nextFloat()
@@ -4220,10 +3940,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val accelerometerMeasurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         accelerometerMeasurementsBeforeTimestamp.add(accelerometerMeasurement1)
-        doReturn(accelerometerMeasurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             accelerometerMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val previousGravityMeasurement: GravitySensorMeasurement? =
@@ -4241,8 +3960,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val gx2 = randomizer.nextFloat()
         val gy2 = randomizer.nextFloat()
@@ -4257,17 +3975,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gravityMeasurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         gravityMeasurementsBeforeTimestamp.add(gravityMeasurement1)
-        doReturn(gravityMeasurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gravityMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
         val headingAccuracyRadians =
@@ -4281,10 +3997,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement1)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         val attitudeListener = attitudeSensorCollectorSpy.measurementListener
@@ -4408,8 +4123,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(attitudeTimestamp, syncer.mostRecentTimestamp)
         assertEquals(1, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
-        verify(attitudeSensorCollectorSpy, times(1)).getMeasurementsBeforePosition(0)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
 
         val attitudeMeasurements: ArrayDeque<AttitudeSensorMeasurement>? =
             syncer.getPrivateProperty("attitudeMeasurements")
@@ -4424,20 +4138,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(alreadyProcessedAttitudeMeasurements.isEmpty())
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
-        verify(syncedMeasurementListener, only()).onSyncedMeasurements(
-            eq(syncer),
-            capture(attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor)
-        )
-/*        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
                 capture(slot)
             )
-        }*/
+        }
 
-        val syncedMeasurement = attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor.value
-//        val syncedMeasurement = slot.captured
+        val syncedMeasurement = slot.captured
         assertEquals(attitudeTimestamp, syncedMeasurement.timestamp)
         val syncedAttitudeMeasurement = syncedMeasurement.attitudeMeasurement
         requireNotNull(syncedAttitudeMeasurement)
@@ -4537,8 +4246,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val wx2 = randomizer.nextFloat()
         val wy2 = randomizer.nextFloat()
@@ -4556,10 +4264,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        doReturn(gyroscopeMeasurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gyroscopeMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val previousAccelerometerMeasurement: AccelerometerSensorMeasurement? =
@@ -4584,8 +4291,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val ax2 = randomizer.nextFloat()
         val ay2 = randomizer.nextFloat()
@@ -4602,10 +4308,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val accelerometerMeasurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         accelerometerMeasurementsBeforeTimestamp.add(accelerometerMeasurement1)
-        doReturn(accelerometerMeasurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             accelerometerMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val previousGravityMeasurement: GravitySensorMeasurement? =
@@ -4623,8 +4328,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val gx2 = randomizer.nextFloat()
         val gy2 = randomizer.nextFloat()
@@ -4639,17 +4343,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gravityMeasurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         gravityMeasurementsBeforeTimestamp.add(gravityMeasurement1)
-        doReturn(gravityMeasurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gravityMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
         val headingAccuracyRadians =
@@ -4663,10 +4365,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement1)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         val attitudeListener = attitudeSensorCollectorSpy.measurementListener
@@ -4790,8 +4491,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertEquals(attitudeTimestamp, syncer.mostRecentTimestamp)
         assertEquals(1, syncer.numberOfProcessedMeasurements)
         assertTrue(syncer.running)
-        verify(attitudeSensorCollectorSpy, times(1)).getMeasurementsBeforePosition(0)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
 
         val attitudeMeasurements: ArrayDeque<AttitudeSensorMeasurement>? =
             syncer.getPrivateProperty("attitudeMeasurements")
@@ -4805,20 +4505,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(alreadyProcessedAttitudeMeasurements.isEmpty())
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
-        verify(syncedMeasurementListener, only()).onSyncedMeasurements(
-            eq(syncer),
-            capture(attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor)
-        )
-/*        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
                 capture(slot)
             )
-        }*/
+        }
 
-        val syncedMeasurement = attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor.value
-//        val syncedMeasurement = slot.captured
+        val syncedMeasurement = slot.captured
         assertEquals(gravityTimestamp, syncedMeasurement.timestamp)
         val syncedAttitudeMeasurement = syncedMeasurement.attitudeMeasurement
         requireNotNull(syncedAttitudeMeasurement)
@@ -4887,8 +4582,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         val gravitySensorCollector: BufferedGravitySensorCollector? =
             syncer.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
 
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextFloat()
@@ -4904,17 +4598,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gravityMeasurementsBeforeTimestamp = ArrayDeque<GravitySensorMeasurement>()
         gravityMeasurementsBeforeTimestamp.add(gravityMeasurement1)
-        doReturn(gravityMeasurementsBeforeTimestamp).whenever(gravitySensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gravitySensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gravityMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val accelerometerSensorCollector: BufferedAccelerometerSensorCollector? =
             syncer.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
 
         val ax = randomizer.nextFloat()
         val ay = randomizer.nextFloat()
@@ -4935,17 +4627,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val accelerometerMeasurementsBeforeTimestamp = ArrayDeque<AccelerometerSensorMeasurement>()
         accelerometerMeasurementsBeforeTimestamp.add(accelerometerMeasurement1)
-        doReturn(accelerometerMeasurementsBeforeTimestamp).whenever(accelerometerSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { accelerometerSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             accelerometerMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("accelerometerSensorCollector", accelerometerSensorCollectorSpy)
 
         val gyroscopeSensorCollector: BufferedGyroscopeSensorCollector? =
             syncer.getPrivateProperty("gyroscopeSensorCollector")
         requireNotNull(gyroscopeSensorCollector)
-        val gyroscopeSensorCollectorSpy = spy(gyroscopeSensorCollector)
-//        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
+        val gyroscopeSensorCollectorSpy = spyk(gyroscopeSensorCollector)
 
         val wx = randomizer.nextFloat()
         val wy = randomizer.nextFloat()
@@ -4967,20 +4657,19 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val gyroscopeMeasurementsBeforeTimestamp = ArrayDeque<GyroscopeSensorMeasurement>()
         gyroscopeMeasurementsBeforeTimestamp.add(gyroscopeMeasurement1)
-        doReturn(gyroscopeMeasurementsBeforeTimestamp).whenever(gyroscopeSensorCollectorSpy).getMeasurementsBeforeTimestamp(any())
-/*        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
+        every { gyroscopeSensorCollectorSpy.getMeasurementsBeforeTimestamp(any()) }.returns(
             gyroscopeMeasurementsBeforeTimestamp
-        )*/
+        )
         syncer.setPrivateProperty("gyroscopeSensorCollector", gyroscopeSensorCollectorSpy)
 
         val attitudeSensorCollector: BufferedAttitudeSensorCollector? =
             syncer.getPrivateProperty("attitudeSensorCollector")
         requireNotNull(attitudeSensorCollector)
-        val attitudeSensorCollectorSpy = spy(attitudeSensorCollector)
-//        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
+        val attitudeSensorCollectorSpy = spyk(attitudeSensorCollector)
 
         val attitude = getAttitude()
-        val headingAccuracyRadians = Math.toRadians(randomizer.nextDouble(0.0, MAX_DEGREES)).toFloat()
+        val headingAccuracyRadians =
+            Math.toRadians(randomizer.nextDouble(0.0, MAX_DEGREES)).toFloat()
         val attitudeMeasurement1 = AttitudeSensorMeasurement(
             attitude,
             headingAccuracyRadians,
@@ -4990,10 +4679,9 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         )
         val measurementsBeforePosition = ArrayDeque<AttitudeSensorMeasurement>()
         measurementsBeforePosition.add(attitudeMeasurement1)
-        doReturn(measurementsBeforePosition).whenever(attitudeSensorCollectorSpy).getMeasurementsBeforePosition(any())
-/*        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
+        every { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(any()) }.returns(
             measurementsBeforePosition
-        )*/
+        )
         syncer.setPrivateProperty("attitudeSensorCollector", attitudeSensorCollectorSpy)
 
         val attitudeListener = attitudeSensorCollectorSpy.measurementListener
@@ -5039,7 +4727,11 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(alreadyProcessedGravityMeasurements.isEmpty())
 
         // process accelerometer measurement
-        accelerometerListener.onMeasurement(accelerometerSensorCollectorSpy, AccelerometerSensorMeasurement(), 0)
+        accelerometerListener.onMeasurement(
+            accelerometerSensorCollectorSpy,
+            AccelerometerSensorMeasurement(),
+            0
+        )
 
         assertNull(syncer.oldestTimestamp)
         assertEquals(mostRecentTimestamp, syncer.mostRecentTimestamp)
@@ -5109,8 +4801,7 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
             0
         )
 
-        verify(attitudeSensorCollectorSpy, times(1)).getMeasurementsBeforePosition(0)
-//        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
+        verify(exactly = 1) { attitudeSensorCollectorSpy.getMeasurementsBeforePosition(0) }
 
         assertNull(syncer.oldestTimestamp)
         assertNull(syncer.mostRecentTimestamp)
@@ -5144,20 +4835,15 @@ class AttitudeAccelerometerGravityAndGyroscopeSensorMeasurementSyncerTest {
         assertTrue(foundGravityMeasurements.isEmpty())
         assertTrue(foundGyroscopeMeasurements.isEmpty())
 
-        verify(syncedMeasurementListener, only()).onSyncedMeasurements(
-            eq(syncer),
-            capture(attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor)
-        )
-/*        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
+        val slot = slot<AttitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurement>()
         verify(exactly = 1) {
             syncedMeasurementListener.onSyncedMeasurements(
                 syncer,
                 capture(slot)
             )
-        }*/
+        }
 
-        val syncedMeasurement = attitudeAccelerometerGravityAndGyroscopeSyncedSensorMeasurementCaptor.value
-//        val syncedMeasurement = slot.captured
+        val syncedMeasurement = slot.captured
         assertEquals(gravityTimestamp, syncedMeasurement.timestamp)
         val syncedAttitudeMeasurement = syncedMeasurement.attitudeMeasurement
         requireNotNull(syncedAttitudeMeasurement)

@@ -17,66 +17,54 @@ package com.irurueta.android.navigation.inertial.processors.pose
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
-import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerLeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDFrame
+import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.navigation.inertial.estimators.NEDKinematicsEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerFusedRelativePoseProcessorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var processorListener: BaseRelativePoseProcessor.OnProcessedListener
 
-//    @MockK(relaxed = true)
-    @Mock
+    @MockK(relaxed = true)
     private lateinit var location: Location
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -192,18 +180,15 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
-        doReturn(gx).whenever(attitudeProcessorSpy).gx
-//        every { attitudeProcessorSpy.gx }.returns(gx)
+        every { attitudeProcessorSpy.gx }.returns(gx)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(gx, processor.gx, 0.0)
 
-        verify(attitudeProcessorSpy, only()).gx
-//        verify(exactly = 1) { attitudeProcessorSpy.gx }
+        verify(exactly = 1) { attitudeProcessorSpy.gx }
     }
 
     @Test
@@ -213,18 +198,15 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         val randomizer = UniformRandomizer()
         val gy = randomizer.nextDouble()
-        doReturn(gy).whenever(attitudeProcessorSpy).gy
-//        every { attitudeProcessorSpy.gy }.returns(gy)
+        every { attitudeProcessorSpy.gy }.returns(gy)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(gy, processor.gy, 0.0)
 
-        verify(attitudeProcessorSpy, only()).gy
-//        verify(exactly = 1) { attitudeProcessorSpy.gy }
+        verify(exactly = 1) { attitudeProcessorSpy.gy }
     }
 
     @Test
@@ -234,18 +216,15 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         val randomizer = UniformRandomizer()
         val gz = randomizer.nextDouble()
-        doReturn(gz).whenever(attitudeProcessorSpy).gz
-//        every { attitudeProcessorSpy.gz }.returns(gz)
+        every { attitudeProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(gz, processor.gz, 0.0)
 
-        verify(attitudeProcessorSpy, only()).gz
-//        verify(exactly = 1) { attitudeProcessorSpy.gz }
+        verify(exactly = 1) { attitudeProcessorSpy.gz }
     }
 
     @Test
@@ -255,20 +234,15 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
         val gy = randomizer.nextDouble()
         val gz = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinates(gx, gy, gz)
-        }.whenever(attitudeProcessorSpy).getGravity(any())
-/*        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
+        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinates(gx, gy, gz)
-        }*/
+        }
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         val gravity = AccelerationTriad()
@@ -277,8 +251,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         // check
         assertEquals(AccelerationTriad(gx, gy, gz), gravity)
 
-        verify(attitudeProcessorSpy, only()).getGravity(gravity)
-//        verify(exactly = 1) { attitudeProcessorSpy.getGravity(gravity) }
+        verify(exactly = 1) { attitudeProcessorSpy.getGravity(gravity) }
     }
 
     @Test
@@ -288,8 +261,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertTrue(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
@@ -298,12 +270,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         processor.useAccurateRelativeGyroscopeAttitudeProcessor = false
 
         // check
-        verify(attitudeProcessorSpy, times(1)).useAccurateRelativeGyroscopeAttitudeProcessor
-//        verify(exactly = 1) { attitudeProcessorSpy.useAccurateRelativeGyroscopeAttitudeProcessor }
-        verify(attitudeProcessorSpy, times(1)).useAccurateRelativeGyroscopeAttitudeProcessor = false
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { attitudeProcessorSpy.useAccurateRelativeGyroscopeAttitudeProcessor }
+        verify(exactly = 1) {
             attitudeProcessorSpy.useAccurateRelativeGyroscopeAttitudeProcessor = false
-        }*/
+        }
 
         assertFalse(processor.useAccurateRelativeGyroscopeAttitudeProcessor)
     }
@@ -315,8 +285,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertTrue(processor.useIndirectAttitudeInterpolation)
@@ -325,12 +294,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         processor.useIndirectAttitudeInterpolation = false
 
         // check
-        verify(attitudeProcessorSpy, times(1)).useIndirectInterpolation
-//        verify(exactly = 1) { attitudeProcessorSpy.useIndirectInterpolation }
-        verify(attitudeProcessorSpy, times(1)).useIndirectInterpolation = false
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { attitudeProcessorSpy.useIndirectInterpolation }
+        verify(exactly = 1) {
             attitudeProcessorSpy.useIndirectInterpolation = false
-        }*/
+        }
 
         assertFalse(processor.useIndirectAttitudeInterpolation)
     }
@@ -342,8 +309,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(
@@ -358,12 +324,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         processor.attitudeInterpolationValue = attitudeInterpolationValue
 
         // check
-        verify(attitudeProcessorSpy, times(1)).interpolationValue
-//        verify(exactly = 1) { attitudeProcessorSpy.interpolationValue }
-        verify(attitudeProcessorSpy, times(1)).interpolationValue = attitudeInterpolationValue
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { attitudeProcessorSpy.interpolationValue }
+        verify(exactly = 1) {
             attitudeProcessorSpy.interpolationValue = attitudeInterpolationValue
-        }*/
+        }
 
         assertEquals(attitudeInterpolationValue, processor.attitudeInterpolationValue, 0.0)
     }
@@ -375,8 +339,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(
@@ -391,12 +354,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         processor.attitudeIndirectInterpolationWeight = attitudeIndirectInterpolationWeight
 
         // check
-        verify(attitudeProcessorSpy, times(1)).indirectInterpolationWeight
-//        verify(exactly = 1) { attitudeProcessorSpy.indirectInterpolationWeight }
-        verify(attitudeProcessorSpy, times(1)).indirectInterpolationWeight = attitudeIndirectInterpolationWeight
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { attitudeProcessorSpy.indirectInterpolationWeight }
+        verify(exactly = 1) {
             attitudeProcessorSpy.indirectInterpolationWeight = attitudeIndirectInterpolationWeight
-        }*/
+        }
 
         assertEquals(
             attitudeIndirectInterpolationWeight,
@@ -412,8 +373,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(
@@ -428,12 +388,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         processor.attitudeOutlierThreshold = attitudeOutlierThreshold
 
         // check
-        verify(attitudeProcessorSpy, times(1)).outlierThreshold
-//        verify(exactly = 1) { attitudeProcessorSpy.outlierThreshold }
-        verify(attitudeProcessorSpy, times(1)).outlierThreshold = attitudeOutlierThreshold
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { attitudeProcessorSpy.outlierThreshold }
+        verify(exactly = 1) {
             attitudeProcessorSpy.outlierThreshold = attitudeOutlierThreshold
-        }*/
+        }
 
         assertEquals(
             attitudeOutlierThreshold,
@@ -449,8 +407,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(
@@ -465,12 +422,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         processor.attitudeOutlierPanicThreshold = attitudeOutlierPanicThreshold
 
         // check
-        verify(attitudeProcessorSpy, times(1)).outlierPanicThreshold
-//        verify(exactly = 1) { attitudeProcessorSpy.outlierPanicThreshold }
-        verify(attitudeProcessorSpy, times(1)).outlierPanicThreshold = attitudeOutlierPanicThreshold
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { attitudeProcessorSpy.outlierPanicThreshold }
+        verify(exactly = 1) {
             attitudeProcessorSpy.outlierPanicThreshold = attitudeOutlierPanicThreshold
-        }*/
+        }
 
         assertEquals(
             attitudeOutlierPanicThreshold,
@@ -486,8 +441,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         assertEquals(
@@ -501,12 +455,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         processor.attitudePanicCounterThreshold = attitudePanicCounterThreshold
 
         // check
-        verify(attitudeProcessorSpy, times(1)).panicCounterThreshold
-//        verify(exactly = 1) { attitudeProcessorSpy.panicCounterThreshold }
-        verify(attitudeProcessorSpy, times(1)).panicCounterThreshold = attitudePanicCounterThreshold
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { attitudeProcessorSpy.panicCounterThreshold }
+        verify(exactly = 1) {
             attitudeProcessorSpy.panicCounterThreshold = attitudePanicCounterThreshold
-        }*/
+        }
 
         assertEquals(
             attitudePanicCounterThreshold,
@@ -562,8 +514,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         setPrivateProperty(
@@ -629,8 +580,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         requireNotNull(timeIntervalSeconds2)
         assertEquals(0.0, timeIntervalSeconds2, 0.0)
 
-        verify(attitudeProcessorSpy, times(1)).reset()
-//        verify(exactly = 1) { attitudeProcessorSpy.reset() }
+        verify(exactly = 1) { attitudeProcessorSpy.reset() }
     }
 
     @Test
@@ -727,10 +677,8 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
-        doReturn(false).whenever(attitudeProcessorSpy).process(any(), any(), any())
-//        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(false)
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(false)
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check
@@ -743,18 +691,13 @@ class AccelerometerFusedRelativePoseProcessorTest {
         assertFalse(processor.process(syncedMeasurement))
 
         // check
-        verify(attitudeProcessorSpy, times(1)).process(
-            accelerometerMeasurement,
-            gyroscopeMeasurement,
-            timestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeProcessorSpy.process(
                 accelerometerMeasurement,
                 gyroscopeMeasurement,
                 timestamp
             )
-        }*/
+        }
 
         val currentAttitude: Quaternion? =
             getPrivateProperty(BaseRelativePoseProcessor::class, processor, "currentAttitude")
@@ -827,22 +770,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
-        doReturn(true).whenever(attitudeProcessorSpy).process(any(), any(), any())
-//        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(true)
-        doReturn(nedAttitude).whenever(attitudeProcessorSpy).fusedAttitude
-//        every { attitudeProcessorSpy.fusedAttitude }.returns(nedAttitude)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                nedGravity.gn,
-                nedGravity.ge,
-                nedGravity.gd,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(attitudeProcessorSpy).getGravity(any())
-/*        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(true)
+        every { attitudeProcessorSpy.fusedAttitude }.returns(nedAttitude)
+        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinatesAndUnit(
                 nedGravity.gn,
@@ -850,7 +781,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
                 nedGravity.gd,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check
@@ -876,18 +807,13 @@ class AccelerometerFusedRelativePoseProcessorTest {
         assertFalse(processor.process(syncedMeasurement))
 
         // check
-        verify(attitudeProcessorSpy, times(1)).process(
-            accelerometerMeasurement,
-            gyroscopeMeasurement,
-            timestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeProcessorSpy.process(
                 accelerometerMeasurement,
                 gyroscopeMeasurement,
                 timestamp
             )
-        }*/
+        }
 
         val currentAttitude: Quaternion? =
             getPrivateProperty(BaseRelativePoseProcessor::class, processor, "currentAttitude")
@@ -984,22 +910,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
-        doReturn(true).whenever(attitudeProcessorSpy).process(any(), any(), any())
-//        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(true)
-        doReturn(nedAttitude).whenever(attitudeProcessorSpy).fusedAttitude
-//        every { attitudeProcessorSpy.fusedAttitude }.returns(nedAttitude)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                nedGravity.gn,
-                nedGravity.ge,
-                nedGravity.gd,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(attitudeProcessorSpy).getGravity(any())
-/*        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(true)
+        every { attitudeProcessorSpy.fusedAttitude }.returns(nedAttitude)
+        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinatesAndUnit(
                 nedGravity.gn,
@@ -1007,7 +921,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
                 nedGravity.gd,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check
@@ -1033,18 +947,13 @@ class AccelerometerFusedRelativePoseProcessorTest {
         assertTrue(processor.process(syncedMeasurement))
 
         // check
-        verify(attitudeProcessorSpy, times(1)).process(
-            accelerometerMeasurement,
-            gyroscopeMeasurement,
-            timestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeProcessorSpy.process(
                 accelerometerMeasurement,
                 gyroscopeMeasurement,
                 timestamp
             )
-        }*/
+        }
 
         val currentAttitude: Quaternion? =
             getPrivateProperty(BaseRelativePoseProcessor::class, processor, "currentAttitude")
@@ -1148,22 +1057,10 @@ class AccelerometerFusedRelativePoseProcessorTest {
         val attitudeProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
             processor.getPrivateProperty("attitudeProcessor")
         requireNotNull(attitudeProcessor)
-        val attitudeProcessorSpy = spy(attitudeProcessor)
-//        val attitudeProcessorSpy = spyk(attitudeProcessor)
-        doReturn(true).whenever(attitudeProcessorSpy).process(any(), any(), any())
-//        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(true)
-        doReturn(nedAttitude).whenever(attitudeProcessorSpy).fusedAttitude
-//        every { attitudeProcessorSpy.fusedAttitude }.returns(nedAttitude)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                nedGravity.gn,
-                nedGravity.ge,
-                nedGravity.gd,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(attitudeProcessorSpy).getGravity(any())
-/*        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
+        val attitudeProcessorSpy = spyk(attitudeProcessor)
+        every { attitudeProcessorSpy.process(any(), any(), any()) }.returns(true)
+        every { attitudeProcessorSpy.fusedAttitude }.returns(nedAttitude)
+        every { attitudeProcessorSpy.getGravity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinatesAndUnit(
                 nedGravity.gn,
@@ -1171,7 +1068,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
                 nedGravity.gd,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         processor.setPrivateProperty("attitudeProcessor", attitudeProcessorSpy)
 
         // check
@@ -1197,18 +1094,13 @@ class AccelerometerFusedRelativePoseProcessorTest {
         assertTrue(processor.process(syncedMeasurement))
 
         // check
-        verify(attitudeProcessorSpy, times(1)).process(
-            accelerometerMeasurement,
-            gyroscopeMeasurement,
-            timestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeProcessorSpy.process(
                 accelerometerMeasurement,
                 gyroscopeMeasurement,
                 timestamp
             )
-        }*/
+        }
 
         val currentAttitude: Quaternion? =
             getPrivateProperty(BaseRelativePoseProcessor::class, processor, "currentAttitude")
@@ -1238,8 +1130,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         assertTrue(transformationRotation.equals(transformationRotation2))
         assertArrayEquals(DoubleArray(3), transformation.translation, VERY_LARGE_ABSOLUTE_ERROR)
 
-        verify(processorListener, only()).onProcessed(processor, timestamp, transformation)
-//        verify(exactly = 1) { processorListener.onProcessed(processor, timestamp, transformation) }
+        verify(exactly = 1) { processorListener.onProcessed(processor, timestamp, transformation) }
     }
 
     private fun getLocation(): Location {
@@ -1257,12 +1148,9 @@ class AccelerometerFusedRelativePoseProcessorTest {
             MAX_HEIGHT
         )
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

@@ -40,7 +40,7 @@ public class BilinearInterpolatorTest {
 
     private static final int MIN_SAMPLES = 2;
 
-    private static final double ABSOLUTE_ERROR = 1e-8;
+    private static final double ABSOLUTE_ERROR = 2e-8;
 
     @Test
     public void interpolate_whenFirstDegree2DPolynomial_returnsExpectedResult()

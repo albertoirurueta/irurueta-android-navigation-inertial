@@ -18,10 +18,21 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.location.Location
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GravityGyroscopeAndMagnetometerSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.GravityGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.SensorType
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.processors.attitude.*
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.FusedGeomagneticAttitudeProcessor
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
@@ -29,65 +40,47 @@ import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
-import java.util.*
+import java.util.Date
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class FusedGeomagneticAttitudeEstimator2Test {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var attitudeListener:
             FusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accuracyChangedListener:
             FusedGeomagneticAttitudeEstimator2.OnAccuracyChangedListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var bufferFilledListener:
             FusedGeomagneticAttitudeEstimator2.OnBufferFilledListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -348,10 +341,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertNull(accelerometerProcessor.worldMagneticModel)
         assertNull(gravityProcessor.worldMagneticModel)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -362,10 +353,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         // check
         assertSame(worldMagneticModel, estimator.worldMagneticModel)
 
-        verify(accelerometerProcessorSpy, times(1)).worldMagneticModel = worldMagneticModel
-//        verify { accelerometerProcessorSpy.worldMagneticModel = worldMagneticModel }
-        verify(gravityProcessorSpy, times(1)).worldMagneticModel = worldMagneticModel
-//        verify { gravityProcessorSpy.worldMagneticModel = worldMagneticModel }
+        verify { accelerometerProcessorSpy.worldMagneticModel = worldMagneticModel }
+        verify { gravityProcessorSpy.worldMagneticModel = worldMagneticModel }
 
         assertSame(worldMagneticModel, accelerometerProcessor.worldMagneticModel)
         assertSame(worldMagneticModel, gravityProcessor.worldMagneticModel)
@@ -463,10 +452,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertFalse(accelerometerProcessor.useWorldMagneticModel)
         assertFalse(gravityProcessor.useWorldMagneticModel)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -476,10 +463,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         // check
         assertTrue(estimator.useWorldMagneticModel)
 
-        verify(accelerometerProcessorSpy, times(1)).useWorldMagneticModel = true
-//        verify(exactly = 1) { accelerometerProcessorSpy.useWorldMagneticModel = true }
-        verify(gravityProcessorSpy, times(1)).useWorldMagneticModel = true
-//        verify(exactly = 1) { gravityProcessorSpy.useWorldMagneticModel = true }
+        verify(exactly = 1) { accelerometerProcessorSpy.useWorldMagneticModel = true }
+        verify(exactly = 1) { gravityProcessorSpy.useWorldMagneticModel = true }
 
         assertTrue(accelerometerProcessor.useWorldMagneticModel)
         assertTrue(gravityProcessor.useWorldMagneticModel)
@@ -530,10 +515,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -544,10 +527,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertFalse(accelerometerProcessor.useAccurateLevelingProcessor)
         assertFalse(gravityProcessor.useAccurateLevelingProcessor)
 
-        verify(accelerometerProcessorSpy, times(1)).useAccurateLevelingProcessor = false
-//        verify(exactly = 1) { accelerometerProcessorSpy.useAccurateLevelingProcessor = false }
-        verify(gravityProcessorSpy, times(1)).useAccurateLevelingProcessor = false
-//        verify(exactly = 1) { gravityProcessorSpy.useAccurateLevelingProcessor = false }
+        verify(exactly = 1) { accelerometerProcessorSpy.useAccurateLevelingProcessor = false }
+        verify(exactly = 1) { gravityProcessorSpy.useAccurateLevelingProcessor = false }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -581,10 +562,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -596,10 +575,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertTrue(accelerometerProcessor.useAccurateLevelingProcessor)
         assertTrue(gravityProcessor.useAccurateLevelingProcessor)
 
-        verify(accelerometerProcessorSpy, times(1)).useAccurateLevelingProcessor = true
-//        verify(exactly = 1) { accelerometerProcessorSpy.useAccurateLevelingProcessor = true }
-        verify(gravityProcessorSpy, times(1)).useAccurateLevelingProcessor = true
-//        verify(exactly = 1) { gravityProcessorSpy.useAccurateLevelingProcessor = true }
+        verify(exactly = 1) { accelerometerProcessorSpy.useAccurateLevelingProcessor = true }
+        verify(exactly = 1) { gravityProcessorSpy.useAccurateLevelingProcessor = true }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -633,10 +610,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -648,14 +623,12 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertTrue(accelerometerProcessorSpy.useAccurateRelativeGyroscopeAttitudeProcessor)
         assertTrue(gravityProcessorSpy.useAccurateRelativeGyroscopeAttitudeProcessor)
 
-        verify(accelerometerProcessorSpy, times(1)).useAccurateRelativeGyroscopeAttitudeProcessor = true
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerProcessorSpy.useAccurateRelativeGyroscopeAttitudeProcessor = true
-        }*/
-        verify(gravityProcessorSpy, times(1)).useAccurateRelativeGyroscopeAttitudeProcessor = true
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             gravityProcessorSpy.useAccurateRelativeGyroscopeAttitudeProcessor = true
-        }*/
+        }
     }
 
     @Test
@@ -674,10 +647,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -689,10 +660,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertFalse(accelerometerProcessorSpy.useIndirectInterpolation)
         assertFalse(gravityProcessorSpy.useIndirectInterpolation)
 
-        verify(accelerometerProcessorSpy, times(1)).useIndirectInterpolation = false
-//        verify(exactly = 1) { accelerometerProcessorSpy.useIndirectInterpolation = false }
-        verify(gravityProcessorSpy, times(1)).useIndirectInterpolation = false
-//        verify(exactly = 1) { gravityProcessorSpy.useIndirectInterpolation = false }
+        verify(exactly = 1) { accelerometerProcessorSpy.useIndirectInterpolation = false }
+        verify(exactly = 1) { gravityProcessorSpy.useIndirectInterpolation = false }
     }
 
     @Test
@@ -733,10 +702,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -749,10 +716,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertEquals(value, accelerometerProcessorSpy.interpolationValue, 0.0)
         assertEquals(value, gravityProcessorSpy.interpolationValue, 0.0)
 
-        verify(accelerometerProcessorSpy, times(1)).interpolationValue = value
-//        verify(exactly = 1) { accelerometerProcessorSpy.interpolationValue = value }
-        verify(gravityProcessorSpy, times(1)).interpolationValue = value
-//        verify(exactly = 1) { gravityProcessorSpy.interpolationValue = value }
+        verify(exactly = 1) { accelerometerProcessorSpy.interpolationValue = value }
+        verify(exactly = 1) { gravityProcessorSpy.interpolationValue = value }
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -783,10 +748,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -808,14 +771,12 @@ class FusedGeomagneticAttitudeEstimator2Test {
             0.0
         )
 
-        verify(accelerometerProcessorSpy, times(1)).indirectInterpolationWeight = indirectInterpolationWeight
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerProcessorSpy.indirectInterpolationWeight = indirectInterpolationWeight
-        }*/
-        verify(gravityProcessorSpy, times(1)).indirectInterpolationWeight = indirectInterpolationWeight
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             gravityProcessorSpy.indirectInterpolationWeight = indirectInterpolationWeight
-        }*/
+        }
     }
 
     @Test
@@ -831,21 +792,16 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        doReturn(TIME_INTERVAL).whenever(accelerometerProcessorSpy).gyroscopeTimeIntervalSeconds
-//        every { accelerometerProcessorSpy.gyroscopeTimeIntervalSeconds }.returns(TIME_INTERVAL)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.gyroscopeTimeIntervalSeconds }.returns(TIME_INTERVAL)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
 
-        verify(accelerometerProcessorSpy, only()).gyroscopeTimeIntervalSeconds
-//        verify(exactly = 1) { accelerometerProcessorSpy.gyroscopeTimeIntervalSeconds }
-        verifyNoInteractions(gravityProcessorSpy)
-//        verify { gravityProcessorSpy wasNot Called }
+        verify(exactly = 1) { accelerometerProcessorSpy.gyroscopeTimeIntervalSeconds }
+        verify { gravityProcessorSpy wasNot Called }
     }
 
     @Test
@@ -861,21 +817,16 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(TIME_INTERVAL).whenever(gravityProcessorSpy).gyroscopeTimeIntervalSeconds
-//        every { gravityProcessorSpy.gyroscopeTimeIntervalSeconds }.returns(TIME_INTERVAL)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.gyroscopeTimeIntervalSeconds }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
 
-        verify(gravityProcessorSpy, only()).gyroscopeTimeIntervalSeconds
-//        verify(exactly = 1) { gravityProcessorSpy.gyroscopeTimeIntervalSeconds }
-        verifyNoInteractions(accelerometerProcessorSpy)
-//        verify { accelerometerProcessorSpy wasNot Called }
+        verify(exactly = 1) { gravityProcessorSpy.gyroscopeTimeIntervalSeconds }
+        verify { accelerometerProcessorSpy wasNot Called }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -931,10 +882,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -949,10 +898,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertEquals(outlierThreshold, accelerometerProcessorSpy.outlierThreshold, 0.0)
         assertEquals(outlierThreshold, gravityProcessorSpy.outlierThreshold, 0.0)
 
-        verify(accelerometerProcessorSpy, times(1)).outlierThreshold = outlierThreshold
-//        verify(exactly = 1) { accelerometerProcessorSpy.outlierThreshold = outlierThreshold }
-        verify(gravityProcessorSpy, times(1)).outlierThreshold = outlierThreshold
-//        verify(exactly = 1) { gravityProcessorSpy.outlierThreshold = outlierThreshold }
+        verify(exactly = 1) { accelerometerProcessorSpy.outlierThreshold = outlierThreshold }
+        verify(exactly = 1) { gravityProcessorSpy.outlierThreshold = outlierThreshold }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -1010,10 +957,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -1027,12 +972,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertEquals(outlierPanicThreshold, accelerometerProcessorSpy.outlierPanicThreshold, 0.0)
         assertEquals(outlierPanicThreshold, gravityProcessorSpy.outlierPanicThreshold, 0.0)
 
-        verify(accelerometerProcessorSpy, times(1)).outlierPanicThreshold = outlierPanicThreshold
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerProcessorSpy.outlierPanicThreshold = outlierPanicThreshold
-        }*/
-        verify(gravityProcessorSpy, times(1)).outlierPanicThreshold = outlierPanicThreshold
-//        verify(exactly = 1) { gravityProcessorSpy.outlierPanicThreshold = outlierPanicThreshold }
+        }
+        verify(exactly = 1) { gravityProcessorSpy.outlierPanicThreshold = outlierPanicThreshold }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -1076,10 +1019,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -1090,10 +1031,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         assertEquals(2, accelerometerProcessorSpy.panicCounterThreshold)
         assertEquals(2, gravityProcessorSpy.panicCounterThreshold)
 
-        verify(accelerometerProcessorSpy, times(1)).panicCounterThreshold = 2
-//        verify(exactly = 1) { accelerometerProcessorSpy.panicCounterThreshold = 2 }
-        verify(gravityProcessorSpy, times(1)).panicCounterThreshold = 2
-//        verify(exactly = 1) { gravityProcessorSpy.panicCounterThreshold = 2 }
+        verify(exactly = 1) { accelerometerProcessorSpy.panicCounterThreshold = 2 }
+        verify(exactly = 1) { gravityProcessorSpy.panicCounterThreshold = 2 }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -1124,10 +1063,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -1140,13 +1077,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(gravityGyroscopeAndMagnetometerSyncer)
 
         val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spy(accelerometerGyroscopeAndMagnetometerSyncer)
-/*        val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spyk(accelerometerGyroscopeAndMagnetometerSyncer)*/
-        doReturn(false).whenever(accelerometerGyroscopeAndMagnetometerSyncerSpy).start(any())
-//        every { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(false)
-        val gravityGyroscopeAndMagnetometerSyncerSpy = spy(gravityGyroscopeAndMagnetometerSyncer)
-//        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
+            spyk(accelerometerGyroscopeAndMagnetometerSyncer)
+        every { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(false)
+        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
 
         estimator.setPrivateProperty(
             "accelerometerGyroscopeAndMagnetometerSyncer",
@@ -1161,14 +1094,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val startTimestamp = System.nanoTime()
         assertFalse(estimator.start(startTimestamp))
 
-        verify(accelerometerProcessorSpy, times(1)).reset()
-//        verify(exactly = 1) { accelerometerProcessorSpy.reset() }
-        verify(accelerometerGyroscopeAndMagnetometerSyncerSpy, only()).start(startTimestamp)
-//        verify(exactly = 1) { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
-        verifyNoInteractions(gravityProcessorSpy)
-//        verify { gravityProcessorSpy wasNot Called }
-        verifyNoInteractions(gravityGyroscopeAndMagnetometerSyncerSpy)
-//        verify { gravityGyroscopeAndMagnetometerSyncerSpy wasNot Called }
+        verify(exactly = 1) { accelerometerProcessorSpy.reset() }
+        verify(exactly = 1) { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
+        verify { gravityProcessorSpy wasNot Called }
+        verify { gravityGyroscopeAndMagnetometerSyncerSpy wasNot Called }
     }
 
     @Test
@@ -1184,10 +1113,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -1200,13 +1127,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(gravityGyroscopeAndMagnetometerSyncer)
 
         val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spy(accelerometerGyroscopeAndMagnetometerSyncer)
-/*        val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spyk(accelerometerGyroscopeAndMagnetometerSyncer)*/
-        val gravityGyroscopeAndMagnetometerSyncerSpy = spy(gravityGyroscopeAndMagnetometerSyncer)
-//        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
-        doReturn(false).whenever(gravityGyroscopeAndMagnetometerSyncerSpy).start(any())
-//        every { gravityGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(false)
+            spyk(accelerometerGyroscopeAndMagnetometerSyncer)
+        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
+        every { gravityGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(false)
 
         estimator.setPrivateProperty(
             "accelerometerGyroscopeAndMagnetometerSyncer",
@@ -1221,14 +1144,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val startTimestamp = System.nanoTime()
         assertFalse(estimator.start(startTimestamp))
 
-        verify(gravityProcessorSpy, times(1)).reset()
-//        verify(exactly = 1) { gravityProcessorSpy.reset() }
-        verify(gravityGyroscopeAndMagnetometerSyncerSpy, only()).start(startTimestamp)
-//        verify(exactly = 1) { gravityGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
-        verifyNoInteractions(accelerometerProcessorSpy)
-//        verify { accelerometerProcessorSpy wasNot Called }
-        verifyNoInteractions(accelerometerGyroscopeAndMagnetometerSyncerSpy)
-//        verify { accelerometerGyroscopeAndMagnetometerSyncerSpy wasNot Called }
+        verify(exactly = 1) { gravityProcessorSpy.reset() }
+        verify(exactly = 1) { gravityGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
+        verify { accelerometerProcessorSpy wasNot Called }
+        verify { accelerometerGyroscopeAndMagnetometerSyncerSpy wasNot Called }
     }
 
     @Test
@@ -1244,10 +1163,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -1260,13 +1177,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(gravityGyroscopeAndMagnetometerSyncer)
 
         val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spy(accelerometerGyroscopeAndMagnetometerSyncer)
-/*        val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spyk(accelerometerGyroscopeAndMagnetometerSyncer)*/
-        doReturn(true).whenever(accelerometerGyroscopeAndMagnetometerSyncerSpy).start(any())
-//        every { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(true)
-        val gravityGyroscopeAndMagnetometerSyncerSpy = spy(gravityGyroscopeAndMagnetometerSyncer)
-//        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
+            spyk(accelerometerGyroscopeAndMagnetometerSyncer)
+        every { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(true)
+        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
 
         estimator.setPrivateProperty(
             "accelerometerGyroscopeAndMagnetometerSyncer",
@@ -1281,14 +1194,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val startTimestamp = System.nanoTime()
         assertTrue(estimator.start(startTimestamp))
 
-        verify(accelerometerProcessorSpy, times(1)).reset()
-//        verify(exactly = 1) { accelerometerProcessorSpy.reset() }
-        verify(accelerometerGyroscopeAndMagnetometerSyncerSpy, only()).start(startTimestamp)
-//        verify(exactly = 1) { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
-        verifyNoInteractions(gravityProcessorSpy)
-//        verify { gravityProcessorSpy wasNot Called }
-        verifyNoInteractions(gravityGyroscopeAndMagnetometerSyncerSpy)
-//        verify { gravityGyroscopeAndMagnetometerSyncerSpy wasNot Called }
+        verify(exactly = 1) { accelerometerProcessorSpy.reset() }
+        verify(exactly = 1) { accelerometerGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
+        verify { gravityProcessorSpy wasNot Called }
+        verify { gravityGyroscopeAndMagnetometerSyncerSpy wasNot Called }
     }
 
     @Test
@@ -1304,10 +1213,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
 
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
@@ -1320,13 +1227,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(gravityGyroscopeAndMagnetometerSyncer)
 
         val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spy(accelerometerGyroscopeAndMagnetometerSyncer)
-/*        val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spyk(accelerometerGyroscopeAndMagnetometerSyncer)*/
-        val gravityGyroscopeAndMagnetometerSyncerSpy = spy(gravityGyroscopeAndMagnetometerSyncer)
-//        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
-        doReturn(true).whenever(gravityGyroscopeAndMagnetometerSyncerSpy).start(any())
-//        every { gravityGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(true)
+            spyk(accelerometerGyroscopeAndMagnetometerSyncer)
+        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
+        every { gravityGyroscopeAndMagnetometerSyncerSpy.start(any()) }.returns(true)
 
         estimator.setPrivateProperty(
             "accelerometerGyroscopeAndMagnetometerSyncer",
@@ -1341,14 +1244,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val startTimestamp = System.nanoTime()
         assertTrue(estimator.start(startTimestamp))
 
-        verify(gravityProcessorSpy, times(1)).reset()
-//        verify(exactly = 1) { gravityProcessorSpy.reset() }
-        verify(gravityGyroscopeAndMagnetometerSyncerSpy, only()).start(startTimestamp)
-//        verify(exactly = 1) { gravityGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
-        verifyNoInteractions(accelerometerProcessorSpy)
-//        verify { accelerometerProcessorSpy wasNot Called }
-        verifyNoInteractions(accelerometerGyroscopeAndMagnetometerSyncerSpy)
-//        verify { accelerometerGyroscopeAndMagnetometerSyncerSpy wasNot Called }
+        verify(exactly = 1) { gravityProcessorSpy.reset() }
+        verify(exactly = 1) { gravityGyroscopeAndMagnetometerSyncerSpy.start(startTimestamp) }
+        verify { accelerometerProcessorSpy wasNot Called }
+        verify { accelerometerGyroscopeAndMagnetometerSyncerSpy wasNot Called }
     }
 
     @Test
@@ -1369,11 +1268,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(gravityGyroscopeAndMagnetometerSyncer)
 
         val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spy(accelerometerGyroscopeAndMagnetometerSyncer)
-/*        val accelerometerGyroscopeAndMagnetometerSyncerSpy =
-            spyk(accelerometerGyroscopeAndMagnetometerSyncer)*/
-        val gravityGyroscopeAndMagnetometerSyncerSpy = spy(gravityGyroscopeAndMagnetometerSyncer)
-//        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
+            spyk(accelerometerGyroscopeAndMagnetometerSyncer)
+        val gravityGyroscopeAndMagnetometerSyncerSpy = spyk(gravityGyroscopeAndMagnetometerSyncer)
 
         estimator.setPrivateProperty(
             "accelerometerGyroscopeAndMagnetometerSyncer",
@@ -1390,10 +1286,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         // check
         assertFalse(estimator.running)
 
-        verify(accelerometerGyroscopeAndMagnetometerSyncerSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerGyroscopeAndMagnetometerSyncerSpy.stop() }
-        verify(gravityGyroscopeAndMagnetometerSyncerSpy, times(1)).stop()
-//        verify(exactly = 1) { gravityGyroscopeAndMagnetometerSyncerSpy.stop() }
+        verify(exactly = 1) { accelerometerGyroscopeAndMagnetometerSyncerSpy.stop() }
+        verify(exactly = 1) { gravityGyroscopeAndMagnetometerSyncerSpy.stop() }
     }
 
     @Test
@@ -1439,18 +1333,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
             SensorAccuracy.MEDIUM
         )
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(
-            estimator,
-            SensorType.GRAVITY,
-            SensorAccuracy.MEDIUM
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
-        }*/
+        }
     }
 
     @Test
@@ -1494,16 +1383,12 @@ class FusedGeomagneticAttitudeEstimator2Test {
             SensorType.GRAVITY
         )
 
-        verify(bufferFilledListener, only()).onBufferFilled(
-            estimator,
-            SensorType.GRAVITY
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
                 SensorType.GRAVITY
             )
-        }*/
+        }
     }
 
     @Test
@@ -1516,10 +1401,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val gravityProcessor: FusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(false).whenever(gravityProcessorSpy).process(any())
-//        every { gravityProcessorSpy.process(any()) }.returns(false)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(false)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val gravityGyroscopeAndMagnetometerSyncer: GravityGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -1535,10 +1418,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(gravityProcessorSpy, only()).process(syncedMeasurement)
-//        verify(exactly = 1) { gravityProcessorSpy.process(syncedMeasurement) }
-        verify(gravityProcessorSpy, never()).fusedAttitude
-//        verify(exactly = 0) { gravityProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { gravityProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 0) { gravityProcessorSpy.fusedAttitude }
     }
 
     @Test
@@ -1556,13 +1437,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val gravityProcessor: FusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(true).whenever(gravityProcessorSpy).process(any())
-//        every { gravityProcessorSpy.process(any()) }.returns(true)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(true)
         val attitude = getAttitude()
-        doReturn(attitude).whenever(gravityProcessorSpy).fusedAttitude
-//        every { gravityProcessorSpy.fusedAttitude }.returns(attitude)
+        every { gravityProcessorSpy.fusedAttitude }.returns(attitude)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val gravityGyroscopeAndMagnetometerSyncer: GravityGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -1578,10 +1456,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(gravityProcessorSpy, times(1)).process(syncedMeasurement)
-//        verify(exactly = 1) { gravityProcessorSpy.process(syncedMeasurement) }
-        verify(gravityProcessorSpy, times(1)).fusedAttitude
-//        verify(exactly = 1) { gravityProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { gravityProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 1) { gravityProcessorSpy.fusedAttitude }
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
@@ -1621,13 +1497,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val gravityProcessor: FusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(true).whenever(gravityProcessorSpy).process(any())
-//        every { gravityProcessorSpy.process(any()) }.returns(true)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(true)
         val attitude = getAttitude()
-        doReturn(attitude).whenever(gravityProcessorSpy).fusedAttitude
-//        every { gravityProcessorSpy.fusedAttitude }.returns(attitude)
+        every { gravityProcessorSpy.fusedAttitude }.returns(attitude)
         estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val gravityGyroscopeAndMagnetometerSyncer: GravityGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -1645,10 +1518,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(gravityProcessorSpy, times(1)).process(syncedMeasurement)
-//        verify(exactly = 1) { gravityProcessorSpy.process(syncedMeasurement) }
-        verify(gravityProcessorSpy, times(1)).fusedAttitude
-//        verify(exactly = 1) { gravityProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { gravityProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 1) { gravityProcessorSpy.fusedAttitude }
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
@@ -1671,16 +1542,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(eulerAngles)
         assertArrayEquals(attitude.toEulerAngles(), eulerAngles, 0.0)
 
-        verify(attitudeListener, only()).onAttitudeAvailable(
-            estimator,
-            fusedAttitude,
-            timestamp,
-            eulerAngles[0],
-            eulerAngles[1],
-            eulerAngles[2],
-            coordinateTransformation
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
@@ -1690,7 +1552,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
                 eulerAngles[2],
                 coordinateTransformation
             )
-        }*/
+        }
     }
 
     @Test
@@ -1708,13 +1570,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        doReturn(true).whenever(accelerometerProcessorSpy).process(any())
-//        every { accelerometerProcessorSpy.process(any()) }.returns(true)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(any()) }.returns(true)
         val attitude = getAttitude()
-        doReturn(attitude).whenever(accelerometerProcessorSpy).fusedAttitude
-//        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
+        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val accelerometerGyroscopeAndMagnetometerSyncer: AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -1732,26 +1591,15 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(accelerometerProcessorSpy, times(1)).process(syncedMeasurement)
-//        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
-        verify(accelerometerProcessorSpy, times(1)).fusedAttitude
-//        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
         assertEquals(attitude, fusedAttitude)
         assertNotSame(attitude, fusedAttitude)
 
-        verify(attitudeListener, only()).onAttitudeAvailable(
-            estimator,
-            fusedAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
@@ -1761,7 +1609,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
                 null,
                 null
             )
-        }*/
+        }
     }
 
     @Test
@@ -1807,18 +1655,13 @@ class FusedGeomagneticAttitudeEstimator2Test {
             SensorAccuracy.MEDIUM
         )
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(
-            estimator,
-            SensorType.GRAVITY,
-            SensorAccuracy.MEDIUM
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 estimator,
                 SensorType.GRAVITY,
                 SensorAccuracy.MEDIUM
             )
-        }*/
+        }
     }
 
     @Test
@@ -1862,16 +1705,12 @@ class FusedGeomagneticAttitudeEstimator2Test {
             SensorType.GRAVITY
         )
 
-        verify(bufferFilledListener, only()).onBufferFilled(
-            estimator,
-            SensorType.GRAVITY
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             bufferFilledListener.onBufferFilled(
                 estimator,
                 SensorType.GRAVITY
             )
-        }*/
+        }
     }
 
     @Test
@@ -1884,10 +1723,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        doReturn(false).whenever(accelerometerProcessorSpy).process(any())
-//        every { accelerometerProcessorSpy.process(any()) }.returns(false)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(any()) }.returns(false)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val accelerometerGyroscopeAndMagnetometerSyncer: AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -1903,10 +1740,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(accelerometerProcessorSpy, only()).process(syncedMeasurement)
-//        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
-        verify(accelerometerProcessorSpy, never()).fusedAttitude
-//        verify(exactly = 0) { accelerometerProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 0) { accelerometerProcessorSpy.fusedAttitude }
     }
 
     @Test
@@ -1924,13 +1759,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        doReturn(true).whenever(accelerometerProcessorSpy).process(any())
-//        every { accelerometerProcessorSpy.process(any()) }.returns(true)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(any()) }.returns(true)
         val attitude = getAttitude()
-        doReturn(attitude).whenever(accelerometerProcessorSpy).fusedAttitude
-//        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
+        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val accelerometerGyroscopeAndMagnetometerSyncer: AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -1946,10 +1778,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(accelerometerProcessorSpy, times(1)).process(syncedMeasurement)
-//        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
-        verify(accelerometerProcessorSpy, times(1)).fusedAttitude
-//        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
@@ -1989,13 +1819,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        doReturn(true).whenever(accelerometerProcessorSpy).process(any())
-//        every { accelerometerProcessorSpy.process(any()) }.returns(true)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(any()) }.returns(true)
         val attitude = getAttitude()
-        doReturn(attitude).whenever(accelerometerProcessorSpy).fusedAttitude
-//        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
+        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val accelerometerGyroscopeAndMagnetometerSyncer: AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -2013,10 +1840,8 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(accelerometerProcessorSpy, times(1)).process(syncedMeasurement)
-//        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
-        verify(accelerometerProcessorSpy, times(1)).fusedAttitude
-//        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
@@ -2039,16 +1864,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
         requireNotNull(eulerAngles)
         assertArrayEquals(attitude.toEulerAngles(), eulerAngles, 0.0)
 
-        verify(attitudeListener, only()).onAttitudeAvailable(
-            estimator,
-            fusedAttitude,
-            timestamp,
-            eulerAngles[0],
-            eulerAngles[1],
-            eulerAngles[2],
-            coordinateTransformation
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
@@ -2058,7 +1874,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
                 eulerAngles[2],
                 coordinateTransformation
             )
-        }*/
+        }
     }
 
     @Test
@@ -2077,13 +1893,10 @@ class FusedGeomagneticAttitudeEstimator2Test {
         val accelerometerProcessor: AccelerometerFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
         requireNotNull(accelerometerProcessor)
-        val accelerometerProcessorSpy = spy(accelerometerProcessor)
-//        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
-        doReturn(true).whenever(accelerometerProcessorSpy).process(any())
-//        every { accelerometerProcessorSpy.process(any()) }.returns(true)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(any()) }.returns(true)
         val attitude = getAttitude()
-        doReturn(attitude).whenever(accelerometerProcessorSpy).fusedAttitude
-//        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
+        every { accelerometerProcessorSpy.fusedAttitude }.returns(attitude)
         estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
         val accelerometerGyroscopeAndMagnetometerSyncer: AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer? =
@@ -2101,26 +1914,15 @@ class FusedGeomagneticAttitudeEstimator2Test {
         )
 
         // check
-        verify(accelerometerProcessorSpy, times(1)).process(syncedMeasurement)
-//        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
-        verify(accelerometerProcessorSpy, times(1)).fusedAttitude
-//        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
+        verify(exactly = 1) { accelerometerProcessorSpy.process(syncedMeasurement) }
+        verify(exactly = 1) { accelerometerProcessorSpy.fusedAttitude }
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
         assertEquals(attitude, fusedAttitude)
         assertNotSame(attitude, fusedAttitude)
 
-        verify(attitudeListener, only()).onAttitudeAvailable(
-            estimator,
-            fusedAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
@@ -2130,7 +1932,7 @@ class FusedGeomagneticAttitudeEstimator2Test {
                 null,
                 null
             )
-        }*/
+        }
     }
 
     private fun getLocation(): Location {
@@ -2148,12 +1950,9 @@ class FusedGeomagneticAttitudeEstimator2Test {
             MAX_HEIGHT
         )
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

@@ -21,11 +21,22 @@ import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
+import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
+import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
@@ -33,161 +44,128 @@ import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.De
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-import com.irurueta.units.*
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
+import com.irurueta.units.MagneticFluxDensity
+import com.irurueta.units.MagneticFluxDensityUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeUnit
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
-import java.util.*
+import java.util.Date
 import kotlin.math.max
 
 @RunWith(RobolectricTestRunner::class)
 class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var errorListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedAccelerometerMeasurementListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedAccelerometerMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedGyroscopeMeasurementListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedGyroscopeMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedMagnetometerMeasurementListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnGeneratedMagnetometerMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var readyToSolveCalibrationListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var calibrationSolvingStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var calibrationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var stoppedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var unreliableGravityNormEstimationListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnUnreliableGravityEstimationListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initialAccelerometerBiasAvailableListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialAccelerometerBiasAvailableListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initialGyroscopeBiasAvailableListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialGyroscopeBiasAvailableListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initialMagnetometerHardIronAvailableListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2.OnInitialMagnetometerHardIronAvailableListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-//    @MockK(relaxUnitFun = true, relaxed = true)
-    @Mock
+    @MockK(relaxUnitFun = true, relaxed = true)
     private lateinit var accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator
 
-//    @MockK(relaxUnitFun = true, relaxed = true)
-    @Mock
+    @MockK(relaxUnitFun = true, relaxed = true)
     private lateinit var magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var matrix: Matrix
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_returnsDefaultValues() {
@@ -4860,17 +4838,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
         val randomizer = UniformRandomizer()
         val averageGravityNorm = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.averageGravityNorm).thenReturn(averageGravityNorm)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.averageGravityNorm }
-            .returns(averageGravityNorm)*/
+        every { accelerometerAndGyroscopeCalibratorSpy.averageGravityNorm }
+            .returns(averageGravityNorm)
 
         assertEquals(averageGravityNorm, calibrator.averageGravityNorm)
     }
@@ -4884,8 +4860,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -4896,9 +4871,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             averageGravityNorm,
             AccelerationUnit.METERS_PER_SQUARED_SECOND
         )
-        whenever(accelerometerAndGyroscopeCalibratorSpy.averageGravityNormAsMeasurement).thenReturn(averageGravityNormAsMeasurement)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.averageGravityNormAsMeasurement }
-            .returns(averageGravityNormAsMeasurement)*/
+        every { accelerometerAndGyroscopeCalibratorSpy.averageGravityNormAsMeasurement }
+            .returns(averageGravityNormAsMeasurement)
 
         assertSame(averageGravityNormAsMeasurement, calibrator.averageGravityNormAsMeasurement)
     }
@@ -4912,26 +4886,19 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
         val randomizer = UniformRandomizer()
         val averageGravityNorm = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = averageGravityNorm
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAverageGravityNormAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getAverageGravityNormAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getAverageGravityNormAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = averageGravityNorm
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
 
         val averageGravityNormAsMeasurement = Acceleration(
             0.0,
@@ -4954,17 +4921,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
         val randomizer = UniformRandomizer()
         val gravityNormVariance = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gravityNormVariance).thenReturn(gravityNormVariance)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gravityNormVariance }
-            .returns(gravityNormVariance)*/
+        every { accelerometerAndGyroscopeCalibratorSpy.gravityNormVariance }
+            .returns(gravityNormVariance)
 
         assertEquals(gravityNormVariance, calibrator.gravityNormVariance)
     }
@@ -4978,17 +4943,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
         val randomizer = UniformRandomizer()
         val gravityNormStandardDeviation = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gravityNormStandardDeviation).thenReturn(gravityNormStandardDeviation)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gravityNormStandardDeviation }
-            .returns(gravityNormStandardDeviation)*/
+        every { accelerometerAndGyroscopeCalibratorSpy.gravityNormStandardDeviation }
+            .returns(gravityNormStandardDeviation)
 
         assertEquals(gravityNormStandardDeviation, calibrator.gravityNormStandardDeviation)
     }
@@ -5002,8 +4965,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -5014,9 +4976,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             gravityNormStandardDeviation,
             AccelerationUnit.METERS_PER_SQUARED_SECOND
         )
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gravityNormStandardDeviationAsMeasurement).thenReturn(gravityNormStandardDeviationMeasurement)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gravityNormStandardDeviationAsMeasurement }
-            .returns(gravityNormStandardDeviationMeasurement)*/
+        every { accelerometerAndGyroscopeCalibratorSpy.gravityNormStandardDeviationAsMeasurement }
+            .returns(gravityNormStandardDeviationMeasurement)
 
         assertSame(
             gravityNormStandardDeviationMeasurement,
@@ -5033,23 +4994,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
         val randomizer = UniformRandomizer()
         val gravityNormStandardDeviation = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val acceleration = invocation.getArgument<Acceleration>(0)
-            acceleration.value = gravityNormStandardDeviation
-            acceleration.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getGravityNormStandardDeviationAsMeasurement(
-            any()
-        )
-/*        every {
+        every {
             accelerometerAndGyroscopeCalibratorSpy.getGravityNormStandardDeviationAsMeasurement(
                 any()
             )
@@ -5058,7 +5010,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             acceleration.value = gravityNormStandardDeviation
             acceleration.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
 
         val gravityNormStandardDeviationMeasurement = Acceleration(
             0.0,
@@ -5085,17 +5037,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
         val randomizer = UniformRandomizer()
         val gravityPsd = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gravityPsd).thenReturn(gravityPsd)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gravityPsd }
-            .returns(gravityPsd)*/
+        every { accelerometerAndGyroscopeCalibratorSpy.gravityPsd }
+            .returns(gravityPsd)
 
         assertEquals(
             gravityPsd,
@@ -5112,17 +5062,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
         val randomizer = UniformRandomizer()
         val gravityRootPsd = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gravityRootPsd).thenReturn(gravityRootPsd)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gravityRootPsd }
-            .returns(gravityRootPsd)*/
+        every { accelerometerAndGyroscopeCalibratorSpy.gravityRootPsd }
+            .returns(gravityRootPsd)
 
         assertEquals(
             gravityRootPsd,
@@ -6871,8 +6819,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeInitializationStarted2)
         assertTrue(accelerometerAndGyroscopeInitializationStarted2)
 
-        verifyNoInteractions(initializationStartedListener)
-//        verify { initializationStartedListener wasNot Called }
+        verify { initializationStartedListener wasNot Called }
     }
 
     @Test
@@ -6906,8 +6853,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeInitializationStarted2)
         assertTrue(accelerometerAndGyroscopeInitializationStarted2)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(calibrator)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
     }
 
     @Test
@@ -6972,8 +6918,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerInitializationStarted2)
         assertTrue(magnetometerInitializationStarted2)
 
-        verifyNoInteractions(initializationStartedListener)
-//        verify { initializationStartedListener wasNot Called }
+        verify { initializationStartedListener wasNot Called }
     }
 
     @Test
@@ -7007,8 +6952,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerInitializationStarted2)
         assertTrue(magnetometerInitializationStarted2)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(calibrator)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
     }
 
     @Test
@@ -7071,8 +7015,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeInitializationCompleted2)
         assertTrue(accelerometerAndGyroscopeInitializationCompleted2)
 
-        verifyNoInteractions(initializationCompletedListener)
-//        verify { initializationCompletedListener wasNot Called }
+        verify { initializationCompletedListener wasNot Called }
     }
 
     @Test
@@ -7107,8 +7050,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeInitializationCompleted2)
         assertTrue(accelerometerAndGyroscopeInitializationCompleted2)
 
-        verify(initializationCompletedListener, only()).onInitializationCompleted(calibrator)
-//        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
     }
 
     @Test
@@ -7171,8 +7113,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerInitializationCompleted2)
         assertTrue(magnetometerInitializationCompleted2)
 
-        verifyNoInteractions(initializationCompletedListener)
-//        verify { initializationCompletedListener wasNot Called }
+        verify { initializationCompletedListener wasNot Called }
     }
 
     @Test
@@ -7207,8 +7148,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerInitializationCompleted2)
         assertTrue(magnetometerInitializationCompleted2)
 
-        verify(initializationCompletedListener, only()).onInitializationCompleted(calibrator)
-//        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
     }
 
     @Test
@@ -7219,8 +7159,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -7230,8 +7169,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         listener.onError(
@@ -7239,10 +7177,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
         )
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(1)).stop()
-        verify(magnetometerCalibratorSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
+        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
     }
 
     @Test
@@ -7256,8 +7192,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -7267,8 +7202,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         listener.onError(
@@ -7276,21 +7210,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
         )
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(1)).stop()
-        verify(magnetometerCalibratorSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
+        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
 
-        verify(errorListener, only()).onError(
-            calibrator,
-            CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
-        }*/
+        }
     }
 
     @Test
@@ -7301,8 +7229,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -7310,8 +7237,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
         val listener = magnetometerCalibrator.errorListener
         requireNotNull(listener)
@@ -7321,13 +7247,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
         )
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(1)).stop()
-        verify(magnetometerCalibratorSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
+        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
     }
 
-//    @Test
+    @Test
     fun onError_whenMagnetometer_stopsAndNotifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(
@@ -7338,8 +7262,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -7347,8 +7270,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
         val listener = magnetometerCalibrator.errorListener
         requireNotNull(listener)
@@ -7358,21 +7280,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
         )
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).stop()
-        verify(magnetometerCalibratorSpy, only()).stop()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.stop() }
+        verify(exactly = 1) { magnetometerCalibratorSpy.stop() }
 
-        verify(errorListener, only()).onError(
-            calibrator,
-            CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
-        }*/
+        }
     }
 
     @Test
@@ -7405,8 +7321,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onStaticIntervalDetected(accelerometerAndGyroscopeCalibrator)
 
-        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(calibrator)
-//        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
     }
 
     @Test
@@ -7439,8 +7354,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onDynamicIntervalDetected(accelerometerAndGyroscopeCalibrator)
 
-        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(calibrator)
-//        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
     }
 
     @Test
@@ -7473,8 +7387,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onStaticIntervalSkipped(accelerometerAndGyroscopeCalibrator)
 
-        verify(staticIntervalSkippedListener, only()).onStaticIntervalSkipped(calibrator)
-//        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -7507,8 +7420,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onDynamicIntervalSkipped(accelerometerAndGyroscopeCalibrator)
 
-        verify(dynamicIntervalSkippedListener, only()).onDynamicIntervalSkipped(calibrator)
-//        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -7553,20 +7465,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             20
         )
 
-        verify(generatedAccelerometerMeasurementListener, only()).onGeneratedAccelerometerMeasurement(
-            calibrator,
-            measurement,
-            1,
-            20
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedAccelerometerMeasurementListener.onGeneratedAccelerometerMeasurement(
                 calibrator,
                 measurement,
                 1,
                 20
             )
-        }*/
+        }
     }
 
     @Test
@@ -7611,20 +7517,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             30
         )
 
-        verify(generatedGyroscopeMeasurementListener, only()).onGeneratedGyroscopeMeasurement(
-            calibrator,
-            measurement,
-            2,
-            30
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedGyroscopeMeasurementListener.onGeneratedGyroscopeMeasurement(
                 calibrator,
                 measurement,
                 2,
                 30
             )
-        }*/
+        }
     }
 
     @Test
@@ -7687,8 +7587,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeReadyToSolveCalibration2)
         assertTrue(accelerometerAndGyroscopeReadyToSolveCalibration2)
 
-        verifyNoInteractions(readyToSolveCalibrationListener)
-//        verify { readyToSolveCalibrationListener wasNot Called }
+        verify { readyToSolveCalibrationListener wasNot Called }
     }
 
     @Test
@@ -7723,8 +7622,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeReadyToSolveCalibration2)
         assertTrue(accelerometerAndGyroscopeReadyToSolveCalibration2)
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
     }
 
     @Test
@@ -7787,8 +7685,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerReadyToSolveCalibration2)
         assertTrue(magnetometerReadyToSolveCalibration2)
 
-        verifyNoInteractions(readyToSolveCalibrationListener)
-//        verify { readyToSolveCalibrationListener wasNot Called }
+        verify { readyToSolveCalibrationListener wasNot Called }
     }
 
     @Test
@@ -7823,8 +7720,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerReadyToSolveCalibration2)
         assertTrue(magnetometerReadyToSolveCalibration2)
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
     }
 
     @Test
@@ -7861,8 +7757,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeCalibrationSolvingStarted2)
         assertTrue(accelerometerAndGyroscopeCalibrationSolvingStarted2)
 
-        verifyNoInteractions(calibrationSolvingStartedListener)
-//        verify { calibrationSolvingStartedListener wasNot Called }
+        verify { calibrationSolvingStartedListener wasNot Called }
     }
 
     @Test
@@ -7901,8 +7796,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeCalibrationSolvingStarted2)
         assertTrue(accelerometerAndGyroscopeCalibrationSolvingStarted2)
 
-        verifyNoInteractions(calibrationSolvingStartedListener)
-//        verify { calibrationSolvingStartedListener wasNot Called }
+        verify { calibrationSolvingStartedListener wasNot Called }
     }
 
     @Test
@@ -7975,14 +7869,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeCalibrationSolvingStarted2)
         assertTrue(accelerometerAndGyroscopeCalibrationSolvingStarted2)
 
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
+        }
     }
 
     @Test
@@ -8022,8 +7913,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeCalibrationSolvingStarted2)
         assertTrue(accelerometerAndGyroscopeCalibrationSolvingStarted2)
 
-        verifyNoInteractions(calibrationSolvingStartedListener)
-//        verify { calibrationSolvingStartedListener wasNot Called }
+        verify { calibrationSolvingStartedListener wasNot Called }
     }
 
     @Test
@@ -8060,8 +7950,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerCalibrationSolvingStarted2)
         assertTrue(magnetometerCalibrationSolvingStarted2)
 
-        verifyNoInteractions(calibrationSolvingStartedListener)
-//        verify { calibrationSolvingStartedListener wasNot Called }
+        verify { calibrationSolvingStartedListener wasNot Called }
     }
 
     @Test
@@ -8100,8 +7989,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerCalibrationSolvingStarted2)
         assertTrue(magnetometerCalibrationSolvingStarted2)
 
-        verifyNoInteractions(calibrationSolvingStartedListener)
-//        verify { calibrationSolvingStartedListener wasNot Called }
+        verify { calibrationSolvingStartedListener wasNot Called }
     }
 
     @Test
@@ -8174,14 +8062,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerCalibrationSolvingStarted2)
         assertTrue(magnetometerCalibrationSolvingStarted2)
 
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
+        }
     }
 
     @Test
@@ -8221,8 +8106,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerCalibrationSolvingStarted2)
         assertTrue(magnetometerCalibrationSolvingStarted2)
 
-        verifyNoInteractions(calibrationSolvingStartedListener)
-//        verify { calibrationSolvingStartedListener wasNot Called }
+        verify { calibrationSolvingStartedListener wasNot Called }
     }
 
     @Test
@@ -8255,8 +8139,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeCalibrationCompleted2)
         assertTrue(accelerometerAndGyroscopeCalibrationCompleted2)
 
-        verifyNoInteractions(calibrationCompletedListener)
-//        verify { calibrationCompletedListener wasNot Called }
+        verify { calibrationCompletedListener wasNot Called }
     }
 
     @Test
@@ -8321,8 +8204,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeCalibrationCompleted2)
         assertTrue(accelerometerAndGyroscopeCalibrationCompleted2)
 
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
     }
 
     @Test
@@ -8355,8 +8237,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerCalibrationCompleted2)
         assertTrue(magnetometerCalibrationCompleted2)
 
-        verifyNoInteractions(calibrationCompletedListener)
-//        verify { calibrationCompletedListener wasNot Called }
+        verify { calibrationCompletedListener wasNot Called }
     }
 
     @Test
@@ -8421,8 +8302,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerCalibrationCompleted2)
         assertTrue(magnetometerCalibrationCompleted2)
 
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
     }
 
     @Test
@@ -8455,8 +8335,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeStopped2)
         assertTrue(accelerometerAndGyroscopeStopped2)
 
-        verifyNoInteractions(stoppedListener)
-//        verify { stoppedListener wasNot Called }
+        verify { stoppedListener wasNot Called }
     }
 
     @Test
@@ -8521,8 +8400,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(accelerometerAndGyroscopeStopped2)
         assertTrue(accelerometerAndGyroscopeStopped2)
 
-        verify(stoppedListener, only()).onStopped(calibrator)
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
     @Test
@@ -8555,8 +8433,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerStopped2)
         assertTrue(magnetometerStopped2)
 
-        verifyNoInteractions(stoppedListener)
-//        verify { stoppedListener wasNot Called }
+        verify { stoppedListener wasNot Called }
     }
 
     @Test
@@ -8621,8 +8498,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerStopped2)
         assertTrue(magnetometerStopped2)
 
-        verify(stoppedListener, only()).onStopped(calibrator)
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
     @Test
@@ -8655,14 +8531,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onUnreliableGravityEstimation(accelerometerAndGyroscopeCalibrator)
 
-        verify(unreliableGravityNormEstimationListener, only()).onUnreliableGravityEstimation(
-            calibrator
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             unreliableGravityNormEstimationListener.onUnreliableGravityEstimation(
                 calibrator
             )
-        }*/
+        }
     }
 
     @Test
@@ -8697,20 +8570,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onInitialBiasAvailable(accelerometerAndGyroscopeCalibrator, 1.0, 2.0, 3.0)
 
-        verify(initialAccelerometerBiasAvailableListener, only()).onInitialBiasAvailable(
-            calibrator,
-            1.0,
-            2.0,
-            3.0
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
                 1.0,
                 2.0,
                 3.0
             )
-        }*/
+        }
     }
 
     @Test
@@ -8743,20 +8610,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onInitialBiasAvailable(accelerometerAndGyroscopeCalibrator, 1.0, 2.0, 3.0)
 
-        verify(initialGyroscopeBiasAvailableListener, only()).onInitialBiasAvailable(
-            calibrator,
-            1.0,
-            2.0,
-            3.0
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initialGyroscopeBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
                 1.0,
                 2.0,
                 3.0
             )
-        }*/
+        }
     }
 
     @Test
@@ -8789,8 +8650,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onAccuracyChanged(SensorAccuracy.LOW)
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.LOW)
-//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.LOW) }
+        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.LOW) }
     }
 
     @Test
@@ -8823,20 +8683,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         listener.onInitialHardIronAvailable(magnetometerCalibrator, 1.0, 2.0, 3.0)
 
-        verify(initialMagnetometerHardIronAvailableListener, only()).onInitialHardIronAvailable(
-            calibrator,
-            1.0,
-            2.0,
-            3.0
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initialMagnetometerHardIronAvailableListener.onInitialHardIronAvailable(
                 calibrator,
                 1.0,
                 2.0,
                 3.0
             )
-        }*/
+        }
     }
 
     @Test
@@ -8871,20 +8725,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         listener.onNewCalibrationMeasurementAvailable(magnetometerCalibrator, measurement, 3, 40)
 
-        verify(generatedMagnetometerMeasurementListener, only()).onGeneratedMagnetometerMeasurement(
-            calibrator,
-            measurement,
-            3,
-            40
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedMagnetometerMeasurementListener.onGeneratedMagnetometerMeasurement(
                 calibrator,
                 measurement,
                 3,
                 40
             )
-        }*/
+        }
     }
 
     @Test
@@ -8900,19 +8748,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.baseNoiseLevel).thenReturn(value)
-//        every { magnetometerCalibratorSpy.baseNoiseLevel }.returns(value)
+        every { magnetometerCalibratorSpy.baseNoiseLevel }.returns(value)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
         assertEquals(value, calibrator.magnetometerBaseNoiseLevel)
 
-        verify(magnetometerCalibratorSpy, times(2)).baseNoiseLevel
-//        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevel }
+        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevel }
     }
 
     @Test
@@ -8928,20 +8773,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val measurement = MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibratorSpy.baseNoiseLevelAsMeasurement).thenReturn(measurement)
-//        every { magnetometerCalibratorSpy.baseNoiseLevelAsMeasurement }.returns(measurement)
+        every { magnetometerCalibratorSpy.baseNoiseLevelAsMeasurement }.returns(measurement)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
         assertSame(measurement, calibrator.magnetometerBaseNoiseLevelAsMeasurement)
 
-        verify(magnetometerCalibratorSpy, times(2)).baseNoiseLevelAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevelAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -8957,22 +8799,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getBaseNoiseLevelAsMeasurement(any())
-/*        every { magnetometerCalibratorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
@@ -8980,8 +8815,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getBaseNoiseLevelAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibratorSpy.getBaseNoiseLevelAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibratorSpy.getBaseNoiseLevelAsMeasurement(result) }
     }
 
     @Test
@@ -8997,12 +8831,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevel).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevel }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevel }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9011,8 +8843,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.gyroscopeBaseNoiseLevel)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).gyroscopeBaseNoiseLevel
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevel }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevel }
     }
 
     @Test
@@ -9028,13 +8859,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val measurement = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevelAsMeasurement).thenReturn(measurement)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevelAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevelAsMeasurement }.returns(
             measurement
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9043,8 +8872,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(measurement, calibrator.gyroscopeBaseNoiseLevelAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).gyroscopeBaseNoiseLevelAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevelAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -9061,22 +8889,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val w = invocation.getArgument<AngularSpeed>(0)
-            w.value = value
-            w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getGyroscopeBaseNoiseLevelAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val w = answer.invocation.args[0] as AngularSpeed
             w.value = value
             w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9087,14 +8908,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getGyroscopeBaseNoiseLevelAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -9110,12 +8928,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevel).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevel }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevel }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9124,8 +8940,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerBaseNoiseLevel)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerBaseNoiseLevel
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevel }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevel }
     }
 
     @Test
@@ -9141,13 +8956,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val measurement = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelAsMeasurement).thenReturn(measurement)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(
             measurement
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9156,8 +8969,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(measurement, calibrator.accelerometerBaseNoiseLevelAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerBaseNoiseLevelAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -9174,19 +8986,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAccelerometerBaseNoiseLevelAsMeasurement(
-            any()
-        )
-/*        every {
+        every {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(
                 any()
             )
@@ -9195,7 +8998,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9206,14 +9009,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getAccelerometerBaseNoiseLevelAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -9229,14 +9029,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelPsd).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelPsd }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelPsd }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9245,8 +9043,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerBaseNoiseLevelPsd)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerBaseNoiseLevelPsd
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelPsd }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelPsd }
     }
 
     @Test
@@ -9262,14 +9059,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelRootPsd).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9278,8 +9073,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerBaseNoiseLevelRootPsd)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerBaseNoiseLevelRootPsd
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelRootPsd }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerBaseNoiseLevelRootPsd }
     }
 
     @Test
@@ -9295,12 +9089,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.threshold).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.threshold }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.threshold }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9309,8 +9101,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.threshold)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).threshold
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.threshold }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.threshold }
     }
 
     @Test
@@ -9326,13 +9117,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val measurement = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.thresholdAsMeasurement).thenReturn(measurement)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.thresholdAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.thresholdAsMeasurement }.returns(
             measurement
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9341,8 +9130,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(measurement, calibrator.thresholdAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).thresholdAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.thresholdAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.thresholdAsMeasurement }
     }
 
     @Test
@@ -9359,22 +9147,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getThresholdAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val a = answer.invocation.args[0] as Acceleration
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9385,14 +9166,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getThresholdAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getThresholdAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -9408,12 +9186,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.processedStaticSamples).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.processedStaticSamples }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.processedStaticSamples }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9422,8 +9198,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.processedStaticSamples)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).processedStaticSamples
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.processedStaticSamples }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.processedStaticSamples }
     }
 
     @Test
@@ -9439,12 +9214,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.processedDynamicSamples).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.processedDynamicSamples }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.processedDynamicSamples }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9453,8 +9226,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.processedDynamicSamples)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).processedDynamicSamples
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.processedDynamicSamples }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.processedDynamicSamples }
     }
 
     @Test
@@ -9470,12 +9242,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextBoolean()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isStaticIntervalSkipped).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.isStaticIntervalSkipped }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.isStaticIntervalSkipped }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9484,8 +9254,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.isStaticIntervalSkipped)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isStaticIntervalSkipped
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isStaticIntervalSkipped }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isStaticIntervalSkipped }
     }
 
     @Test
@@ -9501,12 +9270,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextBoolean()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isDynamicIntervalSkipped).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.isDynamicIntervalSkipped }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.isDynamicIntervalSkipped }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9515,8 +9282,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.isDynamicIntervalSkipped)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isDynamicIntervalSkipped
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isDynamicIntervalSkipped }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isDynamicIntervalSkipped }
     }
 
     @Test
@@ -9532,14 +9298,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeInterval).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeInterval }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeInterval }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9548,8 +9312,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerAverageTimeInterval)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerAverageTimeInterval
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeInterval }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeInterval }
     }
 
     @Test
@@ -9565,13 +9328,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val time = Time(0.0, TimeUnit.SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeIntervalAsTime).thenReturn(time)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeIntervalAsTime }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeIntervalAsTime }.returns(
             time
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9580,8 +9341,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(time, calibrator.accelerometerAverageTimeIntervalAsTime)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerAverageTimeIntervalAsTime
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeIntervalAsTime }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerAverageTimeIntervalAsTime }
     }
 
     @Test
@@ -9598,22 +9358,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val t = invocation.getArgument<Time>(0)
-            t.value = value
-            t.unit = TimeUnit.MILLISECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAccelerometerAverageTimeIntervalAsTime(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val t = answer.invocation.args[0] as Time
             t.value = value
             t.unit = TimeUnit.MILLISECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9624,14 +9377,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.MILLISECOND, time.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getAccelerometerAverageTimeIntervalAsTime(
-            time
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerAverageTimeIntervalAsTime(
                 time
             )
-        }*/
+        }
     }
 
     @Test
@@ -9647,14 +9397,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalVariance).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalVariance }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalVariance }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9663,8 +9411,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerTimeIntervalVariance)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerTimeIntervalVariance
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalVariance }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalVariance }
     }
 
     @Test
@@ -9680,14 +9427,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviation).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9696,8 +9441,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerTimeIntervalStandardDeviation)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerTimeIntervalStandardDeviation
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviation }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviation }
     }
 
     @Test
@@ -9713,13 +9457,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val time = Time(0.0, TimeUnit.SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviationAsTime).thenReturn(time)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(
             time
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9728,8 +9470,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(time, calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerTimeIntervalStandardDeviationAsTime
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
     }
 
     @Test
@@ -9746,19 +9487,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val t = invocation.getArgument<Time>(0)
-            t.value = value
-            t.unit = TimeUnit.MILLISECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAccelerometerTimeIntervalStandardDeviationAsTime(
-            any()
-        )
-/*        every {
+        every {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(
                 any()
             )
@@ -9767,7 +9499,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             t.value = value
             t.unit = TimeUnit.MILLISECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9778,14 +9510,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.MILLISECOND, time.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getAccelerometerTimeIntervalStandardDeviationAsTime(
-            time
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(
                 time
             )
-        }*/
+        }
     }
 
     @Test
@@ -9801,14 +9530,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedGyroscopeMeasurements).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedGyroscopeMeasurements }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedGyroscopeMeasurements }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9817,8 +9544,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.numberOfProcessedGyroscopeMeasurements)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).numberOfProcessedGyroscopeMeasurements
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedGyroscopeMeasurements }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedGyroscopeMeasurements }
     }
 
     @Test
@@ -9834,14 +9560,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9850,8 +9574,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.numberOfProcessedAccelerometerMeasurements)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).numberOfProcessedAccelerometerMeasurements
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedAccelerometerMeasurements }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.numberOfProcessedAccelerometerMeasurements }
     }
 
     @Test
@@ -9867,12 +9590,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasX).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasX }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasX }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9881,8 +9602,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.gyroscopeInitialBiasX)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gyroscopeInitialBiasX
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasX }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasX }
     }
 
     @Test
@@ -9898,12 +9618,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasY).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasY }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasY }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9912,8 +9630,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.gyroscopeInitialBiasY)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gyroscopeInitialBiasY
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasY }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasY }
     }
 
     @Test
@@ -9929,12 +9646,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZ).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZ }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZ }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9943,8 +9658,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.gyroscopeInitialBiasZ)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gyroscopeInitialBiasZ
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZ }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZ }
     }
 
     @Test
@@ -9960,13 +9674,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasXAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasXAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasXAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -9975,8 +9687,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.gyroscopeInitialBiasXAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gyroscopeInitialBiasXAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasXAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasXAsMeasurement }
     }
 
     @Test
@@ -9993,22 +9704,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val w = invocation.getArgument<AngularSpeed>(0)
-            w.value = value
-            w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getGyroscopeInitialBiasXAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasXAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasXAsMeasurement(any()) }.answers { answer ->
             val w = answer.invocation.args[0] as AngularSpeed
             w.value = value
             w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10019,14 +9723,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getGyroscopeInitialBiasXAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasXAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -10042,13 +9743,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasYAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasYAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasYAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10057,8 +9756,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.gyroscopeInitialBiasYAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gyroscopeInitialBiasYAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasYAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasYAsMeasurement }
     }
 
     @Test
@@ -10075,22 +9773,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val w = invocation.getArgument<AngularSpeed>(0)
-            w.value = value
-            w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getGyroscopeInitialBiasYAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasYAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasYAsMeasurement(any()) }.answers { answer ->
             val w = answer.invocation.args[0] as AngularSpeed
             w.value = value
             w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10101,14 +9792,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getGyroscopeInitialBiasYAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasYAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -10124,13 +9812,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10139,8 +9825,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.gyroscopeInitialBiasZAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gyroscopeInitialBiasZAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasZAsMeasurement }
     }
 
     @Test
@@ -10157,22 +9842,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val w = invocation.getArgument<AngularSpeed>(0)
-            w.value = value
-            w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getGyroscopeInitialBiasZAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasZAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasZAsMeasurement(any()) }.answers { answer ->
             val w = answer.invocation.args[0] as AngularSpeed
             w.value = value
             w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10183,14 +9861,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getGyroscopeInitialBiasZAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasZAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -10206,13 +9881,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = AngularSpeedTriad()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasAsTriad).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasAsTriad }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasAsTriad }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10221,8 +9894,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.gyroscopeInitialBiasAsTriad)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gyroscopeInitialBiasAsTriad
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasAsTriad }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeInitialBiasAsTriad }
     }
 
     @Test
@@ -10239,23 +9911,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AngularSpeedTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getGyroscopeInitialBiasAsTriad(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasAsTriad(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasAsTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AngularSpeedTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -10264,7 +9925,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10277,14 +9938,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(valueZ, result.valueZ, 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getGyroscopeInitialBiasAsTriad(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getGyroscopeInitialBiasAsTriad(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -10300,12 +9958,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.initialHardIronX).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialHardIronX }.returns(value)
+        every { magnetometerCalibratorSpy.initialHardIronX }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10314,8 +9970,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerInitialHardIronX)
 
-        verify(magnetometerCalibratorSpy, only()).initialHardIronX
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronX }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronX }
     }
 
     @Test
@@ -10331,12 +9986,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.initialHardIronY).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialHardIronY }.returns(value)
+        every { magnetometerCalibratorSpy.initialHardIronY }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10345,8 +9998,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerInitialHardIronY)
 
-        verify(magnetometerCalibratorSpy, only()).initialHardIronY
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronY }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronY }
     }
 
     @Test
@@ -10362,12 +10014,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.initialHardIronZ).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialHardIronZ }.returns(value)
+        every { magnetometerCalibratorSpy.initialHardIronZ }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10376,8 +10026,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerInitialHardIronZ)
 
-        verify(magnetometerCalibratorSpy, only()).initialHardIronZ
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronZ }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronZ }
     }
 
     @Test
@@ -10393,11 +10042,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibratorSpy.initialHardIronXAsMeasurement).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialHardIronXAsMeasurement }.returns(value)
+        every { magnetometerCalibratorSpy.initialHardIronXAsMeasurement }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10406,8 +10053,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.magnetometerInitialHardIronXAsMeasurement)
 
-        verify(magnetometerCalibratorSpy, only()).initialHardIronXAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronXAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronXAsMeasurement }
     }
 
     @Test
@@ -10424,22 +10070,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getInitialHardIronXAsMeasurement(any())
-/*        every { magnetometerCalibratorSpy.getInitialHardIronXAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getInitialHardIronXAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10450,8 +10089,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getInitialHardIronXAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronXAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronXAsMeasurement(result) }
     }
 
     @Test
@@ -10467,11 +10105,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibratorSpy.initialHardIronYAsMeasurement).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialHardIronYAsMeasurement }.returns(value)
+        every { magnetometerCalibratorSpy.initialHardIronYAsMeasurement }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10480,8 +10116,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.magnetometerInitialHardIronYAsMeasurement)
 
-        verify(magnetometerCalibratorSpy, only()).initialHardIronYAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronYAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronYAsMeasurement }
     }
 
     @Test
@@ -10498,22 +10133,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getInitialHardIronYAsMeasurement(any())
-/*        every { magnetometerCalibratorSpy.getInitialHardIronYAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getInitialHardIronYAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10524,8 +10152,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getInitialHardIronYAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronYAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronYAsMeasurement(result) }
     }
 
     @Test
@@ -10541,11 +10168,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibratorSpy.initialHardIronZAsMeasurement).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialHardIronZAsMeasurement }.returns(value)
+        every { magnetometerCalibratorSpy.initialHardIronZAsMeasurement }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10554,8 +10179,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.magnetometerInitialHardIronZAsMeasurement)
 
-        verify(magnetometerCalibratorSpy, only()).initialHardIronZAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronZAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronZAsMeasurement }
     }
 
     @Test
@@ -10572,22 +10196,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getInitialHardIronZAsMeasurement(any())
-/*        every { magnetometerCalibratorSpy.getInitialHardIronZAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getInitialHardIronZAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10598,8 +10215,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getInitialHardIronZAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronZAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronZAsMeasurement(result) }
     }
 
     @Test
@@ -10615,11 +10231,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val value = MagneticFluxDensityTriad()
-        whenever(magnetometerCalibratorSpy.initialHardIronAsTriad).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialHardIronAsTriad }.returns(value)
+        every { magnetometerCalibratorSpy.initialHardIronAsTriad }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10628,8 +10242,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.magnetometerInitialHardIronAsTriad)
 
-        verify(magnetometerCalibratorSpy, only()).initialHardIronAsTriad
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronAsTriad }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialHardIronAsTriad }
     }
 
     @Test
@@ -10646,22 +10259,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<MagneticFluxDensityTriad>(0)
-            triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getInitialHardIronAsTriad(any())
-/*        every { magnetometerCalibratorSpy.getInitialHardIronAsTriad(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getInitialHardIronAsTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as MagneticFluxDensityTriad
             triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -10674,8 +10281,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(valueZ, result.valueZ, 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getInitialHardIronAsTriad(result)
-//        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronAsTriad(result) }
+        verify(exactly = 1) { magnetometerCalibratorSpy.getInitialHardIronAsTriad(result) }
     }
 
     @Test
@@ -10691,12 +10297,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasX).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasX }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasX }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10705,8 +10309,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerInitialBiasX)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerInitialBiasX
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasX }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasX }
     }
 
     @Test
@@ -10722,12 +10325,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasY).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasY }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasY }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10736,8 +10337,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerInitialBiasY)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerInitialBiasY
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasY }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasY }
     }
 
     @Test
@@ -10753,12 +10353,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZ).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZ }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZ }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10767,8 +10365,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerInitialBiasZ)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerInitialBiasZ
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZ }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZ }
     }
 
     @Test
@@ -10784,13 +10381,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasXAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasXAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasXAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10799,8 +10394,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.accelerometerInitialBiasXAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerInitialBiasXAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasXAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasXAsMeasurement }
     }
 
     @Test
@@ -10817,22 +10411,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAccelerometerInitialBiasXAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasXAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasXAsMeasurement(any()) }.answers { answer ->
             val a = answer.invocation.args[0] as Acceleration
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10843,14 +10430,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getAccelerometerInitialBiasXAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasXAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -10866,13 +10450,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasYAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasYAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasYAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10881,8 +10463,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.accelerometerInitialBiasYAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerInitialBiasYAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasYAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasYAsMeasurement }
     }
 
     @Test
@@ -10899,22 +10480,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAccelerometerInitialBiasYAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasYAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasYAsMeasurement(any()) }.answers { answer ->
             val a = answer.invocation.args[0] as Acceleration
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10925,14 +10499,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getAccelerometerInitialBiasYAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasYAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -10948,13 +10519,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -10963,8 +10532,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.accelerometerInitialBiasZAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerInitialBiasZAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasZAsMeasurement }
     }
 
     @Test
@@ -10981,22 +10549,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAccelerometerInitialBiasZAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasZAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasZAsMeasurement(any()) }.answers { answer ->
             val a = answer.invocation.args[0] as Acceleration
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -11007,14 +10568,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getAccelerometerInitialBiasZAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasZAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -11030,13 +10588,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val value = AccelerationTriad()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasAsTriad).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasAsTriad }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasAsTriad }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -11045,8 +10601,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.accelerometerInitialBiasAsTriad)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerInitialBiasAsTriad
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasAsTriad }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerInitialBiasAsTriad }
     }
 
     @Test
@@ -11063,23 +10618,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AccelerationTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibratorSpy).getAccelerometerInitialBiasAsTriad(any())
-/*        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasAsTriad(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasAsTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AccelerationTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -11088,7 +10632,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -11101,14 +10645,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(valueZ, result.valueZ, 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).getAccelerometerInitialBiasAsTriad(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibratorSpy.getAccelerometerInitialBiasAsTriad(
                 result
             )
-        }*/
+        }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -11215,10 +10756,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         calibrator.start()
 
-        verify(accelerometerAndGyroscopeCalibrator, times(1)).start()
-        verify(magnetometerCalibrator, times(1)).start()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.start() }
-//        verify(exactly = 1) { magnetometerCalibrator.start() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.start() }
+        verify(exactly = 1) { magnetometerCalibrator.start() }
 
         // check
         val accelerometerAndGyroscopeInitializationStarted2: Boolean? =
@@ -11285,10 +10824,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         calibrator.stop()
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).stop()
-        verify(magnetometerCalibrator, only()).stop()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.stop() }
-//        verify(exactly = 1) { magnetometerCalibrator.stop() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.stop() }
+        verify(exactly = 1) { magnetometerCalibrator.stop() }
     }
 
     @Test
@@ -11297,22 +10834,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        doReturn(false).whenever(accelerometerAndGyroscopeCalibrator).calibrate()
-//        every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(false)
+        every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(false)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
         )
-        doReturn(true).whenever(magnetometerCalibrator).calibrate()
-//        every { magnetometerCalibrator.calibrate() }.returns(true)
+        every { magnetometerCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
 
         assertFalse(calibrator.calibrate())
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).calibrate()
-        verifyNoInteractions(magnetometerCalibrator)
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.calibrate() }
-//        verify { magnetometerCalibrator wasNot Called }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.calibrate() }
+        verify { magnetometerCalibrator wasNot Called }
     }
 
     @Test
@@ -11321,22 +10854,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        doReturn(true).whenever(accelerometerAndGyroscopeCalibrator).calibrate()
-//        every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(true)
+        every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
         )
-        doReturn(false).whenever(magnetometerCalibrator).calibrate()
-//        every { magnetometerCalibrator.calibrate() }.returns(false)
+        every { magnetometerCalibrator.calibrate() }.returns(false)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
 
         assertFalse(calibrator.calibrate())
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).calibrate()
-        verify(magnetometerCalibrator, only()).calibrate()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.calibrate() }
-//        verify(exactly = 1) { magnetometerCalibrator.calibrate() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.calibrate() }
+        verify(exactly = 1) { magnetometerCalibrator.calibrate() }
     }
 
     @Test
@@ -11345,22 +10874,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2(context)
 
-        doReturn(true).whenever(accelerometerAndGyroscopeCalibrator).calibrate()
-//        every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(true)
+        every { accelerometerAndGyroscopeCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
         )
-        doReturn(true).whenever(magnetometerCalibrator).calibrate()
-//        every { magnetometerCalibrator.calibrate() }.returns(true)
+        every { magnetometerCalibrator.calibrate() }.returns(true)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibrator)
 
         assertTrue(calibrator.calibrate())
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).calibrate()
-        verify(magnetometerCalibrator, only()).calibrate()
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.calibrate() }
-//        verify(exactly = 1) { magnetometerCalibrator.calibrate() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.calibrate() }
+        verify(exactly = 1) { magnetometerCalibrator.calibrate() }
     }
 
     @Test
@@ -11374,8 +10899,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasX).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasX }.returns(value)
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasX }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11383,8 +10907,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedAccelerometerBiasX)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasX
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasX }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasX }
     }
 
     @Test
@@ -11398,8 +10921,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasY).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasY }.returns(value)
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasY }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11407,8 +10929,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedAccelerometerBiasY)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasY
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasY }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasY }
     }
 
     @Test
@@ -11422,8 +10943,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZ).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZ }.returns(value)
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZ }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11431,8 +10951,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedAccelerometerBiasZ)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasZ
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZ }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZ }
     }
 
     @Test
@@ -11445,10 +10964,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
 
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasXAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasXAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasXAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11456,8 +10974,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedAccelerometerBiasXAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasXAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasXAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasXAsMeasurement }
     }
 
     @Test
@@ -11472,18 +10989,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedAccelerometerBiasXAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasXAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasXAsMeasurement(any()) }.answers { answer ->
             val a = answer.invocation.args[0] as Acceleration
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11493,14 +11004,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedAccelerometerBiasXAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasXAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -11513,10 +11021,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
 
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasYAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasYAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasYAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11524,8 +11031,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedAccelerometerBiasYAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasYAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasYAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasYAsMeasurement }
     }
 
     @Test
@@ -11540,18 +11046,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedAccelerometerBiasYAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasYAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasYAsMeasurement(any()) }.answers { answer ->
             val a = answer.invocation.args[0] as Acceleration
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11561,14 +11061,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedAccelerometerBiasYAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasYAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -11581,10 +11078,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
 
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11592,8 +11088,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedAccelerometerBiasZAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasZAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasZAsMeasurement }
     }
 
     @Test
@@ -11608,18 +11103,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val a = invocation.getArgument<Acceleration>(0)
-            a.value = value
-            a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedAccelerometerBiasZAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasZAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasZAsMeasurement(any()) }.answers { answer ->
             val a = answer.invocation.args[0] as Acceleration
             a.value = value
             a.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11629,14 +11118,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedAccelerometerBiasZAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasZAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -11649,10 +11135,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
 
         val value = AccelerationTriad()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasAsTriad).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasAsTriad }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasAsTriad }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11660,8 +11145,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedAccelerometerBiasAsTriad)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasAsTriad
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasAsTriad }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasAsTriad }
     }
 
     @Test
@@ -11678,17 +11162,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AccelerationTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedAccelerometerBiasAsTriad(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasAsTriad(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasAsTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AccelerationTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -11697,7 +11171,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11709,14 +11183,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(valueZ, result.valueZ, 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedAccelerometerBiasAsTriad(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedAccelerometerBiasAsTriad(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -11727,10 +11198,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasStandardDeviationNorm).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasStandardDeviationNorm }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasStandardDeviationNorm }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11738,8 +11208,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedAccelerometerBiasStandardDeviationNorm
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasStandardDeviationNorm }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedAccelerometerBiasStandardDeviationNorm }
     }
 
     @Test
@@ -11753,8 +11222,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasX).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasX }.returns(value)
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasX }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11762,8 +11230,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedGyroscopeBiasX)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasX
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasX }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasX }
     }
 
     @Test
@@ -11777,8 +11244,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasY).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasY }.returns(value)
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasY }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11786,8 +11252,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedGyroscopeBiasY)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasY
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasY }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasY }
     }
 
     @Test
@@ -11801,8 +11266,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZ).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZ }.returns(value)
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZ }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11810,8 +11274,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedGyroscopeBiasZ)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasZ
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZ }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZ }
     }
 
     @Test
@@ -11824,10 +11287,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedGyroscopeBiasXAsMeasurement)
 
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasXAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasXAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasXAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11835,8 +11297,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedGyroscopeBiasXAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasXAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasXAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasXAsMeasurement }
     }
 
     @Test
@@ -11851,18 +11312,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val w = invocation.getArgument<AngularSpeed>(0)
-            w.value = value
-            w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedGyroscopeBiasXAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasXAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasXAsMeasurement(any()) }.answers { answer ->
             val w = answer.invocation.args[0] as AngularSpeed
             w.value = value
             w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11872,14 +11327,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedGyroscopeBiasXAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasXAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -11892,10 +11344,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedGyroscopeBiasYAsMeasurement)
 
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasYAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasYAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasYAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11903,8 +11354,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedGyroscopeBiasYAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasYAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasYAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasYAsMeasurement }
     }
 
     @Test
@@ -11919,18 +11369,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val w = invocation.getArgument<AngularSpeed>(0)
-            w.value = value
-            w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedGyroscopeBiasYAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasYAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasYAsMeasurement(any()) }.answers { answer ->
             val w = answer.invocation.args[0] as AngularSpeed
             w.value = value
             w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11940,14 +11384,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedGyroscopeBiasYAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasYAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -11960,10 +11401,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedGyroscopeBiasZAsMeasurement)
 
         val value = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZAsMeasurement).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZAsMeasurement }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -11971,8 +11411,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedGyroscopeBiasZAsMeasurement)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasZAsMeasurement
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZAsMeasurement }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasZAsMeasurement }
     }
 
     @Test
@@ -11987,18 +11426,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val w = invocation.getArgument<AngularSpeed>(0)
-            w.value = value
-            w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedGyroscopeBiasZAsMeasurement(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasZAsMeasurement(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasZAsMeasurement(any()) }.answers { answer ->
             val w = answer.invocation.args[0] as AngularSpeed
             w.value = value
             w.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -12008,14 +11441,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedGyroscopeBiasZAsMeasurement(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasZAsMeasurement(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -12028,10 +11458,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedGyroscopeBiasAsTriad)
 
         val value = AngularSpeedTriad()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasAsTriad).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasAsTriad }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasAsTriad }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -12039,8 +11468,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedGyroscopeBiasAsTriad)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasAsTriad
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasAsTriad }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasAsTriad }
     }
 
     @Test
@@ -12057,17 +11485,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AngularSpeedTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-            return@doAnswer true
-        }.whenever(accelerometerAndGyroscopeCalibrator).getEstimatedGyroscopeBiasAsTriad(any())
-/*        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasAsTriad(any()) }.answers { answer ->
+        every { accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasAsTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AngularSpeedTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -12076,7 +11494,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -12088,14 +11506,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(valueZ, result.valueZ, 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).getEstimatedGyroscopeBiasAsTriad(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAndGyroscopeCalibrator.getEstimatedGyroscopeBiasAsTriad(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -12109,10 +11524,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasStandardDeviationNorm).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasStandardDeviationNorm }.returns(
+        every { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasStandardDeviationNorm }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibrator
@@ -12120,8 +11534,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
 
-        verify(accelerometerAndGyroscopeCalibrator, only()).estimatedGyroscopeBiasStandardDeviationNorm
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasStandardDeviationNorm }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibrator.estimatedGyroscopeBiasStandardDeviationNorm }
     }
 
     @Test
@@ -12135,10 +11548,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedHardIronX).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedHardIronX }.returns(
+        every { magnetometerCalibrator.estimatedHardIronX }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12146,8 +11558,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedMagnetometerHardIronX)
 
-        verify(magnetometerCalibrator, only()).estimatedHardIronX
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronX }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronX }
     }
 
     @Test
@@ -12161,10 +11572,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedHardIronY).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedHardIronY }.returns(
+        every { magnetometerCalibrator.estimatedHardIronY }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12172,8 +11582,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedMagnetometerHardIronY)
 
-        verify(magnetometerCalibrator, only()).estimatedHardIronY
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronY }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronY }
     }
 
     @Test
@@ -12187,10 +11596,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedHardIronZ).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedHardIronZ }.returns(
+        every { magnetometerCalibrator.estimatedHardIronZ }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12198,8 +11606,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertEquals(value, calibrator.estimatedMagnetometerHardIronZ)
 
-        verify(magnetometerCalibrator, only()).estimatedHardIronZ
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronZ }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronZ }
     }
 
     @Test
@@ -12212,10 +11619,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerHardIronXAsMeasurement)
 
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibrator.estimatedHardIronXAsMeasurement).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedHardIronXAsMeasurement }.returns(
+        every { magnetometerCalibrator.estimatedHardIronXAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12223,8 +11629,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedMagnetometerHardIronXAsMeasurement)
 
-        verify(magnetometerCalibrator, only()).estimatedHardIronXAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronXAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronXAsMeasurement }
     }
 
     @Test
@@ -12239,18 +11644,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibrator).getEstimatedHardIronXAsMeasurement(any())
-/*        every { magnetometerCalibrator.getEstimatedHardIronXAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibrator.getEstimatedHardIronXAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12260,8 +11659,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibrator, only()).getEstimatedHardIronXAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronXAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronXAsMeasurement(result) }
     }
 
     @Test
@@ -12274,10 +11672,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerHardIronYAsMeasurement)
 
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibrator.estimatedHardIronYAsMeasurement).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedHardIronYAsMeasurement }.returns(
+        every { magnetometerCalibrator.estimatedHardIronYAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12285,8 +11682,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedMagnetometerHardIronYAsMeasurement)
 
-        verify(magnetometerCalibrator, only()).estimatedHardIronYAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronYAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronYAsMeasurement }
     }
 
     @Test
@@ -12301,18 +11697,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibrator).getEstimatedHardIronYAsMeasurement(any())
-/*        every { magnetometerCalibrator.getEstimatedHardIronYAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibrator.getEstimatedHardIronYAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12322,8 +11712,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibrator, only()).getEstimatedHardIronYAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronYAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronYAsMeasurement(result) }
     }
 
     @Test
@@ -12336,10 +11725,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerHardIronZAsMeasurement)
 
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibrator.estimatedHardIronZAsMeasurement).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedHardIronZAsMeasurement }.returns(
+        every { magnetometerCalibrator.estimatedHardIronZAsMeasurement }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12347,8 +11735,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedMagnetometerHardIronZAsMeasurement)
 
-        verify(magnetometerCalibrator, only()).estimatedHardIronZAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronZAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronZAsMeasurement }
     }
 
     @Test
@@ -12363,18 +11750,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibrator).getEstimatedHardIronZAsMeasurement(any())
-/*        every { magnetometerCalibrator.getEstimatedHardIronZAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibrator.getEstimatedHardIronZAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12384,8 +11765,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibrator, only()).getEstimatedHardIronZAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronZAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronZAsMeasurement(result) }
     }
 
     @Test
@@ -12398,10 +11778,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerHardIronAsTriad)
 
         val value = MagneticFluxDensityTriad()
-        whenever(magnetometerCalibrator.estimatedHardIronAsTriad).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedHardIronAsTriad }.returns(
+        every { magnetometerCalibrator.estimatedHardIronAsTriad }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12409,8 +11788,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
 
         assertSame(value, calibrator.estimatedMagnetometerHardIronAsTriad)
 
-        verify(magnetometerCalibrator, only()).estimatedHardIronAsTriad
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronAsTriad }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedHardIronAsTriad }
     }
 
     @Test
@@ -12427,21 +11805,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<MagneticFluxDensityTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                MagneticFluxDensityUnit.TESLA
-            )
-            return@doAnswer true
-        }.whenever(magnetometerCalibrator).getEstimatedHardIronAsTriad(any())
-/*        every { magnetometerCalibrator.getEstimatedHardIronAsTriad(any()) }.answers { answer ->
+        every { magnetometerCalibrator.getEstimatedHardIronAsTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as MagneticFluxDensityTriad
             triad.setValueCoordinatesAndUnit(valueX, valueY, valueZ, MagneticFluxDensityUnit.TESLA)
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -12453,8 +11821,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(valueZ, result.valueZ, 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibrator, only()).getEstimatedHardIronAsTriad(result)
-//        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronAsTriad(result) }
+        verify(exactly = 1) { magnetometerCalibrator.getEstimatedHardIronAsTriad(result) }
     }
 
     @Test
@@ -12470,10 +11837,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.running).thenReturn(true)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-//        every { accelerometerAndGyroscopeCalibratorSpy.running }.returns(true)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.running }.returns(true)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -12481,8 +11846,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12491,10 +11855,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertTrue(calibrator.running)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).running
-        verifyNoInteractions(magnetometerCalibratorSpy)
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.running }
-//        verify { magnetometerCalibratorSpy wasNot Called }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.running }
+        verify { magnetometerCalibratorSpy wasNot Called }
     }
 
     @Test
@@ -12510,8 +11872,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -12519,10 +11880,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-        whenever(magnetometerCalibratorSpy.running).thenReturn(true)
-//        every { magnetometerCalibratorSpy.running }.returns(true)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        every { magnetometerCalibratorSpy.running }.returns(true)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12531,10 +11890,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertTrue(calibrator.running)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).running
-        verify(magnetometerCalibratorSpy, only()).running
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.running }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.running }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.running }
+        verify(exactly = 1) { magnetometerCalibratorSpy.running }
     }
 
     @Test
@@ -12553,14 +11910,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         requireNotNull(magnetometerCalibrator)
         assertFalse(magnetometerCalibrator.running)
 
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
         )
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12569,10 +11924,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertFalse(calibrator.running)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).running
-        verify(magnetometerCalibratorSpy, only()).running
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.running }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.running }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.running }
+        verify(exactly = 1) { magnetometerCalibratorSpy.running }
     }
 
     @Test
@@ -12662,12 +12015,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.baseNoiseLevelPsd).thenReturn(value)
-//        every { magnetometerCalibratorSpy.baseNoiseLevelPsd }.returns(value)
+        every { magnetometerCalibratorSpy.baseNoiseLevelPsd }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12676,8 +12027,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerBaseNoiseLevelPsd)
 
-        verify(magnetometerCalibratorSpy, times(2)).baseNoiseLevelPsd
-//        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevelPsd }
+        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevelPsd }
     }
 
     @Test
@@ -12691,12 +12041,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.baseNoiseLevelRootPsd).thenReturn(value)
-//        every { magnetometerCalibratorSpy.baseNoiseLevelRootPsd }.returns(value)
+        every { magnetometerCalibratorSpy.baseNoiseLevelRootPsd }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12705,8 +12053,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerBaseNoiseLevelRootPsd)
 
-        verify(magnetometerCalibratorSpy, times(2)).baseNoiseLevelRootPsd
-//        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevelRootPsd }
+        verify(exactly = 1) { magnetometerCalibratorSpy.baseNoiseLevelRootPsd }
     }
 
     @Test
@@ -12720,12 +12067,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.threshold).thenReturn(value)
-//        every { magnetometerCalibratorSpy.threshold }.returns(value)
+        every { magnetometerCalibratorSpy.threshold }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12734,8 +12079,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerThreshold)
 
-        verify(magnetometerCalibratorSpy, times(2)).threshold
-//        verify(exactly = 1) { magnetometerCalibratorSpy.threshold }
+        verify(exactly = 1) { magnetometerCalibratorSpy.threshold }
     }
 
     @Test
@@ -12749,11 +12093,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val value = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
-        whenever(magnetometerCalibratorSpy.thresholdAsMeasurement).thenReturn(value)
-//        every { magnetometerCalibratorSpy.thresholdAsMeasurement }.returns(value)
+        every { magnetometerCalibratorSpy.thresholdAsMeasurement }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12762,8 +12104,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(value, calibrator.magnetometerThresholdAsMeasurement)
 
-        verify(magnetometerCalibratorSpy, times(2)).thresholdAsMeasurement
-//        verify(exactly = 1) { magnetometerCalibratorSpy.thresholdAsMeasurement }
+        verify(exactly = 1) { magnetometerCalibratorSpy.thresholdAsMeasurement }
     }
 
     @Test
@@ -12778,22 +12119,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val b = invocation.getArgument<MagneticFluxDensity>(0)
-            b.value = value
-            b.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getThresholdAsMeasurement(any())
-/*        every { magnetometerCalibratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val b = answer.invocation.args[0] as MagneticFluxDensity
             b.value = value
             b.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12804,8 +12138,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getThresholdAsMeasurement(result)
-//        verify(exactly = 1) { magnetometerCalibratorSpy.getThresholdAsMeasurement(result) }
+        verify(exactly = 1) { magnetometerCalibratorSpy.getThresholdAsMeasurement(result) }
     }
 
     @Test
@@ -12819,12 +12152,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.averageTimeInterval).thenReturn(value)
-//        every { magnetometerCalibratorSpy.averageTimeInterval }.returns(value)
+        every { magnetometerCalibratorSpy.averageTimeInterval }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12833,8 +12164,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerAverageTimeInterval)
 
-        verify(magnetometerCalibratorSpy, times(2)).averageTimeInterval
-//        verify(exactly = 1) { magnetometerCalibratorSpy.averageTimeInterval }
+        verify(exactly = 1) { magnetometerCalibratorSpy.averageTimeInterval }
     }
 
     @Test
@@ -12848,11 +12178,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val value = Time(0.0, TimeUnit.SECOND)
-        whenever(magnetometerCalibratorSpy.averageTimeIntervalAsTime).thenReturn(value)
-//        every { magnetometerCalibratorSpy.averageTimeIntervalAsTime }.returns(value)
+        every { magnetometerCalibratorSpy.averageTimeIntervalAsTime }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12861,8 +12189,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerAverageTimeIntervalAsTime)
 
-        verify(magnetometerCalibratorSpy, times(2)).averageTimeIntervalAsTime
-//        verify(exactly = 1) { magnetometerCalibratorSpy.averageTimeIntervalAsTime }
+        verify(exactly = 1) { magnetometerCalibratorSpy.averageTimeIntervalAsTime }
     }
 
     @Test
@@ -12877,22 +12204,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val t = invocation.getArgument<Time>(0)
-            t.value = value
-            t.unit = TimeUnit.SECOND
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getAverageTimeIntervalAsTime(any())
-/*        every { magnetometerCalibratorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val t = answer.invocation.args[0] as Time
             t.value = value
             t.unit = TimeUnit.SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12903,8 +12223,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getAverageTimeIntervalAsTime(result)
-//        verify(exactly = 1) { magnetometerCalibratorSpy.getAverageTimeIntervalAsTime(result) }
+        verify(exactly = 1) { magnetometerCalibratorSpy.getAverageTimeIntervalAsTime(result) }
     }
 
     @Test
@@ -12918,12 +12237,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.timeIntervalVariance).thenReturn(value)
-//        every { magnetometerCalibratorSpy.timeIntervalVariance }.returns(value)
+        every { magnetometerCalibratorSpy.timeIntervalVariance }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12932,8 +12249,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerTimeIntervalVariance)
 
-        verify(magnetometerCalibratorSpy, times(2)).timeIntervalVariance
-//        verify(exactly = 1) { magnetometerCalibratorSpy.timeIntervalVariance }
+        verify(exactly = 1) { magnetometerCalibratorSpy.timeIntervalVariance }
     }
 
     @Test
@@ -12947,12 +12263,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.timeIntervalStandardDeviation).thenReturn(value)
-//        every { magnetometerCalibratorSpy.timeIntervalStandardDeviation }.returns(value)
+        every { magnetometerCalibratorSpy.timeIntervalStandardDeviation }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12961,8 +12275,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerTimeIntervalStandardDeviation)
 
-        verify(magnetometerCalibratorSpy, times(2)).timeIntervalStandardDeviation
-//        verify(exactly = 1) { magnetometerCalibratorSpy.timeIntervalStandardDeviation }
+        verify(exactly = 1) { magnetometerCalibratorSpy.timeIntervalStandardDeviation }
     }
 
     @Test
@@ -12976,11 +12289,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val value = Time(0.0, TimeUnit.SECOND)
-        whenever(magnetometerCalibratorSpy.timeIntervalStandardDeviationAsTime).thenReturn(value)
-//        every { magnetometerCalibratorSpy.timeIntervalStandardDeviationAsTime }.returns(value)
+        every { magnetometerCalibratorSpy.timeIntervalStandardDeviationAsTime }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -12989,8 +12300,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.magnetometerTimeIntervalStandardDeviationAsTime)
 
-        verify(magnetometerCalibratorSpy, times(2)).timeIntervalStandardDeviationAsTime
-//        verify(exactly = 1) { magnetometerCalibratorSpy.timeIntervalStandardDeviationAsTime }
+        verify(exactly = 1) { magnetometerCalibratorSpy.timeIntervalStandardDeviationAsTime }
     }
 
     @Test
@@ -13005,22 +12315,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val t = invocation.getArgument<Time>(0)
-            t.value = value
-            t.unit = TimeUnit.SECOND
-            return@doAnswer true
-        }.whenever(magnetometerCalibratorSpy).getTimeIntervalStandardDeviationAsTime(any())
-/*        every { magnetometerCalibratorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        every { magnetometerCalibratorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val t = answer.invocation.args[0] as Time
             t.value = value
             t.unit = TimeUnit.SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -13031,14 +12334,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertEquals(value, result.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, result.unit)
 
-        verify(magnetometerCalibratorSpy, only()).getTimeIntervalStandardDeviationAsTime(
-            result
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             magnetometerCalibratorSpy.getTimeIntervalStandardDeviationAsTime(
                 result
             )
-        }*/
+        }
     }
 
     @Test
@@ -13052,12 +12352,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibratorSpy.initialMagneticFluxDensityNorm).thenReturn(value)
-//        every { magnetometerCalibratorSpy.initialMagneticFluxDensityNorm }.returns(value)
+        every { magnetometerCalibratorSpy.initialMagneticFluxDensityNorm }.returns(value)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -13066,8 +12364,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.initialMagneticFluxDensityNorm)
 
-        verify(magnetometerCalibratorSpy, only()).initialMagneticFluxDensityNorm
-//        verify(exactly = 1) { magnetometerCalibratorSpy.initialMagneticFluxDensityNorm }
+        verify(exactly = 1) { magnetometerCalibratorSpy.initialMagneticFluxDensityNorm }
     }
 
     @Test
@@ -13083,12 +12380,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gravityNorm).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.gravityNorm }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.gravityNorm }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13097,8 +12392,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.gravityNorm)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gravityNorm
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gravityNorm }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gravityNorm }
     }
 
     @Test
@@ -13114,12 +12408,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextBoolean()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerResultUnreliable).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerResultUnreliable }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerResultUnreliable }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13128,8 +12420,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.accelerometerResultUnreliable)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).accelerometerResultUnreliable
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerResultUnreliable }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerResultUnreliable }
     }
 
     @Test
@@ -13145,12 +12436,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextBoolean()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isGravityNormEstimated).thenReturn(value)
-//        every { accelerometerAndGyroscopeCalibratorSpy.isGravityNormEstimated }.returns(value)
+        every { accelerometerAndGyroscopeCalibratorSpy.isGravityNormEstimated }.returns(value)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13159,8 +12448,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.isGravityNormEstimated)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).isGravityNormEstimated
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isGravityNormEstimated }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isGravityNormEstimated }
     }
 
     @Test
@@ -13176,10 +12464,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor).thenReturn(sensor)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-//        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor }.returns(sensor)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13188,8 +12474,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(sensor, calibrator.accelerometerSensor)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).accelerometerSensor
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.accelerometerSensor }
     }
 
     @Test
@@ -13205,10 +12490,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor).thenReturn(sensor)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-//        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor }.returns(sensor)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13217,8 +12500,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(sensor, calibrator.gyroscopeSensor)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).gyroscopeSensor
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gyroscopeSensor }
     }
 
     @Test
@@ -13234,10 +12516,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-        whenever(magnetometerCalibratorSpy.magnetometerSensor).thenReturn(sensor)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-//        every { magnetometerCalibratorSpy.magnetometerSensor }.returns(sensor)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        every { magnetometerCalibratorSpy.magnetometerSensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibratorSpy
@@ -13246,8 +12526,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(sensor, calibrator.magnetometerSensor)
 
-        verify(magnetometerCalibratorSpy, times(2)).magnetometerSensor
-//        verify(exactly = 1) { magnetometerCalibratorSpy.magnetometerSensor }
+        verify(exactly = 1) { magnetometerCalibratorSpy.magnetometerSensor }
     }
 
     @Test
@@ -13263,10 +12542,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.gravitySensor).thenReturn(sensor)
-//        every { accelerometerAndGyroscopeCalibratorSpy.gravitySensor }.returns(sensor)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.gravitySensor }.returns(sensor)
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13275,8 +12552,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(sensor, calibrator.gravitySensor)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).gravitySensor
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gravitySensor }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.gravitySensor }
     }
 
     @Test
@@ -13313,12 +12589,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMa).thenReturn(matrix)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMa }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMa }.returns(
             matrix
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13327,8 +12601,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(matrix, calibrator.estimatedAccelerometerMa)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMa
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMa }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMa }
     }
 
     @Test
@@ -13344,14 +12617,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSx).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSx }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13360,8 +12631,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerSx)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerSx
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSx }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSx }
     }
 
     @Test
@@ -13377,14 +12647,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSy).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSy }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13393,8 +12661,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerSy)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerSy
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSy }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSy }
     }
 
     @Test
@@ -13410,14 +12677,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSz).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSz }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13426,8 +12691,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerSz)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerSz
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSz }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerSz }
     }
 
     @Test
@@ -13443,14 +12707,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxy).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxy }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13459,8 +12721,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerMxy)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMxy
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxy }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxy }
     }
 
     @Test
@@ -13476,14 +12737,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxz).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxz }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13492,8 +12751,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerMxz)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMxz
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxz }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMxz }
     }
 
     @Test
@@ -13509,14 +12767,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyx).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyx }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13525,8 +12781,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerMyx)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMyx
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyx }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyx }
     }
 
     @Test
@@ -13542,14 +12797,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyz).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyz }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13558,8 +12811,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerMyz)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMyz
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyz }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMyz }
     }
 
     @Test
@@ -13575,14 +12827,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzx).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzx }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13591,8 +12841,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerMzx)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMzx
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzx }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzx }
     }
 
     @Test
@@ -13608,14 +12857,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzy).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzy }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13624,8 +12871,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerMzy)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMzy
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzy }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMzy }
     }
 
     @Test
@@ -13641,12 +12887,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerCovariance).thenReturn(matrix)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerCovariance }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerCovariance }.returns(
             matrix
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13655,8 +12899,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(matrix, calibrator.estimatedAccelerometerCovariance)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerCovariance
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerCovariance }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerCovariance }
     }
 
     @Test
@@ -13672,14 +12915,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerChiSq).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerChiSq }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerChiSq }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13688,8 +12929,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerChiSq)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerChiSq
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerChiSq }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerChiSq }
     }
 
     @Test
@@ -13705,14 +12945,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMse).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMse }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMse }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13721,8 +12959,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedAccelerometerMse)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedAccelerometerMse
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMse }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedAccelerometerMse }
     }
 
     @Test
@@ -13738,12 +12975,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMg).thenReturn(matrix)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMg }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMg }.returns(
             matrix
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13752,8 +12987,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(matrix, calibrator.estimatedGyroscopeMg)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMg
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMg }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMg }
     }
 
     @Test
@@ -13769,14 +13003,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSx).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSx }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13785,8 +13017,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeSx)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeSx
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSx }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSx }
     }
 
     @Test
@@ -13802,14 +13033,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSy).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSy }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13818,8 +13047,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeSy)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeSy
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSy }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSy }
     }
 
     @Test
@@ -13835,14 +13063,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSz).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSz }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13851,8 +13077,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeSz)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeSz
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSz }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeSz }
     }
 
     @Test
@@ -13868,14 +13093,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxy).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxy }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13884,8 +13107,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeMxy)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMxy
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxy }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxy }
     }
 
     @Test
@@ -13901,14 +13123,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxz).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxz }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13917,8 +13137,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeMxz)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMxz
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxz }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMxz }
     }
 
     @Test
@@ -13934,14 +13153,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyx).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyx }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13950,8 +13167,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeMyx)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMyx
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyx }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyx }
     }
 
     @Test
@@ -13967,14 +13183,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyz).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyz }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -13983,8 +13197,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeMyz)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMyz
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyz }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMyz }
     }
 
     @Test
@@ -14000,14 +13213,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzx).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzx }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14016,8 +13227,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeMzx)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMzx
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzx }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzx }
     }
 
     @Test
@@ -14033,14 +13243,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzy).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzy }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14049,8 +13257,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeMzy)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMzy
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzy }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMzy }
     }
 
     @Test
@@ -14066,12 +13273,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeGg).thenReturn(matrix)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeGg }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeGg }.returns(
             matrix
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14080,8 +13285,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(matrix, calibrator.estimatedGyroscopeGg)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeGg
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeGg }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeGg }
     }
 
     @Test
@@ -14097,12 +13301,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeCovariance).thenReturn(matrix)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeCovariance }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeCovariance }.returns(
             matrix
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14111,8 +13313,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(matrix, calibrator.estimatedGyroscopeCovariance)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeCovariance
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeCovariance }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeCovariance }
     }
 
     @Test
@@ -14128,14 +13329,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeChiSq).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeChiSq }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeChiSq }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14144,8 +13343,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeChiSq)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeChiSq
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeChiSq }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeChiSq }
     }
 
     @Test
@@ -14161,14 +13359,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMse).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMse }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMse }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14177,8 +13373,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedGyroscopeMse)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, only()).estimatedGyroscopeMse
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMse }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.estimatedGyroscopeMse }
     }
 
     @Test
@@ -14191,10 +13386,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerMm)
 
         // mock internal calibrator
-        whenever(magnetometerCalibrator.estimatedMm).thenReturn(matrix)
-/*        every { magnetometerCalibrator.estimatedMm }.returns(
+        every { magnetometerCalibrator.estimatedMm }.returns(
             matrix
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14203,8 +13397,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(matrix, calibrator.estimatedMagnetometerMm)
 
-        verify(magnetometerCalibrator, only()).estimatedMm
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMm }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMm }
     }
 
     @Test
@@ -14219,10 +13412,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedSx).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedSx }.returns(
+        every { magnetometerCalibrator.estimatedSx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14231,8 +13423,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerSx)
 
-        verify(magnetometerCalibrator, only()).estimatedSx
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedSx }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedSx }
     }
 
     @Test
@@ -14247,10 +13438,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedSy).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedSy }.returns(
+        every { magnetometerCalibrator.estimatedSy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14259,8 +13449,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerSy)
 
-        verify(magnetometerCalibrator, only()).estimatedSy
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedSy }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedSy }
     }
 
     @Test
@@ -14275,10 +13464,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedSz).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedSz }.returns(
+        every { magnetometerCalibrator.estimatedSz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14287,8 +13475,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerSz)
 
-        verify(magnetometerCalibrator, only()).estimatedSz
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedSz }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedSz }
     }
 
     @Test
@@ -14303,10 +13490,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedMxy).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedMxy }.returns(
+        every { magnetometerCalibrator.estimatedMxy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14315,8 +13501,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerMxy)
 
-        verify(magnetometerCalibrator, only()).estimatedMxy
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMxy }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMxy }
     }
 
     @Test
@@ -14331,10 +13516,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedMxz).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedMxz }.returns(
+        every { magnetometerCalibrator.estimatedMxz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14343,8 +13527,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerMxz)
 
-        verify(magnetometerCalibrator, only()).estimatedMxz
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMxz }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMxz }
     }
 
     @Test
@@ -14359,10 +13542,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedMyx).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedMyx }.returns(
+        every { magnetometerCalibrator.estimatedMyx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14371,8 +13553,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerMyx)
 
-        verify(magnetometerCalibrator, only()).estimatedMyx
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMyx }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMyx }
     }
 
     @Test
@@ -14387,10 +13568,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedMyz).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedMyz }.returns(
+        every { magnetometerCalibrator.estimatedMyz }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14399,8 +13579,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerMyz)
 
-        verify(magnetometerCalibrator, only()).estimatedMyz
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMyz }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMyz }
     }
 
     @Test
@@ -14415,10 +13594,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedMzx).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedMzx }.returns(
+        every { magnetometerCalibrator.estimatedMzx }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14427,8 +13605,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerMzx)
 
-        verify(magnetometerCalibrator, only()).estimatedMzx
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMzx }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMzx }
     }
 
     @Test
@@ -14443,10 +13620,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedMzy).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedMzy }.returns(
+        every { magnetometerCalibrator.estimatedMzy }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14455,8 +13631,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerMzy)
 
-        verify(magnetometerCalibrator, only()).estimatedMzy
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMzy }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMzy }
     }
 
     @Test
@@ -14469,10 +13644,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         assertNull(calibrator.estimatedMagnetometerCovariance)
 
         // mock internal calibrator
-        whenever(magnetometerCalibrator.estimatedCovariance).thenReturn(matrix)
-/*        every { magnetometerCalibrator.estimatedCovariance }.returns(
+        every { magnetometerCalibrator.estimatedCovariance }.returns(
             matrix
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14481,8 +13655,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertSame(matrix, calibrator.estimatedMagnetometerCovariance)
 
-        verify(magnetometerCalibrator, only()).estimatedCovariance
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedCovariance }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedCovariance }
     }
 
     @Test
@@ -14497,10 +13670,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedChiSq).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedChiSq }.returns(
+        every { magnetometerCalibrator.estimatedChiSq }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14509,8 +13681,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerChiSq)
 
-        verify(magnetometerCalibrator, only()).estimatedChiSq
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedChiSq }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedChiSq }
     }
 
     @Test
@@ -14525,10 +13696,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // mock internal calibrator
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        whenever(magnetometerCalibrator.estimatedMse).thenReturn(value)
-/*        every { magnetometerCalibrator.estimatedMse }.returns(
+        every { magnetometerCalibrator.estimatedMse }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "magnetometerCalibrator",
             magnetometerCalibrator
@@ -14537,8 +13707,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.estimatedMagnetometerMse)
 
-        verify(magnetometerCalibrator, only()).estimatedMse
-//        verify(exactly = 1) { magnetometerCalibrator.estimatedMse }
+        verify(exactly = 1) { magnetometerCalibrator.estimatedMse }
     }
 
     @Test
@@ -14615,14 +13784,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextBoolean()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14631,8 +13798,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.isReadyToSolveAccelerometerCalibration)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveAccelerometerCalibration
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
     }
 
     @Test
@@ -14648,14 +13814,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextBoolean()
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration).thenReturn(value)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
             value
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14664,8 +13828,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         // check
         assertEquals(value, calibrator.isReadyToSolveGyroscopeCalibration)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveGyroscopeCalibration
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
     }
 
     @Test
@@ -14681,19 +13844,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextBoolean()
-        whenever(magnetometerCalibratorSpy.isReadyToSolveCalibration).thenReturn(value)
-//        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(value)
+        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(value)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
         assertEquals(value, calibrator.isReadyToSolveMagnetometerCalibration)
 
-        verify(magnetometerCalibratorSpy, times(2)).isReadyToSolveCalibration
-//        verify(exactly = 1) { magnetometerCalibratorSpy.isReadyToSolveCalibration }
+        verify(exactly = 1) { magnetometerCalibratorSpy.isReadyToSolveCalibration }
     }
 
     @Test
@@ -14709,16 +13869,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration).thenReturn(false)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
             false
-        )*/
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration).thenReturn(true)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
+        )
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
             true
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14727,21 +13884,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-        doReturn(true).whenever(magnetometerCalibratorSpy).isReadyToSolveCalibration
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-//        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(true)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(true)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
         assertFalse(calibrator.isReadyToSolveCalibration)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveAccelerometerCalibration
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(1)).isReadyToSolveGyroscopeCalibration
-        verifyNoInteractions(magnetometerCalibratorSpy)
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
-//        verify(exactly = 0) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
-//        verify { magnetometerCalibratorSpy wasNot Called }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
+        verify(exactly = 0) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
+        verify { magnetometerCalibratorSpy wasNot Called }
     }
 
     @Test
@@ -14757,16 +13909,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration).thenReturn(true)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
             true
-        )*/
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration).thenReturn(false)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
+        )
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
             false
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14775,21 +13924,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-        doReturn(false).whenever(magnetometerCalibratorSpy).isReadyToSolveCalibration
-//        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(false)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(false)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
         assertFalse(calibrator.isReadyToSolveCalibration)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveAccelerometerCalibration
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveGyroscopeCalibration
-        verifyNoInteractions(magnetometerCalibratorSpy)
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
-//        verify { magnetometerCalibratorSpy wasNot Called }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
+        verify { magnetometerCalibratorSpy wasNot Called }
     }
 
     @Test
@@ -14805,16 +13949,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration).thenReturn(true)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration).thenReturn(true)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
             true
-        )*/
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
+        )
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
             true
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14823,21 +13964,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-        whenever(magnetometerCalibratorSpy.isReadyToSolveCalibration).thenReturn(false)
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-//        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(false)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(false)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
         assertFalse(calibrator.isReadyToSolveCalibration)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveAccelerometerCalibration
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveGyroscopeCalibration
-        verify(magnetometerCalibratorSpy, times(2)).isReadyToSolveCalibration
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.isReadyToSolveCalibration }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
+        verify(exactly = 1) { magnetometerCalibratorSpy.isReadyToSolveCalibration }
     }
 
     @Test
@@ -14853,16 +13989,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val accelerometerAndGyroscopeCalibrator: StaticIntervalAccelerometerAndGyroscopeCalibrator? =
             calibrator.getPrivateProperty("accelerometerAndGyroscopeCalibrator")
         requireNotNull(accelerometerAndGyroscopeCalibrator)
-        val accelerometerAndGyroscopeCalibratorSpy = spy(accelerometerAndGyroscopeCalibrator)
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration).thenReturn(true)
-//        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
+        val accelerometerAndGyroscopeCalibratorSpy = spyk(accelerometerAndGyroscopeCalibrator)
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }.returns(
             true
-        )*/
-        whenever(accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration).thenReturn(true)
-/*        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
+        )
+        every { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }.returns(
             true
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerAndGyroscopeCalibrator",
             accelerometerAndGyroscopeCalibratorSpy
@@ -14871,21 +14004,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
         val magnetometerCalibrator: SingleSensorStaticIntervalMagnetometerCalibrator? =
             calibrator.getPrivateProperty("magnetometerCalibrator")
         requireNotNull(magnetometerCalibrator)
-        val magnetometerCalibratorSpy = spy(magnetometerCalibrator)
-        doReturn(true).whenever(magnetometerCalibratorSpy).isReadyToSolveCalibration
-//        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
-//        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(true)
+        val magnetometerCalibratorSpy = spyk(magnetometerCalibrator)
+        every { magnetometerCalibratorSpy.isReadyToSolveCalibration }.returns(true)
         calibrator.setPrivateProperty("magnetometerCalibrator", magnetometerCalibratorSpy)
 
         // check
         assertTrue(calibrator.isReadyToSolveCalibration)
 
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveAccelerometerCalibration
-        verify(accelerometerAndGyroscopeCalibratorSpy, times(2)).isReadyToSolveGyroscopeCalibration
-        verify(magnetometerCalibratorSpy, only()).isReadyToSolveCalibration
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
-//        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
-//        verify(exactly = 1) { magnetometerCalibratorSpy.isReadyToSolveCalibration }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveAccelerometerCalibration }
+        verify(exactly = 1) { accelerometerAndGyroscopeCalibratorSpy.isReadyToSolveGyroscopeCalibration }
+        verify(exactly = 1) { magnetometerCalibratorSpy.isReadyToSolveCalibration }
     }
 
     private fun getLocation(): Location {
@@ -14895,12 +14023,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2Test {
             randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.latitude }.returns(latitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

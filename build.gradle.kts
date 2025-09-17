@@ -13,8 +13,10 @@ subprojects {
     tasks.withType(type = Test::class) {
         // Gradle 5+ reduced default heap and permgen sizes.
         // Robolectric and mockkk/mockito need more memory during test execution.
-        maxParallelForks = 2
-        forkEvery = 80
+        // Forking can be configured for faster execution, but may load to problems on
+        // instrumentation tests
+        // maxParallelForks = 2
+        // forkEvery = 80
         maxHeapSize = "2048m"
         minHeapSize = "1024m"
     }

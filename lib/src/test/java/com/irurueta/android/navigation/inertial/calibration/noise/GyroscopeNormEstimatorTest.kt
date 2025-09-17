@@ -19,10 +19,19 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.ECEFPosition
+import com.irurueta.navigation.frames.ECEFVelocity
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
@@ -33,25 +42,20 @@ import com.irurueta.units.AngularSpeed
 import com.irurueta.units.AngularSpeedUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -60,35 +64,21 @@ import kotlin.math.sqrt
 class GyroscopeNormEstimatorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var completedListener:
             AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GyroscopeNormEstimator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var unreliableListener:
             AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var measurementListener: GyroscopeSensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -666,10 +656,8 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        whenever(collectorSpy.sensor).thenReturn(sensor)
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.sensor }.returns(sensor)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertSame(sensor, estimator.sensor)
@@ -689,10 +677,8 @@ class GyroscopeNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -700,8 +686,7 @@ class GyroscopeNormEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -718,10 +703,8 @@ class GyroscopeNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(false).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(false)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(false)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -737,24 +720,20 @@ class GyroscopeNormEstimatorTest {
         val noiseEstimator: AccumulatedAngularSpeedMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spy(noiseEstimator)
-//        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -768,12 +747,10 @@ class GyroscopeNormEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(noiseEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(timeIntervalEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(estimator.maxSamples, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -785,24 +762,20 @@ class GyroscopeNormEstimatorTest {
         val noiseEstimator: AccumulatedAngularSpeedMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spy(noiseEstimator)
-//        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -816,12 +789,10 @@ class GyroscopeNormEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(noiseEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(timeIntervalEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -833,10 +804,8 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         setPrivateProperty(BaseAccumulatedEstimator::class, estimator, "resultUnreliable", true)
@@ -880,10 +849,8 @@ class GyroscopeNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -891,15 +858,13 @@ class GyroscopeNormEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
 
         // stop
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -915,8 +880,7 @@ class GyroscopeNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -925,8 +889,7 @@ class GyroscopeNormEstimatorTest {
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -950,17 +913,7 @@ class GyroscopeNormEstimatorTest {
 
         gyroscopeMeasurementListener.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
 
-        verify(measurementListener, only()).onMeasurement(
-            wx,
-            wy,
-            wz,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             measurementListener.onMeasurement(
                 wx,
                 wy,
@@ -971,7 +924,7 @@ class GyroscopeNormEstimatorTest {
                 timestamp,
                 accuracy
             )
-        }*/
+        }
     }
 
     @Test
@@ -1044,15 +997,13 @@ class GyroscopeNormEstimatorTest {
         val noiseEstimator: AccumulatedAngularSpeedMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spy(noiseEstimator)
-//        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -1075,19 +1026,15 @@ class GyroscopeNormEstimatorTest {
         // set measurement
         measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp1, accuracy)
 
-        verify(noiseEstimatorSpy, times(1)).addMeasurement(norm)
-        verify(timeIntervalEstimatorSpy, never()).addTimestamp(any<Double>())
-//        verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(norm) }
-//        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(norm) }
+        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
         // set another measurement
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp2, accuracy)
 
-        verify(noiseEstimatorSpy, times(2)).addMeasurement(norm)
-        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(any<Double>())
-//        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(norm) }
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(norm) }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
         assertEquals(ECEFKinematicsEstimator.EARTH_ROTATION_RATE, norm, SMALL_ABSOLUTE_ERROR)
     }
@@ -1156,8 +1103,7 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1195,8 +1141,7 @@ class GyroscopeNormEstimatorTest {
         assertEquals(maxSamples, estimator.numberOfProcessedMeasurements)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxSamples(estimator, norm)
@@ -1214,8 +1159,7 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1254,10 +1198,8 @@ class GyroscopeNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-        verify(completedListener, only()).onEstimationCompleted(estimator)
-//        verify(exactly = 1) { collectorSpy.stop() }
-//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxSamples(estimator, norm)
@@ -1271,8 +1213,7 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1312,8 +1253,7 @@ class GyroscopeNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, norm)
@@ -1331,8 +1271,7 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1372,12 +1311,10 @@ class GyroscopeNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(completedListener, only()).onEstimationCompleted(estimator)
-//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, norm)
@@ -1391,8 +1328,7 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1432,8 +1368,7 @@ class GyroscopeNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, norm)
@@ -1451,8 +1386,7 @@ class GyroscopeNormEstimatorTest {
         val collector: GyroscopeSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1492,12 +1426,10 @@ class GyroscopeNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(completedListener, only()).onEstimationCompleted(estimator)
-//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, norm)
@@ -1545,8 +1477,7 @@ class GyroscopeNormEstimatorTest {
 
         // check
         assertTrue(estimator.resultUnreliable)
-        verify(unreliableListener, only()).onUnreliable(estimator)
-//        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
+        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
     }
 
     @Test
@@ -1569,8 +1500,7 @@ class GyroscopeNormEstimatorTest {
 
         // check
         assertFalse(estimator.resultUnreliable)
-        verify(unreliableListener, never()).onUnreliable(estimator)
-//        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
+        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
     }
 
     private fun checkResultMaxSamples(estimator: GyroscopeNormEstimator, norm: Double) {

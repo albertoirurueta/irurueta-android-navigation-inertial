@@ -20,25 +20,35 @@ import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerCalibrator
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
-import com.irurueta.navigation.inertial.calibration.accelerometer.*
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.clearAllMocks
-//import io.mockk.every
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import io.mockk.mockk
-//import io.mockk.unmockkAll
-//import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.max
 
@@ -46,24 +56,13 @@ import kotlin.math.max
 class AccelerometerInternalCalibratorBuilderTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-    //val mockkRule = MockKRule(this)
-
-    //@MockK
-    @Mock
+    @MockK
     private lateinit var measurement: StandardDeviationBodyKinematics
 
-    //@MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredValues_setsExpectedValues() {
@@ -2507,12 +2506,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -2590,12 +2585,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -2679,12 +2670,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -2765,12 +2752,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3109,12 +3092,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3192,12 +3171,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3281,12 +3256,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -3372,12 +3343,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4092,12 +4059,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4175,12 +4138,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4264,12 +4223,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4350,12 +4305,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4406,12 +4357,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4799,12 +4746,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4882,12 +4825,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -4971,12 +4910,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -5062,12 +4997,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -5118,12 +5049,8 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        whenever(measurement.specificForceStandardDeviation).thenReturn(
-            specificForceStandardDeviation
-        )
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
         (1..13).forEach { _ ->
             measurements.add(measurement)
@@ -5176,12 +5103,9 @@ class AccelerometerInternalCalibratorBuilderTest {
             randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.latitude }.returns(latitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

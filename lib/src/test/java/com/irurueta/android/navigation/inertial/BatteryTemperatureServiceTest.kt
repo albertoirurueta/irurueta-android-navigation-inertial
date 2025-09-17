@@ -26,64 +26,37 @@ import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.units.Temperature
 import com.irurueta.units.TemperatureUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.impl.annotations.SpyK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.Spy
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.capture
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.only
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class BatteryTemperatureServiceTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var listener: BatteryTemperatureService.OnBatteryTemperatureChangedListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var intent: Intent
 
-//    @SpyK
-    @Spy
+    @SpyK
     private var contextSpy = ApplicationProvider.getApplicationContext<Context>()
-
-    @Captor
-    private lateinit var intentFilterCaptor: ArgumentCaptor<IntentFilter>
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {
@@ -130,8 +103,7 @@ class BatteryTemperatureServiceTest {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Test
     fun currentBatteryTemperatureCelsius_whenNotAvailable_returnsNull() {
-        doReturn(null).whenever(contextSpy).registerReceiver(eq(null), any())
-//        every { contextSpy.registerReceiver(null, any()) }.returns(null)
+        every { contextSpy.registerReceiver(null, any()) }.returns(null)
 
         val service = BatteryTemperatureService(contextSpy)
 
@@ -141,10 +113,8 @@ class BatteryTemperatureServiceTest {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Test
     fun currentBatteryTemperatureCelsius_whenAvailable_returnsExpectedValue() {
-        doReturn(300).whenever(intent).getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
-//        every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
-        doReturn(intent).whenever(contextSpy).registerReceiver(eq(null), any())
-//        every { contextSpy.registerReceiver(null, any()) }.returns(intent)
+        every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
+        every { contextSpy.registerReceiver(null, any()) }.returns(intent)
 
         val service = BatteryTemperatureService(contextSpy)
 
@@ -156,8 +126,7 @@ class BatteryTemperatureServiceTest {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Test
     fun currentBatteryTemperature_whenNotAvailable_returnsNull() {
-        doReturn(null).whenever(contextSpy).registerReceiver(eq(null), any())
-//        every { contextSpy.registerReceiver(null, any()) }.returns(null)
+        every { contextSpy.registerReceiver(null, any()) }.returns(null)
 
         val service = BatteryTemperatureService(contextSpy)
 
@@ -167,10 +136,8 @@ class BatteryTemperatureServiceTest {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Test
     fun currentBatteryTemperature_whenAvailable_returnsExpectedValue() {
-        doReturn(300).whenever(intent).getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
-//        every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
-        doReturn(intent).whenever(contextSpy).registerReceiver(eq(null), any())
-//        every { contextSpy.registerReceiver(null, any()) }.returns(intent)
+        every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
+        every { contextSpy.registerReceiver(null, any()) }.returns(intent)
 
         val service = BatteryTemperatureService(contextSpy)
 
@@ -183,8 +150,7 @@ class BatteryTemperatureServiceTest {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Test
     fun getCurrentBatteryTemperature_whenNotAvailable_returnsNull() {
-        doReturn(null).whenever(contextSpy).registerReceiver(eq(null), any())
-//        every { contextSpy.registerReceiver(null, any()) }.returns(null)
+        every { contextSpy.registerReceiver(null, any()) }.returns(null)
 
         val service = BatteryTemperatureService(contextSpy)
 
@@ -199,10 +165,8 @@ class BatteryTemperatureServiceTest {
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Test
     fun getCurrentBatteryTemperature_whenAvailable_returnsExpectedValue() {
-        doReturn(300).whenever(intent).getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
-//        every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
-        doReturn(intent).whenever(contextSpy).registerReceiver(eq(null), any())
-//        every { contextSpy.registerReceiver(null, any()) }.returns(intent)
+        every { intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) }.returns(300)
+        every { contextSpy.registerReceiver(null, any()) }.returns(intent)
 
         val service = BatteryTemperatureService(contextSpy)
 
@@ -225,20 +189,15 @@ class BatteryTemperatureServiceTest {
 
         service.start()
 
-        verify(contextSpy, only()).registerReceiver(
-            eq(receiver),
-            capture(intentFilterCaptor)
-        )
-/*        val slot = slot<IntentFilter>()
+        val slot = slot<IntentFilter>()
         verify(exactly = 1) {
             contextSpy.registerReceiver(
                 receiver,
                 capture(slot)
             )
-        }*/
+        }
 
-        val intentFilter = intentFilterCaptor.value
-//        val intentFilter = slot.captured
+        val intentFilter = slot.captured
         assertEquals(1, intentFilter.countActions())
         assertEquals(Intent.ACTION_BATTERY_CHANGED, intentFilter.getAction(0))
 
@@ -254,8 +213,7 @@ class BatteryTemperatureServiceTest {
 
         service.start()
 
-        verifyNoInteractions(contextSpy)
-//        verify { contextSpy wasNot Called }
+        verify { contextSpy wasNot Called }
         assertTrue(service.running)
     }
 
@@ -267,8 +225,7 @@ class BatteryTemperatureServiceTest {
 
         service.stop()
 
-        verifyNoInteractions(contextSpy)
-//        verify { contextSpy wasNot Called }
+        verify { contextSpy wasNot Called }
         assertFalse(service.running)
     }
 
@@ -286,8 +243,7 @@ class BatteryTemperatureServiceTest {
 
         service.stop()
 
-        verify(contextSpy, times(1)).unregisterReceiver(receiver)
-//        verify(exactly = 1) { contextSpy.unregisterReceiver(receiver) }
+        verify(exactly = 1) { contextSpy.unregisterReceiver(receiver) }
         assertFalse(service.running)
     }
 }

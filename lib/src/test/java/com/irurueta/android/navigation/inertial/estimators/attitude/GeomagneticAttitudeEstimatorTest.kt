@@ -21,7 +21,13 @@ import android.os.SystemClock
 import android.view.Display
 import android.view.Surface
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.testutils.callPrivateFunc
@@ -35,81 +41,53 @@ import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.MagneticFluxDensityConverter
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Spy
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
-import java.util.*
+import java.util.Date
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class GeomagneticAttitudeEstimatorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var listener: GeomagneticAttitudeEstimator.OnAttitudeAvailableListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var accelerometerMeasurementListener:
             AccelerometerSensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var magnetometerMeasurementListener:
             MagnetometerSensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var display: Display
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    @Spy
-    private val context = ApplicationProvider.getApplicationContext<Context>()
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -600,19 +578,15 @@ class GeomagneticAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doReturn(false).whenever(levelingEstimatorSpy).start()
-//        every { levelingEstimatorSpy.start() }.returns(false)
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        every { levelingEstimatorSpy.start() }.returns(false)
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val magnetometerSensorCollector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("magnetometerSensorCollector")
         requireNotNull(magnetometerSensorCollector)
-        val magnetometerSensorCollectorSpy = spy(magnetometerSensorCollector)
-//        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
-        doReturn(true).whenever(magnetometerSensorCollectorSpy).start()
-//        every { magnetometerSensorCollectorSpy.start() }.returns(true)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         estimator.setPrivateProperty("hasMagnetometerValues", true)
@@ -627,14 +601,10 @@ class GeomagneticAttitudeEstimatorTest {
         // start
         assertFalse(estimator.start())
 
-        verify(levelingEstimatorSpy, times(1)).start()
-//        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(magnetometerSensorCollectorSpy, never()).start()
-//        verify(exactly = 0) { magnetometerSensorCollectorSpy.start() }
-        verify(levelingEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(magnetometerSensorCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { levelingEstimatorSpy.start() }
+        verify(exactly = 0) { magnetometerSensorCollectorSpy.start() }
+        verify(exactly = 1) { levelingEstimatorSpy.stop() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
 
         val hasMagnetometerValues2: Boolean? = estimator.getPrivateProperty("hasMagnetometerValues")
         requireNotNull(hasMagnetometerValues2)
@@ -650,19 +620,15 @@ class GeomagneticAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doReturn(true).whenever(levelingEstimatorSpy).start()
-//        every { levelingEstimatorSpy.start() }.returns(true)
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        every { levelingEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val magnetometerSensorCollector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("magnetometerSensorCollector")
         requireNotNull(magnetometerSensorCollector)
-        val magnetometerSensorCollectorSpy = spy(magnetometerSensorCollector)
-//        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
-        doReturn(false).whenever(magnetometerSensorCollectorSpy).start()
-//        every { magnetometerSensorCollectorSpy.start() }.returns(false)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start() }.returns(false)
         estimator.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         estimator.setPrivateProperty("hasMagnetometerValues", true)
@@ -677,14 +643,10 @@ class GeomagneticAttitudeEstimatorTest {
         // start
         assertFalse(estimator.start())
 
-        verify(levelingEstimatorSpy, times(1)).start()
-//        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(magnetometerSensorCollectorSpy, times(1)).start()
-//        verify(exactly = 1) { magnetometerSensorCollectorSpy.start() }
-        verify(levelingEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(magnetometerSensorCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { levelingEstimatorSpy.start() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.start() }
+        verify(exactly = 1) { levelingEstimatorSpy.stop() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
 
         val hasMagnetometerValues2: Boolean? = estimator.getPrivateProperty("hasMagnetometerValues")
         requireNotNull(hasMagnetometerValues2)
@@ -700,19 +662,15 @@ class GeomagneticAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doReturn(true).whenever(levelingEstimatorSpy).start()
-//        every { levelingEstimatorSpy.start() }.returns(true)
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        every { levelingEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val magnetometerSensorCollector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("magnetometerSensorCollector")
         requireNotNull(magnetometerSensorCollector)
-        val magnetometerSensorCollectorSpy = spy(magnetometerSensorCollector)
-//        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
-        doReturn(true).whenever(magnetometerSensorCollectorSpy).start()
-//        every { magnetometerSensorCollectorSpy.start() }.returns(true)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         estimator.setPrivateProperty("hasMagnetometerValues", true)
@@ -727,14 +685,10 @@ class GeomagneticAttitudeEstimatorTest {
         // start
         assertTrue(estimator.start())
 
-        verify(levelingEstimatorSpy, only()).start()
-//        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(magnetometerSensorCollectorSpy, only()).start()
-//        verify(exactly = 1) { magnetometerSensorCollectorSpy.start() }
-        verify(levelingEstimatorSpy, never()).stop()
-//        verify(exactly = 0) { levelingEstimatorSpy.stop() }
-        verify(magnetometerSensorCollectorSpy, never()).stop()
-//        verify(exactly = 0) { magnetometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { levelingEstimatorSpy.start() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.start() }
+        verify(exactly = 0) { levelingEstimatorSpy.stop() }
+        verify(exactly = 0) { magnetometerSensorCollectorSpy.stop() }
 
         val hasMagnetometerValues2: Boolean? = estimator.getPrivateProperty("hasMagnetometerValues")
         requireNotNull(hasMagnetometerValues2)
@@ -750,19 +704,15 @@ class GeomagneticAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doReturn(true).whenever(levelingEstimatorSpy).start()
-//        every { levelingEstimatorSpy.start() }.returns(true)
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        every { levelingEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val magnetometerSensorCollector: MagnetometerSensorCollector? =
             estimator.getPrivateProperty("magnetometerSensorCollector")
         requireNotNull(magnetometerSensorCollector)
-        val magnetometerSensorCollectorSpy = spy(magnetometerSensorCollector)
-//        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
-        doReturn(true).whenever(magnetometerSensorCollectorSpy).start()
-//        every { magnetometerSensorCollectorSpy.start() }.returns(true)
+        val magnetometerSensorCollectorSpy = spyk(magnetometerSensorCollector)
+        every { magnetometerSensorCollectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("magnetometerSensorCollector", magnetometerSensorCollectorSpy)
 
         // set as running
@@ -773,10 +723,8 @@ class GeomagneticAttitudeEstimatorTest {
         estimator.stop()
 
         // check
-        verify(levelingEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(magnetometerSensorCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { levelingEstimatorSpy.stop() }
+        verify(exactly = 1) { magnetometerSensorCollectorSpy.stop() }
         assertFalse(estimator.running)
     }
 
@@ -835,9 +783,21 @@ class GeomagneticAttitudeEstimatorTest {
         )
 
         // check sensor values
-        assertEquals(MagneticFluxDensityConverter.microTeslaToTesla(microBx.toDouble()), triad.valueY, 0.0)
-        assertEquals(MagneticFluxDensityConverter.microTeslaToTesla(microBy.toDouble()), triad.valueX, 0.0)
-        assertEquals(MagneticFluxDensityConverter.microTeslaToTesla(microBz.toDouble()), -triad.valueZ, 0.0)
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(microBx.toDouble()),
+            triad.valueY,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(microBy.toDouble()),
+            triad.valueX,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla(microBz.toDouble()),
+            -triad.valueZ,
+            0.0
+        )
         val hasMagnetometerValues2: Boolean? = estimator.getPrivateProperty("hasMagnetometerValues")
         requireNotNull(hasMagnetometerValues2)
         assertTrue(hasMagnetometerValues2)
@@ -887,9 +847,21 @@ class GeomagneticAttitudeEstimatorTest {
         )
 
         // check sensor values
-        assertEquals(MagneticFluxDensityConverter.microTeslaToTesla((microBx - hardIronX).toDouble()), triad.valueY, 0.0)
-        assertEquals(MagneticFluxDensityConverter.microTeslaToTesla((microBy - hardIronY).toDouble()), triad.valueX, 0.0)
-        assertEquals(MagneticFluxDensityConverter.microTeslaToTesla((microBz - hardIronZ).toDouble()), -triad.valueZ, 0.0)
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla((microBx - hardIronX).toDouble()),
+            triad.valueY,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla((microBy - hardIronY).toDouble()),
+            triad.valueX,
+            0.0
+        )
+        assertEquals(
+            MagneticFluxDensityConverter.microTeslaToTesla((microBz - hardIronZ).toDouble()),
+            -triad.valueZ,
+            0.0
+        )
         val hasMagnetometerValues2: Boolean? = estimator.getPrivateProperty("hasMagnetometerValues")
         requireNotNull(hasMagnetometerValues2)
         assertTrue(hasMagnetometerValues2)
@@ -897,11 +869,9 @@ class GeomagneticAttitudeEstimatorTest {
 
     @Test
     fun levelingAvailableListener_whenAccurateLeveling_processesLevelingAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val location = getLocation()
         val estimator = GeomagneticAttitudeEstimator(
             context, location,
@@ -928,16 +898,7 @@ class GeomagneticAttitudeEstimatorTest {
             null
         )
 
-        verify(listener, only()).onAttitudeAvailable(
-            eq(estimator),
-            any(),
-            any(),
-            any(),
-            any(),
-            any(),
-            eq(null)
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onAttitudeAvailable(
                 estimator,
                 any(),
@@ -947,16 +908,14 @@ class GeomagneticAttitudeEstimatorTest {
                 any(),
                 null
             )
-        }*/
+        }
     }
 
     @Test
     fun levelingAvailableListener_whenNonAccurateLeveling_processesLevelingAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val estimator = GeomagneticAttitudeEstimator(
             context,
             useAccurateLevelingEstimator = false,
@@ -982,16 +941,7 @@ class GeomagneticAttitudeEstimatorTest {
             null
         )
 
-        verify(listener, only()).onAttitudeAvailable(
-            eq(estimator),
-            any(),
-            any(),
-            any(),
-            any(),
-            any(),
-            eq(null)
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onAttitudeAvailable(
                 estimator,
                 any(),
@@ -1001,7 +951,7 @@ class GeomagneticAttitudeEstimatorTest {
                 any(),
                 null
             )
-        }*/
+        }
     }
 
     @Test
@@ -1023,17 +973,14 @@ class GeomagneticAttitudeEstimatorTest {
             timestamp
         )
 
-        verifyNoInteractions(listener)
-//        verify { listener wasNot Called }
+        verify { listener wasNot Called }
     }
 
     @Test
     fun processLeveling_whenMagnetometerValues_estimatesAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val estimator = GeomagneticAttitudeEstimator(context)
 
         estimator.setPrivateProperty("hasMagnetometerValues", true)
@@ -1044,14 +991,12 @@ class GeomagneticAttitudeEstimatorTest {
         // setup spies
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spy(fusedAttitude)
-//        val fusedAttitudeSpy = spyk(fusedAttitude)
+        val fusedAttitudeSpy = spyk(fusedAttitude)
         estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
 
         val coordinateTransformation: CoordinateTransformation? =
@@ -1062,12 +1007,10 @@ class GeomagneticAttitudeEstimatorTest {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spy(coordinateTransformation)
-//        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
-        val attitude = spy(Quaternion())
-//        val attitude = spyk(Quaternion())
+        val attitude = spyk(Quaternion())
         val timestamp = SystemClock.elapsedRealtimeNanos()
         callPrivateFunc(
             GeomagneticAttitudeEstimator::class,
@@ -1077,25 +1020,18 @@ class GeomagneticAttitudeEstimatorTest {
             timestamp
         )
 
-        verify(attitude, only()).copyTo(levelingAttitudeSpy)
-//        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
-        verify(levelingAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
-        verify(fusedAttitudeSpy, times(1)).setFromEulerAngles(any(), any(), any())
-//        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
-        verifyNoInteractions(coordinateTransformationSpy)
-//        verify { coordinateTransformationSpy wasNot Called }
-        verify(fusedAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
+        verify { coordinateTransformationSpy wasNot Called }
+        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
     }
 
     @Test
     fun processLeveling_whenCoordinateTransformationEstimated_estimatesAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val estimator = GeomagneticAttitudeEstimator(
             context,
             estimateCoordinateTransformation = true,
@@ -1110,14 +1046,12 @@ class GeomagneticAttitudeEstimatorTest {
         // setup spies
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spy(fusedAttitude)
-//        val fusedAttitudeSpy = spyk(fusedAttitude)
+        val fusedAttitudeSpy = spyk(fusedAttitude)
         estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
 
         val coordinateTransformation: CoordinateTransformation? =
@@ -1128,12 +1062,10 @@ class GeomagneticAttitudeEstimatorTest {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spy(coordinateTransformation)
-//        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
-        val attitude = spy(Quaternion())
-//        val attitude = spyk(Quaternion())
+        val attitude = spyk(Quaternion())
         val timestamp = SystemClock.elapsedRealtimeNanos()
         callPrivateFunc(
             GeomagneticAttitudeEstimator::class,
@@ -1143,29 +1075,14 @@ class GeomagneticAttitudeEstimatorTest {
             timestamp
         )
 
-        verify(attitude, only()).copyTo(levelingAttitudeSpy)
-//        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
-        verify(levelingAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
-        verify(fusedAttitudeSpy, times(1)).setFromEulerAngles(any(), any(), any())
-//        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
-        verify(fusedAttitudeSpy, times(1)).asInhomogeneousMatrix(any())
-//        verify(exactly = 1) { fusedAttitudeSpy.asInhomogeneousMatrix(any()) }
-        verify(coordinateTransformationSpy, only()).fromRotation(fusedAttitudeSpy)
-//        verify(exactly = 1) { coordinateTransformationSpy.fromRotation(fusedAttitudeSpy) }
-        verify(fusedAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.asInhomogeneousMatrix(any()) }
+        verify(exactly = 1) { coordinateTransformationSpy.fromRotation(fusedAttitudeSpy) }
+        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
 
-        verify(listener, only()).onAttitudeAvailable(
-            eq(estimator),
-            eq(fusedAttitudeSpy),
-            any(),
-            any(),
-            any(),
-            any(),
-            eq(coordinateTransformationSpy)
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onAttitudeAvailable(
                 estimator,
                 fusedAttitudeSpy,
@@ -1175,16 +1092,14 @@ class GeomagneticAttitudeEstimatorTest {
                 any(),
                 coordinateTransformationSpy
             )
-        }*/
+        }
     }
 
     @Test
     fun processLeveling_whenEulerAnglesNotEstimated_estimatesAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val estimator = GeomagneticAttitudeEstimator(
             context,
             estimateEulerAngles = false,
@@ -1199,14 +1114,12 @@ class GeomagneticAttitudeEstimatorTest {
         // setup spies
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spy(fusedAttitude)
-//        val fusedAttitudeSpy = spyk(fusedAttitude)
+        val fusedAttitudeSpy = spyk(fusedAttitude)
         estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
 
         val coordinateTransformation: CoordinateTransformation? =
@@ -1217,13 +1130,11 @@ class GeomagneticAttitudeEstimatorTest {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spy(coordinateTransformation)
-//        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
         val timestamp = SystemClock.elapsedRealtimeNanos()
-        val attitude = spy(Quaternion())
-//        val attitude = spyk(Quaternion())
+        val attitude = spyk(Quaternion())
         callPrivateFunc(
             GeomagneticAttitudeEstimator::class,
             estimator,
@@ -1232,29 +1143,14 @@ class GeomagneticAttitudeEstimatorTest {
             timestamp
         )
 
-        verify(attitude, only()).copyTo(levelingAttitudeSpy)
-//        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
-        verify(levelingAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
-        verify(fusedAttitudeSpy, times(1)).setFromEulerAngles(any(), any(), any())
-//        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
-        verify(fusedAttitudeSpy, never()).asInhomogeneousMatrix(any())
-//        verify(exactly = 0) { fusedAttitudeSpy.asInhomogeneousMatrix(any()) }
-        verifyNoInteractions(coordinateTransformationSpy)
-//        verify { coordinateTransformationSpy wasNot Called }
-        verify(fusedAttitudeSpy, never()).toEulerAngles(any())
-//        verify(exactly = 0) { fusedAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
+        verify(exactly = 0) { fusedAttitudeSpy.asInhomogeneousMatrix(any()) }
+        verify { coordinateTransformationSpy wasNot Called }
+        verify(exactly = 0) { fusedAttitudeSpy.toEulerAngles(any()) }
 
-        verify(listener, only()).onAttitudeAvailable(
-            estimator,
-            fusedAttitudeSpy,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onAttitudeAvailable(
                 estimator,
                 fusedAttitudeSpy,
@@ -1264,16 +1160,14 @@ class GeomagneticAttitudeEstimatorTest {
                 null,
                 null
             )
-        }*/
+        }
     }
 
     @Test
     fun processLeveling_whenNoMagneticModel_estimatesAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val estimator = GeomagneticAttitudeEstimator(context)
 
         assertNull(estimator.worldMagneticModel)
@@ -1287,14 +1181,12 @@ class GeomagneticAttitudeEstimatorTest {
         // setup spies
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spy(fusedAttitude)
-//        val fusedAttitudeSpy = spyk(fusedAttitude)
+        val fusedAttitudeSpy = spyk(fusedAttitude)
         estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
 
         val coordinateTransformation: CoordinateTransformation? =
@@ -1305,12 +1197,10 @@ class GeomagneticAttitudeEstimatorTest {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spy(coordinateTransformation)
-//        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
-        val attitude = spy(Quaternion())
-//        val attitude = spyk(Quaternion())
+        val attitude = spyk(Quaternion())
         val timestamp = SystemClock.elapsedRealtimeNanos()
         callPrivateFunc(
             GeomagneticAttitudeEstimator::class,
@@ -1320,25 +1210,18 @@ class GeomagneticAttitudeEstimatorTest {
             timestamp
         )
 
-        verify(attitude, only()).copyTo(levelingAttitudeSpy)
-//        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
-        verify(levelingAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
-        verify(fusedAttitudeSpy, times(1)).setFromEulerAngles(any(), any(), any())
-//        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
-        verifyNoInteractions(coordinateTransformationSpy)
-//        verify { coordinateTransformationSpy wasNot Called }
-        verify(fusedAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
+        verify { coordinateTransformationSpy wasNot Called }
+        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
     }
 
     @Test
     fun processLeveling_whenMagneticModel_estimatesAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val location = getLocation()
         val worldMagneticModel = WorldMagneticModel()
         val estimator =
@@ -1360,14 +1243,12 @@ class GeomagneticAttitudeEstimatorTest {
         // setup spies
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spy(fusedAttitude)
-//        val fusedAttitudeSpy = spyk(fusedAttitude)
+        val fusedAttitudeSpy = spyk(fusedAttitude)
         estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
 
         val coordinateTransformation: CoordinateTransformation? =
@@ -1378,12 +1259,10 @@ class GeomagneticAttitudeEstimatorTest {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spy(coordinateTransformation)
-//        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
-        val attitude = spy(Quaternion())
-//        val attitude = spyk(Quaternion())
+        val attitude = spyk(Quaternion())
         val timestamp = SystemClock.elapsedRealtimeNanos()
         callPrivateFunc(
             GeomagneticAttitudeEstimator::class,
@@ -1393,25 +1272,18 @@ class GeomagneticAttitudeEstimatorTest {
             timestamp
         )
 
-        verify(attitude, only()).copyTo(levelingAttitudeSpy)
-//        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
-        verify(levelingAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
-        verify(fusedAttitudeSpy, times(1)).setFromEulerAngles(any(), any(), any())
-//        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
-        verifyNoInteractions(coordinateTransformationSpy)
-//        verify { coordinateTransformationSpy wasNot Called }
-        verify(fusedAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
+        verify { coordinateTransformationSpy wasNot Called }
+        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
     }
 
     @Test
     fun processLeveling_whenIgnoreDisplayOrientation_estimatesAttitude() {
-        whenever(display.rotation).thenReturn(Surface.ROTATION_0)
-//        every { display.rotation }.returns(Surface.ROTATION_0)
-//        val context = spyk(ApplicationProvider.getApplicationContext())
-        doReturn(display).whenever(context).display
-//        every { context.display }.returns(display)
+        every { display.rotation }.returns(Surface.ROTATION_0)
+        val context = spyk(ApplicationProvider.getApplicationContext())
+        every { context.display }.returns(display)
         val estimator = GeomagneticAttitudeEstimator(
             context,
             attitudeAvailableListener = listener
@@ -1425,14 +1297,12 @@ class GeomagneticAttitudeEstimatorTest {
         // setup spies
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
         requireNotNull(fusedAttitude)
-        val fusedAttitudeSpy = spy(fusedAttitude)
-//        val fusedAttitudeSpy = spyk(fusedAttitude)
+        val fusedAttitudeSpy = spyk(fusedAttitude)
         estimator.setPrivateProperty("fusedAttitude", fusedAttitudeSpy)
 
         val coordinateTransformation: CoordinateTransformation? =
@@ -1443,12 +1313,10 @@ class GeomagneticAttitudeEstimatorTest {
             FrameType.LOCAL_NAVIGATION_FRAME,
             coordinateTransformation.destinationType
         )
-        val coordinateTransformationSpy = spy(coordinateTransformation)
-//        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
         estimator.setPrivateProperty("coordinateTransformation", coordinateTransformationSpy)
 
-        val attitude = spy(Quaternion())
-//        val attitude = spyk(Quaternion())
+        val attitude = spyk(Quaternion())
         val timestamp = SystemClock.elapsedRealtimeNanos()
         callPrivateFunc(
             GeomagneticAttitudeEstimator::class,
@@ -1458,29 +1326,14 @@ class GeomagneticAttitudeEstimatorTest {
             timestamp
         )
 
-        verify(attitude, only()).copyTo(levelingAttitudeSpy)
-//        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
-        verify(levelingAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
-        verify(fusedAttitudeSpy, times(1)).setFromEulerAngles(any(), any(), any())
-//        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
-        verify(fusedAttitudeSpy, never()).asInhomogeneousMatrix(any())
-//        verify(exactly = 0) { fusedAttitudeSpy.asInhomogeneousMatrix(any()) }
-        verifyNoInteractions(coordinateTransformationSpy)
-//        verify { coordinateTransformationSpy wasNot Called }
-        verify(fusedAttitudeSpy, times(1)).toEulerAngles(any())
-//        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { attitude.copyTo(levelingAttitudeSpy) }
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(any()) }
+        verify(exactly = 1) { fusedAttitudeSpy.setFromEulerAngles(any(), any(), any()) }
+        verify(exactly = 0) { fusedAttitudeSpy.asInhomogeneousMatrix(any()) }
+        verify { coordinateTransformationSpy wasNot Called }
+        verify(exactly = 1) { fusedAttitudeSpy.toEulerAngles(any()) }
 
-        verify(listener, only()).onAttitudeAvailable(
-            eq(estimator),
-            eq(fusedAttitudeSpy),
-            any(),
-            any(),
-            any(),
-            any(),
-            eq(null)
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onAttitudeAvailable(
                 estimator,
                 fusedAttitudeSpy,
@@ -1490,7 +1343,7 @@ class GeomagneticAttitudeEstimatorTest {
                 any(),
                 null
             )
-        }*/
+        }
     }
 
     private fun getLocation(): Location {
@@ -1508,12 +1361,9 @@ class GeomagneticAttitudeEstimatorTest {
             MAX_HEIGHT
         )
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

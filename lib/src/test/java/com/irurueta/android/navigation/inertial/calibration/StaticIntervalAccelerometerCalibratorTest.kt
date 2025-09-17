@@ -30,7 +30,6 @@ import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
-import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.frames.NEDFrame
@@ -50,28 +49,13 @@ import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
+import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.doThrow
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.InvocationTargetException
 import java.util.*
@@ -80,125 +64,92 @@ import java.util.*
 class StaticIntervalAccelerometerCalibratorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var errorListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedAccelerometerMeasurementListener:
             StaticIntervalAccelerometerCalibrator.OnGeneratedAccelerometerMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var readyToSolveCalibrationListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var calibrationSolvingStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var calibrationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var stoppedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var unreliableGravityNormEstimatorListener:
             StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var initialBiasAvailableListener:
             StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var unreliableGravityNormEstimationListener:
             StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initialAccelerometerBiasAvailableListener:
             StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var generator: AccelerometerMeasurementGenerator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var measurement: StandardDeviationBodyKinematics
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gravityNormEstimator: GravityNormEstimator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var internalCalibrator: AccelerometerNonLinearCalibrator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_returnsDefaultValues() {
@@ -6378,8 +6329,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         generatorInitializationStartedListener.onInitializationStarted(generator)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(calibrator)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
     }
 
     @Test
@@ -6397,11 +6347,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
-        whenever(gravityNormEstimatorSpy.averageNorm).thenReturn(gravityNorm)
-//        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val randomizer = UniformRandomizer()
@@ -6433,11 +6381,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
-        whenever(gravityNormEstimatorSpy.averageNorm).thenReturn(gravityNorm)
-//        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val randomizer = UniformRandomizer()
@@ -6450,8 +6396,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         assertEquals(gravityNorm, calibrator.gravityNorm)
 
-        verify(initializationCompletedListener, only()).onInitializationCompleted(calibrator)
-//        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
     }
 
     @Test
@@ -6470,17 +6415,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-        whenever(gravityNormEstimatorSpy.running).thenReturn(true)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>? =
@@ -6491,10 +6433,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         assertFalse(calibrator.running)
-        verify(generatorSpy, times(1)).stop()
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
     }
 
     @Test
@@ -6517,17 +6457,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        whenever(gravityNormEstimatorSpy.running).thenReturn(true)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>? =
@@ -6538,22 +6475,15 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         assertFalse(calibrator.running)
-        verify(generatorSpy, times(1)).stop()
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-        verify(errorListener, only()).onError(
-            calibrator,
-            CalibratorErrorReason.UNRELIABLE_SENSOR
-        )
-        verify(stoppedListener, only()).onStopped(calibrator)
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.UNRELIABLE_SENSOR
             )
-        }*/
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
     @Test
@@ -6582,8 +6512,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
 
-        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(calibrator)
-//        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
     }
 
     @Test
@@ -6612,8 +6541,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
 
-        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(calibrator)
-//        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
     }
 
     @Test
@@ -6642,8 +6570,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
 
-        verify(staticIntervalSkippedListener, only()).onStaticIntervalSkipped(calibrator)
-//        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -6672,8 +6599,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
 
-        verify(dynamicIntervalSkippedListener, only()).onDynamicIntervalSkipped(calibrator)
-//        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -6714,20 +6640,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(1, calibrator.accelerometerMeasurements.size)
         assertSame(measurement, calibrator.accelerometerMeasurements[0])
 
-        verify(generatedAccelerometerMeasurementListener, only()).onGeneratedAccelerometerMeasurement(
-            calibrator,
-            measurement,
-            1,
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedAccelerometerMeasurementListener.onGeneratedAccelerometerMeasurement(
                 calibrator,
                 measurement,
                 1,
                 StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL
             )
-        }*/
+        }
     }
 
     @Test
@@ -6756,17 +6676,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        whenever(gravityNormEstimatorSpy.running).thenReturn(true)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6779,10 +6696,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -6816,17 +6731,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        whenever(gravityNormEstimatorSpy.running).thenReturn(true)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6839,12 +6751,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -6933,17 +6842,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        whenever(gravityNormEstimatorSpy.running).thenReturn(true)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6958,10 +6864,8 @@ class StaticIntervalAccelerometerCalibratorTest {
             StandardDeviationBodyKinematics(calibrator.accelerometerMeasurements.last())
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -7083,17 +6987,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        whenever(gravityNormEstimatorSpy.running).thenReturn(true)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7108,10 +7009,8 @@ class StaticIntervalAccelerometerCalibratorTest {
             StandardDeviationBodyKinematics(calibrator.accelerometerMeasurements.last())
         generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
 
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -7145,22 +7044,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
         assertNotNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(stoppedListener, only()).onStopped(calibrator)
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-        verifyNoInteractions(errorListener)
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
-//        verify { errorListener wasNot Called }
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify { errorListener wasNot Called }
     }
 
     @Test
@@ -7175,10 +7067,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -7228,10 +7118,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -7280,10 +7168,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -7332,10 +7218,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -7387,10 +7271,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -7427,20 +7309,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(bx.toDouble(), initialBiasY, 0.0)
         assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
-        verify(initialAccelerometerBiasAvailableListener, only()).onInitialBiasAvailable(
-            calibrator,
-            by.toDouble(),
-            bx.toDouble(),
-            -bz.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
                 by.toDouble(),
                 bx.toDouble(),
                 -bz.toDouble()
             )
-        }*/
+        }
     }
 
     @Test
@@ -7458,10 +7334,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(2)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -7492,8 +7366,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerInitialBiasY)
         assertNull(calibrator.accelerometerInitialBiasZ)
 
-        verifyNoInteractions(initialAccelerometerBiasAvailableListener)
-//        verify { initialAccelerometerBiasAvailableListener wasNot Called }
+        verify { initialAccelerometerBiasAvailableListener wasNot Called }
     }
 
     @Test
@@ -7509,8 +7382,7 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val gravityNorm = randomizer.nextDouble()
-        whenever(gravityNormEstimator.averageNorm).thenReturn(gravityNorm)
-//        every { gravityNormEstimator.averageNorm }.returns(gravityNorm)
+        every { gravityNormEstimator.averageNorm }.returns(gravityNorm)
         gravityNormCompletedListener.onEstimationCompleted(gravityNormEstimator)
 
         assertEquals(gravityNorm, calibrator.gravityNorm)
@@ -7550,14 +7422,11 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         assertTrue(calibrator.accelerometerResultUnreliable)
 
-        verify(unreliableGravityNormEstimatorListener, only()).onUnreliableGravityEstimation(
-            calibrator
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             unreliableGravityNormEstimatorListener.onUnreliableGravityEstimation(
                 calibrator
             )
-        }*/
+        }
     }
 
     @Test
@@ -7568,18 +7437,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
 
-        verify(generatorSpy, times(2)).accelerometerBaseNoiseLevel
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevel }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevel }
     }
 
     @Test
@@ -7590,20 +7456,17 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         val baseNoiseLevel1 =
             Acceleration(baseNoiseLevel, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(generatorSpy.accelerometerBaseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
-//        every { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        every { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val baseNoiseLevel2 = calibrator.accelerometerBaseNoiseLevelAsMeasurement
         assertSame(baseNoiseLevel1, baseNoiseLevel2)
-        verify(generatorSpy, times(2)).accelerometerBaseNoiseLevelAsMeasurement
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -7618,22 +7481,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = baseNoiseLevel
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getAccelerometerBaseNoiseLevelAsMeasurement(any())
-/*        every { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        every { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = baseNoiseLevel
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
@@ -7641,8 +7497,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         assertEquals(baseNoiseLevel, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(generatorSpy, only()).getAccelerometerBaseNoiseLevelAsMeasurement(acceleration)
-//        verify(exactly = 1) { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration) }
+        verify(exactly = 1) { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration) }
     }
 
     @Test
@@ -7653,17 +7508,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevelPsd).thenReturn(baseNoiseLevelPsd)
-//        every { generatorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
+        every { generatorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevelPsd, calibrator.accelerometerBaseNoiseLevelPsd)
-        verify(generatorSpy, times(2)).accelerometerBaseNoiseLevelPsd
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelPsd }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelPsd }
     }
 
     @Test
@@ -7674,17 +7526,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevelRootPsd).thenReturn(baseNoiseLevelRootPsd)
-//        every { generatorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
+        every { generatorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevelRootPsd, calibrator.accelerometerBaseNoiseLevelRootPsd)
-        verify(generatorSpy, times(2)).accelerometerBaseNoiseLevelRootPsd
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelRootPsd }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelRootPsd }
     }
 
     @Test
@@ -7698,17 +7547,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
-        whenever(generatorSpy.threshold).thenReturn(threshold)
-//        every { generatorSpy.threshold }.returns(threshold)
+        every { generatorSpy.threshold }.returns(threshold)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(threshold, calibrator.threshold)
-        verify(generatorSpy, times(2)).threshold
-//        verify(exactly = 1) { generatorSpy.threshold }
+        verify(exactly = 1) { generatorSpy.threshold }
     }
 
     @Test
@@ -7722,18 +7568,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
         val acceleration = Acceleration(threshold, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(generatorSpy.thresholdAsMeasurement).thenReturn(acceleration)
-//        every { generatorSpy.thresholdAsMeasurement }.returns(acceleration)
+        every { generatorSpy.thresholdAsMeasurement }.returns(acceleration)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(acceleration, calibrator.thresholdAsMeasurement)
-        verify(generatorSpy, times(2)).thresholdAsMeasurement
-//        verify(exactly = 1) { generatorSpy.thresholdAsMeasurement }
+        verify(exactly = 1) { generatorSpy.thresholdAsMeasurement }
     }
 
     @Test
@@ -7748,29 +7591,21 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = threshold
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getThresholdAsMeasurement(any())
-/*        every { generatorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        every { generatorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = threshold
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getThresholdAsMeasurement(acceleration))
         assertEquals(threshold, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(generatorSpy, only()).getThresholdAsMeasurement(acceleration)
-//        verify(exactly = 1) { generatorSpy.getThresholdAsMeasurement(acceleration) }
+        verify(exactly = 1) { generatorSpy.getThresholdAsMeasurement(acceleration) }
     }
 
     @Test
@@ -7781,17 +7616,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val processedStaticSamples = randomizer.nextInt()
-        whenever(generatorSpy.processedStaticSamples).thenReturn(processedStaticSamples)
-//        every { generatorSpy.processedStaticSamples }.returns(processedStaticSamples)
+        every { generatorSpy.processedStaticSamples }.returns(processedStaticSamples)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(processedStaticSamples, calibrator.processedStaticSamples)
-        verify(generatorSpy, times(2)).processedStaticSamples
-//        verify(exactly = 1) { generatorSpy.processedStaticSamples }
+        verify(exactly = 1) { generatorSpy.processedStaticSamples }
     }
 
     @Test
@@ -7802,17 +7634,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val processedDynamicSamples = randomizer.nextInt()
-        whenever(generatorSpy.processedDynamicSamples).thenReturn(processedDynamicSamples)
-//        every { generatorSpy.processedDynamicSamples }.returns(processedDynamicSamples)
+        every { generatorSpy.processedDynamicSamples }.returns(processedDynamicSamples)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(processedDynamicSamples, calibrator.processedDynamicSamples)
-        verify(generatorSpy, times(2)).processedDynamicSamples
-//        verify(exactly = 1) { generatorSpy.processedDynamicSamples }
+        verify(exactly = 1) { generatorSpy.processedDynamicSamples }
     }
 
     @Test
@@ -7823,15 +7652,12 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.isStaticIntervalSkipped).thenReturn(true)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.isStaticIntervalSkipped }.returns(true)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.isStaticIntervalSkipped }.returns(true)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.isStaticIntervalSkipped)
-        verify(generatorSpy, times(2)).isStaticIntervalSkipped
-//        verify(exactly = 1) { generatorSpy.isStaticIntervalSkipped }
+        verify(exactly = 1) { generatorSpy.isStaticIntervalSkipped }
     }
 
     @Test
@@ -7842,15 +7668,12 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.isDynamicIntervalSkipped).thenReturn(true)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.isDynamicIntervalSkipped }.returns(true)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.isDynamicIntervalSkipped }.returns(true)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.isDynamicIntervalSkipped)
-        verify(generatorSpy, times(2)).isDynamicIntervalSkipped
-//        verify(exactly = 1) { generatorSpy.isDynamicIntervalSkipped }
+        verify(exactly = 1) { generatorSpy.isDynamicIntervalSkipped }
     }
 
     @Test
@@ -7861,17 +7684,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerAverageTimeInterval).thenReturn(averageTimeInterval)
-//        every { generatorSpy.accelerometerAverageTimeInterval }.returns(averageTimeInterval)
+        every { generatorSpy.accelerometerAverageTimeInterval }.returns(averageTimeInterval)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(averageTimeInterval, calibrator.accelerometerAverageTimeInterval)
-        verify(generatorSpy, only()).accelerometerAverageTimeInterval
-//        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeInterval }
+        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeInterval }
     }
 
     @Test
@@ -7882,18 +7702,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
         val time = Time(averageTimeInterval, TimeUnit.SECOND)
-        whenever(generatorSpy.accelerometerAverageTimeIntervalAsTime).thenReturn(time)
-//        every { generatorSpy.accelerometerAverageTimeIntervalAsTime }.returns(time)
+        every { generatorSpy.accelerometerAverageTimeIntervalAsTime }.returns(time)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(time, calibrator.accelerometerAverageTimeIntervalAsTime)
-        verify(generatorSpy, only()).accelerometerAverageTimeIntervalAsTime
-//        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeIntervalAsTime }
+        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeIntervalAsTime }
     }
 
     @Test
@@ -7908,29 +7725,21 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = averageTimeInterval
-            result.unit = TimeUnit.SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getAccelerometerAverageTimeIntervalAsTime(any())
-/*        every { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        every { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = averageTimeInterval
             result.unit = TimeUnit.SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
         assertEquals(averageTimeInterval, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)
-        verify(generatorSpy, only()).getAccelerometerAverageTimeIntervalAsTime(time)
-//        verify(exactly = 1) { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(time) }
+        verify(exactly = 1) { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(time) }
     }
 
     @Test
@@ -7944,17 +7753,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val timeIntervalVariance = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerTimeIntervalVariance).thenReturn(timeIntervalVariance)
-//        every { generatorSpy.accelerometerTimeIntervalVariance }.returns(timeIntervalVariance)
+        every { generatorSpy.accelerometerTimeIntervalVariance }.returns(timeIntervalVariance)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(timeIntervalVariance, calibrator.accelerometerTimeIntervalVariance)
-        verify(generatorSpy, only()).accelerometerTimeIntervalVariance
-//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalVariance }
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalVariance }
     }
 
     @Test
@@ -7968,22 +7774,19 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val timeIntervalStandardDeviation = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerTimeIntervalStandardDeviation).thenReturn(timeIntervalStandardDeviation)
-/*        every { generatorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
+        every { generatorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
             timeIntervalStandardDeviation
-        )*/
+        )
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
             timeIntervalStandardDeviation,
             calibrator.accelerometerTimeIntervalStandardDeviation
         )
-        verify(generatorSpy, only()).accelerometerTimeIntervalStandardDeviation
-//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviation }
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviation }
     }
 
     @Test
@@ -7994,18 +7797,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val time = Time(value, TimeUnit.SECOND)
-        whenever(generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime).thenReturn(time)
-//        every { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(time)
+        every { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(time)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(time, calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        verify(generatorSpy, only()).accelerometerTimeIntervalStandardDeviationAsTime
-//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
     }
 
     @Test
@@ -8020,29 +7820,21 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getAccelerometerTimeIntervalStandardDeviationAsTime(any())
-/*        every { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        every { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(value, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)
-        verify(generatorSpy, only()).getAccelerometerTimeIntervalStandardDeviationAsTime(time)
-//        verify(exactly = 1) { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(time) }
+        verify(exactly = 1) { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(time) }
     }
 
     @Test
@@ -8053,14 +7845,12 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val numberOfProcessedAccelerometerMeasurements = randomizer.nextInt()
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(numberOfProcessedAccelerometerMeasurements)
-/*        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
             numberOfProcessedAccelerometerMeasurements
-        )*/
+        )
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
@@ -8068,8 +7858,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.numberOfProcessedAccelerometerMeasurements
         )
 
-        verify(generatorSpy, only()).numberOfProcessedAccelerometerMeasurements
-//        verify(exactly = 1) { generatorSpy.numberOfProcessedAccelerometerMeasurements }
+        verify(exactly = 1) { generatorSpy.numberOfProcessedAccelerometerMeasurements }
     }
 
     @Test
@@ -8368,16 +8157,13 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(location)
-        whenever(gravityNormEstimatorSpy.averageNorm).thenReturn(gravityNorm)
-//        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertEquals(gravityNorm, calibrator.averageGravityNorm)
-        verify(gravityNormEstimatorSpy, times(2)).averageNorm
-//        verify(exactly = 1) { gravityNormEstimatorSpy.averageNorm }
+        verify(exactly = 1) { gravityNormEstimatorSpy.averageNorm }
     }
 
     @Test
@@ -8402,17 +8188,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(location)
         val acceleration = Acceleration(gravityNorm, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(gravityNormEstimatorSpy.averageNormAsMeasurement).thenReturn(acceleration)
-//        every { gravityNormEstimatorSpy.averageNormAsMeasurement }.returns(acceleration)
+        every { gravityNormEstimatorSpy.averageNormAsMeasurement }.returns(acceleration)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertSame(acceleration, calibrator.averageGravityNormAsMeasurement)
-        verify(gravityNormEstimatorSpy, times(2)).averageNormAsMeasurement
-//        verify(exactly = 1) { gravityNormEstimatorSpy.averageNormAsMeasurement }
+        verify(exactly = 1) { gravityNormEstimatorSpy.averageNormAsMeasurement }
     }
 
     @Test
@@ -8437,29 +8220,21 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(location)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = gravityNorm
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(gravityNormEstimatorSpy).getAverageNormAsMeasurement(any())
-/*        every { gravityNormEstimatorSpy.getAverageNormAsMeasurement(any()) }.answers { answer ->
+        every { gravityNormEstimatorSpy.getAverageNormAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = gravityNorm
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getAverageGravityNormAsMeasurement(acceleration))
         assertEquals(gravityNorm, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(gravityNormEstimatorSpy, only()).getAverageNormAsMeasurement(acceleration)
-//        verify(exactly = 1) { gravityNormEstimatorSpy.getAverageNormAsMeasurement(acceleration) }
+        verify(exactly = 1) { gravityNormEstimatorSpy.getAverageNormAsMeasurement(acceleration) }
     }
 
     @Test
@@ -8486,19 +8261,16 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityNormVariance = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.normVariance).thenReturn(gravityNormVariance)
-//        every { gravityNormEstimatorSpy.normVariance }.returns(gravityNormVariance)
+        every { gravityNormEstimatorSpy.normVariance }.returns(gravityNormVariance)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val result = calibrator.gravityNormVariance
         requireNotNull(result)
         assertEquals(gravityNormVariance, result, 0.0)
-        verify(gravityNormEstimatorSpy, times(2)).normVariance
-//        verify(exactly = 1) { gravityNormEstimatorSpy.normVariance }
+        verify(exactly = 1) { gravityNormEstimatorSpy.normVariance }
     }
 
     @Test
@@ -8520,19 +8292,16 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityNormStandardDeviation = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.normStandardDeviation).thenReturn(gravityNormStandardDeviation)
-//        every { gravityNormEstimatorSpy.normStandardDeviation }.returns(gravityNormStandardDeviation)
+        every { gravityNormEstimatorSpy.normStandardDeviation }.returns(gravityNormStandardDeviation)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val result = calibrator.gravityNormStandardDeviation
         requireNotNull(result)
         assertEquals(gravityNormStandardDeviation, result, 0.0)
-        verify(gravityNormEstimatorSpy, times(2)).normStandardDeviation
-//        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviation }
+        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviation }
     }
 
     @Test
@@ -8556,20 +8325,17 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityNormStandardDeviation = randomizer.nextDouble()
         val acceleration =
             Acceleration(gravityNormStandardDeviation, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(gravityNormEstimatorSpy.normStandardDeviationAsMeasurement).thenReturn(acceleration)
-//        every { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }.returns(acceleration)
+        every { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }.returns(acceleration)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val result = calibrator.gravityNormStandardDeviationAsMeasurement
         assertSame(acceleration, result)
-        verify(gravityNormEstimatorSpy, times(2)).normStandardDeviationAsMeasurement
-//        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }
+        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }
     }
 
     @Test
@@ -8593,36 +8359,26 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = value
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(gravityNormEstimatorSpy).getNormStandardDeviationAsMeasurement(any())
-/*        every { gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(any()) }.answers { answer ->
+        every { gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
         assertEquals(value, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(gravityNormEstimatorSpy, only()).getNormStandardDeviationAsMeasurement(
-            acceleration
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(
                 acceleration
             )
-        }*/
+        }
     }
 
     @Test
@@ -8647,17 +8403,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityPsd = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.psd).thenReturn(gravityPsd)
-//        every { gravityNormEstimatorSpy.psd }.returns(gravityPsd)
+        every { gravityNormEstimatorSpy.psd }.returns(gravityPsd)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertEquals(gravityPsd, calibrator.gravityPsd)
-        verify(gravityNormEstimatorSpy, times(2)).psd
-//        verify(exactly = 1) { gravityNormEstimatorSpy.psd }
+        verify(exactly = 1) { gravityNormEstimatorSpy.psd }
     }
 
     @Test
@@ -8681,17 +8434,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityRootPsd = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.rootPsd).thenReturn(gravityRootPsd)
-//        every { gravityNormEstimatorSpy.rootPsd }.returns(gravityRootPsd)
+        every { gravityNormEstimatorSpy.rootPsd }.returns(gravityRootPsd)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertEquals(gravityRootPsd, calibrator.gravityRootPsd)
-        verify(gravityNormEstimatorSpy, times(2)).rootPsd
-//        verify(exactly = 1) { gravityNormEstimatorSpy.rootPsd }
+        verify(exactly = 1) { gravityNormEstimatorSpy.rootPsd }
     }
 
     @Test
@@ -8727,17 +8477,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).start()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.start() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.start() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         calibrator.start()
@@ -8752,10 +8499,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         assertTrue(calibrator.running)
 
-        verifyNoInteractions(gravityNormEstimatorSpy)
-        verify(generatorSpy, only()).start()
-//        verify { gravityNormEstimatorSpy wasNot Called }
-//        verify(exactly = 1) { generatorSpy.start() }
+        verify { gravityNormEstimatorSpy wasNot Called }
+        verify(exactly = 1) { generatorSpy.start() }
     }
 
     @Test
@@ -8779,19 +8524,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        doNothing().whenever(gravityNormEstimatorSpy).start()
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        justRun { gravityNormEstimatorSpy.start() }
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        justRun { gravityNormEstimatorSpy.start() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).start()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.start() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.start() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         calibrator.start()
@@ -8806,10 +8547,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         assertTrue(calibrator.running)
 
-        verify(gravityNormEstimatorSpy, only()).start()
-        verify(generatorSpy, only()).start()
-//        verify(exactly = 1) { gravityNormEstimatorSpy.start() }
-//        verify(exactly = 1) { generatorSpy.start() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.start() }
+        verify(exactly = 1) { generatorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -8834,17 +8573,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).stop()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.stop() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
@@ -8858,12 +8594,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(generatorSpy, only()).stop()
-        verify(gravityNormEstimatorSpy, only()).running
-        verify(gravityNormEstimatorSpy, never()).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.running }
-//        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
         assertFalse(gravityNormEstimatorSpy.running)
     }
 
@@ -8875,19 +8608,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).stop()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.stop() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        whenever(gravityNormEstimatorSpy.running).thenReturn(true)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
@@ -8901,12 +8630,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(generatorSpy, only()).stop()
-        verify(gravityNormEstimatorSpy, times(1)).running
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.running }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
         assertTrue(gravityNormEstimatorSpy.running)
     }
 
@@ -8921,17 +8647,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).stop()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.stop() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
@@ -8945,14 +8668,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(generatorSpy, only()).stop()
-        verify(gravityNormEstimatorSpy, only()).running
-        verify(gravityNormEstimatorSpy, never()).stop()
-        verify(stoppedListener, only()).onStopped(calibrator)
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.running }
-//        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
         assertFalse(gravityNormEstimatorSpy.running)
     }
 
@@ -9012,23 +8731,18 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        doNothing().whenever(internalCalibrator).calibrate()
-//        justRun { internalCalibrator.calibrate() }
+        justRun { internalCalibrator.calibrate() }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
         assertTrue(calibrator.calibrate())
 
         assertFalse(calibrator.running)
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
     }
 
     @Test
@@ -9043,8 +8757,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        doThrow(CalibrationException()).whenever(internalCalibrator).calibrate()
-//        every { internalCalibrator.calibrate() }.throws(NavigationException())
+        every { internalCalibrator.calibrate() }.throws(CalibrationException())
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
         assertFalse(calibrator.calibrate())
@@ -9067,23 +8780,18 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        doThrow(CalibrationException()).whenever(internalCalibrator).calibrate()
-//        every { internalCalibrator.calibrate() }.throws(NavigationException())
+        every { internalCalibrator.calibrate() }.throws(CalibrationException())
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
 
         assertFalse(calibrator.calibrate())
 
         assertFalse(calibrator.running)
-        verify(errorListener, only()).onError(
-            calibrator,
-            CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
             )
-        }*/
+        }
     }
 
     @Test
@@ -9100,12 +8808,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        whenever(internalCalibratorSpy.estimatedBiasFx).thenReturn(estimatedBiasX)
-//        every { internalCalibratorSpy.estimatedBiasFx }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.estimatedBiasFx }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedAccelerometerBiasX)
@@ -9116,12 +8822,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        whenever(internalCalibratorSpy.biasX).thenReturn(estimatedBiasX)
-//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedAccelerometerBiasX)
@@ -9141,12 +8845,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        whenever(internalCalibratorSpy.estimatedBiasFy).thenReturn(estimatedBiasY)
-//        every { internalCalibratorSpy.estimatedBiasFy }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.estimatedBiasFy }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedAccelerometerBiasY)
@@ -9157,12 +8859,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        whenever(internalCalibratorSpy.biasY).thenReturn(estimatedBiasY)
-//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedAccelerometerBiasY)
@@ -9182,12 +8882,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        whenever(internalCalibratorSpy.estimatedBiasFz).thenReturn(estimatedBiasZ)
-//        every { internalCalibratorSpy.estimatedBiasFz }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.estimatedBiasFz }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedAccelerometerBiasZ)
@@ -9198,12 +8896,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        whenever(internalCalibratorSpy.biasZ).thenReturn(estimatedBiasZ)
-//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedAccelerometerBiasZ)
@@ -9223,13 +8919,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(internalCalibratorSpy.estimatedBiasFxAsAcceleration).thenReturn(acceleration)
-//        every { internalCalibratorSpy.estimatedBiasFxAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.estimatedBiasFxAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasXAsMeasurement)
@@ -9240,13 +8934,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(internalCalibratorSpy.biasXAsAcceleration).thenReturn(acceleration)
-//        every { internalCalibratorSpy.biasXAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.biasXAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasXAsMeasurement)
@@ -9267,22 +8959,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasX
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasFxAsAcceleration(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasFxAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasFxAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasX
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -9297,20 +8982,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasX
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalCalibratorSpy).getBiasXAsAcceleration(any())
-/*        every { internalCalibratorSpy.getBiasXAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasXAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasX
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -9334,13 +9013,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(internalCalibratorSpy.estimatedBiasFyAsAcceleration).thenReturn(acceleration)
-//        every { internalCalibratorSpy.estimatedBiasFyAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.estimatedBiasFyAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasYAsMeasurement)
@@ -9351,13 +9028,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(internalCalibratorSpy.biasYAsAcceleration).thenReturn(acceleration)
-//        every { internalCalibratorSpy.biasYAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.biasYAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasYAsMeasurement)
@@ -9378,22 +9053,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-        //val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasY
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasFyAsAcceleration(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasFyAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasFyAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasY
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -9408,20 +9076,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasY
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalCalibratorSpy).getBiasYAsAcceleration(any())
-/*        every { internalCalibratorSpy.getBiasYAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasYAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasY
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -9445,13 +9107,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(internalCalibratorSpy.estimatedBiasFzAsAcceleration).thenReturn(acceleration)
-//        every { internalCalibratorSpy.estimatedBiasFzAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.estimatedBiasFzAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasZAsMeasurement)
@@ -9462,13 +9122,11 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(internalCalibratorSpy.biasZAsAcceleration).thenReturn(acceleration)
-//        every { internalCalibratorSpy.biasZAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.biasZAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasZAsMeasurement)
@@ -9489,22 +9147,15 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasZ
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasFzAsAcceleration(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasFzAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasFzAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasZ
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -9519,20 +9170,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasZ
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalCalibratorSpy).getBiasZAsAcceleration(any())
-/*        every { internalCalibratorSpy.getBiasZAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasZAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasZ
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -9556,8 +9201,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -9568,8 +9212,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        whenever(internalCalibratorSpy.estimatedBiasAsTriad).thenReturn(triad)
-//        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
+        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedAccelerometerBiasAsTriad)
@@ -9580,8 +9223,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -9592,8 +9234,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        whenever(internalCalibratorSpy.biasAsTriad).thenReturn(triad)
-//        every { internalCalibratorSpy.biasAsTriad }.returns(triad)
+        every { internalCalibratorSpy.biasAsTriad }.returns(triad)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedAccelerometerBiasAsTriad)
@@ -9615,23 +9256,12 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                estimatedBiasX,
-                estimatedBiasY,
-                estimatedBiasZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasAsTriad(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinatesAndUnit(
                 estimatedBiasX,
@@ -9640,7 +9270,7 @@ class StaticIntervalAccelerometerCalibratorTest {
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val triad = AccelerationTriad()
@@ -9657,23 +9287,12 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                estimatedBiasX,
-                estimatedBiasY,
-                estimatedBiasZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getBiasAsTriad(any())
-/*        every { internalCalibratorSpy.getBiasAsTriad(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinatesAndUnit(
                 estimatedBiasX,
@@ -9681,7 +9300,7 @@ class StaticIntervalAccelerometerCalibratorTest {
                 estimatedBiasZ,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val triad = AccelerationTriad()
@@ -9708,14 +9327,12 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasStandardDeviationNorm = randomizer.nextDouble()
-        whenever(internalCalibratorSpy.estimatedBiasStandardDeviationNorm).thenReturn(estimatedBiasStandardDeviationNorm)
-/*        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
+        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
             estimatedBiasStandardDeviationNorm
-        )*/
+        )
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(
@@ -9729,8 +9346,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
@@ -10881,12 +10497,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
 
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
@@ -11237,11 +10851,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
@@ -11369,11 +10981,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
 
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -11470,10 +11080,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -11576,10 +11184,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -11616,11 +11222,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
@@ -11688,10 +11292,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -11981,11 +11583,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
@@ -12122,10 +11722,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -12222,10 +11820,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -12328,10 +11924,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -12369,11 +11963,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
@@ -12450,10 +12042,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -12747,11 +12337,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
@@ -13175,11 +12763,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
@@ -13376,10 +12962,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -13478,10 +13062,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -13586,10 +13168,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -13626,11 +13206,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
@@ -13697,10 +13275,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -13769,10 +13345,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -14069,11 +13643,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
@@ -14274,10 +13846,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -14376,10 +13946,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -14484,10 +14052,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -14525,11 +14091,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
@@ -14600,10 +14164,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -14672,10 +14234,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -14966,11 +14526,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
@@ -15321,11 +14879,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
@@ -15453,10 +15009,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -15553,10 +15107,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -15659,10 +15211,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -15699,11 +15249,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
@@ -15771,10 +15319,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16063,11 +15609,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
@@ -16199,10 +15743,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16299,10 +15841,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16405,10 +15945,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16446,11 +15984,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
@@ -16522,10 +16058,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16819,11 +16353,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
@@ -17247,11 +16779,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
@@ -17448,11 +16978,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17551,10 +17078,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17659,10 +17184,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17699,11 +17222,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
@@ -17770,10 +17291,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17842,10 +17361,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18142,11 +17659,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
@@ -18349,10 +17864,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18451,10 +17964,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18559,10 +18070,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18600,11 +18109,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
@@ -18675,10 +18182,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18747,10 +18252,8 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        whenever(measurement.specificForceStandardDeviation).thenReturn(specificForceStandardDeviation)
-        whenever(measurement.angularRateStandardDeviation).thenReturn(0.0)
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18813,12 +18316,9 @@ class StaticIntervalAccelerometerCalibratorTest {
             randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.latitude }.returns(latitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

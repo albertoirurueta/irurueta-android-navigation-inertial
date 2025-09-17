@@ -26,74 +26,43 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.test.core.app.ApplicationProvider
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.impl.annotations.SpyK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.Mockito.mockStatic
-import org.mockito.Spy
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.capture
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-//import org.mockito.kotlin.mock
-import org.mockito.kotlin.only
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-//@Ignore("Possible memory leak when running this test")
 @Suppress("UseCheckPermission")
 @RunWith(RobolectricTestRunner::class)
 class LocationPermissionServiceTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var listener:
             LocationPermissionService.OnLocationPermissionRequestResultListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var launcher: ActivityResultLauncher<Array<String>>
 
-//    @SpyK
-    @Spy
+    @SpyK
     private var context: Context = ApplicationProvider.getApplicationContext()
 
-//    @SpyK
-    @Spy
+    @SpyK
     private var activity = AppCompatActivity()
-
-    @Captor
-    private lateinit var locationPermissionResultCaptor: ArgumentCaptor<LocationPermissionService.LocationPermissionResult>
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenActivity_setsBothContextAndActivity() {
@@ -157,338 +126,228 @@ class LocationPermissionServiceTest {
     @SuppressLint("UseCheckPermission")
     @Test
     fun hasFineLocationPermission_whenPermissionGranted_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_GRANTED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_GRANTED)*/
+        }.returns(PackageManager.PERMISSION_GRANTED)
         val service = LocationPermissionService(context)
 
         assertTrue(service.hasFineLocationPermission())
-        verify(context, only()).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @SuppressLint("UseCheckPermission")
     @Test
     fun hasFineLocationPermission_whenPermissionDenied_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_DENIED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_DENIED)*/
+        }.returns(PackageManager.PERMISSION_DENIED)
         val service = LocationPermissionService(context)
 
         assertFalse(service.hasFineLocationPermission())
-        verify(context, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Test
     fun hasCoarseLocationPermission_whenPermissionGranted_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_GRANTED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_GRANTED)*/
+        }.returns(PackageManager.PERMISSION_GRANTED)
         val service = LocationPermissionService(context)
 
         assertTrue(service.hasCoarseLocationPermission())
-        verify(context, only()).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Test
     fun hasCoarseLocationPermission_whenPermissionDenied_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_DENIED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_DENIED)*/
+        }.returns(PackageManager.PERMISSION_DENIED)
         val service = LocationPermissionService(context)
 
         assertFalse(service.hasCoarseLocationPermission())
-        verify(context, only()).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun hasBackgroundLocationPermission_whenSdkPAndFinePermissionGranted_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_GRANTED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_GRANTED)*/
+        }.returns(PackageManager.PERMISSION_GRANTED)
 
         val service = LocationPermissionService(context)
 
         assertTrue(service.hasBackgroundLocationPermission())
-        verify(context, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun hasBackgroundLocationPermission_whenSdkPAndCoarsePermissionGranted_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_DENIED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_DENIED)*/
-        doReturn(PackageManager.PERMISSION_GRANTED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        }.returns(PackageManager.PERMISSION_DENIED)
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_GRANTED)*/
+        }.returns(PackageManager.PERMISSION_GRANTED)
 
         val service = LocationPermissionService(context)
 
         assertTrue(service.hasBackgroundLocationPermission())
-        verify(context, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }*/
-        verify(context, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun hasBackgroundLocationPermission_whenSdkPAndPermissionDenied_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_DENIED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_DENIED)*/
-        doReturn(PackageManager.PERMISSION_DENIED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        }.returns(PackageManager.PERMISSION_DENIED)
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_DENIED)*/
+        }.returns(PackageManager.PERMISSION_DENIED)
 
         val service = LocationPermissionService(context)
 
         assertFalse(service.hasBackgroundLocationPermission())
-        verify(context, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }*/
-        verify(context, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun hasBackgroundLocationPermission_whenSdkQAndPermissionGranted_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_GRANTED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_GRANTED)*/
+        }.returns(PackageManager.PERMISSION_GRANTED)
         val service = LocationPermissionService(context)
 
         assertTrue(service.hasBackgroundLocationPermission())
-        verify(context, only()).checkPermission(
-            eq(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun hasBackgroundLocationPermission_whenSdkQAndPermissionDenied_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_DENIED).whenever(context).checkPermission(
-            eq(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_DENIED)*/
+        }.returns(PackageManager.PERMISSION_DENIED)
         val service = LocationPermissionService(context)
 
         assertFalse(service.hasBackgroundLocationPermission())
-        verify(context, only()).checkPermission(
-            eq(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -502,25 +361,7 @@ class LocationPermissionServiceTest {
     fun shouldShowRequestFineLocationPermissionRationale_whenActivity_callsExpectedMethod() {
         val activity = AppCompatActivity()
 
-        mockStatic(ActivityCompat::class.java).use { mock ->
-            mock.`when`<Boolean> {
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            }.thenReturn(true)
-
-            val service = LocationPermissionService(activity)
-            assertTrue(service.shouldShowRequestFineLocationPermissionRationale())
-
-            mock.verify({
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            }, only())
-        }
-/*        mockkStatic(ActivityCompat::class) {
+        mockkStatic(ActivityCompat::class) {
             every {
                 ActivityCompat.shouldShowRequestPermissionRationale(
                     activity,
@@ -536,7 +377,7 @@ class LocationPermissionServiceTest {
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             }
-        }*/
+        }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -550,25 +391,7 @@ class LocationPermissionServiceTest {
     fun shouldShowRequestCoarseLocationPermissionRationale_whenActivity_callsExpectedMethod() {
         val activity = AppCompatActivity()
 
-        mockStatic(ActivityCompat::class.java).use { mock ->
-            mock.`when`<Boolean> {
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            }.thenReturn(true)
-
-            val service = LocationPermissionService(activity)
-            assertTrue(service.shouldShowRequestCoarseLocationPermissionRationale())
-
-            mock.verify({
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            }, only())
-        }
-/*        mockkStatic(ActivityCompat::class) {
+        mockkStatic(ActivityCompat::class) {
             every {
                 ActivityCompat.shouldShowRequestPermissionRationale(
                     activity,
@@ -584,7 +407,7 @@ class LocationPermissionServiceTest {
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 )
             }
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.Q])
@@ -600,25 +423,7 @@ class LocationPermissionServiceTest {
     fun shouldShowRequestBackgroundLocationPermissionRationale_whenActivityAndSdkQ_callsExpectedMethod() {
         val activity = AppCompatActivity()
 
-        mockStatic(ActivityCompat::class.java).use { mock ->
-            mock.`when`<Boolean> {
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                )
-            }.thenReturn(true)
-
-            val service = LocationPermissionService(activity)
-            assertTrue(service.shouldShowRequestBackgroundLocationPermissionRationale())
-
-            mock.verify({
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                )
-            }, only())
-        }
-/*        mockkStatic(ActivityCompat::class) {
+        mockkStatic(ActivityCompat::class) {
             every {
                 ActivityCompat.shouldShowRequestPermissionRationale(
                     activity,
@@ -634,84 +439,59 @@ class LocationPermissionServiceTest {
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             }
-        }*/
+        }
     }
 
     @SuppressLint("UseCheckPermission")
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun shouldShowRequestBackgroundLocationPermissionRationale_whenNoActivityAndSdkR_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_GRANTED).whenever(context).checkPermission(
-            any(),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             context.checkPermission(
                 any(),
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_GRANTED)*/
+        }.returns(PackageManager.PERMISSION_GRANTED)
 
         val service = LocationPermissionService(context)
         assertFalse(service.shouldShowRequestBackgroundLocationPermissionRationale())
-        verify(context, only()).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             context.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun shouldShowRequestBackgroundLocationPermissionRationale_whenActivityAndSdkR_callsExpectedMethod() {
-        doReturn(PackageManager.PERMISSION_DENIED).whenever(activity).checkPermission(
-            any(),
-            any(),
-            any()
-        )
-/*        every {
+        every {
             activity.checkPermission(
                 any(),
                 any(),
                 any()
             )
-        }.returns(PackageManager.PERMISSION_DENIED)*/
+        }.returns(PackageManager.PERMISSION_DENIED)
 
         val service = LocationPermissionService(activity)
         assertTrue(service.shouldShowRequestBackgroundLocationPermissionRationale())
-        verify(activity, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_FINE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.checkPermission(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 any(),
                 any()
             )
-        }*/
-        verify(activity, times(1)).checkPermission(
-            eq(Manifest.permission.ACCESS_COARSE_LOCATION),
-            any(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             activity.checkPermission(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 any(),
                 any()
             )
-        }*/
+        }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -724,20 +504,9 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestFineLocationPermission_whenActivityAndNoListener_callsExpectedMethod() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(Manifest.permission.ACCESS_FINE_LOCATION to true)
-
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -749,41 +518,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
         val service = LocationPermissionService(activity)
         service.requestFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
     }
 
     @Test
     fun requestFineLocationPermission_whenActivityAndListener_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(Manifest.permission.ACCESS_FINE_LOCATION to true)
-
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -795,33 +548,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertFalse(result.cancelled)
         assertTrue(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -833,19 +578,9 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestFineLocationPermission_whenCancelled_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -857,33 +592,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, times(1)).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertTrue(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -903,19 +630,9 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestCoarseLocationPermission_whenActivityAndNoListener_callsExpectedMethod() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(Manifest.permission.ACCESS_COARSE_LOCATION to true)
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -927,40 +644,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
         val service = LocationPermissionService(activity)
         service.requestCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
     }
 
     @Test
     fun requestCoarseLocationPermission_whenActivityAndListener_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(Manifest.permission.ACCESS_COARSE_LOCATION to true)
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -972,33 +674,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertFalse(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertTrue(result.coarsePermissionGranted)
@@ -1010,19 +704,9 @@ class LocationPermissionServiceTest {
 
     @Test
     fun requestCoarseLocationPermission_whenCancelled_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1034,33 +718,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertTrue(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -1081,34 +757,16 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityNoListenerAndSdkQ_callsExpectedMethod() {
-        doNothing().whenever(launcher).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        justRun {
+        justRun {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(
-                Manifest.permission.ACCESS_FINE_LOCATION to true,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION to true
-            )
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1123,68 +781,40 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityListenerAndSdkQ_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        justRun {
+        justRun {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(
-                Manifest.permission.ACCESS_FINE_LOCATION to true,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION to true
-            )
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1199,45 +829,32 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertFalse(result.cancelled)
         assertTrue(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -1250,31 +867,16 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundFineLocationPermission_whenCancelledAndSdkQ_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        justRun {
+        justRun {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1286,45 +888,32 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertTrue(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -1337,19 +926,9 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityNoListenerAndSdkP_callsExpectedMethod() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(Manifest.permission.ACCESS_FINE_LOCATION to true)
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1361,43 +940,28 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundFineLocationPermission_whenActivityListenerAndSdkP_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(Manifest.permission.ACCESS_FINE_LOCATION to true)
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1409,33 +973,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertFalse(result.cancelled)
         assertTrue(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -1448,19 +1004,9 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundFineLocationPermission_whenCancelledAndSdkP_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1472,33 +1018,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundFineLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertTrue(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -1519,31 +1057,16 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityNoListenerAndSdkQ_callsExpectedMethod() {
-        doNothing().whenever(launcher).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        justRun {
+        justRun {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1555,68 +1078,40 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
     }
 
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityListenerAndSdkQ_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        justRun {
+        justRun {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION to true,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION to true
-            )
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1631,45 +1126,32 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertFalse(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertTrue(result.coarsePermissionGranted)
@@ -1682,31 +1164,16 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.Q])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenCancelledAndSdkQ_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        justRun {
+        justRun {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1718,45 +1185,32 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            )
-        )
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_BACKGROUND_LOCATION
                 )
             )
-        }*/
+        }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertTrue(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)
@@ -1769,19 +1223,9 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityNoListenerAndSdkP_callsExpectedMethod() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1793,41 +1237,26 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
         val service = LocationPermissionService(activity)
         service.requestBackgroundCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
     }
 
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenActivityListenerAndSdkP_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = mapOf(Manifest.permission.ACCESS_COARSE_LOCATION to true)
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1839,35 +1268,27 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-/*        verify(exactly = 1) {
+        }
+        verify(exactly = 1) {
             launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-        }*/
+        }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertFalse(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertTrue(result.coarsePermissionGranted)
@@ -1880,19 +1301,9 @@ class LocationPermissionServiceTest {
     @Config(sdk = [Build.VERSION_CODES.P])
     @Test
     fun requestBackgroundCoarseLocationPermission_whenCancelledAndSdkP_notifiesResultOfRequest() {
-        doNothing().whenever(launcher).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        justRun { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-        doAnswer { invocation ->
-            val permissions = emptyMap<String, Boolean>()
-            val callback = invocation.getArgument<ActivityResultCallback<Map<String, Boolean>>>(1)
-            callback.onActivityResult(permissions)
-            return@doAnswer launcher
-        }.whenever(activity).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        every {
+        every {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
@@ -1904,33 +1315,25 @@ class LocationPermissionServiceTest {
             val callback = answer.invocation.args[1] as ActivityResultCallback<Map<String, Boolean>>
             callback.onActivityResult(permissions)
             return@answers launcher
-        }*/
+        }
 
-        doNothing().whenever(listener).onLocationPermissionRequestResult(any())
-//        justRun { listener.onLocationPermissionRequestResult(any()) }
+        justRun { listener.onLocationPermissionRequestResult(any()) }
 
         val service = LocationPermissionService(activity, listener)
         service.requestBackgroundCoarseLocationPermission()
 
-        verify(activity, only()).registerForActivityResult(
-            any<ActivityResultContracts.RequestMultiplePermissions>(),
-            any()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             activity.registerForActivityResult(
                 any<ActivityResultContracts.RequestMultiplePermissions>(),
                 any()
             )
-        }*/
-        verify(launcher, only()).launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-//        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
+        }
+        verify(exactly = 1) { launcher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION)) }
 
-//        val slot = slot<LocationPermissionService.LocationPermissionResult>()
-        verify(listener, only()).onLocationPermissionRequestResult(capture(locationPermissionResultCaptor))
-//        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
+        val slot = slot<LocationPermissionService.LocationPermissionResult>()
+        verify(exactly = 1) { listener.onLocationPermissionRequestResult(capture(slot)) }
 
-        val result = locationPermissionResultCaptor.value
-//        val result = slot.captured
+        val result = slot.captured
         assertTrue(result.cancelled)
         assertFalse(result.finePermissionGranted)
         assertFalse(result.coarsePermissionGranted)

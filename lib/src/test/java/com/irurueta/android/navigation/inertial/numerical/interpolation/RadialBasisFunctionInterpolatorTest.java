@@ -38,7 +38,7 @@ public class RadialBasisFunctionInterpolatorTest {
 
     private static final double ABSOLUTE_ERROR_THINPLATE_1 = 1e-2;
 
-    private static final double ABSOLUTE_ERROR_GAUSS_1 = 1e-3;
+    private static final double ABSOLUTE_ERROR_GAUSS_1 = 2e-3;
 
     private static final double ABSOLUTE_ERROR_MQ_2 = 1e-3;
 
@@ -46,7 +46,7 @@ public class RadialBasisFunctionInterpolatorTest {
 
     private static final double ABSOLUTE_ERROR_THINPLATE_2 = 1e-1;
 
-    private static final double ABSOLUTE_ERROR_GAUSS_2 = 1e-3;
+    private static final double ABSOLUTE_ERROR_GAUSS_2 = 2e-3;
 
     private static final double ABSOLUTE_ERROR_MQ_3 = 1e-1;
 

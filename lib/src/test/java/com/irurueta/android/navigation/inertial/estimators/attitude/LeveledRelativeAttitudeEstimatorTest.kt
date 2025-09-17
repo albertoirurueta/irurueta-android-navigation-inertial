@@ -20,7 +20,12 @@ import android.location.Location
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.testutils.getPrivateProperty
@@ -29,95 +34,57 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
+import io.mockk.Called
 import io.mockk.every
-import io.mockk.mockkObject
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.justRun
+import io.mockk.mockkObject
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.capture
-import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.abs
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class LeveledRelativeAttitudeEstimatorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
-
-    @get:Rule
     val mockkRule = MockKRule(this)
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var listener: LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var accelerometerMeasurementListener:
             AccelerometerSensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gyroscopeMeasurementListener:
             GyroscopeSensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var attitudeAvailableListener:
             LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    @Captor
-    private lateinit var rollCaptor: ArgumentCaptor<Double>
-
-    @Captor
-    private lateinit var pitchCaptor: ArgumentCaptor<Double>
-
-    @Captor
-    private lateinit var yawCaptor: ArgumentCaptor<Double>
-
-    @Captor
-    private lateinit var coordinateTransformationCaptor: ArgumentCaptor<CoordinateTransformation>
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -635,15 +602,12 @@ class LeveledRelativeAttitudeEstimatorTest {
         val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spy(attitudeEstimator)
-//        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        doReturn(TIME_INTERVAL).whenever(attitudeEstimatorSpy).averageTimeInterval
-//        every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
         estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
         assertEquals(TIME_INTERVAL, estimator.gyroscopeAverageTimeInterval, 0.0)
-        verify(attitudeEstimatorSpy, only()).averageTimeInterval
-//        verify(exactly = 1) { attitudeEstimatorSpy.averageTimeInterval }
+        verify(exactly = 1) { attitudeEstimatorSpy.averageTimeInterval }
     }
 
     @Test
@@ -842,29 +806,22 @@ class LeveledRelativeAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doReturn(false).whenever(levelingEstimatorSpy).start()
-//        every { levelingEstimatorSpy.start() }.returns(false)
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        every { levelingEstimatorSpy.start() }.returns(false)
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spy(attitudeEstimator)
-//        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
         estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
         assertFalse(estimator.start())
 
-        verify(levelingEstimatorSpy, times(1)).start()
-//        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(attitudeEstimatorSpy, never()).start()
-//        verify(exactly = 0) { attitudeEstimatorSpy.start() }
-        verify(levelingEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(attitudeEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { levelingEstimatorSpy.start() }
+        verify(exactly = 0) { attitudeEstimatorSpy.start() }
+        verify(exactly = 1) { levelingEstimatorSpy.stop() }
+        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
     }
 
     @Test
@@ -877,27 +834,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doReturn(true).whenever(levelingEstimatorSpy).start()
-//        every { levelingEstimatorSpy.start() }.returns(true)
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        every { levelingEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spy(attitudeEstimator)
-//        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        doReturn(false).whenever(attitudeEstimatorSpy).start()
-//        every { attitudeEstimatorSpy.start() }.returns(false)
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        every { attitudeEstimatorSpy.start() }.returns(false)
         estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
         assertFalse(estimator.start())
 
-        verify(levelingEstimatorSpy, times(1)).start()
-//        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(attitudeEstimatorSpy, times(1)).start()
-//        verify(exactly = 1) { attitudeEstimatorSpy.start() }
+        verify(exactly = 1) { levelingEstimatorSpy.start() }
+        verify(exactly = 1) { attitudeEstimatorSpy.start() }
     }
 
     @Test
@@ -910,27 +861,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doReturn(true).whenever(levelingEstimatorSpy).start()
-//        every { levelingEstimatorSpy.start() }.returns(true)
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        every { levelingEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spy(attitudeEstimator)
-//        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        doReturn(true).whenever(attitudeEstimatorSpy).start()
-//        every { attitudeEstimatorSpy.start() }.returns(true)
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        every { attitudeEstimatorSpy.start() }.returns(true)
         estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
         assertTrue(estimator.start())
 
-        verify(levelingEstimatorSpy, only()).start()
-//        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(attitudeEstimatorSpy, only()).start()
-//        verify(exactly = 1) { attitudeEstimatorSpy.start() }
+        verify(exactly = 1) { levelingEstimatorSpy.start() }
+        verify(exactly = 1) { attitudeEstimatorSpy.start() }
     }
 
     @Test
@@ -945,27 +890,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         val levelingEstimator: BaseLevelingEstimator<*, *>? =
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spy(levelingEstimator)
-//        val levelingEstimatorSpy = spyk(levelingEstimator)
-        doNothing().whenever(levelingEstimatorSpy).stop()
-//        justRun { levelingEstimatorSpy.stop() }
+        val levelingEstimatorSpy = spyk(levelingEstimator)
+        justRun { levelingEstimatorSpy.stop() }
         estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
 
         val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spy(attitudeEstimator)
-//        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        doNothing().whenever(attitudeEstimatorSpy).stop()
-//        justRun { attitudeEstimatorSpy.stop() }
+        val attitudeEstimatorSpy = spyk(attitudeEstimator)
+        justRun { attitudeEstimatorSpy.stop() }
         estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
         estimator.stop()
 
-        verify(levelingEstimatorSpy, only()).stop()
-//        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(attitudeEstimatorSpy, only()).stop()
-//        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
+        verify(exactly = 1) { levelingEstimatorSpy.stop() }
+        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
         assertFalse(estimator.running)
     }
 
@@ -996,8 +935,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
 
-        val internalAttitude = spy(getAttitude())
-//        val internalAttitude = spyk(getAttitude())
+        val internalAttitude = spyk(getAttitude())
         val listener = attitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1011,10 +949,8 @@ class LeveledRelativeAttitudeEstimatorTest {
             null
         )
 
-        verify(internalAttitude, only()).copyTo(relativeAttitude1)
-//        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
-        assertTrue(internalAttitude.equals(relativeAttitude1))
-//        assertEquals(internalAttitude, relativeAttitude1)
+        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
+        assertEquals(internalAttitude, relativeAttitude1)
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
         assertTrue(hasRelativeAttitude2)
@@ -1025,8 +961,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         val previousRelativeAttitude2: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
         requireNotNull(previousRelativeAttitude2)
-        assertTrue(internalAttitude.equals(previousRelativeAttitude2))
-//        assertEquals(internalAttitude, previousRelativeAttitude2)
+        assertEquals(internalAttitude, previousRelativeAttitude2)
     }
 
     @Test
@@ -1056,8 +991,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("attitudeEstimator")
         requireNotNull(attitudeEstimator)
 
-        val internalAttitude = spy(getAttitude())
-//        val internalAttitude = spyk(getAttitude())
+        val internalAttitude = spyk(getAttitude())
         val listener = attitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1071,10 +1005,8 @@ class LeveledRelativeAttitudeEstimatorTest {
             null
         )
 
-        verify(internalAttitude, only()).copyTo(relativeAttitude1)
-//        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
-        assertTrue(internalAttitude.equals(relativeAttitude1))
-//        assertEquals(internalAttitude, relativeAttitude1)
+        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
+        assertEquals(internalAttitude, relativeAttitude1)
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
         assertTrue(hasRelativeAttitude2)
@@ -1085,8 +1017,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         val previousRelativeAttitude2: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
         requireNotNull(previousRelativeAttitude2)
-        assertTrue(internalAttitude.equals(previousRelativeAttitude2))
-//        assertEquals(internalAttitude, previousRelativeAttitude2)
+        assertEquals(internalAttitude, previousRelativeAttitude2)
     }
 
     @Test
@@ -1117,8 +1048,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(attitudeEstimator)
 
         // call listener for the 1st time
-        val internalAttitude1 = spy(getAttitude())
-//        val internalAttitude1 = spyk(getAttitude())
+        val internalAttitude1 = spyk(getAttitude())
         val listener = attitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1132,10 +1062,8 @@ class LeveledRelativeAttitudeEstimatorTest {
             null
         )
 
-        verify(internalAttitude1, only()).copyTo(relativeAttitude1)
-//        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
-        assertTrue(internalAttitude1.equals(relativeAttitude1))
-//        assertEquals(internalAttitude1, relativeAttitude1)
+        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
+        assertEquals(internalAttitude1, relativeAttitude1)
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
         assertTrue(hasRelativeAttitude2)
@@ -1146,13 +1074,11 @@ class LeveledRelativeAttitudeEstimatorTest {
         val previousRelativeAttitude2: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
         requireNotNull(previousRelativeAttitude2)
-        assertTrue(internalAttitude1.equals(previousRelativeAttitude2))
-//        assertEquals(internalAttitude1, previousRelativeAttitude2)
+        assertEquals(internalAttitude1, previousRelativeAttitude2)
 
         // call listener a 2nd time
         val deltaRelativeAttitude1 = getAttitude()
-        val internalAttitude2 = spy(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-//        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
+        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
         listener.onAttitudeAvailable(
             attitudeEstimator,
             internalAttitude2,
@@ -1163,10 +1089,8 @@ class LeveledRelativeAttitudeEstimatorTest {
             null
         )
 
-        verify(internalAttitude2, only()).copyTo(relativeAttitude1)
-//        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
-        assertTrue(internalAttitude2.equals(relativeAttitude1))
-//        assertEquals(internalAttitude2, relativeAttitude1)
+        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
+        assertEquals(internalAttitude2, relativeAttitude1)
         val hasRelativeAttitude3: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude3)
         assertTrue(hasRelativeAttitude3)
@@ -1177,8 +1101,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         val previousRelativeAttitude3: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
         requireNotNull(previousRelativeAttitude3)
-        assertTrue(internalAttitude1.equals(previousRelativeAttitude3))
-//        assertEquals(internalAttitude1, previousRelativeAttitude3)
+        assertEquals(internalAttitude1, previousRelativeAttitude3)
         val inversePreviousRelativeAttitude: Quaternion? =
             estimator.getPrivateProperty("inversePreviousRelativeAttitude")
         requireNotNull(inversePreviousRelativeAttitude)
@@ -1220,8 +1143,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(attitudeEstimator)
 
         // call listener for the 1st time
-        val internalAttitude1 = spy(getAttitude())
-//        val internalAttitude1 = spyk(getAttitude())
+        val internalAttitude1 = spyk(getAttitude())
         val listener = attitudeEstimator.attitudeAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1235,10 +1157,8 @@ class LeveledRelativeAttitudeEstimatorTest {
             null
         )
 
-        verify(internalAttitude1, only()).copyTo(relativeAttitude1)
-//        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
-        assertTrue(internalAttitude1.equals(relativeAttitude1))
-//        assertEquals(internalAttitude1, relativeAttitude1)
+        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
+        assertEquals(internalAttitude1, relativeAttitude1)
         val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude2)
         assertTrue(hasRelativeAttitude2)
@@ -1249,13 +1169,11 @@ class LeveledRelativeAttitudeEstimatorTest {
         val previousRelativeAttitude2: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
         requireNotNull(previousRelativeAttitude2)
-        assertTrue(internalAttitude1.equals(previousRelativeAttitude2))
-//        assertEquals(internalAttitude1, previousRelativeAttitude2)
+        assertEquals(internalAttitude1, previousRelativeAttitude2)
 
         // call listener a 2nd time
         val deltaRelativeAttitude1 = getAttitude()
-        val internalAttitude2 = spy(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-//        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
+        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
         listener.onAttitudeAvailable(
             attitudeEstimator,
             internalAttitude2,
@@ -1266,10 +1184,8 @@ class LeveledRelativeAttitudeEstimatorTest {
             null
         )
 
-        verify(internalAttitude2, only()).copyTo(relativeAttitude1)
-//        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
-        assertTrue(internalAttitude2.equals(relativeAttitude1))
-//        assertEquals(internalAttitude2, relativeAttitude1)
+        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
+        assertEquals(internalAttitude2, relativeAttitude1)
         val hasRelativeAttitude3: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
         requireNotNull(hasRelativeAttitude3)
         assertTrue(hasRelativeAttitude3)
@@ -1280,8 +1196,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         val previousRelativeAttitude3: Quaternion? =
             estimator.getPrivateProperty("previousRelativeAttitude")
         requireNotNull(previousRelativeAttitude3)
-        assertTrue(internalAttitude1.equals(previousRelativeAttitude3))
-//        assertEquals(internalAttitude1, previousRelativeAttitude3)
+        assertEquals(internalAttitude1, previousRelativeAttitude3)
         val inversePreviousRelativeAttitude: Quaternion? =
             estimator.getPrivateProperty("inversePreviousRelativeAttitude")
         requireNotNull(inversePreviousRelativeAttitude)
@@ -1321,8 +1236,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
 
-        val internalAttitude = spy(getAttitude())
-//        val internalAttitude = spyk(getAttitude())
+        val internalAttitude = spyk(getAttitude())
         val listener = levelingEstimator.levelingAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1339,10 +1253,8 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(levelingAttitude2)
         assertEquals(Quaternion(), levelingAttitude2)
 
-        verifyNoInteractions(attitudeAvailableListener)
-//        verify { attitudeAvailableListener wasNot Called }
-        verifyNoInteractions(internalAttitude)
-//        verify { internalAttitude wasNot Called }
+        verify { attitudeAvailableListener wasNot Called }
+        verify { internalAttitude wasNot Called }
     }
 
     @Test
@@ -1373,8 +1285,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
 
-        val internalAttitude = spy(getAttitude())
-//        val internalAttitude = spyk(getAttitude())
+        val internalAttitude = spyk(getAttitude())
         val listener = levelingEstimator.levelingAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1391,10 +1302,8 @@ class LeveledRelativeAttitudeEstimatorTest {
         requireNotNull(levelingAttitude2)
         assertEquals(Quaternion(), levelingAttitude2)
 
-        verifyNoInteractions(attitudeAvailableListener)
-//        verify { attitudeAvailableListener wasNot Called }
-        verifyNoInteractions(internalAttitude)
-//        verify { internalAttitude wasNot Called }
+        verify { attitudeAvailableListener wasNot Called }
+        verify { internalAttitude wasNot Called }
     }
 
     @Test
@@ -1425,8 +1334,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
 
-        val internalAttitude = spy(getAttitude())
-//        val internalAttitude = spyk(getAttitude())
+        val internalAttitude = spyk(getAttitude())
         val listener = levelingEstimator.levelingAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1441,13 +1349,10 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude2)
-        assertTrue(internalAttitude.equals(levelingAttitude2))
-//        assertEquals(internalAttitude, levelingAttitude2)
+        assertEquals(internalAttitude, levelingAttitude2)
 
-        verifyNoInteractions(attitudeAvailableListener)
-//        verify { attitudeAvailableListener wasNot Called }
-        verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify { attitudeAvailableListener wasNot Called }
+        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
     }
 
     @Test
@@ -1480,8 +1385,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
 
-        val internalAttitude = spy(getAttitude())
-//        val internalAttitude = spyk(getAttitude())
+        val internalAttitude = spyk(getAttitude())
         val listener = levelingEstimator.levelingAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1496,13 +1400,10 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude2)
-        assertTrue(internalAttitude.equals(levelingAttitude2))
-//        assertEquals(internalAttitude, levelingAttitude2)
+        assertEquals(internalAttitude, levelingAttitude2)
 
-        verifyNoInteractions(attitudeAvailableListener)
-//        verify { attitudeAvailableListener wasNot Called }
-        verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify { attitudeAvailableListener wasNot Called }
+        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
     }
 
     @Test
@@ -1532,23 +1433,20 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
         val attitude = getAttitude()
         attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spy(relativeAttitude)
-//        val relativeAttitudeSpy = spyk(relativeAttitude)
+        val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spy(internalFusedAttitude)
-//        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
         estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         estimator.setPrivateProperty("panicCounter", estimator.panicCounterThreshold)
@@ -1564,8 +1462,7 @@ class LeveledRelativeAttitudeEstimatorTest {
             estimator.getPrivateProperty("levelingEstimator")
         requireNotNull(levelingEstimator)
 
-        val internalAttitude = spy(getAttitude())
-//        val internalAttitude = spyk(getAttitude())
+        val internalAttitude = spyk(getAttitude())
         val listener = levelingEstimator.levelingAvailableListener
         requireNotNull(listener)
         val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1588,31 +1485,21 @@ class LeveledRelativeAttitudeEstimatorTest {
         attitude.toEulerAngles(angles)
         val relativeYaw = angles[2]
 
-        verifyNoInteractions(attitudeAvailableListener)
-//        verify { attitudeAvailableListener wasNot Called }
-        verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        verify { attitudeAvailableListener wasNot Called }
+        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
 
         val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
         requireNotNull(eulerAngles)
-        verify(levelingAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(relativeAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(levelingAttitudeSpy, times(1)).setFromEulerAngles(
-            levelingRoll,
-            levelingPitch,
-            relativeYaw
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+        verify(exactly = 1) {
             levelingAttitudeSpy.setFromEulerAngles(
                 levelingRoll,
                 levelingPitch,
                 relativeYaw
             )
-        }*/
-        verify(levelingAttitudeSpy, times(1)).copyTo(internalFusedAttitudeSpy)
-//        verify { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+        }
+        verify { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
         val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
         requireNotNull(panicCounter2)
@@ -1653,24 +1540,21 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
         val attitude = getAttitude()
         attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spy(relativeAttitude)
-//        val relativeAttitudeSpy = spyk(relativeAttitude)
+        val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spy(internalFusedAttitude)
-//        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
         estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
@@ -1713,8 +1597,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 estimator.getPrivateProperty("levelingEstimator")
             requireNotNull(levelingEstimator)
 
-            val internalAttitude = spy(getAttitude())
-//            val internalAttitude = spyk(getAttitude())
+            val internalAttitude = spyk(getAttitude())
             val listener = levelingEstimator.levelingAvailableListener
             requireNotNull(listener)
             val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1738,29 +1621,20 @@ class LeveledRelativeAttitudeEstimatorTest {
             attitude.toEulerAngles(angles)
             val relativeYaw = angles[2]
 
-            verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
 
             val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
             requireNotNull(eulerAngles)
-            verify(levelingAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(relativeAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(levelingAttitudeSpy, times(1)).setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
                 levelingAttitudeSpy.setFromEulerAngles(
                     levelingRoll,
                     levelingPitch,
                     relativeYaw
                 )
-            }*/
-            verify(levelingAttitudeSpy, never()).copyTo(internalFusedAttitudeSpy)
-//            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
             val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
             requireNotNull(panicCounter2)
@@ -1786,22 +1660,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             val previousRelativeAttitude2: Quaternion? =
                 estimator.getPrivateProperty("previousRelativeAttitude")
             requireNotNull(previousRelativeAttitude2)
-            assertTrue(relativeAttitudeSpy.equals(previousRelativeAttitude2))
-//            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
             val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
             requireNotNull(fusedAttitude)
 
-            verify(attitudeAvailableListener, only()).onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
-                timestamp,
-                null,
-                null,
-                null,
-                null
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) {
                 attitudeAvailableListener.onAttitudeAvailable(
                     estimator,
                     fusedAttitude,
@@ -1811,7 +1675,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                     null,
                     null
                 )
-            }*/
+            }
         }
     }
 
@@ -1845,24 +1709,21 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
         val attitude = getAttitude()
         attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spy(relativeAttitude)
-//        val relativeAttitudeSpy = spyk(relativeAttitude)
+        val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spy(internalFusedAttitude)
-//        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
         estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
@@ -1905,8 +1766,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 estimator.getPrivateProperty("levelingEstimator")
             requireNotNull(levelingEstimator)
 
-            val internalAttitude = spy(getAttitude())
-//            val internalAttitude = spyk(getAttitude())
+            val internalAttitude = spyk(getAttitude())
             val listener = levelingEstimator.levelingAvailableListener
             requireNotNull(listener)
             val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -1930,29 +1790,20 @@ class LeveledRelativeAttitudeEstimatorTest {
             attitude.toEulerAngles(angles)
             val relativeYaw = angles[2]
 
-            verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
 
             val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
             requireNotNull(eulerAngles)
-            verify(levelingAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(relativeAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(levelingAttitudeSpy, times(1)).setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
                 levelingAttitudeSpy.setFromEulerAngles(
                     levelingRoll,
                     levelingPitch,
                     relativeYaw
                 )
-            }*/
-            verify(levelingAttitudeSpy, never()).copyTo(internalFusedAttitudeSpy)
-//            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
             val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
             requireNotNull(panicCounter2)
@@ -1971,22 +1822,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             val previousRelativeAttitude2: Quaternion? =
                 estimator.getPrivateProperty("previousRelativeAttitude")
             requireNotNull(previousRelativeAttitude2)
-            assertTrue(relativeAttitudeSpy.equals(previousRelativeAttitude2))
-//            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
             val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
             requireNotNull(fusedAttitude)
 
-            verify(attitudeAvailableListener, only()).onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
-                timestamp,
-                null,
-                null,
-                null,
-                null
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) {
                 attitudeAvailableListener.onAttitudeAvailable(
                     estimator,
                     fusedAttitude,
@@ -1996,7 +1837,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                     null,
                     null
                 )
-            }*/
+            }
         }
     }
 
@@ -2030,24 +1871,21 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
         val attitude = getAttitude()
         attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spy(relativeAttitude)
-//        val relativeAttitudeSpy = spyk(relativeAttitude)
+        val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spy(internalFusedAttitude)
-//        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
         estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
@@ -2090,8 +1928,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 estimator.getPrivateProperty("levelingEstimator")
             requireNotNull(levelingEstimator)
 
-            val internalAttitude = spy(getAttitude())
-//            val internalAttitude = spyk(getAttitude())
+            val internalAttitude = spyk(getAttitude())
             val listener = levelingEstimator.levelingAvailableListener
             requireNotNull(listener)
             val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -2115,29 +1952,20 @@ class LeveledRelativeAttitudeEstimatorTest {
             attitude.toEulerAngles(angles)
             val relativeYaw = angles[2]
 
-            verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
 
             val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
             requireNotNull(eulerAngles)
-            verify(levelingAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(relativeAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(levelingAttitudeSpy, times(1)).setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
                 levelingAttitudeSpy.setFromEulerAngles(
                     levelingRoll,
                     levelingPitch,
                     relativeYaw
                 )
-            }*/
-            verify(levelingAttitudeSpy, never()).copyTo(internalFusedAttitudeSpy)
-//            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
             val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
             requireNotNull(panicCounter2)
@@ -2156,22 +1984,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             val previousRelativeAttitude2: Quaternion? =
                 estimator.getPrivateProperty("previousRelativeAttitude")
             requireNotNull(previousRelativeAttitude2)
-            assertTrue(relativeAttitudeSpy.equals(previousRelativeAttitude2))
-//            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
             val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
             requireNotNull(fusedAttitude)
 
-            verify(attitudeAvailableListener, only()).onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
-                timestamp,
-                null,
-                null,
-                null,
-                null
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) {
                 attitudeAvailableListener.onAttitudeAvailable(
                     estimator,
                     fusedAttitude,
@@ -2181,7 +1999,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                     null,
                     null
                 )
-            }*/
+            }
         }
     }
 
@@ -2216,24 +2034,21 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
         val attitude = getAttitude()
         attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spy(relativeAttitude)
-//        val relativeAttitudeSpy = spyk(relativeAttitude)
+        val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spy(internalFusedAttitude)
-//        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
         estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
@@ -2275,18 +2090,15 @@ class LeveledRelativeAttitudeEstimatorTest {
             val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
                 estimator.getPrivateProperty("attitudeEstimator")
             requireNotNull(attitudeEstimator)
-            val attitudeEstimatorSpy = spy(attitudeEstimator)
-//            val attitudeEstimatorSpy = spyk(attitudeEstimator)
-            doReturn(TIME_INTERVAL).whenever(attitudeEstimatorSpy).averageTimeInterval
-//            every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
+            val attitudeEstimatorSpy = spyk(attitudeEstimator)
+            every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
             estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
             val levelingEstimator: LevelingEstimator? =
                 estimator.getPrivateProperty("levelingEstimator")
             requireNotNull(levelingEstimator)
 
-            val internalAttitude = spy(getAttitude())
-//            val internalAttitude = spyk(getAttitude())
+            val internalAttitude = spyk(getAttitude())
             val listener = levelingEstimator.levelingAvailableListener
             requireNotNull(listener)
             val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -2310,29 +2122,20 @@ class LeveledRelativeAttitudeEstimatorTest {
             attitude.toEulerAngles(angles)
             val relativeYaw = angles[2]
 
-            verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
 
             val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
             requireNotNull(eulerAngles)
-            verify(levelingAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(relativeAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(levelingAttitudeSpy, times(1)).setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
                 levelingAttitudeSpy.setFromEulerAngles(
                     levelingRoll,
                     levelingPitch,
                     relativeYaw
                 )
-            }*/
-            verify(levelingAttitudeSpy, never()).copyTo(internalFusedAttitudeSpy)
-//            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
             val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
             requireNotNull(panicCounter2)
@@ -2360,22 +2163,12 @@ class LeveledRelativeAttitudeEstimatorTest {
             val previousRelativeAttitude2: Quaternion? =
                 estimator.getPrivateProperty("previousRelativeAttitude")
             requireNotNull(previousRelativeAttitude2)
-            assertTrue(relativeAttitudeSpy.equals(previousRelativeAttitude2))
-//            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
             val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
             requireNotNull(fusedAttitude)
 
-            verify(attitudeAvailableListener, only()).onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
-                timestamp,
-                null,
-                null,
-                null,
-                null
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) {
                 attitudeAvailableListener.onAttitudeAvailable(
                     estimator,
                     fusedAttitude,
@@ -2385,7 +2178,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                     null,
                     null
                 )
-            }*/
+            }
         }
     }
 
@@ -2419,24 +2212,21 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
         requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spy(levelingAttitude)
-//        val levelingAttitudeSpy = spyk(levelingAttitude)
+        val levelingAttitudeSpy = spyk(levelingAttitude)
         estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
 
         val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
         requireNotNull(relativeAttitude)
         val attitude = getAttitude()
         attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spy(relativeAttitude)
-//        val relativeAttitudeSpy = spyk(relativeAttitude)
+        val relativeAttitudeSpy = spyk(relativeAttitude)
         estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
 
         val internalFusedAttitude: Quaternion? =
             estimator.getPrivateProperty("internalFusedAttitude")
         requireNotNull(internalFusedAttitude)
         getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spy(internalFusedAttitude)
-//        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
+        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
         estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
 
         val previousRelativeAttitude1 = Quaternion()
@@ -2479,8 +2269,7 @@ class LeveledRelativeAttitudeEstimatorTest {
                 estimator.getPrivateProperty("levelingEstimator")
             requireNotNull(levelingEstimator)
 
-            val internalAttitude = spy(getAttitude())
-//            val internalAttitude = spyk(getAttitude())
+            val internalAttitude = spyk(getAttitude())
             val listener = levelingEstimator.levelingAvailableListener
             requireNotNull(listener)
             val timestamp = SystemClock.elapsedRealtimeNanos()
@@ -2504,29 +2293,20 @@ class LeveledRelativeAttitudeEstimatorTest {
             attitude.toEulerAngles(angles)
             val relativeYaw = angles[2]
 
-            verify(internalAttitude, times(1)).copyTo(levelingAttitude2)
-//            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
 
             val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
             requireNotNull(eulerAngles)
-            verify(levelingAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(relativeAttitudeSpy, times(1)).toEulerAngles(eulerAngles)
-//            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(levelingAttitudeSpy, times(1)).setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
                 levelingAttitudeSpy.setFromEulerAngles(
                     levelingRoll,
                     levelingPitch,
                     relativeYaw
                 )
-            }*/
-            verify(levelingAttitudeSpy, never()).copyTo(internalFusedAttitudeSpy)
-//            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
 
             val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
             requireNotNull(panicCounter2)
@@ -2552,27 +2332,17 @@ class LeveledRelativeAttitudeEstimatorTest {
             val previousRelativeAttitude2: Quaternion? =
                 estimator.getPrivateProperty("previousRelativeAttitude")
             requireNotNull(previousRelativeAttitude2)
-            assertTrue(relativeAttitudeSpy.equals(previousRelativeAttitude2))
-//            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
 
-//            val rollSlot = slot<Double>()
-//            val pitchSlot = slot<Double>()
-//            val yawSlot = slot<Double>()
-//            val coordinateTransformationSlot = slot<CoordinateTransformation>()
+            val rollSlot = slot<Double>()
+            val pitchSlot = slot<Double>()
+            val yawSlot = slot<Double>()
+            val coordinateTransformationSlot = slot<CoordinateTransformation>()
 
             val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
             requireNotNull(fusedAttitude)
 
-            verify(attitudeAvailableListener, only()).onAttitudeAvailable(
-                eq(estimator),
-                eq(fusedAttitude),
-                eq(timestamp),
-                capture(rollCaptor),
-                capture(pitchCaptor),
-                capture(yawCaptor),
-                capture(coordinateTransformationCaptor)
-            )
-/*            verify(exactly = 1) {
+            verify(exactly = 1) {
                 attitudeAvailableListener.onAttitudeAvailable(
                     estimator,
                     fusedAttitude,
@@ -2582,27 +2352,23 @@ class LeveledRelativeAttitudeEstimatorTest {
                     capture(yawSlot),
                     capture(coordinateTransformationSlot)
                 )
-            }*/
+            }
 
-            assertNotNull(rollCaptor.value)
-//            assertTrue(rollSlot.isCaptured)
-//            assertFalse(rollSlot.isNull)
-//            assertNotNull(rollSlot.captured)
+            assertTrue(rollSlot.isCaptured)
+            assertFalse(rollSlot.isNull)
+            assertNotNull(rollSlot.captured)
 
-            assertNotNull(pitchCaptor.value)
-//            assertTrue(pitchSlot.isCaptured)
-//            assertFalse(pitchSlot.isNull)
-//            assertNotNull(pitchSlot.captured)
+            assertTrue(pitchSlot.isCaptured)
+            assertFalse(pitchSlot.isNull)
+            assertNotNull(pitchSlot.captured)
 
-            assertNotNull(yawCaptor.value)
-//            assertTrue(yawSlot.isCaptured)
-//            assertFalse(yawSlot.isNull)
-//            assertNotNull(yawSlot.captured)
+            assertTrue(yawSlot.isCaptured)
+            assertFalse(yawSlot.isNull)
+            assertNotNull(yawSlot.captured)
 
-            val c = coordinateTransformationCaptor.value
-//            assertTrue(coordinateTransformationSlot.isCaptured)
-//            assertFalse(coordinateTransformationSlot.isNull)
-//            val c = coordinateTransformationSlot.captured
+            assertTrue(coordinateTransformationSlot.isCaptured)
+            assertFalse(coordinateTransformationSlot.isNull)
+            val c = coordinateTransformationSlot.captured
             assertNotNull(c)
             assertEquals(FrameType.BODY_FRAME, c.sourceType)
             assertEquals(FrameType.LOCAL_NAVIGATION_FRAME, c.destinationType)
@@ -2624,12 +2390,9 @@ class LeveledRelativeAttitudeEstimatorTest {
             MAX_HEIGHT
         )
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

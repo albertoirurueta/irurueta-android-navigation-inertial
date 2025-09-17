@@ -19,11 +19,20 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.ECEFPosition
+import com.irurueta.navigation.frames.ECEFVelocity
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
@@ -34,85 +43,63 @@ import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticInterva
 import com.irurueta.navigation.inertial.calibration.noise.WindowedTriadNoiseEstimator
 import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.statistics.UniformRandomizer
-import com.irurueta.units.*
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeUnit
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeIntervalDetectorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationStartedListener:
             IntervalDetector.OnInitializationStartedListener<GyroscopeIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationCompletedListener:
             IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var errorListener: IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalDetectedListener:
             IntervalDetector.OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalDetectedListener:
             IntervalDetector.OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var resetListener:
             IntervalDetector.OnResetListener<GyroscopeIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var measurementListener: GyroscopeSensorCollector.OnMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -2430,10 +2417,8 @@ class GyroscopeIntervalDetectorTest {
             detector.getPrivateProperty("collector")
         requireNotNull(collector)
 
-        val collectorSpy = spy(collector)
-        whenever(collectorSpy.sensor).thenReturn(sensor)
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.sensor }.returns(sensor)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.sensor }.returns(sensor)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertSame(sensor, detector.sensor)
@@ -2708,10 +2693,8 @@ class GyroscopeIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2719,8 +2702,7 @@ class GyroscopeIntervalDetectorTest {
         detector.start()
 
         assertTrue(detector.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -2737,10 +2719,8 @@ class GyroscopeIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(false).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(false)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(false)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2756,24 +2736,20 @@ class GyroscopeIntervalDetectorTest {
         val collector: GyroscopeSensorCollector? =
             detector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -2794,10 +2770,8 @@ class GyroscopeIntervalDetectorTest {
         detector.start()
 
         assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
-        verify(timeIntervalEstimatorSpy, times(1)).reset()
-        verify(internalDetectorSpy, only()).reset()
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
-//        verify(exactly = 1) { internalDetectorSpy.reset() }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { internalDetectorSpy.reset() }
 
         val unreliable: Boolean? =
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
@@ -2848,10 +2822,8 @@ class GyroscopeIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2859,15 +2831,13 @@ class GyroscopeIntervalDetectorTest {
         detector.start()
 
         assertTrue(detector.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
 
         // stop
         detector.stop()
 
         assertFalse(detector.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -2883,8 +2853,7 @@ class GyroscopeIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2893,8 +2862,7 @@ class GyroscopeIntervalDetectorTest {
         detector.stop()
 
         assertFalse(detector.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -2956,8 +2924,7 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
@@ -2979,18 +2946,13 @@ class GyroscopeIntervalDetectorTest {
         measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp, accuracy)
 
         // check
-        verify(internalDetectorSpy, times(1)).process(
-            wy.toDouble(),
-            wx.toDouble(),
-            -wz.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 wy.toDouble(),
                 wx.toDouble(),
                 -wz.toDouble()
             )
-        }*/
+        }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
     }
@@ -3003,10 +2965,8 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial values
@@ -3033,18 +2993,13 @@ class GyroscopeIntervalDetectorTest {
         measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp, accuracy)
 
         // check
-        verify(internalDetectorSpy, times(1)).process(
-            wy.toDouble(),
-            wx.toDouble(),
-            -wz.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 wy.toDouble(),
                 wx.toDouble(),
                 -wz.toDouble()
             )
-        }*/
+        }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3062,10 +3017,8 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
         setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
@@ -3074,8 +3027,7 @@ class GyroscopeIntervalDetectorTest {
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3107,20 +3059,14 @@ class GyroscopeIntervalDetectorTest {
         measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp2, accuracy)
 
         // check
-        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(TIME_INTERVAL_SECONDS)
-        verify(internalDetectorSpy, times(1)).process(
-            wy.toDouble(),
-            wx.toDouble(),
-            -wz.toDouble()
-        )
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 wy.toDouble(),
                 wx.toDouble(),
                 -wz.toDouble()
             )
-        }*/
+        }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3142,10 +3088,8 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
         setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
@@ -3154,8 +3098,7 @@ class GyroscopeIntervalDetectorTest {
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3187,20 +3130,14 @@ class GyroscopeIntervalDetectorTest {
         measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp2, accuracy)
 
         // check
-        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(TIME_INTERVAL_SECONDS)
-        verify(internalDetectorSpy, times(1)).process(
-            wy.toDouble(),
-            wx.toDouble(),
-            -wz.toDouble()
-        )
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 wy.toDouble(),
                 wx.toDouble(),
                 -wz.toDouble()
             )
-        }*/
+        }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3209,8 +3146,7 @@ class GyroscopeIntervalDetectorTest {
         requireNotNull(initialTimestamp2)
         assertEquals(timestamp1, initialTimestamp2)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(detector)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
     }
 
     @Test
@@ -3221,19 +3157,15 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(2.0 * TIME_INTERVAL_SECONDS)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3285,8 +3217,7 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
@@ -3312,17 +3243,7 @@ class GyroscopeIntervalDetectorTest {
         internalMeasurementListener.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
 
         // check
-        verify(measurementListener, only()).onMeasurement(
-            wx,
-            wy,
-            wz,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             measurementListener.onMeasurement(
                 wx,
                 wy,
@@ -3333,7 +3254,7 @@ class GyroscopeIntervalDetectorTest {
                 timestamp,
                 accuracy
             )
-        }*/
+        }
     }
 
     @Test
@@ -3382,16 +3303,12 @@ class GyroscopeIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
-        verify(errorListener, only()).onError(
-            detector,
-            ErrorReason.UNRELIABLE_SENSOR
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             errorListener.onError(
                 detector,
                 ErrorReason.UNRELIABLE_SENSOR
             )
-        }*/
+        }
     }
 
     @Test
@@ -3416,10 +3333,9 @@ class GyroscopeIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
-        verify(errorListener, never()).onError(any(), any())
-/*        verify(exactly = 0) {
+        verify(exactly = 0) {
             errorListener.onError(any(), any())
-        }*/
+        }
     }
 
     @Test
@@ -3448,12 +3364,10 @@ class GyroscopeIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
-        verify(errorListener, never()).onError(any(), any())
-        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.HIGH)
-/*        verify(exactly = 0) {
+        verify(exactly = 0) {
             errorListener.onError(any(), any())
-        }*/
-//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
+        }
+        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
     }
 
     @Test
@@ -3480,10 +3394,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevel).thenReturn(baseNoiseLevel1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3518,10 +3430,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val baseNoiseLevel1 = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3556,18 +3466,12 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = value
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getBaseNoiseLevelAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = value
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3602,10 +3506,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevelPsd).thenReturn(baseNoiseLevelPsd1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3639,10 +3541,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevelRootPsd).thenReturn(baseNoiseLevelRootPsd1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3676,10 +3576,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val threshold1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.threshold).thenReturn(threshold1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.threshold }.returns(threshold1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.threshold }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3714,10 +3612,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val threshold1 = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.thresholdAsMeasurement).thenReturn(threshold1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3752,18 +3648,12 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = value
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getThresholdAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = value
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3785,10 +3675,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgX, 0.0)
@@ -3806,10 +3694,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgXAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.accumulatedAvgXAsMeasurement)
@@ -3827,18 +3713,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgX = invocation.getArgument<AngularSpeed>(0)
-            avgX.value = value
-            avgX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedAvgXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgXAsMeasurement(any()) }.answers { answer ->
             val avgX = answer.invocation.args[0] as AngularSpeed
             avgX.value = value
             avgX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgXAsMeasurement(result)
@@ -3858,10 +3738,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgY, 0.0)
@@ -3879,10 +3757,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgYAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.accumulatedAvgYAsMeasurement)
@@ -3900,18 +3776,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgY = invocation.getArgument<AngularSpeed>(0)
-            avgY.value = value
-            avgY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedAvgYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgYAsMeasurement(any()) }.answers { answer ->
             val avgY = answer.invocation.args[0] as AngularSpeed
             avgY.value = value
             avgY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgYAsMeasurement(result)
@@ -3931,10 +3801,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgZ, 0.0)
@@ -3952,10 +3820,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgZAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.accumulatedAvgZAsMeasurement)
@@ -3973,18 +3839,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgZ = invocation.getArgument<AngularSpeed>(0)
-            avgZ.value = value
-            avgZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedAvgZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgZAsMeasurement(any()) }.answers { answer ->
             val avgZ = answer.invocation.args[0] as AngularSpeed
             avgZ.value = value
             avgZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgZAsMeasurement(result)
@@ -4008,10 +3868,8 @@ class GyroscopeIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val triad =
             AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgTriad).thenReturn(triad)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgTriad }.returns(triad)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.accumulatedAvgTriad)
@@ -4032,18 +3890,8 @@ class GyroscopeIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val result =
             AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AngularSpeedTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }.whenever(internalDetectorSpy).getAccumulatedAvgTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AngularSpeedTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4051,7 +3899,7 @@ class GyroscopeIntervalDetectorTest {
                 valueZ,
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgTriad(result)
@@ -4073,10 +3921,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdX, 0.0)
@@ -4094,10 +3940,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdXAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.accumulatedStdXAsMeasurement)
@@ -4115,18 +3959,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdX = invocation.getArgument<AngularSpeed>(0)
-            stdX.value = value
-            stdX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedStdXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdXAsMeasurement(any()) }.answers { answer ->
             val stdX = answer.invocation.args[0] as AngularSpeed
             stdX.value = value
             stdX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdXAsMeasurement(result)
@@ -4146,10 +3984,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdY, 0.0)
@@ -4167,10 +4003,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdYAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.accumulatedStdYAsMeasurement)
@@ -4188,18 +4022,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdY = invocation.getArgument<AngularSpeed>(0)
-            stdY.value = value
-            stdY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedStdYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdYAsMeasurement(any()) }.answers { answer ->
             val stdY = answer.invocation.args[0] as AngularSpeed
             stdY.value = value
             stdY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdYAsMeasurement(result)
@@ -4219,10 +4047,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdZ, 0.0)
@@ -4240,10 +4066,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdZAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.accumulatedStdZAsMeasurement)
@@ -4261,18 +4085,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdZ = invocation.getArgument<AngularSpeed>(0)
-            stdZ.value = value
-            stdZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedStdZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdZAsMeasurement(any()) }.answers { answer ->
             val stdZ = answer.invocation.args[0] as AngularSpeed
             stdZ.value = value
             stdZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdZAsMeasurement(result)
@@ -4296,10 +4114,8 @@ class GyroscopeIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val triad =
             AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdTriad).thenReturn(triad)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdTriad }.returns(triad)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.accumulatedStdTriad)
@@ -4320,18 +4136,8 @@ class GyroscopeIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val result =
             AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AngularSpeedTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }.whenever(internalDetectorSpy).getAccumulatedStdTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AngularSpeedTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4339,7 +4145,7 @@ class GyroscopeIntervalDetectorTest {
                 valueZ,
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdTriad(result)
@@ -4361,10 +4167,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgX, 0.0)
@@ -4382,10 +4186,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgXAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.instantaneousAvgXAsMeasurement)
@@ -4403,18 +4205,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgX = invocation.getArgument<AngularSpeed>(0)
-            avgX.value = value
-            avgX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousAvgXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgXAsMeasurement(any()) }.answers { answer ->
             val avgX = answer.invocation.args[0] as AngularSpeed
             avgX.value = value
             avgX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgXAsMeasurement(result)
@@ -4434,10 +4230,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgY, 0.0)
@@ -4455,10 +4249,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgYAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.instantaneousAvgYAsMeasurement)
@@ -4476,18 +4268,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgY = invocation.getArgument<AngularSpeed>(0)
-            avgY.value = value
-            avgY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousAvgYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgYAsMeasurement(any()) }.answers { answer ->
             val avgY = answer.invocation.args[0] as AngularSpeed
             avgY.value = value
             avgY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgYAsMeasurement(result)
@@ -4507,10 +4293,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgZ, 0.0)
@@ -4528,10 +4312,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgZAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.instantaneousAvgZAsMeasurement)
@@ -4549,18 +4331,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgZ = invocation.getArgument<AngularSpeed>(0)
-            avgZ.value = value
-            avgZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousAvgZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgZAsMeasurement(any()) }.answers { answer ->
             val avgZ = answer.invocation.args[0] as AngularSpeed
             avgZ.value = value
             avgZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgZAsMeasurement(result)
@@ -4582,12 +4358,10 @@ class GyroscopeIntervalDetectorTest {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         val triad =
             AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        whenever(internalDetectorSpy.instantaneousAvgTriad).thenReturn(triad)
-//        every { internalDetectorSpy.instantaneousAvgTriad }.returns(triad)
+        every { internalDetectorSpy.instantaneousAvgTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.instantaneousAvgTriad)
@@ -4607,18 +4381,8 @@ class GyroscopeIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = AngularSpeedTriad()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AngularSpeedTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }.whenever(internalDetectorSpy).getInstantaneousAvgTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AngularSpeedTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4626,7 +4390,7 @@ class GyroscopeIntervalDetectorTest {
                 valueZ,
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgTriad(result)
@@ -4648,10 +4412,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdX, 0.0)
@@ -4669,10 +4431,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdXAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.instantaneousStdXAsMeasurement)
@@ -4690,18 +4450,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdX = invocation.getArgument<AngularSpeed>(0)
-            stdX.value = value
-            stdX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousStdXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdXAsMeasurement(any()) }.answers { answer ->
             val stdX = answer.invocation.args[0] as AngularSpeed
             stdX.value = value
             stdX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdXAsMeasurement(result)
@@ -4721,10 +4475,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdY, 0.0)
@@ -4742,10 +4494,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdYAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.instantaneousStdYAsMeasurement)
@@ -4763,18 +4513,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdY = invocation.getArgument<AngularSpeed>(0)
-            stdY.value = value
-            stdY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousStdYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdYAsMeasurement(any()) }.answers { answer ->
             val stdY = answer.invocation.args[0] as AngularSpeed
             stdY.value = value
             stdY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdYAsMeasurement(result)
@@ -4794,10 +4538,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdZ, 0.0)
@@ -4815,10 +4557,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdZAsMeasurement).thenReturn(angularSpeed)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(angularSpeed)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(angularSpeed)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(angularSpeed, detector.instantaneousStdZAsMeasurement)
@@ -4836,18 +4576,12 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdZ = invocation.getArgument<AngularSpeed>(0)
-            stdZ.value = value
-            stdZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousStdZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdZAsMeasurement(any()) }.answers { answer ->
             val stdZ = answer.invocation.args[0] as AngularSpeed
             stdZ.value = value
             stdZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdZAsMeasurement(result)
@@ -4869,12 +4603,10 @@ class GyroscopeIntervalDetectorTest {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         val triad =
             AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        whenever(internalDetectorSpy.instantaneousStdTriad).thenReturn(triad)
-//        every { internalDetectorSpy.instantaneousStdTriad }.returns(triad)
+        every { internalDetectorSpy.instantaneousStdTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.instantaneousStdTriad)
@@ -4894,18 +4626,8 @@ class GyroscopeIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = AngularSpeedTriad()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AngularSpeedTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }.whenever(internalDetectorSpy).getInstantaneousStdTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AngularSpeedTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4913,7 +4635,7 @@ class GyroscopeIntervalDetectorTest {
                 valueZ,
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdTriad(result)
@@ -4948,10 +4670,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val averageTimeInterval1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(averageTimeInterval1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -4990,10 +4710,8 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val averageTimeInterval1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeIntervalAsTime).thenReturn(averageTimeInterval1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5033,18 +4751,12 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-        }.whenever(timeIntervalEstimatorSpy).getAverageTimeIntervalAsTime(any())
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }*/
+        }
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5085,10 +4797,8 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val timeIntervalVariance1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalVariance).thenReturn(timeIntervalVariance1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5127,12 +4837,10 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val timeIntervalStandardDeviation1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviation).thenReturn(timeIntervalStandardDeviation1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
             timeIntervalStandardDeviation1
-        )*/
+        )
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5172,12 +4880,10 @@ class GyroscopeIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val timeIntervalStd1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime).thenReturn(timeIntervalStd1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
             timeIntervalStd1
-        )*/
+        )
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5217,18 +4923,12 @@ class GyroscopeIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-        }.whenever(timeIntervalEstimatorSpy).getTimeIntervalStandardDeviationAsTime(any())
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }*/
+        }
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5268,10 +4968,8 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.IDLE)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.IDLE, detector.status)
@@ -5290,11 +4988,9 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.INITIALIZING)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.INITIALIZING, detector.status)
@@ -5313,11 +5009,9 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.INITIALIZATION_COMPLETED, detector.status)
@@ -5336,11 +5030,9 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.STATIC_INTERVAL, detector.status)
@@ -5359,11 +5051,9 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.DYNAMIC_INTERVAL, detector.status)
@@ -5382,11 +5072,9 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.FAILED)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.FAILED)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.FAILED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.FAILED, detector.status)
@@ -5405,10 +5093,8 @@ class GyroscopeIntervalDetectorTest {
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(null)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(null)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(null)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.IDLE, detector.status)
@@ -5447,8 +5133,7 @@ class GyroscopeIntervalDetectorTest {
         requireNotNull(internalDetector)
         internalDetectorListener.onInitializationStarted(internalDetector)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(intervalDetector)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
     }
 
     @Test
@@ -5487,16 +5172,12 @@ class GyroscopeIntervalDetectorTest {
         val baseNoiseLevel = randomizer.nextDouble()
         internalDetectorListener.onInitializationCompleted(internalDetector, baseNoiseLevel)
 
-        verify(initializationCompletedListener, only()).onInitializationCompleted(
-            intervalDetector,
-            baseNoiseLevel
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initializationCompletedListener.onInitializationCompleted(
                 intervalDetector,
                 baseNoiseLevel
             )
-        }*/
+        }
     }
 
     @Test
@@ -5518,8 +5199,7 @@ class GyroscopeIntervalDetectorTest {
         val collector: GyroscopeSensorCollector? =
             intervalDetector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         intervalDetector.setPrivateProperty("collector", collectorSpy)
 
         internalDetectorListener.onError(
@@ -5529,8 +5209,7 @@ class GyroscopeIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -5552,8 +5231,7 @@ class GyroscopeIntervalDetectorTest {
         val collector: GyroscopeSensorCollector? =
             intervalDetector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         intervalDetector.setPrivateProperty("collector", collectorSpy)
 
         internalDetectorListener.onError(
@@ -5563,18 +5241,13 @@ class GyroscopeIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(collectorSpy, times(1)).stop()
-        verify(errorListener, only()).onError(
-            intervalDetector,
-            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-        )
-//        verify(exactly = 1) { collectorSpy.stop() }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) {
             errorListener.onError(
                 intervalDetector,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
-        }*/
+        }
     }
 
     @Test
@@ -5639,16 +5312,7 @@ class GyroscopeIntervalDetectorTest {
             instantaneousStdZ
         )
 
-        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(
-            intervalDetector,
-            instantaneousAvgX,
-            instantaneousAvgY,
-            instantaneousAvgZ,
-            instantaneousStdX,
-            instantaneousStdY,
-            instantaneousStdZ
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             staticIntervalDetectedListener.onStaticIntervalDetected(
                 intervalDetector,
                 instantaneousAvgX,
@@ -5658,7 +5322,7 @@ class GyroscopeIntervalDetectorTest {
                 instantaneousStdY,
                 instantaneousStdZ
             )
-        }*/
+        }
     }
 
     @Test
@@ -5747,22 +5411,7 @@ class GyroscopeIntervalDetectorTest {
             accumulatedStdZ
         )
 
-        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(
-            intervalDetector,
-            instantaneousAvgX,
-            instantaneousAvgY,
-            instantaneousAvgZ,
-            instantaneousStdX,
-            instantaneousStdY,
-            instantaneousStdZ,
-            accumulatedAvgX,
-            accumulatedAvgY,
-            accumulatedAvgZ,
-            accumulatedStdX,
-            accumulatedStdY,
-            accumulatedStdZ
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             dynamicIntervalDetectedListener.onDynamicIntervalDetected(
                 intervalDetector,
                 instantaneousAvgX,
@@ -5778,7 +5427,7 @@ class GyroscopeIntervalDetectorTest {
                 accumulatedStdY,
                 accumulatedStdZ
             )
-        }*/
+        }
     }
 
     @Test
@@ -5812,8 +5461,7 @@ class GyroscopeIntervalDetectorTest {
 
         internalDetectorListener.onReset(internalDetector)
 
-        verify(resetListener, only()).onReset(intervalDetector)
-//        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
+        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
     }
 
     private companion object {

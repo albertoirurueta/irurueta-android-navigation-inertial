@@ -7,42 +7,26 @@ import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.Called
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
 
-//@Ignore("Possible memory leak when running this test")
 class RelativeGyroscopeAttitudeProcessorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var listener: BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenNoParameters_setsDefaultValues() {
@@ -108,8 +92,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
         assertEquals(Quaternion(), processor.attitude)
         assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
 
-        verifyNoInteractions(listener)
-//        verify { listener wasNot Called }
+        verify { listener wasNot Called }
     }
 
     @Test
@@ -131,8 +114,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
             "triad"
         )
         requireNotNull(triad)
-        val triadSpy = spy(triad)
-//        val triadSpy = spyk(triad)
+        val triadSpy = spyk(triad)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
@@ -142,8 +124,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
         val deltaAttitude: Quaternion? = processor.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
-        val deltaAttitudeSpy = spy(deltaAttitude)
-//        val deltaAttitudeSpy = spyk(deltaAttitude)
+        val deltaAttitudeSpy = spyk(deltaAttitude)
         processor.setPrivateProperty("deltaAttitude", deltaAttitudeSpy)
 
         val randomizer = UniformRandomizer()
@@ -163,50 +144,35 @@ class RelativeGyroscopeAttitudeProcessorTest {
         assertTrue(processor.process(measurement))
 
         // check
-        verify(triadSpy, times(1)).setValueCoordinates(
-            wx.toDouble(),
-            wy.toDouble(),
-            wz.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             triadSpy.setValueCoordinates(
                 wx.toDouble(),
                 wy.toDouble(),
                 wz.toDouble()
             )
-        }*/
+        }
 
         val expectedRoll = wx.toDouble() * INTERVAL_SECONDS
         val expectedPitch = wy.toDouble() * INTERVAL_SECONDS
         val expectedYaw = wz.toDouble() * INTERVAL_SECONDS
-        verify(deltaAttitudeSpy, times(1)).setFromEulerAngles(
-            expectedRoll,
-            expectedPitch,
-            expectedYaw
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             deltaAttitudeSpy.setFromEulerAngles(
                 expectedRoll,
                 expectedPitch,
                 expectedYaw
             )
-        }*/
+        }
 
         val expectedAttitude = Quaternion(expectedRoll, expectedPitch, expectedYaw)
         assertEquals(expectedAttitude, processor.attitude)
 
-        verify(listener, only()).onProcessed(
-            processor,
-            expectedAttitude,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 expectedAttitude,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -228,8 +194,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
             "triad"
         )
         requireNotNull(triad)
-        val triadSpy = spy(triad)
-//        val triadSpy = spyk(triad)
+        val triadSpy = spyk(triad)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
@@ -239,8 +204,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
         val deltaAttitude: Quaternion? = processor.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
-        val deltaAttitudeSpy = spy(deltaAttitude)
-//        val deltaAttitudeSpy = spyk(deltaAttitude)
+        val deltaAttitudeSpy = spyk(deltaAttitude)
         processor.setPrivateProperty("deltaAttitude", deltaAttitudeSpy)
 
         val randomizer = UniformRandomizer()
@@ -255,50 +219,35 @@ class RelativeGyroscopeAttitudeProcessorTest {
         assertTrue(processor.process(measurement))
 
         // check
-        verify(triadSpy, times(1)).setValueCoordinates(
-            wx.toDouble() - bx.toDouble(),
-            wy.toDouble() - by.toDouble(),
-            wz.toDouble() - bz.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             triadSpy.setValueCoordinates(
                 wx.toDouble() - bx.toDouble(),
                 wy.toDouble() - by.toDouble(),
                 wz.toDouble() - bz.toDouble()
             )
-        }*/
+        }
 
         val expectedRoll = (wx.toDouble() - bx.toDouble()) * INTERVAL_SECONDS
         val expectedPitch = (wy.toDouble() - by.toDouble()) * INTERVAL_SECONDS
         val expectedYaw = (wz.toDouble() - bz.toDouble()) * INTERVAL_SECONDS
-        verify(deltaAttitudeSpy, times(1)).setFromEulerAngles(
-            expectedRoll,
-            expectedPitch,
-            expectedYaw
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             deltaAttitudeSpy.setFromEulerAngles(
                 expectedRoll,
                 expectedPitch,
                 expectedYaw
             )
-        }*/
+        }
 
         val expectedAttitude = Quaternion(expectedRoll, expectedPitch, expectedYaw)
         assertEquals(expectedAttitude, processor.attitude)
 
-        verify(listener, only()).onProcessed(
-            processor,
-            expectedAttitude,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 expectedAttitude,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -320,8 +269,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
             "triad"
         )
         requireNotNull(triad)
-        val triadSpy = spy(triad)
-//        val triadSpy = spyk(triad)
+        val triadSpy = spyk(triad)
         setPrivateProperty(
             BaseRelativeGyroscopeAttitudeProcessor::class,
             processor,
@@ -331,8 +279,7 @@ class RelativeGyroscopeAttitudeProcessorTest {
 
         val deltaAttitude: Quaternion? = processor.getPrivateProperty("deltaAttitude")
         requireNotNull(deltaAttitude)
-        val deltaAttitudeSpy = spy(deltaAttitude)
-//        val deltaAttitudeSpy = spyk(deltaAttitude)
+        val deltaAttitudeSpy = spyk(deltaAttitude)
         processor.setPrivateProperty("deltaAttitude", deltaAttitudeSpy)
 
         val randomizer = UniformRandomizer()
@@ -347,50 +294,35 @@ class RelativeGyroscopeAttitudeProcessorTest {
         assertTrue(processor.process(measurement, timestamp))
 
         // check
-        verify(triadSpy, times(1)).setValueCoordinates(
-            wx.toDouble() - bx.toDouble(),
-            wy.toDouble() - by.toDouble(),
-            wz.toDouble() - bz.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             triadSpy.setValueCoordinates(
                 wx.toDouble() - bx.toDouble(),
                 wy.toDouble() - by.toDouble(),
                 wz.toDouble() - bz.toDouble()
             )
-        }*/
+        }
 
         val expectedRoll = (wx.toDouble() - bx.toDouble()) * INTERVAL_SECONDS
         val expectedPitch = (wy.toDouble() - by.toDouble()) * INTERVAL_SECONDS
         val expectedYaw = (wz.toDouble() - bz.toDouble()) * INTERVAL_SECONDS
-        verify(deltaAttitudeSpy, times(1)).setFromEulerAngles(
-            expectedRoll,
-            expectedPitch,
-            expectedYaw
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             deltaAttitudeSpy.setFromEulerAngles(
                 expectedRoll,
                 expectedPitch,
                 expectedYaw
             )
-        }*/
+        }
 
         val expectedAttitude = Quaternion(expectedRoll, expectedPitch, expectedYaw)
         assertEquals(expectedAttitude, processor.attitude)
 
-        verify(listener, only()).onProcessed(
-            processor,
-            expectedAttitude,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 expectedAttitude,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test

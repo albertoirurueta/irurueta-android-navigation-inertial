@@ -19,47 +19,29 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.clearAllMocks
-//import io.mockk.every
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import io.mockk.unmockkAll
-import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerSensorMeasurementConverterTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var event: SensorEvent
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun convert_whenNoSensorEvent_returnsFalse() {
@@ -69,8 +51,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenUnknownSensorType_returnsFalse() {
-        whenever(sensor.type).thenReturn(Sensor.TYPE_GYROSCOPE)
-//        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
         event.sensor = sensor
         val measurement = MagnetometerSensorMeasurement()
 
@@ -79,8 +60,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerSensorTypeWithoutStartOffset_returnsTrue() {
-        whenever(sensor.type).thenReturn(Sensor.TYPE_MAGNETIC_FIELD)
-//        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD)
+        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -115,8 +95,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerUncalibratedSensorTypeWithoutStartOffset_returnsTrue() {
-        whenever(sensor.type).thenReturn(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-//        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -154,8 +133,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerSensorTypeWithStartOffset_returnsTrue() {
-        whenever(sensor.type).thenReturn(Sensor.TYPE_MAGNETIC_FIELD)
-//        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD)
+        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()
@@ -191,8 +169,7 @@ class MagnetometerSensorMeasurementConverterTest {
 
     @Test
     fun convert_whenMagnetometerUncalibratedSensorTypeWithStartOffset_returnsTrue() {
-        whenever(sensor.type).thenReturn(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
-//        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
         event.sensor = sensor
 
         val timestamp = System.nanoTime()

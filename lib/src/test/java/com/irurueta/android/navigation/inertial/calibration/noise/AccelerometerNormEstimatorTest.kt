@@ -32,25 +32,13 @@ import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
+import io.mockk.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -59,36 +47,22 @@ import kotlin.math.sqrt
 class AccelerometerNormEstimatorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var completedListener:
             AccumulatedMeasurementEstimator.OnEstimationCompletedListener<AccelerometerNormEstimator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var unreliableListener:
             AccumulatedMeasurementEstimator.OnUnreliableListener<AccelerometerNormEstimator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var measurementListener:
             AccelerometerSensorCollector.OnMeasurementListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -663,10 +637,8 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        whenever(collectorSpy.sensor).thenReturn(sensor)
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.sensor }.returns(sensor)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertSame(sensor, estimator.sensor)
@@ -686,10 +658,8 @@ class AccelerometerNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -697,8 +667,7 @@ class AccelerometerNormEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -715,10 +684,8 @@ class AccelerometerNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(false).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(false)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(false)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -734,17 +701,14 @@ class AccelerometerNormEstimatorTest {
         val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spy(noiseEstimator)
-//        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
@@ -753,8 +717,7 @@ class AccelerometerNormEstimatorTest {
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -768,12 +731,10 @@ class AccelerometerNormEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(noiseEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(timeIntervalEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(estimator.maxSamples, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -785,17 +746,14 @@ class AccelerometerNormEstimatorTest {
         val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spy(noiseEstimator)
-//        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
@@ -804,8 +762,7 @@ class AccelerometerNormEstimatorTest {
             "timeIntervalEstimator"
         )
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -819,12 +776,10 @@ class AccelerometerNormEstimatorTest {
 
         assertTrue(estimator.running)
 
-        verify(noiseEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { noiseEstimatorSpy.reset() }
+        verify(exactly = 1) { noiseEstimatorSpy.reset() }
         assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
 
-        verify(timeIntervalEstimatorSpy, times(1)).reset()
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
         assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
     }
 
@@ -836,10 +791,8 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         setPrivateProperty(
@@ -888,10 +841,8 @@ class AccelerometerNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -899,15 +850,13 @@ class AccelerometerNormEstimatorTest {
         estimator.start()
 
         assertTrue(estimator.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
 
         // stop
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -924,8 +873,7 @@ class AccelerometerNormEstimatorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(estimator.running)
@@ -934,8 +882,7 @@ class AccelerometerNormEstimatorTest {
         estimator.stop()
 
         assertFalse(estimator.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -960,10 +907,9 @@ class AccelerometerNormEstimatorTest {
 
         accelerometerMeasurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
 
-        verify(measurementListener, only()).onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
-        }*/
+        }
     }
 
     @Test
@@ -1045,8 +991,7 @@ class AccelerometerNormEstimatorTest {
         val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
             estimator.getPrivateProperty("noiseEstimator")
         requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spy(noiseEstimator)
-//        val noiseEstimatorSpy = spyk(noiseEstimator)
+        val noiseEstimatorSpy = spyk(noiseEstimator)
         estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
@@ -1056,8 +1001,7 @@ class AccelerometerNormEstimatorTest {
                 "timeIntervalEstimator"
             )
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             BaseAccumulatedEstimator::class,
             estimator,
@@ -1080,19 +1024,15 @@ class AccelerometerNormEstimatorTest {
         // set measurement
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp1, accuracy)
 
-        verify(noiseEstimatorSpy, times(1)).addMeasurement(a)
-        verify(timeIntervalEstimatorSpy, never()).addTimestamp(any<Double>())
-//        verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(a) }
-//        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(a) }
+        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
 
         // set another measurement
         val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
-        verify(noiseEstimatorSpy, times(2)).addMeasurement(a)
-        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(any<Double>())
-//        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(a) }
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
+        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(a) }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
     }
 
     @Test
@@ -1165,8 +1105,7 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1204,8 +1143,7 @@ class AccelerometerNormEstimatorTest {
         assertEquals(maxSamples, estimator.numberOfProcessedMeasurements)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxSamples(estimator, a)
@@ -1223,8 +1161,7 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxSamples = estimator.maxSamples
@@ -1263,10 +1200,8 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-        verify(completedListener, only()).onEstimationCompleted(estimator)
-//        verify(exactly = 1) { collectorSpy.stop() }
-//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxSamples(estimator, a)
@@ -1283,8 +1218,7 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1324,8 +1258,7 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, a)
@@ -1343,8 +1276,7 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1384,12 +1316,10 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(completedListener, only()).onEstimationCompleted(estimator)
-//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, a)
@@ -1404,8 +1334,7 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1445,8 +1374,7 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check result
         checkResultMaxDuration(estimator, a)
@@ -1464,8 +1392,7 @@ class AccelerometerNormEstimatorTest {
         val collector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         estimator.setPrivateProperty("collector", collectorSpy)
 
         val maxDurationMillis = estimator.maxDurationMillis
@@ -1505,12 +1432,10 @@ class AccelerometerNormEstimatorTest {
         assertTrue(estimator.resultAvailable)
 
         // check that after completion, collector was stopped
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
 
         // check that listener was called
-        verify(completedListener, only()).onEstimationCompleted(estimator)
-//        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
 
         // check result
         checkResultMaxDuration(estimator, a)
@@ -1558,8 +1483,7 @@ class AccelerometerNormEstimatorTest {
 
         // check
         assertTrue(estimator.resultUnreliable)
-        verify(unreliableListener, only()).onUnreliable(estimator)
-//        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
+        verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
     }
 
     @Test
@@ -1582,8 +1506,7 @@ class AccelerometerNormEstimatorTest {
 
         // check
         assertFalse(estimator.resultUnreliable)
-        verify(unreliableListener, never()).onUnreliable(estimator)
-//        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
+        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
     }
 
     private fun checkResultMaxSamples(estimator: AccelerometerNormEstimator, a: Double) {

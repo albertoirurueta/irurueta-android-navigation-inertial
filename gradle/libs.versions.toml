@@ -1,10 +1,10 @@
 [versions]
-agp = "8.12.2"
-kotlin = "2.2.10"
+agp = "8.13.0"
+kotlin = "2.2.20"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
-composeBom = "2025.08.01"
+composeBom = "2025.09.00"
 material = "1.13.0"
 dokka = "2.0.0"
 sonarqube = "6.3.1.5724"
@@ -21,7 +21,6 @@ iruruetaNavigationInertialExtra = "1.4.0"
 playServicesLocation = "21.3.0"
 rules = "1.7.0"
 iruruetaTestUtils = "1.3.0"
-mockitoKotlin = "6.0.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -43,7 +42,6 @@ irurueta-gl-cube = { group = "com.irurueta", name = "irurueta-android-gl-cube", 
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 androidx-rules = { group = "androidx.test", name = "rules", version.ref = "rules" }
 irurueta-test-utils = { group = "com.irurueta", name = "irurueta-android-test-utils", version.ref= "iruruetaTestUtils" }
-mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

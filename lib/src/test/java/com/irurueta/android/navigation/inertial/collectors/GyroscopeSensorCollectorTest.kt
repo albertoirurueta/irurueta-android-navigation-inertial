@@ -22,69 +22,42 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.testutils.getPrivateProperty
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.capture
-import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeSensorCollectorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var measurementListener: GyroscopeSensorCollector.OnMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var event: SensorEvent
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
-
-    @Captor
-    private lateinit var sensorEventListenerCaptor: ArgumentCaptor<SensorEventListener>
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -243,23 +216,17 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-//        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }.returns(sensor)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }.returns(sensor)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
             GyroscopeSensorCollector(contextSpy, GyroscopeSensorType.GYROSCOPE)
 
         assertSame(sensor, collector.sensor)
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(sensorManagerSpy, only()).getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
     }
 
     @Test
@@ -268,16 +235,12 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
             sensor
-        )*/
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -285,12 +248,10 @@ class GyroscopeSensorCollectorTest {
         )
 
         assertSame(sensor, collector.sensor)
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(sensorManagerSpy, only()).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-        }*/
+        }
     }
 
     @Test
@@ -299,21 +260,16 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
             GyroscopeSensorCollector(contextSpy, GyroscopeSensorType.GYROSCOPE)
 
         assertFalse(collector.sensorAvailable)
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-//        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }
     }
 
     @Test
@@ -322,12 +278,9 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -335,27 +288,22 @@ class GyroscopeSensorCollectorTest {
         )
 
         assertFalse(collector.sensorAvailable)
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(sensorManagerSpy, times(1)).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) {
             sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-        }*/
+        }
     }
 
     @Test
     fun start_whenNoSensorManager_returnsFalse() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(null).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
         val collector = GyroscopeSensorCollector(contextSpy)
         assertFalse(collector.start())
 
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
     }
 
     @Test
@@ -364,34 +312,23 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(null).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-//        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }.returns(null)
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE) }.returns(null)
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(contextSpy)
         assertFalse(collector.start())
 
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(sensorManagerSpy, never()).registerListener(
-            any(),
-            any<Sensor>(),
-            eq(collector.sensorDelay.value)
-        )
-/*        verify(exactly = 0) {
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 0) {
             sensorManagerSpy.registerListener(
                 any(),
                 any<Sensor>(),
                 collector.sensorDelay.value
             )
-        }*/
+        }
     }
 
     @Test
@@ -400,50 +337,36 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
             sensor
-        )*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(contextSpy)
         assertTrue(collector.start())
 
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
         assertNotNull(eventListener)
     }
 
     @Test
     fun stop_whenNoSensorManager_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(null).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
         val collector = GyroscopeSensorCollector(contextSpy)
         collector.stop()
@@ -455,29 +378,21 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensor)*/
-        doNothing().whenever(sensorManagerSpy).unregisterListener(any(), any<Sensor>())
-//        justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
+            .returns(sensor)
+        justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(contextSpy)
         collector.stop()
 
-        verify(contextSpy, only()).getSystemService(Context.SENSOR_SERVICE)
-//        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
-        verify(sensorManagerSpy, times(1)).unregisterListener(capture(sensorEventListenerCaptor), eq(sensor))
-//        val slot = slot<SensorEventListener>()
-//        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
+        verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
+        val slot = slot<SensorEventListener>()
+        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
         assertNotNull(eventListener)
     }
 
@@ -487,18 +402,13 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
             sensor
-        )*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -506,26 +416,19 @@ class GyroscopeSensorCollectorTest {
         )
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
         eventListener.onSensorChanged(null)
-        verifyNoInteractions(measurementListener)
-//        verify { measurementListener wasNot Called }
+        verify { measurementListener wasNot Called }
     }
 
     @Test
@@ -534,18 +437,13 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
             sensor
-        )*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -553,30 +451,22 @@ class GyroscopeSensorCollectorTest {
         )
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
-        whenever(sensor.type).thenReturn(-1)
-//        every { sensor.type }.returns(-1)
+        every { sensor.type }.returns(-1)
         event.sensor = sensor
         eventListener.onSensorChanged(event)
 
-        verifyNoInteractions(measurementListener)
-//        verify { measurementListener wasNot Called }
+        verify { measurementListener wasNot Called }
     }
 
     @Test
@@ -585,41 +475,29 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
             sensor
-        )*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(contextSpy)
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
-        whenever(sensor.type).thenReturn(-1)
-//        every { sensor.type }.returns(-1)
+        every { sensor.type }.returns(-1)
         event.sensor = sensor
         event.timestamp = System.nanoTime()
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
@@ -627,8 +505,7 @@ class GyroscopeSensorCollectorTest {
         valuesField.set(event, floatArrayOf(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f))
         eventListener.onSensorChanged(event)
 
-        verify(sensor, only()).type
-//        verify(exactly = 1) { sensor.type }
+        verify(exactly = 1) { sensor.type }
     }
 
     @Test
@@ -637,18 +514,13 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
             sensor
-        )*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -656,25 +528,18 @@ class GyroscopeSensorCollectorTest {
         )
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
-        whenever(sensor.type).thenReturn(GyroscopeSensorType.GYROSCOPE.value)
-//        every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE.value)
+        every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE.value)
         event.sensor = sensor
         event.timestamp = System.nanoTime()
         event.accuracy = SensorAccuracy.HIGH.value
@@ -683,17 +548,7 @@ class GyroscopeSensorCollectorTest {
         valuesField.set(event, floatArrayOf(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f))
         eventListener.onSensorChanged(event)
 
-        verify(measurementListener, only()).onMeasurement(
-            1.0f,
-            2.0f,
-            3.0f,
-            null,
-            null,
-            null,
-            event.timestamp,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             measurementListener.onMeasurement(
                 1.0f,
                 2.0f,
@@ -704,7 +559,7 @@ class GyroscopeSensorCollectorTest {
                 event.timestamp,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -713,18 +568,13 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }.returns(
             sensor
-        )*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        )
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -733,26 +583,19 @@ class GyroscopeSensorCollectorTest {
         )
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
-        whenever(sensor.type).thenReturn(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
-/*        every { sensor.type }
-            .returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)*/
+        every { sensor.type }
+            .returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         event.sensor = sensor
         event.timestamp = System.nanoTime()
         event.accuracy = SensorAccuracy.HIGH.value
@@ -761,17 +604,7 @@ class GyroscopeSensorCollectorTest {
         valuesField.set(event, floatArrayOf(1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f))
         eventListener.onSensorChanged(event)
 
-        verify(measurementListener, only()).onMeasurement(
-            1.0f,
-            2.0f,
-            3.0f,
-            4.0f,
-            5.0f,
-            6.0f,
-            event.timestamp,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             measurementListener.onMeasurement(
                 1.0f,
                 2.0f,
@@ -782,7 +615,7 @@ class GyroscopeSensorCollectorTest {
                 event.timestamp,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test
@@ -791,17 +624,12 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensor)*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
+            .returns(sensor)
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -809,27 +637,20 @@ class GyroscopeSensorCollectorTest {
         )
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
         eventListener.onAccuracyChanged(null, SensorAccuracy.HIGH.value)
 
-        verifyNoInteractions(accuracyChangedListener)
-//        verify { accuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -838,17 +659,12 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensor)*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
+            .returns(sensor)
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -856,29 +672,21 @@ class GyroscopeSensorCollectorTest {
         )
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
-        whenever(sensor.type).thenReturn(-1)
-//        every { sensor.type }.returns(-1)
+        every { sensor.type }.returns(-1)
         eventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
-        verifyNoInteractions(accuracyChangedListener)
-//        verify { accuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -887,17 +695,12 @@ class GyroscopeSensorCollectorTest {
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
-        val sensorManagerSpy = spy(sensorManager)
-//        val sensorManagerSpy = spyk(sensorManager)
-        doReturn(sensor).whenever(sensorManagerSpy).getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED)
-/*        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
-            .returns(sensor)*/
-        doReturn(true).whenever(sensorManagerSpy).registerListener(any(), any<Sensor>(), any())
-//        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spy(context)
-//        val contextSpy = spyk(context)
-        doReturn(sensorManagerSpy).whenever(contextSpy).getSystemService(Context.SENSOR_SERVICE)
-//        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
+        val sensorManagerSpy = spyk(sensorManager)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED) }
+            .returns(sensor)
+        every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+        val contextSpy = spyk(context)
+        every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GyroscopeSensorCollector(
             contextSpy,
@@ -905,35 +708,25 @@ class GyroscopeSensorCollectorTest {
         )
         assertTrue(collector.start())
 
-        verify(sensorManagerSpy, times(1)).registerListener(
-            capture(sensorEventListenerCaptor),
-            eq(sensor),
-            eq(collector.sensorDelay.value)
-        )
-/*        val slot = slot<SensorEventListener>()
+        val slot = slot<SensorEventListener>()
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
                 sensor,
                 collector.sensorDelay.value
             )
-        }*/
+        }
 
-        val eventListener = sensorEventListenerCaptor.value
-//        val eventListener = slot.captured
+        val eventListener = slot.captured
 
-        whenever(sensor.type).thenReturn(GyroscopeSensorType.GYROSCOPE.value)
-//        every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE.value)
+        every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE.value)
         eventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
-        verify(accuracyChangedListener, only()).onAccuracyChanged(
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accuracyChangedListener.onAccuracyChanged(
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     @Test

@@ -25,46 +25,30 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.only
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import kotlin.math.sqrt
 
-//@Ignore("Possible memory leak when running this test")
 class GravityProcessorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var listener:
             BaseGravityProcessor.OnProcessedListener<GravitySensorMeasurement>
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -180,15 +164,7 @@ class GravityProcessorTest {
 
         assertTrue(processor.process(measurement))
 
-        verify(listener, only()).onProcessed(
-            processor,
-            gy.toDouble(),
-            gx.toDouble(),
-            -gz.toDouble(),
-            timestamp,
-            SensorAccuracy.LOW
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 gy.toDouble(),
@@ -197,7 +173,7 @@ class GravityProcessorTest {
                 timestamp,
                 SensorAccuracy.LOW
             )
-        }*/
+        }
 
         // check
         assertEquals(gy.toDouble(), processor.gx, 0.0)
@@ -235,15 +211,7 @@ class GravityProcessorTest {
                     + gz.toDouble() * gz.toDouble()
         )
         val factor = SensorManager.GRAVITY_EARTH / norm
-        verify(listener, only()).onProcessed(
-            processor,
-            gy.toDouble() * factor,
-            gx.toDouble() * factor,
-            -gz.toDouble() * factor,
-            timestamp,
-            SensorAccuracy.LOW
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 gy.toDouble() * factor,
@@ -252,7 +220,7 @@ class GravityProcessorTest {
                 timestamp,
                 SensorAccuracy.LOW
             )
-        }*/
+        }
 
         // check
         assertEquals(gy.toDouble() * factor, processor.gx, 0.0)
@@ -297,15 +265,7 @@ class GravityProcessorTest {
 
         val factor =
             NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
-        verify(listener, only()).onProcessed(
-            processor,
-            gy.toDouble() * factor,
-            gx.toDouble() * factor,
-            -gz.toDouble() * factor,
-            timestamp,
-            SensorAccuracy.LOW
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 gy.toDouble() * factor,
@@ -314,7 +274,7 @@ class GravityProcessorTest {
                 timestamp,
                 SensorAccuracy.LOW
             )
-        }*/
+        }
 
         // check
         assertEquals(gy.toDouble() * factor, processor.gx, 0.0)
@@ -347,15 +307,7 @@ class GravityProcessorTest {
 
         assertTrue(processor.process(measurement, timestamp))
 
-        verify(listener, only()).onProcessed(
-            processor,
-            gy.toDouble(),
-            gx.toDouble(),
-            -gz.toDouble(),
-            timestamp,
-            SensorAccuracy.LOW
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 gy.toDouble(),
@@ -364,7 +316,7 @@ class GravityProcessorTest {
                 timestamp,
                 SensorAccuracy.LOW
             )
-        }*/
+        }
 
         // check
         assertEquals(gy.toDouble(), processor.gx, 0.0)
@@ -459,12 +411,9 @@ class GravityProcessorTest {
             MAX_HEIGHT
         )
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

@@ -18,72 +18,51 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.capture
-import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class GravityEstimatorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var estimationListener: GravityEstimator.OnEstimationListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accelerometerMeasurementListener:
             AccelerometerSensorCollector.OnMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
-
-    @Captor
-    private lateinit var doubleArrayCaptor: ArgumentCaptor<DoubleArray>
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -200,8 +179,7 @@ class GravityEstimatorTest {
         val accelerometerAveragingFilter: AveragingFilter? =
             estimator.getPrivateProperty("accelerometerAveragingFilter")
         requireNotNull(accelerometerAveragingFilter)
-        val accelerometerAveragingFilterSpy = spy(accelerometerAveragingFilter)
-//        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
+        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
         estimator.setPrivateProperty(
             "accelerometerAveragingFilter",
             accelerometerAveragingFilterSpy
@@ -210,17 +188,14 @@ class GravityEstimatorTest {
         val gravitySensorCollector: GravitySensorCollector? =
             estimator.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
         estimator.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doReturn(true).whenever(accelerometerSensorCollectorSpy).start()
-//        every { accelerometerSensorCollectorSpy.start() }.returns(true)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.start() }.returns(true)
         estimator.setPrivateProperty(
             "accelerometerSensorCollector",
             accelerometerSensorCollectorSpy
@@ -229,12 +204,9 @@ class GravityEstimatorTest {
         assertTrue(estimator.start())
 
         assertTrue(estimator.running)
-        verify(accelerometerAveragingFilterSpy, only()).reset()
-//        verify(exactly = 1) { accelerometerAveragingFilterSpy.reset() }
-        verify(accelerometerSensorCollectorSpy, only()).start()
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
-        verifyNoInteractions(gravitySensorCollectorSpy)
-//        verify { gravitySensorCollectorSpy wasNot Called }
+        verify(exactly = 1) { accelerometerAveragingFilterSpy.reset() }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.start() }
+        verify { gravitySensorCollectorSpy wasNot Called }
     }
 
     @Test
@@ -245,8 +217,7 @@ class GravityEstimatorTest {
         val accelerometerAveragingFilter: AveragingFilter? =
             estimator.getPrivateProperty("accelerometerAveragingFilter")
         requireNotNull(accelerometerAveragingFilter)
-        val accelerometerAveragingFilterSpy = spy(accelerometerAveragingFilter)
-//        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
+        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
         estimator.setPrivateProperty(
             "accelerometerAveragingFilter",
             accelerometerAveragingFilterSpy
@@ -255,17 +226,14 @@ class GravityEstimatorTest {
         val gravitySensorCollector: GravitySensorCollector? =
             estimator.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doReturn(true).whenever(gravitySensorCollectorSpy).start()
-//        every { gravitySensorCollectorSpy.start() }.returns(true)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.start() }.returns(true)
         estimator.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
         estimator.setPrivateProperty(
             "accelerometerSensorCollector",
             accelerometerSensorCollectorSpy
@@ -274,12 +242,9 @@ class GravityEstimatorTest {
         assertTrue(estimator.start())
 
         assertTrue(estimator.running)
-        verify(accelerometerAveragingFilterSpy, only()).reset()
-//        verify(exactly = 1) { accelerometerAveragingFilterSpy.reset() }
-        verifyNoInteractions(accelerometerSensorCollectorSpy)
-//        verify { accelerometerSensorCollectorSpy wasNot Called }
-        verify(gravitySensorCollectorSpy, only()).start()
-//        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
+        verify(exactly = 1) { accelerometerAveragingFilterSpy.reset() }
+        verify { accelerometerSensorCollectorSpy wasNot Called }
+        verify(exactly = 1) { gravitySensorCollectorSpy.start() }
     }
 
     @Test
@@ -294,19 +259,15 @@ class GravityEstimatorTest {
         val gravitySensorCollector: GravitySensorCollector? =
             estimator.getPrivateProperty("gravitySensorCollector")
         requireNotNull(gravitySensorCollector)
-        val gravitySensorCollectorSpy = spy(gravitySensorCollector)
-//        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
-        doNothing().whenever(gravitySensorCollectorSpy).stop()
-//        justRun { gravitySensorCollectorSpy.stop() }
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        justRun { gravitySensorCollectorSpy.stop() }
         estimator.setPrivateProperty("gravitySensorCollector", gravitySensorCollectorSpy)
 
         val accelerometerSensorCollector: AccelerometerSensorCollector? =
             estimator.getPrivateProperty("accelerometerSensorCollector")
         requireNotNull(accelerometerSensorCollector)
-        val accelerometerSensorCollectorSpy = spy(accelerometerSensorCollector)
-//        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
-        doNothing().whenever(accelerometerSensorCollectorSpy).stop()
-//        justRun { accelerometerSensorCollectorSpy.stop() }
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        justRun { accelerometerSensorCollectorSpy.stop() }
         estimator.setPrivateProperty(
             "accelerometerSensorCollector",
             accelerometerSensorCollectorSpy
@@ -314,10 +275,8 @@ class GravityEstimatorTest {
 
         estimator.stop()
 
-        verify(gravitySensorCollectorSpy, only()).stop()
-//        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
-        verify(accelerometerSensorCollectorSpy, only()).stop()
-//        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
         assertFalse(estimator.running)
     }
 
@@ -362,14 +321,7 @@ class GravityEstimatorTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
         measurementListener.onMeasurement(gx, gy, gz, g, timestamp, SensorAccuracy.HIGH)
 
-        verify(estimationListener, only()).onEstimation(
-            estimator,
-            gy.toDouble(),
-            gx.toDouble(),
-            -gz.toDouble(),
-            timestamp
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             estimationListener.onEstimation(
                 estimator,
                 gy.toDouble(),
@@ -377,7 +329,7 @@ class GravityEstimatorTest {
                 -gz.toDouble(),
                 timestamp
             )
-        }*/
+        }
     }
 
     @Test
@@ -401,10 +353,9 @@ class GravityEstimatorTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
         measurementListener.onMeasurement(gx, gy, gz, g, timestamp, SensorAccuracy.HIGH)
 
-        verify(gravityMeasurementListener, only()).onMeasurement(gx, gy, gz, g, timestamp, SensorAccuracy.HIGH)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             gravityMeasurementListener.onMeasurement(gx, gy, gz, g, timestamp, SensorAccuracy.HIGH)
-        }*/
+        }
     }
 
     @Test
@@ -415,8 +366,7 @@ class GravityEstimatorTest {
         val accelerometerAveragingFilter: AveragingFilter? =
             estimator.getPrivateProperty("accelerometerAveragingFilter")
         requireNotNull(accelerometerAveragingFilter)
-        val accelerometerAveragingFilterSpy = spy(accelerometerAveragingFilter)
-//        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
+        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
         estimator.setPrivateProperty(
             "accelerometerAveragingFilter",
             accelerometerAveragingFilterSpy
@@ -439,14 +389,7 @@ class GravityEstimatorTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
         measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
 
-        verify(accelerometerAveragingFilterSpy, only()).filter(
-            eq(ax.toDouble() - bx.toDouble()),
-            eq(ay.toDouble() - by.toDouble()),
-            eq(az.toDouble() - bz.toDouble()),
-            any(),
-            eq(timestamp)
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -454,7 +397,7 @@ class GravityEstimatorTest {
                 any(),
                 timestamp
             )
-        }*/
+        }
     }
 
     @Test
@@ -466,8 +409,7 @@ class GravityEstimatorTest {
             estimator.getPrivateProperty("accelerometerAveragingFilter")
         requireNotNull(accelerometerAveragingFilter)
         assertTrue(accelerometerAveragingFilter is LowPassAveragingFilter)
-        val accelerometerAveragingFilterSpy = spy(accelerometerAveragingFilter)
-//        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
+        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
         estimator.setPrivateProperty(
             "accelerometerAveragingFilter",
             accelerometerAveragingFilterSpy
@@ -491,14 +433,7 @@ class GravityEstimatorTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
         measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
 
-        verify(accelerometerAveragingFilterSpy, only()).filter(
-            eq(ax.toDouble() - bx.toDouble()),
-            eq(ay.toDouble() - by.toDouble()),
-            eq(az.toDouble() - bz.toDouble()),
-            any(),
-            eq(timestamp)
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -506,10 +441,9 @@ class GravityEstimatorTest {
                 any(),
                 timestamp
             )
-        }*/
+        }
 
-        verifyNoInteractions(estimationListener)
-//        verify { estimationListener wasNot Called }
+        verify { estimationListener wasNot Called }
 
         // receive 2nd measurement
         measurementListener.onMeasurement(
@@ -523,14 +457,7 @@ class GravityEstimatorTest {
             SensorAccuracy.HIGH
         )
 
-        verify(accelerometerAveragingFilterSpy, times(1)).filter(
-            eq(ax.toDouble() - bx.toDouble()),
-            eq(ay.toDouble() - by.toDouble()),
-            eq(az.toDouble() - bz.toDouble()),
-            capture(doubleArrayCaptor),
-            eq(timestamp + INTERVAL_NANOS)
-        )
-/*        val slot = slot<DoubleArray>()
+        val slot = slot<DoubleArray>()
         verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
@@ -539,18 +466,10 @@ class GravityEstimatorTest {
                 capture(slot),
                 timestamp + INTERVAL_NANOS
             )
-        }*/
+        }
 
-        val filterOutput = doubleArrayCaptor.value
-//        val filterOutput = slot.captured
-        verify(estimationListener, only()).onEstimation(
-            estimator,
-            filterOutput[1],
-            filterOutput[0],
-            -filterOutput[2],
-            timestamp + INTERVAL_NANOS
-        )
-/*        verify(exactly = 1) {
+        val filterOutput = slot.captured
+        verify(exactly = 1) {
             estimationListener.onEstimation(
                 estimator,
                 filterOutput[1],
@@ -558,7 +477,7 @@ class GravityEstimatorTest {
                 -filterOutput[2],
                 timestamp + INTERVAL_NANOS
             )
-        }*/
+        }
     }
 
     @Test
@@ -573,8 +492,7 @@ class GravityEstimatorTest {
             estimator.getPrivateProperty("accelerometerAveragingFilter")
         requireNotNull(accelerometerAveragingFilter)
         assertTrue(accelerometerAveragingFilter is LowPassAveragingFilter)
-        val accelerometerAveragingFilterSpy = spy(accelerometerAveragingFilter)
-//        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
+        val accelerometerAveragingFilterSpy = spyk(accelerometerAveragingFilter)
         estimator.setPrivateProperty(
             "accelerometerAveragingFilter",
             accelerometerAveragingFilterSpy
@@ -598,14 +516,7 @@ class GravityEstimatorTest {
         val timestamp = SystemClock.elapsedRealtimeNanos()
         measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
 
-        verify(accelerometerAveragingFilterSpy, only()).filter(
-            eq(ax.toDouble() - bx.toDouble()),
-            eq(ay.toDouble() - by.toDouble()),
-            eq(az.toDouble() - bz.toDouble()),
-            any(),
-            eq(timestamp)
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -613,19 +524,9 @@ class GravityEstimatorTest {
                 any(),
                 timestamp
             )
-        }*/
+        }
 
-        verify(accelerometerMeasurementListener, only()).onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             accelerometerMeasurementListener.onMeasurement(
                 ax,
                 ay,
@@ -636,20 +537,13 @@ class GravityEstimatorTest {
                 timestamp,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
 
         // receive 2nd measurement
         measurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, SensorAccuracy.HIGH)
 
-//        val filterOutputList = mutableListOf<DoubleArray>()
-        verify(accelerometerAveragingFilterSpy, times(2)).filter(
-            eq(ax.toDouble() - bx.toDouble()),
-            eq(ay.toDouble() - by.toDouble()),
-            eq(az.toDouble() - bz.toDouble()),
-            any<DoubleArray>(),
-            eq(timestamp)
-        )
-/*        verify(exactly = 2) {
+        val filterOutputList = mutableListOf<DoubleArray>()
+        verify(exactly = 2) {
             accelerometerAveragingFilterSpy.filter(
                 ax.toDouble() - bx.toDouble(),
                 ay.toDouble() - by.toDouble(),
@@ -657,19 +551,9 @@ class GravityEstimatorTest {
                 capture(filterOutputList),
                 timestamp
             )
-        }*/
+        }
 
-        verify(accelerometerMeasurementListener, times(2)).onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 2) {
+        verify(exactly = 2) {
             accelerometerMeasurementListener.onMeasurement(
                 ax,
                 ay,
@@ -680,7 +564,7 @@ class GravityEstimatorTest {
                 timestamp,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     private companion object {

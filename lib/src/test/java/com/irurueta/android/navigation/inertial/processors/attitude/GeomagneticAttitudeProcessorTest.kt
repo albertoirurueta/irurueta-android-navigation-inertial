@@ -33,51 +33,33 @@ import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
-import java.util.*
+import java.util.Date
 
-//@Ignore("Possible memory leak when running this test")
 class GeomagneticAttitudeProcessorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var listener:
             BaseGeomagneticAttitudeProcessor.OnProcessedListener<GravitySensorMeasurement, GravityAndMagnetometerSyncedSensorMeasurement>
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -143,17 +125,14 @@ class GeomagneticAttitudeProcessorTest {
         // setup spy
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
-        doReturn(gx).whenever(gravityProcessorSpy).gx
-//        every { gravityProcessorSpy.gx }.returns(gx)
+        every { gravityProcessorSpy.gx }.returns(gx)
         processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertEquals(gx, processor.gx, 0.0)
-        verify(gravityProcessorSpy, only()).gx
-//        verify(exactly = 1) { gravityProcessorSpy.gx }
+        verify(exactly = 1) { gravityProcessorSpy.gx }
     }
 
     @Test
@@ -163,20 +142,16 @@ class GeomagneticAttitudeProcessorTest {
         // setup spy
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         val randomizer = UniformRandomizer()
         val gy = randomizer.nextDouble()
         val gz = randomizer.nextDouble()
-        doReturn(gy).whenever(gravityProcessorSpy).gy
-//        every { gravityProcessorSpy.gy }.returns(gy)
-        doReturn(gz).whenever(gravityProcessorSpy).gz
-//        every { gravityProcessorSpy.gz }.returns(gz)
+        every { gravityProcessorSpy.gy }.returns(gy)
+        every { gravityProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertEquals(gy, processor.gy, 0.0)
-        verify(gravityProcessorSpy, only()).gy
-//        verify(exactly = 1) { gravityProcessorSpy.gy }
+        verify(exactly = 1) { gravityProcessorSpy.gy }
     }
 
     @Test
@@ -186,17 +161,14 @@ class GeomagneticAttitudeProcessorTest {
         // setup spy
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         val randomizer = UniformRandomizer()
         val gz = randomizer.nextDouble()
-        doReturn(gz).whenever(gravityProcessorSpy).gz
-//        every { gravityProcessorSpy.gz }.returns(gz)
+        every { gravityProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertEquals(gz, processor.gz, 0.0)
-        verify(gravityProcessorSpy, only()).gz
-//        verify(exactly = 1) { gravityProcessorSpy.gz }
+        verify(exactly = 1) { gravityProcessorSpy.gz }
     }
 
     @Test
@@ -206,16 +178,13 @@ class GeomagneticAttitudeProcessorTest {
         // setup spy
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         val gravity = AccelerationTriad()
-        doReturn(gravity).whenever(gravityProcessorSpy).gravity
-//        every { gravityProcessorSpy.gravity }.returns(gravity)
+        every { gravityProcessorSpy.gravity }.returns(gravity)
         processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertSame(gravity, processor.gravity)
-        verify(gravityProcessorSpy, only()).gravity
-//        verify(exactly = 1) { gravityProcessorSpy.gravity }
+        verify(exactly = 1) { gravityProcessorSpy.gravity }
     }
 
     @Test
@@ -225,20 +194,15 @@ class GeomagneticAttitudeProcessorTest {
         // setup spy
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
         val gy = randomizer.nextDouble()
         val gz = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AccelerationTriad>(0)
-            triad.setValueCoordinatesAndUnit(gx, gy, gz, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        }.whenever(gravityProcessorSpy).getGravity(any())
-/*        every { gravityProcessorSpy.getGravity(any()) }.answers { answer ->
+        every { gravityProcessorSpy.getGravity(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AccelerationTriad
             triad.setValueCoordinatesAndUnit(gx, gy, gz, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        }*/
+        }
         processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val gravity = AccelerationTriad()
@@ -472,10 +436,8 @@ class GeomagneticAttitudeProcessorTest {
 
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(false).whenever(gravityProcessorSpy).process(any(), any())
-//        every { gravityProcessorSpy.process(any()) }.returns(false)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(false)
         processor.setPrivateProperty(
             "gravityProcessor",
             gravityProcessorSpy
@@ -488,8 +450,7 @@ class GeomagneticAttitudeProcessorTest {
         )
         assertFalse(processor.process(syncedMeasurement))
 
-        verify(gravityProcessorSpy, only()).process(gravityMeasurement)
-//        verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement) }
+        verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement) }
     }
 
     @Test
@@ -498,20 +459,15 @@ class GeomagneticAttitudeProcessorTest {
 
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(true).whenever(gravityProcessorSpy).process(any(), any())
-//        every { gravityProcessorSpy.process(any()) }.returns(true)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(true)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
         val gy = randomizer.nextDouble()
         val gz = randomizer.nextDouble()
-        doReturn(gx).whenever(gravityProcessorSpy).gx
-//        every { gravityProcessorSpy.gx }.returns(gx)
-        doReturn(gy).whenever(gravityProcessorSpy).gy
-//        every { gravityProcessorSpy.gy }.returns(gy)
-        doReturn(gz).whenever(gravityProcessorSpy).gz
-//        every { gravityProcessorSpy.gz }.returns(gz)
+        every { gravityProcessorSpy.gx }.returns(gx)
+        every { gravityProcessorSpy.gy }.returns(gy)
+        every { gravityProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty(
             "gravityProcessor",
             gravityProcessorSpy
@@ -523,11 +479,9 @@ class GeomagneticAttitudeProcessorTest {
             "levelingProcessor"
         )
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spy(levelingProcessor)
-//        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
         val levelingAttitude1 = getAttitude()
-        doReturn(levelingAttitude1).whenever(levelingProcessorSpy).attitude
-//        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
+        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
         setPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
             processor,
@@ -549,8 +503,7 @@ class GeomagneticAttitudeProcessorTest {
         )
         assertTrue(processor.process(syncedMeasurement))
 
-        doNothing().whenever(levelingProcessorSpy).process(gx, gy, gz)
-//        every { levelingProcessorSpy.process(gx, gy, gz) }
+        every { levelingProcessorSpy.process(gx, gy, gz) }
 
         val triad: MagneticFluxDensityTriad? =
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
@@ -609,20 +562,15 @@ class GeomagneticAttitudeProcessorTest {
 
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(true).whenever(gravityProcessorSpy).process(any(), any())
-//        every { gravityProcessorSpy.process(any()) }.returns(true)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(true)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
         val gy = randomizer.nextDouble()
         val gz = randomizer.nextDouble()
-        doReturn(gx).whenever(gravityProcessorSpy).gx
-//        every { gravityProcessorSpy.gx }.returns(gx)
-        doReturn(gy).whenever(gravityProcessorSpy).gy
-//        every { gravityProcessorSpy.gy }.returns(gy)
-        doReturn(gz).whenever(gravityProcessorSpy).gz
-//        every { gravityProcessorSpy.gz }.returns(gz)
+        every { gravityProcessorSpy.gx }.returns(gx)
+        every { gravityProcessorSpy.gy }.returns(gy)
+        every { gravityProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty(
             "gravityProcessor",
             gravityProcessorSpy
@@ -634,11 +582,9 @@ class GeomagneticAttitudeProcessorTest {
             "levelingProcessor"
         )
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spy(levelingProcessor)
-//        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
         val levelingAttitude1 = getAttitude()
-        doReturn(levelingAttitude1).whenever(levelingProcessorSpy).attitude
-//        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
+        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
         setPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
             processor,
@@ -657,8 +603,7 @@ class GeomagneticAttitudeProcessorTest {
         )
         assertTrue(processor.process(syncedMeasurement))
 
-        doNothing().whenever(levelingProcessorSpy).process(gx, gy, gz)
-//        every { levelingProcessorSpy.process(gx, gy, gz) }
+        every { levelingProcessorSpy.process(gx, gy, gz) }
 
         val triad: MagneticFluxDensityTriad? =
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
@@ -720,20 +665,15 @@ class GeomagneticAttitudeProcessorTest {
 
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(true).whenever(gravityProcessorSpy).process(any(), any())
-//        every { gravityProcessorSpy.process(any()) }.returns(true)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(true)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
         val gy = randomizer.nextDouble()
         val gz = randomizer.nextDouble()
-        doReturn(gx).whenever(gravityProcessorSpy).gx
-//        every { gravityProcessorSpy.gx }.returns(gx)
-        doReturn(gy).whenever(gravityProcessorSpy).gy
-//        every { gravityProcessorSpy.gy }.returns(gy)
-        doReturn(gz).whenever(gravityProcessorSpy).gz
-//        every { gravityProcessorSpy.gz }.returns(gz)
+        every { gravityProcessorSpy.gx }.returns(gx)
+        every { gravityProcessorSpy.gy }.returns(gy)
+        every { gravityProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty(
             "gravityProcessor",
             gravityProcessorSpy
@@ -745,11 +685,9 @@ class GeomagneticAttitudeProcessorTest {
             "levelingProcessor"
         )
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spy(levelingProcessor)
-//        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
         val levelingAttitude1 = getAttitude()
-        doReturn(levelingAttitude1).whenever(levelingProcessorSpy).attitude
-//        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
+        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
         setPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
             processor,
@@ -768,8 +706,7 @@ class GeomagneticAttitudeProcessorTest {
         )
         assertTrue(processor.process(syncedMeasurement))
 
-        doNothing().whenever(levelingProcessorSpy).process(gx, gy, gz)
-//        every { levelingProcessorSpy.process(gx, gy, gz) }
+        every { levelingProcessorSpy.process(gx, gy, gz) }
 
         val triad: MagneticFluxDensityTriad? =
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
@@ -838,20 +775,15 @@ class GeomagneticAttitudeProcessorTest {
 
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
-        doReturn(true).whenever(gravityProcessorSpy).process(any(), any())
-//        every { gravityProcessorSpy.process(any()) }.returns(true)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(any()) }.returns(true)
         val randomizer = UniformRandomizer()
         val gx = randomizer.nextDouble()
         val gy = randomizer.nextDouble()
         val gz = randomizer.nextDouble()
-        doReturn(gx).whenever(gravityProcessorSpy).gx
-//        every { gravityProcessorSpy.gx }.returns(gx)
-        doReturn(gy).whenever(gravityProcessorSpy).gy
-//        every { gravityProcessorSpy.gy }.returns(gy)
-        doReturn(gz).whenever(gravityProcessorSpy).gz
-//        every { gravityProcessorSpy.gz }.returns(gz)
+        every { gravityProcessorSpy.gx }.returns(gx)
+        every { gravityProcessorSpy.gy }.returns(gy)
+        every { gravityProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty(
             "gravityProcessor",
             gravityProcessorSpy
@@ -863,11 +795,9 @@ class GeomagneticAttitudeProcessorTest {
             "levelingProcessor"
         )
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spy(levelingProcessor)
-//        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
         val levelingAttitude1 = getAttitude()
-        doReturn(levelingAttitude1).whenever(levelingProcessorSpy).attitude
-//        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
+        every { levelingProcessorSpy.attitude }.returns(levelingAttitude1)
         setPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
             processor,
@@ -886,8 +816,7 @@ class GeomagneticAttitudeProcessorTest {
         )
         assertTrue(processor.process(syncedMeasurement))
 
-        doNothing().whenever(levelingProcessorSpy).process(gx, gy, gz)
-//        every { levelingProcessorSpy.process(gx, gy, gz) }
+        every { levelingProcessorSpy.process(gx, gy, gz) }
 
         val triad: MagneticFluxDensityTriad? =
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
@@ -946,20 +875,14 @@ class GeomagneticAttitudeProcessorTest {
         val fusedAttitude = Quaternion(roll1, pitch1, yaw1)
         assertEquals(fusedAttitude, processor.fusedAttitude)
 
-        verify(listener, only()).onProcessed(
-            processor,
-            processor.fusedAttitude,
-            SensorAccuracy.HIGH,
-            SensorAccuracy.MEDIUM
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 processor.fusedAttitude,
                 SensorAccuracy.HIGH,
                 SensorAccuracy.MEDIUM
             )
-        }*/
+        }
     }
 
     @Test
@@ -970,8 +893,7 @@ class GeomagneticAttitudeProcessorTest {
 
         val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
         requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spy(gravityProcessor)
-//        val gravityProcessorSpy = spyk(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
         processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
@@ -980,8 +902,7 @@ class GeomagneticAttitudeProcessorTest {
             "levelingProcessor"
         )
         requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spy(levelingProcessor)
-//        val levelingProcessorSpy = spyk(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
         setPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
             processor,
@@ -993,10 +914,8 @@ class GeomagneticAttitudeProcessorTest {
         processor.reset()
 
         // check
-        verify(gravityProcessorSpy, only()).reset()
-//        verify(exactly = 1) { gravityProcessorSpy.reset() }
-        verify(levelingProcessorSpy, only()).reset()
-//        verify(exactly = 1) { levelingProcessorSpy.reset() }
+        verify(exactly = 1) { gravityProcessorSpy.reset() }
+        verify(exactly = 1) { levelingProcessorSpy.reset() }
         assertEquals(Quaternion(), processor.fusedAttitude)
     }
 
@@ -1007,12 +926,9 @@ class GeomagneticAttitudeProcessorTest {
             randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }

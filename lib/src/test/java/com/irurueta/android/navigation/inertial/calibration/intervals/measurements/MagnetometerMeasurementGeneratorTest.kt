@@ -21,7 +21,13 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.testutils.callPrivateFunc
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
@@ -36,112 +42,90 @@ import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
 import com.irurueta.statistics.UniformRandomizer
-import com.irurueta.units.*
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.MagneticFluxDensity
+import com.irurueta.units.MagneticFluxDensityConverter
+import com.irurueta.units.MagneticFluxDensityUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeConverter
+import com.irurueta.units.TimeUnit
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerMeasurementGeneratorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationStartedListener:
             SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationCompletedListener:
             SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var errorListener:
             SingleSensorCalibrationMeasurementGenerator.OnErrorListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalDetectedListener:
             SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalDetectedListener:
             SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalSkippedListener:
             SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalSkippedListener:
             SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedMeasurementListener:
             SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var resetListener:
             SingleSensorCalibrationMeasurementGenerator.OnResetListener<MagnetometerMeasurementGenerator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accelerometerMeasurementListener:
             AccelerometerSensorCollector.OnMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var magnetometerMeasurementListener:
             MagnetometerSensorCollector.OnMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var internalGenerator: MagnetometerMeasurementsGenerator
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValue() {
@@ -2362,10 +2346,8 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-        whenever(accelerometerCollectorSpy.sensor).thenReturn(sensor)
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
-//        every { accelerometerCollectorSpy.sensor }.returns(sensor)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        every { accelerometerCollectorSpy.sensor }.returns(sensor)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -2389,10 +2371,8 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-        whenever(magnetometerCollectorSpy.sensor).thenReturn(sensor)
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
-//        every { magnetometerCollectorSpy.sensor }.returns(sensor)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        every { magnetometerCollectorSpy.sensor }.returns(sensor)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         // check
@@ -2807,10 +2787,8 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevel).thenReturn(baseNoiseLevel1)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel1)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevel)
@@ -2848,12 +2826,10 @@ class MagnetometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val baseNoiseLevel1 = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-/*        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(
             baseNoiseLevel1
-        )*/
+        )
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevelAsMeasurement)
@@ -2891,18 +2867,12 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = value
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(measurementsGeneratorSpy).getAccelerometerBaseNoiseLevelAsMeasurement(any())
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-/*        every { measurementsGeneratorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val baseNoiseLevel = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -2945,10 +2915,8 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevelPsd).thenReturn(baseNoiseLevelPsd1)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevelPsd)
@@ -2985,12 +2953,10 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.accelerometerBaseNoiseLevelRootPsd).thenReturn(baseNoiseLevelRootPsd1)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-/*        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(
             baseNoiseLevelRootPsd1
-        )*/
+        )
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.accelerometerBaseNoiseLevelRootPsd)
@@ -3027,10 +2993,8 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val threshold1 = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.threshold).thenReturn(threshold1)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.threshold }.returns(threshold1)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.threshold }.returns(threshold1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.threshold)
@@ -3068,10 +3032,8 @@ class MagnetometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val threshold1 = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.thresholdAsMeasurement).thenReturn(threshold1)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.thresholdAsMeasurement }.returns(threshold1)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.thresholdAsMeasurement }.returns(threshold1)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertNull(generator.thresholdAsMeasurement)
@@ -3112,18 +3074,12 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = value
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(measurementsGeneratorSpy).getThresholdAsMeasurement(any())
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-/*        every { measurementsGeneratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val threshold = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -3153,16 +3109,13 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.processedStaticSamples).thenReturn(value)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.processedStaticSamples }.returns(value)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.processedStaticSamples }.returns(value)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertEquals(value, generator.processedStaticSamples)
-        verify(measurementsGeneratorSpy, only()).processedStaticSamples
-//        verify(exactly = 1) { measurementsGeneratorSpy.processedStaticSamples }
+        verify(exactly = 1) { measurementsGeneratorSpy.processedStaticSamples }
     }
 
     @Test
@@ -3178,16 +3131,13 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(measurementsGenerator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextInt()
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.processedDynamicSamples).thenReturn(value)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.processedDynamicSamples }.returns(value)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.processedDynamicSamples }.returns(value)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertEquals(value, generator.processedDynamicSamples)
-        verify(measurementsGeneratorSpy, only()).processedDynamicSamples
-//        verify(exactly = 1) { measurementsGeneratorSpy.processedDynamicSamples }
+        verify(exactly = 1) { measurementsGeneratorSpy.processedDynamicSamples }
     }
 
     @Test
@@ -3201,16 +3151,13 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.isStaticIntervalSkipped).thenReturn(true)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.isStaticIntervalSkipped }.returns(true)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.isStaticIntervalSkipped }.returns(true)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertTrue(generator.isStaticIntervalSkipped)
-        verify(measurementsGeneratorSpy, only()).isStaticIntervalSkipped
-//        verify(exactly = 1) { measurementsGeneratorSpy.isStaticIntervalSkipped }
+        verify(exactly = 1) { measurementsGeneratorSpy.isStaticIntervalSkipped }
     }
 
     @Test
@@ -3224,16 +3171,13 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.isDynamicIntervalSkipped).thenReturn(true)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.isDynamicIntervalSkipped }.returns(true)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.isDynamicIntervalSkipped }.returns(true)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         // check
         assertTrue(generator.isDynamicIntervalSkipped)
-        verify(measurementsGeneratorSpy, only()).isDynamicIntervalSkipped
-//        verify(exactly = 1) { measurementsGeneratorSpy.isDynamicIntervalSkipped }
+        verify(exactly = 1) { measurementsGeneratorSpy.isDynamicIntervalSkipped }
     }
 
     @Test
@@ -3262,10 +3206,8 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(value1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(value1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(value1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3311,10 +3253,8 @@ class MagnetometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val time1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeIntervalAsTime).thenReturn(time1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(time1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(time1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3360,18 +3300,12 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-        }.whenever(timeIntervalEstimatorSpy).getAverageTimeIntervalAsTime(any())
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }*/
+        }
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3421,10 +3355,8 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalVariance).thenReturn(value1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(value1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(value1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3469,10 +3401,8 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviation).thenReturn(value1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(value1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(value1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3518,10 +3448,8 @@ class MagnetometerMeasurementGeneratorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val time1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime).thenReturn(time1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(time1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(time1)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3567,18 +3495,12 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(timeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-        }.whenever(timeIntervalEstimatorSpy).getTimeIntervalStandardDeviationAsTime(any())
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }*/
+        }
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3625,10 +3547,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.IDLE)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.IDLE, generator.status)
@@ -3647,10 +3567,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZING, generator.status)
@@ -3669,10 +3587,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZATION_COMPLETED, generator.status)
@@ -3691,10 +3607,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.STATIC_INTERVAL, generator.status)
@@ -3713,10 +3627,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.DYNAMIC_INTERVAL, generator.status)
@@ -3735,10 +3647,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.FAILED)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.FAILED)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.FAILED, generator.status)
@@ -3767,8 +3677,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3779,10 +3688,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZING, generator.status)
@@ -3813,13 +3720,10 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(timestamp, initialAccelerometerTimestamp)
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
-        val captor = ArgumentCaptor.captor<BodyKinematicsAndMagneticFluxDensity>()
-        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
-//        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
-//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
+        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val captured = captor.value
-//        val captured = slot.captured
+        val captured = slot.captured
         assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
         assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
         assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
@@ -3828,8 +3732,7 @@ class MagnetometerMeasurementGeneratorTest {
         assertEquals(0.0, captured.kinematics.angularRateZ, 0.0)
         assertSame(magneticFluxDensity, captured.magneticFluxDensity)
 
-        verifyNoInteractions(accelerometerTimeIntervalEstimatorSpy)
-//        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
+        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
     }
 
     @Test
@@ -3855,8 +3758,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3867,10 +3769,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         setPrivateProperty(
@@ -3901,18 +3801,14 @@ class MagnetometerMeasurementGeneratorTest {
         listener.onMeasurement(ax, ay, az, biasX, biasY, biasZ, timestamp, accuracy)
 
         val seconds = TimeConverter.nanosecondToSecond(timestamp.toDouble())
-        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).addTimestamp(seconds)
-//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.addTimestamp(seconds) }
+        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.addTimestamp(seconds) }
 
         assertEquals(2, generator.numberOfProcessedAccelerometerMeasurements)
 
-        val captor = ArgumentCaptor.captor<BodyKinematicsAndMagneticFluxDensity>()
-        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
-//        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
-//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
+        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val captured = captor.value
-//        val captured = slot.captured
+        val captured = slot.captured
         assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
         assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
         assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
@@ -3945,12 +3841,10 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         val randomizer = UniformRandomizer()
         val timeInterval = randomizer.nextDouble()
-        whenever(accelerometerTimeIntervalEstimatorSpy.averageTimeInterval).thenReturn(timeInterval)
-//        every { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }.returns(timeInterval)
+        every { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }.returns(timeInterval)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -3961,12 +3855,10 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-/*        every { measurementsGeneratorSpy.status }.returns(
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(
             TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED
-        )*/
+        )
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZATION_COMPLETED, generator.status)
@@ -3988,13 +3880,10 @@ class MagnetometerMeasurementGeneratorTest {
         val accuracy = SensorAccuracy.HIGH
         listener.onMeasurement(ax, ay, az, biasX, biasY, biasZ, timestamp, accuracy)
 
-        val captor = ArgumentCaptor.captor<BodyKinematicsAndMagneticFluxDensity>()
-        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
-//        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
-//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
+        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val captured = captor.value
-//        val captured = slot.captured
+        val captured = slot.captured
         assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
         assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
         assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
@@ -4003,10 +3892,8 @@ class MagnetometerMeasurementGeneratorTest {
         assertEquals(0.0, captured.kinematics.angularRateZ, 0.0)
         assertSame(magneticFluxDensity, captured.magneticFluxDensity)
 
-        verify(accelerometerTimeIntervalEstimatorSpy, only()).averageTimeInterval
-        verify(measurementsGeneratorSpy, times(1)).timeInterval = timeInterval
-//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
-//        verify(exactly = 1) { measurementsGeneratorSpy.timeInterval = timeInterval }
+        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.averageTimeInterval }
+        verify(exactly = 1) { measurementsGeneratorSpy.timeInterval = timeInterval }
 
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
@@ -4040,8 +3927,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4052,10 +3938,8 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         assertEquals(Status.INITIALIZING, generator.status)
@@ -4086,13 +3970,10 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(initialAccelerometerTimestamp)
         assertEquals(timestamp, initialAccelerometerTimestamp)
         assertEquals(1, generator.numberOfProcessedAccelerometerMeasurements)
-        val captor = ArgumentCaptor.captor<BodyKinematicsAndMagneticFluxDensity>()
-        verify(measurementsGeneratorSpy, times(1)).process(captor.capture())
-//        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
-//        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
+        val slot = slot<BodyKinematicsAndMagneticFluxDensity>()
+        verify(exactly = 1) { measurementsGeneratorSpy.process(capture(slot)) }
 
-        val captured = captor.value
-//        val captured = slot.captured
+        val captured = slot.captured
         assertEquals(ay.toDouble(), captured.kinematics.fx, 0.0)
         assertEquals(ax.toDouble(), captured.kinematics.fy, 0.0)
         assertEquals(-az.toDouble(), captured.kinematics.fz, 0.0)
@@ -4101,19 +3982,8 @@ class MagnetometerMeasurementGeneratorTest {
         assertEquals(0.0, captured.kinematics.angularRateZ, 0.0)
         assertSame(magneticFluxDensity, captured.magneticFluxDensity)
 
-        verifyNoInteractions(accelerometerTimeIntervalEstimatorSpy)
-        verify(accelerometerMeasurementListener, only()).onMeasurement(
-            ax,
-            ay,
-            az,
-            biasX,
-            biasY,
-            biasZ,
-            timestamp,
-            accuracy
-        )
-//        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
-/*        verify(exactly = 1) {
+        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
+        verify(exactly = 1) {
             accelerometerMeasurementListener.onMeasurement(
                 ax,
                 ay,
@@ -4124,7 +3994,7 @@ class MagnetometerMeasurementGeneratorTest {
                 timestamp,
                 accuracy
             )
-        }*/
+        }
     }
 
     @Test
@@ -4138,8 +4008,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4150,8 +4019,7 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         val unreliable1: Boolean? =
@@ -4174,10 +4042,8 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
 
-        verify(accelerometerCollectorSpy, times(1)).stop()
-        verify(magnetometerCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
-//        verify(exactly = 1) { magnetometerCollectorSpy.stop() }
+        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { magnetometerCollectorSpy.stop() }
     }
 
     @Test
@@ -4195,8 +4061,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4207,8 +4072,7 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         val unreliable1: Boolean? =
@@ -4231,14 +4095,10 @@ class MagnetometerMeasurementGeneratorTest {
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
 
-        verify(accelerometerCollectorSpy, times(1)).stop()
-        verify(magnetometerCollectorSpy, times(1)).stop()
-        verify(errorListener, only()).onError(generator, ErrorReason.UNRELIABLE_SENSOR)
-        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.UNRELIABLE)
-//        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
-//        verify(exactly = 1) { magnetometerCollectorSpy.stop() }
-//        verify(exactly = 1) { errorListener.onError(generator, ErrorReason.UNRELIABLE_SENSOR) }
-//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE) }
+        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { magnetometerCollectorSpy.stop() }
+        verify(exactly = 1) { errorListener.onError(generator, ErrorReason.UNRELIABLE_SENSOR) }
+        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE) }
     }
 
     @Test
@@ -4260,10 +4120,8 @@ class MagnetometerMeasurementGeneratorTest {
 
         collectorAccuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
 
-        verifyNoInteractions(errorListener)
-        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.HIGH)
-//        verify { errorListener wasNot Called }
-//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
+        verify { errorListener wasNot Called }
+        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
     }
 
     @Test
@@ -4277,8 +4135,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4289,8 +4146,7 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
@@ -4299,10 +4155,8 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-        doReturn(true).whenever(accelerometerCollectorSpy).start()
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
-//        every { accelerometerCollectorSpy.start() }.returns(true)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        every { accelerometerCollectorSpy.start() }.returns(true)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4313,10 +4167,8 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-        doReturn(true).whenever(magnetometerCollectorSpy).start()
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
-//        every { magnetometerCollectorSpy.start() }.returns(true)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        every { magnetometerCollectorSpy.start() }.returns(true)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         assertFalse(generator.running)
@@ -4324,17 +4176,13 @@ class MagnetometerMeasurementGeneratorTest {
         // start
         generator.start()
 
-        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).reset()
-        verify(measurementsGeneratorSpy, only()).reset()
-//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
-//        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
 
         assertTrue(generator.running)
 
-        verify(accelerometerCollectorSpy, only()).start()
-        verify(magnetometerCollectorSpy, only()).start()
-//        verify(exactly = 1) { accelerometerCollectorSpy.start() }
-//        verify(exactly = 1) { magnetometerCollectorSpy.start() }
+        verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify(exactly = 1) { magnetometerCollectorSpy.start() }
     }
 
     @Test
@@ -4348,8 +4196,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4360,8 +4207,7 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
@@ -4370,10 +4216,8 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-        doReturn(false).whenever(accelerometerCollectorSpy).start()
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
-//        every { accelerometerCollectorSpy.start() }.returns(false)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        every { accelerometerCollectorSpy.start() }.returns(false)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4384,10 +4228,8 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-        doReturn(true).whenever(magnetometerCollectorSpy).start()
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
-//        every { magnetometerCollectorSpy.start() }.returns(true)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        every { magnetometerCollectorSpy.start() }.returns(true)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         assertFalse(generator.running)
@@ -4395,17 +4237,13 @@ class MagnetometerMeasurementGeneratorTest {
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
-        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).reset()
-        verify(measurementsGeneratorSpy, only()).reset()
-//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
-//        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
 
         assertFalse(generator.running)
 
-        verify(accelerometerCollectorSpy, only()).start()
-        verifyNoInteractions(magnetometerCollectorSpy)
-//        verify(exactly = 1) { accelerometerCollectorSpy.start() }
-//        verify { magnetometerCollectorSpy wasNot Called }
+        verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify { magnetometerCollectorSpy wasNot Called }
     }
 
     @Test
@@ -4419,8 +4257,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4431,8 +4268,7 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
@@ -4441,10 +4277,8 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-        doReturn(true).whenever(accelerometerCollectorSpy).start()
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
-//        every { accelerometerCollectorSpy.start() }.returns(true)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        every { accelerometerCollectorSpy.start() }.returns(true)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4455,10 +4289,8 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-        doReturn(false).whenever(magnetometerCollectorSpy).start()
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
-//        every { magnetometerCollectorSpy.start() }.returns(false)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        every { magnetometerCollectorSpy.start() }.returns(false)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         assertFalse(generator.running)
@@ -4466,23 +4298,17 @@ class MagnetometerMeasurementGeneratorTest {
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
-        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).reset()
-        verify(measurementsGeneratorSpy, only()).reset()
-//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
-//        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
 
         assertFalse(generator.running)
 
-        verify(accelerometerCollectorSpy, times(1)).start()
-        verify(magnetometerCollectorSpy, times(1)).start()
-//        verify(exactly = 1) { accelerometerCollectorSpy.start() }
-//        verify(exactly = 1) { magnetometerCollectorSpy.start() }
+        verify(exactly = 1) { accelerometerCollectorSpy.start() }
+        verify(exactly = 1) { magnetometerCollectorSpy.start() }
 
         // also collectors were stopped
-        verify(accelerometerCollectorSpy, times(1)).stop()
-        verify(magnetometerCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
-//        verify(exactly = 1) { magnetometerCollectorSpy.stop() }
+        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { magnetometerCollectorSpy.stop() }
     }
 
     @Test
@@ -4498,8 +4324,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4510,8 +4335,7 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val accelerometerCollector: AccelerometerSensorCollector? = getPrivateProperty(
@@ -4520,8 +4344,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4532,21 +4355,16 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
 
-        verifyNoInteractions(accelerometerTimeIntervalEstimatorSpy)
-        verifyNoInteractions(measurementsGeneratorSpy)
-        verifyNoInteractions(accelerometerCollectorSpy)
-        verifyNoInteractions(magnetometerCollectorSpy)
-//        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
-//        verify { measurementsGeneratorSpy wasNot Called }
-//        verify { accelerometerCollectorSpy wasNot Called }
-//        verify { magnetometerCollectorSpy wasNot Called }
+        verify { accelerometerTimeIntervalEstimatorSpy wasNot Called }
+        verify { measurementsGeneratorSpy wasNot Called }
+        verify { accelerometerCollectorSpy wasNot Called }
+        verify { magnetometerCollectorSpy wasNot Called }
     }
 
     @Test
@@ -4560,8 +4378,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerCollector"
         )
         requireNotNull(accelerometerCollector)
-        val accelerometerCollectorSpy = spy(accelerometerCollector)
-//        val accelerometerCollectorSpy = spyk(accelerometerCollector)
+        val accelerometerCollectorSpy = spyk(accelerometerCollector)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4572,8 +4389,7 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerCollector: MagnetometerSensorCollector? =
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
-        val magnetometerCollectorSpy = spy(magnetometerCollector)
-//        val magnetometerCollectorSpy = spyk(magnetometerCollector)
+        val magnetometerCollectorSpy = spyk(magnetometerCollector)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
         setPrivateProperty(CalibrationMeasurementGenerator::class, generator, "running", true)
@@ -4584,8 +4400,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         // check
         assertFalse(generator.running)
-        verify(accelerometerCollectorSpy, times(1)).stop()
-//        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
+        verify(exactly = 1) { accelerometerCollectorSpy.stop() }
     }
 
     @Test
@@ -4599,8 +4414,7 @@ class MagnetometerMeasurementGeneratorTest {
             "accelerometerTimeIntervalEstimator"
         )
         requireNotNull(accelerometerTimeIntervalEstimator)
-        val accelerometerTimeIntervalEstimatorSpy = spy(accelerometerTimeIntervalEstimator)
-//        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
+        val accelerometerTimeIntervalEstimatorSpy = spyk(accelerometerTimeIntervalEstimator)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
             generator,
@@ -4611,8 +4425,7 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         setPrivateProperty(
@@ -4639,8 +4452,7 @@ class MagnetometerMeasurementGeneratorTest {
         val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
             generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
         requireNotNull(magnetometerAccumulatedNoiseEstimator)
-        val magnetometerAccumulatedNoiseEstimatorSpy = spy(magnetometerAccumulatedNoiseEstimator)
-//        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
         generator.setPrivateProperty(
             "magnetometerAccumulatedNoiseEstimator",
             magnetometerAccumulatedNoiseEstimatorSpy
@@ -4667,10 +4479,8 @@ class MagnetometerMeasurementGeneratorTest {
         callPrivateFunc(MagnetometerMeasurementGenerator::class, generator, "reset")
 
         assertEquals(Integer.MAX_VALUE, accelerometerTimeIntervalEstimatorSpy.totalSamples)
-        verify(accelerometerTimeIntervalEstimatorSpy, times(1)).reset()
-        verify(measurementsGeneratorSpy, only()).reset()
-//        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
-//        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
+        verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { measurementsGeneratorSpy.reset() }
         val unreliable: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "unreliable")
         requireNotNull(unreliable)
@@ -4702,8 +4512,7 @@ class MagnetometerMeasurementGeneratorTest {
                 MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
             )
         )
-        verify(magnetometerAccumulatedNoiseEstimatorSpy, only()).reset()
-//        verify(exactly = 1) { magnetometerAccumulatedNoiseEstimatorSpy.reset() }
+        verify(exactly = 1) { magnetometerAccumulatedNoiseEstimatorSpy.reset() }
 
         val initialized: Boolean? =
             getPrivateProperty(CalibrationMeasurementGenerator::class, generator, "initialized")
@@ -4793,8 +4602,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(generator)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(generator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(generator) }
     }
 
     @Test
@@ -4828,16 +4636,12 @@ class MagnetometerMeasurementGeneratorTest {
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
 
-        verify(initializationCompletedListener, only()).onInitializationCompleted(
-            generator,
-            baseNoiseLevel
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initializationCompletedListener.onInitializationCompleted(
                 generator,
                 baseNoiseLevel
             )
-        }*/
+        }
     }
 
     @Test
@@ -4869,16 +4673,12 @@ class MagnetometerMeasurementGeneratorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(errorListener, only()).onError(
-            generator,
-            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             errorListener.onError(
                 generator,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
-        }*/
+        }
     }
 
     @Test
@@ -4908,8 +4708,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
 
-        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(generator)
-//        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(generator) }
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(generator) }
     }
 
     @Test
@@ -4939,8 +4738,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
 
-        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(generator)
-//        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(generator) }
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(generator) }
     }
 
     @Test
@@ -4970,8 +4768,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
 
-        verify(staticIntervalSkippedListener, only()).onStaticIntervalSkipped(generator)
-//        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(generator) }
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(generator) }
     }
 
     @Test
@@ -5001,8 +4798,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
 
-        verify(dynamicIntervalSkippedListener, only()).onDynamicIntervalSkipped(generator)
-//        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator) }
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator) }
     }
 
     @Test
@@ -5034,16 +4830,12 @@ class MagnetometerMeasurementGeneratorTest {
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
 
-        verify(generatedMeasurementListener, only()).onGeneratedMeasurement(
-            generator,
-            measurement
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedMeasurementListener.onGeneratedMeasurement(
                 generator,
                 measurement
             )
-        }*/
+        }
     }
 
     @Test
@@ -5069,8 +4861,7 @@ class MagnetometerMeasurementGeneratorTest {
 
         measurementsGeneratorListener.onReset(internalGenerator)
 
-        verify(resetListener, only()).onReset(generator)
-//        verify(exactly = 1) { resetListener.onReset(generator) }
+        verify(exactly = 1) { resetListener.onReset(generator) }
     }
 
     @Test
@@ -5173,17 +4964,7 @@ class MagnetometerMeasurementGeneratorTest {
         assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
-        verify(magnetometerMeasurementListener, only()).onMeasurement(
-            bx,
-            by,
-            bz,
-            hardIronX,
-            hardIronY,
-            hardIronZ,
-            timestamp,
-            accuracy
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             magnetometerMeasurementListener.onMeasurement(
                 bx,
                 by,
@@ -5194,7 +4975,7 @@ class MagnetometerMeasurementGeneratorTest {
                 timestamp,
                 accuracy
             )
-        }*/
+        }
     }
 
     @Test
@@ -5207,17 +4988,14 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
             generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
         requireNotNull(magnetometerAccumulatedNoiseEstimator)
-        val magnetometerAccumulatedNoiseEstimatorSpy = spy(magnetometerAccumulatedNoiseEstimator)
-//        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
         generator.setPrivateProperty(
             "magnetometerAccumulatedNoiseEstimator",
             magnetometerAccumulatedNoiseEstimatorSpy
@@ -5263,18 +5041,13 @@ class MagnetometerMeasurementGeneratorTest {
         assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
-        verify(magnetometerAccumulatedNoiseEstimatorSpy, times(1)).addTriad(
-            bxTesla,
-            byTesla,
-            bzTesla
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             magnetometerAccumulatedNoiseEstimatorSpy.addTriad(
                 bxTesla,
                 byTesla,
                 bzTesla
             )
-        }*/
+        }
     }
 
     @Test
@@ -5294,27 +5067,22 @@ class MagnetometerMeasurementGeneratorTest {
         val measurementsGenerator: MagnetometerMeasurementsGenerator? =
             generator.getPrivateProperty("measurementsGenerator")
         requireNotNull(measurementsGenerator)
-        val measurementsGeneratorSpy = spy(measurementsGenerator)
-        whenever(measurementsGeneratorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-//        val measurementsGeneratorSpy = spyk(measurementsGenerator)
-//        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        val measurementsGeneratorSpy = spyk(measurementsGenerator)
+        every { measurementsGeneratorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         generator.setPrivateProperty("measurementsGenerator", measurementsGeneratorSpy)
 
         val magnetometerAccumulatedNoiseEstimator: AccumulatedMagneticFluxDensityTriadNoiseEstimator? =
             generator.getPrivateProperty("magnetometerAccumulatedNoiseEstimator")
         requireNotNull(magnetometerAccumulatedNoiseEstimator)
-        val magnetometerAccumulatedNoiseEstimatorSpy = spy(magnetometerAccumulatedNoiseEstimator)
-//        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
+        val magnetometerAccumulatedNoiseEstimatorSpy = spyk(magnetometerAccumulatedNoiseEstimator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         val initialMagneticFluxDensityNorm = randomizer.nextDouble()
-        whenever(magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm).thenReturn(baseNoiseLevel)
-        whenever(magnetometerAccumulatedNoiseEstimatorSpy.avgNorm).thenReturn(initialMagneticFluxDensityNorm)
-/*        every { magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm }.returns(
+        every { magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm }.returns(
             baseNoiseLevel
-        )*/
-/*        every { magnetometerAccumulatedNoiseEstimatorSpy.avgNorm }
-            .returns(initialMagneticFluxDensityNorm)*/
+        )
+        every { magnetometerAccumulatedNoiseEstimatorSpy.avgNorm }
+            .returns(initialMagneticFluxDensityNorm)
         generator.setPrivateProperty(
             "magnetometerAccumulatedNoiseEstimator",
             magnetometerAccumulatedNoiseEstimatorSpy
@@ -5359,10 +5127,9 @@ class MagnetometerMeasurementGeneratorTest {
         assertEquals(-bzTesla, magneticFluxDensity.bz, 0.0)
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
-        verify(magnetometerAccumulatedNoiseEstimatorSpy, times(2)).standardDeviationNorm
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             magnetometerAccumulatedNoiseEstimatorSpy.standardDeviationNorm
-        }*/
+        }
 
         assertEquals(baseNoiseLevel, generator.magnetometerBaseNoiseLevel)
         val magneticFluxDensity2 = generator.magnetometerBaseNoiseLevelAsMeasurement

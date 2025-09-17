@@ -20,39 +20,23 @@ import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasure
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.clearAllMocks
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import io.mockk.unmockkAll
-//import io.mockk.verify
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
-//import org.junit.Rule
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnitRunner
-import org.mockito.kotlin.only
-import org.mockito.kotlin.verify
 
-//@Ignore("Possible memory leak when running this test")
-@RunWith(MockitoJUnitRunner::class)
 class AttitudeProcessorTest {
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
+    @get:Rule
+    val mockkRule = MockKRule(this)
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var listener: AttitudeProcessor.OnProcessedListener
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -113,20 +97,14 @@ class AttitudeProcessorTest {
         assertEquals(expected, nedAttitude)
         assertSame(nedAttitude, processor.nedAttitude)
 
-        verify(listener, only()).onProcessed(
-            processor,
-            nedAttitude,
-            timestamp,
-            SensorAccuracy.HIGH
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             listener.onProcessed(
                 processor,
                 nedAttitude,
                 timestamp,
                 SensorAccuracy.HIGH
             )
-        }*/
+        }
     }
 
     private companion object {

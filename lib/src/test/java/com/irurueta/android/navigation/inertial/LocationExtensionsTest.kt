@@ -18,40 +18,20 @@ package com.irurueta.android.navigation.inertial
 import android.location.Location
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.statistics.UniformRandomizer
-//import io.mockk.clearAllMocks
-//import io.mockk.every
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import io.mockk.unmockkAll
-//import org.junit.After
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.Assert.assertEquals
-//import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.whenever
 
-//@Ignore("Possible memory leak when running this test")
 class LocationExtensionsTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun toNEDPosition_returnsExpectedValue() {
@@ -63,12 +43,9 @@ class LocationExtensionsTest {
 
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         val nedPosition1 = NEDPosition()
         location.toNEDPosition(nedPosition1)

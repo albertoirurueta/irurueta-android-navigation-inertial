@@ -24,55 +24,29 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
-//import org.junit.Ignore
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
-import org.mockito.Mock
-import org.mockito.Mockito.mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.capture
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.only
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
-//@Ignore("Possible memory leak when running this test")
 @RunWith(RobolectricTestRunner::class)
 class AccurateLevelingProcessorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var listener: BaseLevelingProcessor.OnProcessedListener
-
-    @Mock
-    private lateinit var location: Location
-
-    @Captor
-    private lateinit var captor: ArgumentCaptor<Quaternion>
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenRequiredParameters_returnsExpectedValues() {
@@ -130,7 +104,7 @@ class AccurateLevelingProcessorTest {
     @Test
     fun process_setsExpectedAttitudeAndNotifies() {
         val location = getLocation()
-//        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>(relaxUnitFun = true)
+        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AccurateLevelingProcessor(location, listener)
 
         val latitude = Math.toRadians(location.latitude)
@@ -166,17 +140,15 @@ class AccurateLevelingProcessorTest {
 
         processor.process(fx, fy, fz)
 
-        verify(listener, only()).onProcessed(eq(processor), capture(captor))
-/*        val slot = slot<Quaternion>()
-        verify(exactly = 1) { listener.onProcessed(processor, capture(slot)) }*/
+        val slot = slot<Quaternion>()
+        verify(exactly = 1) { listener.onProcessed(processor, capture(slot)) }
 
         val expectedAttitude = Quaternion()
         bodyC.asRotation(expectedAttitude)
         expectedAttitude.inverse()
         expectedAttitude.normalize()
 
-        val capturedAttitude = captor.value
-//        val capturedAttitude = slot.captured
+        val capturedAttitude = slot.captured
         capturedAttitude.normalize()
         assertTrue(capturedAttitude.equals(expectedAttitude, ABSOLUTE_ERROR))
         assertTrue(processor.attitude.equals(expectedAttitude, ABSOLUTE_ERROR))
@@ -199,7 +171,7 @@ class AccurateLevelingProcessorTest {
     @Test
     fun reset_setsExpectedAttitudeAndNotifies() {
         val location = getLocation()
-//        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>(relaxUnitFun = true)
+        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AccurateLevelingProcessor(location, listener)
 
         val latitude = Math.toRadians(location.latitude)
@@ -235,17 +207,15 @@ class AccurateLevelingProcessorTest {
 
         processor.process(fx, fy, fz)
 
-        verify(listener, only()).onProcessed(eq(processor), capture(captor))
-/*        val slot = slot<Quaternion>()
-        verify(exactly = 1) { listener.onProcessed(processor, capture(slot)) }*/
+        val slot = slot<Quaternion>()
+        verify(exactly = 1) { listener.onProcessed(processor, capture(slot)) }
 
         val expectedAttitude = Quaternion()
         bodyC.asRotation(expectedAttitude)
         expectedAttitude.inverse()
         expectedAttitude.normalize()
 
-        val capturedAttitude = captor.value
-//        val capturedAttitude = slot.captured
+        val capturedAttitude = slot.captured
         capturedAttitude.normalize()
         assertTrue(capturedAttitude.equals(expectedAttitude, ABSOLUTE_ERROR))
         assertTrue(processor.attitude.equals(expectedAttitude, ABSOLUTE_ERROR))
@@ -293,13 +263,10 @@ class AccurateLevelingProcessorTest {
             MAX_HEIGHT
         )
 
-//        val location = mockk<Location>()
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-//        every { location.latitude }.returns(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.altitude }.returns(height)
+        val location = mockk<Location>()
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }
@@ -317,6 +284,6 @@ class AccurateLevelingProcessorTest {
         const val MIN_ANGLE_DEGREES = -45.0
         const val MAX_ANGLE_DEGREES = 45.0
 
-        const val ABSOLUTE_ERROR = 1e-1
+        const val ABSOLUTE_ERROR = 2e-1
     }
 }

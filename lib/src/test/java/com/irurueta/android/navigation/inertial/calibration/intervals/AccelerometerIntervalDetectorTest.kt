@@ -20,7 +20,11 @@ import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
@@ -37,84 +41,59 @@ import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerIntervalDetectorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationStartedListener:
             IntervalDetector.OnInitializationStartedListener<AccelerometerIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationCompletedListener:
             IntervalDetector.OnInitializationCompletedListener<AccelerometerIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var errorListener: IntervalDetector.OnErrorListener<AccelerometerIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalDetectedListener:
             IntervalDetector.OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalDetectedListener:
             IntervalDetector.OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var resetListener:
             IntervalDetector.OnResetListener<AccelerometerIntervalDetector>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var measurementListener: AccelerometerSensorCollector.OnMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var sensor: Sensor
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -2465,10 +2444,8 @@ class AccelerometerIntervalDetectorTest {
             detector.getPrivateProperty("collector")
         requireNotNull(collector)
 
-        val collectorSpy = spy(collector)
-        whenever(collectorSpy.sensor).thenReturn(sensor)
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.sensor }.returns(sensor)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.sensor }.returns(sensor)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertSame(sensor, detector.sensor)
@@ -2743,10 +2720,8 @@ class AccelerometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2754,8 +2729,7 @@ class AccelerometerIntervalDetectorTest {
         detector.start()
 
         assertTrue(detector.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -2772,10 +2746,8 @@ class AccelerometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(false).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(false)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(false)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2791,24 +2763,20 @@ class AccelerometerIntervalDetectorTest {
         val collector: AccelerometerSensorCollector? =
             detector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -2829,10 +2797,8 @@ class AccelerometerIntervalDetectorTest {
         detector.start()
 
         assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
-        verify(timeIntervalEstimatorSpy, times(1)).reset()
-        verify(internalDetectorSpy, only()).reset()
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
-//        verify(exactly = 1) { internalDetectorSpy.reset() }
+        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
+        verify(exactly = 1) { internalDetectorSpy.reset() }
 
         val unreliable: Boolean? =
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
@@ -2883,10 +2849,8 @@ class AccelerometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-        doReturn(true).whenever(collectorSpy).start()
-//        val collectorSpy = spyk(collector)
-//        every { collectorSpy.start() }.returns(true)
+        val collectorSpy = spyk(collector)
+        every { collectorSpy.start() }.returns(true)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2894,15 +2858,13 @@ class AccelerometerIntervalDetectorTest {
         detector.start()
 
         assertTrue(detector.running)
-        verify(collectorSpy, only()).start()
-//        verify(exactly = 1) { collectorSpy.start() }
+        verify(exactly = 1) { collectorSpy.start() }
 
         // stop
         detector.stop()
 
         assertFalse(detector.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -2918,8 +2880,7 @@ class AccelerometerIntervalDetectorTest {
         assertNotNull(collector.measurementListener)
         assertNotNull(collector.accuracyChangedListener)
 
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         detector.setPrivateProperty("collector", collectorSpy)
 
         assertFalse(detector.running)
@@ -2928,8 +2889,7 @@ class AccelerometerIntervalDetectorTest {
         detector.stop()
 
         assertFalse(detector.running)
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -2991,8 +2951,7 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
@@ -3014,18 +2973,13 @@ class AccelerometerIntervalDetectorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
 
         // check
-        verify(internalDetectorSpy, times(1)).process(
-            ay.toDouble(),
-            ax.toDouble(),
-            -az.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 ay.toDouble(),
                 ax.toDouble(),
                 -az.toDouble()
             )
-        }*/
+        }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
     }
@@ -3038,10 +2992,8 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial values
@@ -3068,18 +3020,13 @@ class AccelerometerIntervalDetectorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp, accuracy)
 
         // check
-        verify(internalDetectorSpy, times(1)).process(
-            ay.toDouble(),
-            ax.toDouble(),
-            -az.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 ay.toDouble(),
                 ax.toDouble(),
                 -az.toDouble()
             )
-        }*/
+        }
         assertEquals(1, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3097,10 +3044,8 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
         setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
@@ -3109,8 +3054,7 @@ class AccelerometerIntervalDetectorTest {
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3142,20 +3086,14 @@ class AccelerometerIntervalDetectorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         // check
-        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(TIME_INTERVAL_SECONDS)
-        verify(internalDetectorSpy, times(1)).process(
-            ay.toDouble(),
-            ax.toDouble(),
-            -az.toDouble()
-        )
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 ay.toDouble(),
                 ax.toDouble(),
                 -az.toDouble()
             )
-        }*/
+        }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3177,10 +3115,8 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
         setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
         val timestamp1 = SystemClock.elapsedRealtimeNanos()
@@ -3189,8 +3125,7 @@ class AccelerometerIntervalDetectorTest {
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3222,20 +3157,14 @@ class AccelerometerIntervalDetectorTest {
         measurementListener.onMeasurement(ax, ay, az, null, null, null, timestamp2, accuracy)
 
         // check
-        verify(timeIntervalEstimatorSpy, times(1)).addTimestamp(TIME_INTERVAL_SECONDS)
-        verify(internalDetectorSpy, times(1)).process(
-            ay.toDouble(),
-            ax.toDouble(),
-            -az.toDouble()
-        )
-//        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
+        verify(exactly = 1) {
             internalDetectorSpy.process(
                 ay.toDouble(),
                 ax.toDouble(),
                 -az.toDouble()
             )
-        }*/
+        }
         assertEquals(2, detector.numberOfProcessedMeasurements)
         assertEquals(Status.INITIALIZING, detector.status)
 
@@ -3244,8 +3173,7 @@ class AccelerometerIntervalDetectorTest {
         requireNotNull(initialTimestamp2)
         assertEquals(timestamp1, initialTimestamp2)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(detector)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
     }
 
     @Test
@@ -3256,19 +3184,15 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         val timeIntervalEstimator: TimeIntervalEstimator? =
             getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
         requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(2.0 * TIME_INTERVAL_SECONDS)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -3320,8 +3244,7 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         // check initial status
@@ -3347,17 +3270,7 @@ class AccelerometerIntervalDetectorTest {
         internalMeasurementListener.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
 
         // check
-        verify(measurementListener, only()).onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             measurementListener.onMeasurement(
                 ax,
                 ay,
@@ -3368,7 +3281,7 @@ class AccelerometerIntervalDetectorTest {
                 timestamp,
                 accuracy
             )
-        }*/
+        }
     }
 
     @Test
@@ -3417,16 +3330,12 @@ class AccelerometerIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertTrue(unreliable2)
-        verify(errorListener, only()).onError(
-            detector,
-            ErrorReason.UNRELIABLE_SENSOR
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             errorListener.onError(
                 detector,
                 ErrorReason.UNRELIABLE_SENSOR
             )
-        }*/
+        }
     }
 
     @Test
@@ -3451,10 +3360,9 @@ class AccelerometerIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
-        verify(errorListener, never()).onError(any(), any())
-/*        verify(exactly = 0) {
+        verify(exactly = 0) {
             errorListener.onError(any(), any())
-        }*/
+        }
     }
 
     @Test
@@ -3483,12 +3391,10 @@ class AccelerometerIntervalDetectorTest {
             getPrivateProperty(IntervalDetector::class, detector, "unreliable")
         requireNotNull(unreliable2)
         assertFalse(unreliable2)
-        verify(errorListener, never()).onError(any(), any())
-        verify(accuracyChangedListener, only()).onAccuracyChanged(SensorAccuracy.HIGH)
-/*        verify(exactly = 0) {
+        verify(exactly = 0) {
             errorListener.onError(any(), any())
-        }*/
-//        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
+        }
+        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
     }
 
     @Test
@@ -3515,10 +3421,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevel1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevel).thenReturn(baseNoiseLevel1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3553,10 +3457,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val baseNoiseLevel1 = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3591,18 +3493,12 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = value
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getBaseNoiseLevelAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3637,10 +3533,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevelPsd).thenReturn(baseNoiseLevelPsd1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3674,10 +3568,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.baseNoiseLevelRootPsd).thenReturn(baseNoiseLevelRootPsd1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3711,10 +3603,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val threshold1 = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.threshold).thenReturn(threshold1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.threshold }.returns(threshold1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.threshold }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3749,10 +3639,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val threshold1 = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.thresholdAsMeasurement).thenReturn(threshold1)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3787,18 +3675,12 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = value
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getThresholdAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
@@ -3820,10 +3702,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgX, 0.0)
@@ -3841,10 +3721,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgXAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.accumulatedAvgXAsMeasurement)
@@ -3862,18 +3740,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgX = invocation.getArgument<Acceleration>(0)
-            avgX.value = value
-            avgX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedAvgXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgXAsMeasurement(any()) }.answers { answer ->
             val avgX = answer.invocation.args[0] as Acceleration
             avgX.value = value
             avgX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgXAsMeasurement(result)
@@ -3893,10 +3765,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgY, 0.0)
@@ -3914,10 +3784,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgYAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.accumulatedAvgYAsMeasurement)
@@ -3935,18 +3803,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgY = invocation.getArgument<Acceleration>(0)
-            avgY.value = value
-            avgY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedAvgYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgYAsMeasurement(any()) }.answers { answer ->
             val avgY = answer.invocation.args[0] as Acceleration
             avgY.value = value
             avgY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgYAsMeasurement(result)
@@ -3966,10 +3828,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedAvgZ, 0.0)
@@ -3987,10 +3847,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgZAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.accumulatedAvgZAsMeasurement)
@@ -4008,18 +3866,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgZ = invocation.getArgument<Acceleration>(0)
-            avgZ.value = value
-            avgZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedAvgZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgZAsMeasurement(any()) }.answers { answer ->
             val avgZ = answer.invocation.args[0] as Acceleration
             avgZ.value = value
             avgZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgZAsMeasurement(result)
@@ -4043,10 +3895,8 @@ class AccelerometerIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val triad =
             AccelerationTriad(AccelerationUnit.METERS_PER_SQUARED_SECOND, valueX, valueY, valueZ)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedAvgTriad).thenReturn(triad)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedAvgTriad }.returns(triad)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedAvgTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.accumulatedAvgTriad)
@@ -4067,18 +3917,8 @@ class AccelerometerIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val result =
             AccelerationTriad(AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AccelerationTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(internalDetectorSpy).getAccumulatedAvgTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedAvgTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedAvgTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AccelerationTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4086,7 +3926,7 @@ class AccelerometerIntervalDetectorTest {
                 valueZ,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedAvgTriad(result)
@@ -4108,10 +3948,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdX, 0.0)
@@ -4129,10 +3967,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdXAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.accumulatedStdXAsMeasurement)
@@ -4150,18 +3986,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdX = invocation.getArgument<Acceleration>(0)
-            stdX.value = value
-            stdX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedStdXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdXAsMeasurement(any()) }.answers { answer ->
             val stdX = answer.invocation.args[0] as Acceleration
             stdX.value = value
             stdX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdXAsMeasurement(result)
@@ -4181,10 +4011,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdY, 0.0)
@@ -4202,10 +4030,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdYAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.accumulatedStdYAsMeasurement)
@@ -4223,18 +4049,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdY = invocation.getArgument<Acceleration>(0)
-            stdY.value = value
-            stdY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedStdYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdYAsMeasurement(any()) }.answers { answer ->
             val stdY = answer.invocation.args[0] as Acceleration
             stdY.value = value
             stdY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdYAsMeasurement(result)
@@ -4254,10 +4074,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.accumulatedStdZ, 0.0)
@@ -4275,10 +4093,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdZAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.accumulatedStdZAsMeasurement)
@@ -4296,18 +4112,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdZ = invocation.getArgument<Acceleration>(0)
-            stdZ.value = value
-            stdZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getAccumulatedStdZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdZAsMeasurement(any()) }.answers { answer ->
             val stdZ = answer.invocation.args[0] as Acceleration
             stdZ.value = value
             stdZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdZAsMeasurement(result)
@@ -4331,10 +4141,8 @@ class AccelerometerIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val triad =
             AccelerationTriad(AccelerationUnit.METERS_PER_SQUARED_SECOND, valueX, valueY, valueZ)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.accumulatedStdTriad).thenReturn(triad)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.accumulatedStdTriad }.returns(triad)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.accumulatedStdTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.accumulatedStdTriad)
@@ -4355,18 +4163,8 @@ class AccelerometerIntervalDetectorTest {
         val valueZ = randomizer.nextDouble()
         val result =
             AccelerationTriad(AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AccelerationTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(internalDetectorSpy).getAccumulatedStdTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getAccumulatedStdTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getAccumulatedStdTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AccelerationTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4374,7 +4172,7 @@ class AccelerometerIntervalDetectorTest {
                 valueZ,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getAccumulatedStdTriad(result)
@@ -4396,10 +4194,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgX, 0.0)
@@ -4417,10 +4213,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgXAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.instantaneousAvgXAsMeasurement)
@@ -4438,18 +4232,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgX = invocation.getArgument<Acceleration>(0)
-            avgX.value = value
-            avgX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousAvgXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgXAsMeasurement(any()) }.answers { answer ->
             val avgX = answer.invocation.args[0] as Acceleration
             avgX.value = value
             avgX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgXAsMeasurement(result)
@@ -4469,10 +4257,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgY, 0.0)
@@ -4490,10 +4276,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgYAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.instantaneousAvgYAsMeasurement)
@@ -4511,18 +4295,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgY = invocation.getArgument<Acceleration>(0)
-            avgY.value = value
-            avgY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousAvgYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgYAsMeasurement(any()) }.answers { answer ->
             val avgY = answer.invocation.args[0] as Acceleration
             avgY.value = value
             avgY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgYAsMeasurement(result)
@@ -4542,10 +4320,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousAvgZ, 0.0)
@@ -4563,10 +4339,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousAvgZAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.instantaneousAvgZAsMeasurement)
@@ -4584,18 +4358,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val avgZ = invocation.getArgument<Acceleration>(0)
-            avgZ.value = value
-            avgZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousAvgZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgZAsMeasurement(any()) }.answers { answer ->
             val avgZ = answer.invocation.args[0] as Acceleration
             avgZ.value = value
             avgZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgZAsMeasurement(result)
@@ -4617,12 +4385,10 @@ class AccelerometerIntervalDetectorTest {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         val triad =
             AccelerationTriad(AccelerationUnit.METERS_PER_SQUARED_SECOND, valueX, valueY, valueZ)
-        whenever(internalDetectorSpy.instantaneousAvgTriad).thenReturn(triad)
-//        every { internalDetectorSpy.instantaneousAvgTriad }.returns(triad)
+        every { internalDetectorSpy.instantaneousAvgTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.instantaneousAvgTriad)
@@ -4642,18 +4408,8 @@ class AccelerometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = AccelerationTriad()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AccelerationTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(internalDetectorSpy).getInstantaneousAvgTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousAvgTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousAvgTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AccelerationTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4661,7 +4417,7 @@ class AccelerometerIntervalDetectorTest {
                 valueZ,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousAvgTriad(result)
@@ -4683,10 +4439,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdX).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdX }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdX }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdX, 0.0)
@@ -4704,10 +4458,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdXAsMeasurement).thenReturn(acceleration)
-        //val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.instantaneousStdXAsMeasurement)
@@ -4725,18 +4477,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdX = invocation.getArgument<Acceleration>(0)
-            stdX.value = value
-            stdX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousStdXAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdXAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdXAsMeasurement(any()) }.answers { answer ->
             val stdX = answer.invocation.args[0] as Acceleration
             stdX.value = value
             stdX.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdXAsMeasurement(result)
@@ -4756,10 +4502,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdY).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdY }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdY }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdY, 0.0)
@@ -4777,10 +4521,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdYAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.instantaneousStdYAsMeasurement)
@@ -4798,18 +4540,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdY = invocation.getArgument<Acceleration>(0)
-            stdY.value = value
-            stdY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousStdYAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdYAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdYAsMeasurement(any()) }.answers { answer ->
             val stdY = answer.invocation.args[0] as Acceleration
             stdY.value = value
             stdY.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdYAsMeasurement(result)
@@ -4829,10 +4565,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdZ).thenReturn(value)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdZ }.returns(value)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdZ }.returns(value)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(value, detector.instantaneousStdZ, 0.0)
@@ -4850,10 +4584,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val acceleration = Acceleration(value, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.instantaneousStdZAsMeasurement).thenReturn(acceleration)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(acceleration)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(acceleration)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(acceleration, detector.instantaneousStdZAsMeasurement)
@@ -4871,18 +4603,12 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val result = Acceleration(0.0, AccelerationUnit.FEET_PER_SQUARED_SECOND)
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val stdZ = invocation.getArgument<Acceleration>(0)
-            stdZ.value = value
-            stdZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalDetectorSpy).getInstantaneousStdZAsMeasurement(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdZAsMeasurement(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdZAsMeasurement(any()) }.answers { answer ->
             val stdZ = answer.invocation.args[0] as Acceleration
             stdZ.value = value
             stdZ.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdZAsMeasurement(result)
@@ -4904,12 +4630,10 @@ class AccelerometerIntervalDetectorTest {
         val valueX = randomizer.nextDouble()
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spy(internalDetector)
-//        val internalDetectorSpy = spyk(internalDetector)
+        val internalDetectorSpy = spyk(internalDetector)
         val triad =
             AccelerationTriad(AccelerationUnit.METERS_PER_SQUARED_SECOND, valueX, valueY, valueZ)
-        whenever(internalDetectorSpy.instantaneousStdTriad).thenReturn(triad)
-//        every { internalDetectorSpy.instantaneousStdTriad }.returns(triad)
+        every { internalDetectorSpy.instantaneousStdTriad }.returns(triad)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertSame(triad, detector.instantaneousStdTriad)
@@ -4929,18 +4653,8 @@ class AccelerometerIntervalDetectorTest {
         val valueY = randomizer.nextDouble()
         val valueZ = randomizer.nextDouble()
         val result = AccelerationTriad()
-        val internalDetectorSpy = spy(internalDetector)
-        doAnswer { invocation ->
-            val triad = invocation.getArgument<AccelerationTriad>(0)
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(internalDetectorSpy).getInstantaneousStdTriad(any())
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.getInstantaneousStdTriad(any()) }.answers { answer ->
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.getInstantaneousStdTriad(any()) }.answers { answer ->
             val triad = answer.invocation.args[0] as AccelerationTriad
             triad.setValueCoordinatesAndUnit(
                 valueX,
@@ -4948,7 +4662,7 @@ class AccelerometerIntervalDetectorTest {
                 valueZ,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         detector.getInstantaneousStdTriad(result)
@@ -4983,10 +4697,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val averageTimeInterval1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeInterval).thenReturn(averageTimeInterval1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5024,10 +4736,8 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val averageTimeInterval1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.averageTimeIntervalAsTime).thenReturn(averageTimeInterval1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5067,19 +4777,12 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-            true
-        }.whenever(timeIntervalEstimatorSpy).getAverageTimeIntervalAsTime(any())
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }*/
+        }
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5120,10 +4823,8 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val timeIntervalVariance1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalVariance).thenReturn(timeIntervalVariance1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-//        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5162,12 +4863,10 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val timeIntervalStandardDeviation1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviation).thenReturn(timeIntervalStandardDeviation1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
             timeIntervalStandardDeviation1
-        )*/
+        )
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5207,12 +4906,10 @@ class AccelerometerIntervalDetectorTest {
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val timeIntervalStd1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        whenever(timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime).thenReturn(timeIntervalStd1)
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
             timeIntervalStd1
-        )*/
+        )
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5252,19 +4949,12 @@ class AccelerometerIntervalDetectorTest {
 
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spy(timeIntervalEstimator)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-            true
-        }.whenever(timeIntervalEstimatorSpy).getTimeIntervalStandardDeviationAsTime(any())
-//        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-/*        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
+        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
-        }*/
+        }
         setPrivateProperty(
             IntervalDetector::class,
             detector,
@@ -5304,10 +4994,8 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.IDLE)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.IDLE, detector.status)
@@ -5326,11 +5014,9 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZING)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.INITIALIZING)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZING)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.INITIALIZING, detector.status)
@@ -5349,11 +5035,9 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.INITIALIZATION_COMPLETED, detector.status)
@@ -5372,11 +5056,9 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.STATIC_INTERVAL, detector.status)
@@ -5395,11 +5077,9 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.DYNAMIC_INTERVAL, detector.status)
@@ -5418,11 +5098,9 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(TriadStaticIntervalDetector.Status.FAILED)
-//        val internalDetectorSpy = spyk(internalDetector)
-/*        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.FAILED)*/
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }
+            .returns(TriadStaticIntervalDetector.Status.FAILED)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.FAILED, detector.status)
@@ -5441,10 +5119,8 @@ class AccelerometerIntervalDetectorTest {
         val internalDetector: AccelerationTriadStaticIntervalDetector? =
             detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
-        val internalDetectorSpy = spy(internalDetector)
-        whenever(internalDetectorSpy.status).thenReturn(null)
-//        val internalDetectorSpy = spyk(internalDetector)
-//        every { internalDetectorSpy.status }.returns(null)
+        val internalDetectorSpy = spyk(internalDetector)
+        every { internalDetectorSpy.status }.returns(null)
         detector.setPrivateProperty("internalDetector", internalDetectorSpy)
 
         assertEquals(Status.IDLE, detector.status)
@@ -5483,8 +5159,7 @@ class AccelerometerIntervalDetectorTest {
         requireNotNull(internalDetector)
         internalDetectorListener.onInitializationStarted(internalDetector)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(intervalDetector)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
     }
 
     @Test
@@ -5523,16 +5198,12 @@ class AccelerometerIntervalDetectorTest {
         val baseNoiseLevel = randomizer.nextDouble()
         internalDetectorListener.onInitializationCompleted(internalDetector, baseNoiseLevel)
 
-        verify(initializationCompletedListener, only()).onInitializationCompleted(
-            intervalDetector,
-            baseNoiseLevel
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initializationCompletedListener.onInitializationCompleted(
                 intervalDetector,
                 baseNoiseLevel
             )
-        }*/
+        }
     }
 
     @Test
@@ -5554,8 +5225,7 @@ class AccelerometerIntervalDetectorTest {
         val collector: AccelerometerSensorCollector? =
             intervalDetector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         intervalDetector.setPrivateProperty("collector", collectorSpy)
 
         internalDetectorListener.onError(
@@ -5565,8 +5235,7 @@ class AccelerometerIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(collectorSpy, times(1)).stop()
-//        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collectorSpy.stop() }
     }
 
     @Test
@@ -5588,8 +5257,7 @@ class AccelerometerIntervalDetectorTest {
         val collector: AccelerometerSensorCollector? =
             intervalDetector.getPrivateProperty("collector")
         requireNotNull(collector)
-        val collectorSpy = spy(collector)
-//        val collectorSpy = spyk(collector)
+        val collectorSpy = spyk(collector)
         intervalDetector.setPrivateProperty("collector", collectorSpy)
 
         internalDetectorListener.onError(
@@ -5599,18 +5267,13 @@ class AccelerometerIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(collectorSpy, times(1)).stop()
-        verify(errorListener, only()).onError(
-            intervalDetector,
-            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
-        )
-//        verify(exactly = 1) { collectorSpy.stop() }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) {
             errorListener.onError(
                 intervalDetector,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
-        }*/
+        }
     }
 
     @Test
@@ -5675,16 +5338,7 @@ class AccelerometerIntervalDetectorTest {
             instantaneousStdZ
         )
 
-        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(
-            intervalDetector,
-            instantaneousAvgX,
-            instantaneousAvgY,
-            instantaneousAvgZ,
-            instantaneousStdX,
-            instantaneousStdY,
-            instantaneousStdZ
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             staticIntervalDetectedListener.onStaticIntervalDetected(
                 intervalDetector,
                 instantaneousAvgX,
@@ -5694,7 +5348,7 @@ class AccelerometerIntervalDetectorTest {
                 instantaneousStdY,
                 instantaneousStdZ
             )
-        }*/
+        }
     }
 
     @Test
@@ -5783,22 +5437,7 @@ class AccelerometerIntervalDetectorTest {
             accumulatedStdZ
         )
 
-        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(
-            intervalDetector,
-            instantaneousAvgX,
-            instantaneousAvgY,
-            instantaneousAvgZ,
-            instantaneousStdX,
-            instantaneousStdY,
-            instantaneousStdZ,
-            accumulatedAvgX,
-            accumulatedAvgY,
-            accumulatedAvgZ,
-            accumulatedStdX,
-            accumulatedStdY,
-            accumulatedStdZ
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             dynamicIntervalDetectedListener.onDynamicIntervalDetected(
                 intervalDetector,
                 instantaneousAvgX,
@@ -5814,7 +5453,7 @@ class AccelerometerIntervalDetectorTest {
                 accumulatedStdY,
                 accumulatedStdZ
             )
-        }*/
+        }
     }
 
     @Test
@@ -5848,8 +5487,7 @@ class AccelerometerIntervalDetectorTest {
 
         internalDetectorListener.onReset(internalDetector)
 
-        verify(resetListener, only()).onReset(intervalDetector)
-//        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
+        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
     }
 
     private fun getGravity(): ECEFGravity {

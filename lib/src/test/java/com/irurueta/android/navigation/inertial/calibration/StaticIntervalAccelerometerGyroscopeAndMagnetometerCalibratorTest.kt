@@ -21,17 +21,25 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.WrongSizeException
-import com.irurueta.android.navigation.inertial.*
+import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
-import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.ECEFFrame
 import com.irurueta.navigation.frames.FrameType
@@ -39,48 +47,103 @@ import com.irurueta.navigation.frames.NEDFrame
 import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
-import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsGenerator
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
+import com.irurueta.navigation.inertial.calibration.BodyMagneticFluxDensityGenerator
 import com.irurueta.navigation.inertial.calibration.CalibrationException
-import com.irurueta.navigation.inertial.calibration.accelerometer.*
-import com.irurueta.navigation.inertial.calibration.gyroscope.*
+import com.irurueta.navigation.inertial.calibration.IMUErrors
+import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
+import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
+import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.EasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.LMedSRobustEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.LMedSRobustKnownBiasEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.MSACRobustEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.MSACRobustKnownBiasEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.PROMedSRobustEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.PROMedSRobustKnownBiasEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.PROSACRobustEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.PROSACRobustKnownBiasEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType
+import com.irurueta.navigation.inertial.calibration.gyroscope.RANSACRobustEasyGyroscopeCalibrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.RANSACRobustKnownBiasEasyGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
-import com.irurueta.navigation.inertial.calibration.magnetometer.*
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
 import com.irurueta.navigation.inertial.estimators.BodyMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-import com.irurueta.units.*
-//import io.mockk.*
-//import io.mockk.impl.annotations.MockK
-//import io.mockk.junit4.MockKRule
-//import org.junit.After
-import org.junit.Assert.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
+import com.irurueta.units.MagneticFluxDensity
+import com.irurueta.units.MagneticFluxDensityConverter
+import com.irurueta.units.MagneticFluxDensityUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeUnit
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.junit.MockitoJUnit
-import org.mockito.junit.MockitoRule
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
-import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.doThrow
-import org.mockito.kotlin.never
-import org.mockito.kotlin.only
-import org.mockito.kotlin.spy
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.InvocationTargetException
-import java.util.*
+import java.util.Date
+import java.util.GregorianCalendar
+import java.util.Random
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -88,147 +151,109 @@ import kotlin.math.sqrt
 class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @get:Rule
-    val mockitoRule: MockitoRule = MockitoJUnit.rule()
+    val mockkRule = MockKRule(this)
 
-//    @get:Rule
-//    val mockkRule = MockKRule(this)
-
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initializationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var errorListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalDetectedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var dynamicIntervalSkippedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedAccelerometerMeasurementListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnGeneratedAccelerometerMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedGyroscopeMeasurementListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnGeneratedGyroscopeMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var generatedMagnetometerMeasurementListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnGeneratedMagnetometerMeasurementListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var readyToSolveCalibrationListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var calibrationSolvingStartedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var calibrationCompletedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var stoppedListener:
             StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var unreliableGravityNormEstimationListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnUnreliableGravityEstimationListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initialAccelerometerBiasAvailableListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialAccelerometerBiasAvailableListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initialGyroscopeBiasAvailableListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialGyroscopeBiasAvailableListener
 
-//    @MockK(relaxUnitFun = true)
-    @Mock
+    @MockK(relaxUnitFun = true)
     private lateinit var initialMagnetometerHardIronAvailableListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialMagnetometerHardIronAvailableListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gravityNormEstimator: GravityNormEstimator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var accelerometerNonLinearInternalCalibrator: AccelerometerNonLinearCalibrator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var gyroscopeNonLinearInternalCalibrator: GyroscopeNonLinearCalibrator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var magnetometerNonLinearInternalCalibrator: MagnetometerNonLinearCalibrator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var accelerometerInternalCalibrator: KnownBiasAndPositionAccelerometerCalibrator
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var magneticFluxMeasurement: StandardDeviationBodyMagneticFluxDensity
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var location: Location
 
-//    @MockK
-    @Mock
+    @MockK
     private lateinit var measurement: StandardDeviationBodyKinematics
-
-    /*@After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-        System.gc()
-    }*/
 
     @Test
     fun constructor_whenContext_returnsDefaultValues() {
@@ -4200,16 +4225,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(location)
-        whenever(gravityNormEstimatorSpy.averageNorm).thenReturn(gravityNorm)
-//        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
+        every { gravityNormEstimatorSpy.averageNorm }.returns(gravityNorm)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertEquals(gravityNorm, calibrator.averageGravityNorm)
-        verify(gravityNormEstimatorSpy, times(2)).averageNorm
-//        verify(exactly = 1) { gravityNormEstimatorSpy.averageNorm }
+        verify(exactly = 1) { gravityNormEstimatorSpy.averageNorm }
     }
 
     @Test
@@ -4238,17 +4260,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(location)
         val acceleration = Acceleration(gravityNorm, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(gravityNormEstimatorSpy.averageNormAsMeasurement).thenReturn(acceleration)
-//        every { gravityNormEstimatorSpy.averageNormAsMeasurement }.returns(acceleration)
+        every { gravityNormEstimatorSpy.averageNormAsMeasurement }.returns(acceleration)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertSame(acceleration, gravityNormEstimatorSpy.averageNormAsMeasurement)
-        verify(gravityNormEstimatorSpy, times(2)).averageNormAsMeasurement
-//        verify(exactly = 1) { gravityNormEstimatorSpy.averageNormAsMeasurement }
+        verify(exactly = 1) { gravityNormEstimatorSpy.averageNormAsMeasurement }
     }
 
     @Test
@@ -4277,29 +4296,21 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val gravityNorm = GravityHelper.getGravityNormForLocation(location)
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = gravityNorm
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(gravityNormEstimatorSpy).getAverageNormAsMeasurement(any())
-/*        every { gravityNormEstimatorSpy.getAverageNormAsMeasurement(any()) }.answers { answer ->
+        every { gravityNormEstimatorSpy.getAverageNormAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = gravityNorm
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getAverageGravityNormAsMeasurement(acceleration))
         assertEquals(gravityNorm, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(gravityNormEstimatorSpy, only()).getAverageNormAsMeasurement(acceleration)
-//        verify(exactly = 1) { gravityNormEstimatorSpy.getAverageNormAsMeasurement(acceleration) }
+        verify(exactly = 1) { gravityNormEstimatorSpy.getAverageNormAsMeasurement(acceleration) }
     }
 
     @Test
@@ -4330,19 +4341,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityNormVariance = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.normVariance).thenReturn(gravityNormVariance)
-//        every { gravityNormEstimatorSpy.normVariance }.returns(gravityNormVariance)
+        every { gravityNormEstimatorSpy.normVariance }.returns(gravityNormVariance)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val result = calibrator.gravityNormVariance
         requireNotNull(result)
         assertEquals(gravityNormVariance, result, 0.0)
-        verify(gravityNormEstimatorSpy, times(2)).normVariance
-//        verify(exactly = 1) { gravityNormEstimatorSpy.normVariance }
+        verify(exactly = 1) { gravityNormEstimatorSpy.normVariance }
     }
 
     @Test
@@ -4369,19 +4377,16 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityNormStandardDeviation = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.normStandardDeviation).thenReturn(gravityNormStandardDeviation)
-//        every { gravityNormEstimatorSpy.normStandardDeviation }.returns(gravityNormStandardDeviation)
+        every { gravityNormEstimatorSpy.normStandardDeviation }.returns(gravityNormStandardDeviation)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val result = calibrator.gravityNormStandardDeviation
         requireNotNull(result)
         assertEquals(gravityNormStandardDeviation, result, 0.0)
-        verify(gravityNormEstimatorSpy, times(2)).normStandardDeviation
-//        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviation }
+        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviation }
     }
 
     @Test
@@ -4408,20 +4413,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityNormStandardDeviation = randomizer.nextDouble()
         val acceleration =
             Acceleration(gravityNormStandardDeviation, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        whenever(gravityNormEstimatorSpy.normStandardDeviationAsMeasurement).thenReturn(acceleration)
-//        every { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }.returns(acceleration)
+        every { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }.returns(acceleration)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val result = calibrator.gravityNormStandardDeviationAsMeasurement
         assertSame(acceleration, result)
-        verify(gravityNormEstimatorSpy, times(2)).normStandardDeviationAsMeasurement
-//        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }
+        verify(exactly = 1) { gravityNormEstimatorSpy.normStandardDeviationAsMeasurement }
     }
 
     @Test
@@ -4448,36 +4450,26 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = value
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(gravityNormEstimatorSpy).getNormStandardDeviationAsMeasurement(any())
-/*        every { gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(any()) }.answers { answer ->
+        every { gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = value
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         assertTrue(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
         assertEquals(value, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(gravityNormEstimatorSpy, only()).getNormStandardDeviationAsMeasurement(
-            acceleration
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             gravityNormEstimatorSpy.getNormStandardDeviationAsMeasurement(
                 acceleration
             )
-        }*/
+        }
     }
 
     @Test
@@ -4506,17 +4498,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityPsd = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.psd).thenReturn(gravityPsd)
-//        every { gravityNormEstimatorSpy.psd }.returns(gravityPsd)
+        every { gravityNormEstimatorSpy.psd }.returns(gravityPsd)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertEquals(gravityPsd, calibrator.gravityPsd)
-        verify(gravityNormEstimatorSpy, times(2)).psd
-//        verify(exactly = 1) { gravityNormEstimatorSpy.psd }
+        verify(exactly = 1) { gravityNormEstimatorSpy.psd }
     }
 
     @Test
@@ -4544,17 +4533,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         val randomizer = UniformRandomizer()
         val gravityRootPsd = randomizer.nextDouble()
-        whenever(gravityNormEstimatorSpy.rootPsd).thenReturn(gravityRootPsd)
-//        every { gravityNormEstimatorSpy.rootPsd }.returns(gravityRootPsd)
+        every { gravityNormEstimatorSpy.rootPsd }.returns(gravityRootPsd)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         assertEquals(gravityRootPsd, calibrator.gravityRootPsd)
-        verify(gravityNormEstimatorSpy, times(2)).rootPsd
-//        verify(exactly = 1) { gravityNormEstimatorSpy.rootPsd }
+        verify(exactly = 1) { gravityNormEstimatorSpy.rootPsd }
     }
 
     @Test
@@ -5913,8 +5899,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         generatorInitializationStartedListener.onInitializationStarted(generator)
 
-        verify(initializationStartedListener, only()).onInitializationStarted(calibrator)
-//        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(calibrator) }
     }
 
     @Test
@@ -5955,8 +5940,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             baseNoiseLevel
         )
 
-        verify(initializationCompletedListener, only()).onInitializationCompleted(calibrator)
-//        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
+        verify(exactly = 1) { initializationCompletedListener.onInitializationCompleted(calibrator) }
     }
 
     @Test
@@ -5976,8 +5960,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorErrorListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener? =
@@ -5988,8 +5971,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         // check
         assertFalse(calibrator.running)
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
     }
 
     @Test
@@ -6013,8 +5995,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorErrorListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener? =
@@ -6025,20 +6006,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         // check
         assertFalse(calibrator.running)
-        verify(generatorSpy, times(1)).stop()
-        verify(errorListener, only()).onError(
-            calibrator,
-            CalibratorErrorReason.UNRELIABLE_SENSOR
-        )
-        verify(stoppedListener, only()).onStopped(calibrator)
-//        verify(exactly = 1) { generatorSpy.stop() }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.UNRELIABLE_SENSOR
             )
-        }*/
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
     @Test
@@ -6069,8 +6044,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         generatorStaticIntervalDetectedListener.onStaticIntervalDetected(generator)
 
-        verify(staticIntervalDetectedListener, only()).onStaticIntervalDetected(calibrator)
-//        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(calibrator) }
     }
 
     @Test
@@ -6101,8 +6075,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         generatorDynamicIntervalDetectedListener.onDynamicIntervalDetected(generator)
 
-        verify(dynamicIntervalDetectedListener, only()).onDynamicIntervalDetected(calibrator)
-//        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(calibrator) }
     }
 
     @Test
@@ -6133,8 +6106,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         generatorStaticIntervalSkippedListener.onStaticIntervalSkipped(generator)
 
-        verify(staticIntervalSkippedListener, only()).onStaticIntervalSkipped(calibrator)
-//        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -6165,8 +6137,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         generatorDynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator)
 
-        verify(dynamicIntervalSkippedListener, only()).onDynamicIntervalSkipped(calibrator)
-//        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(calibrator) }
     }
 
     @Test
@@ -6215,20 +6186,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(1, calibrator.accelerometerMeasurements.size)
         assertSame(measurement, calibrator.accelerometerMeasurements[0])
 
-        verify(generatedAccelerometerMeasurementListener, only()).onGeneratedAccelerometerMeasurement(
-            calibrator,
-            measurement,
-            1,
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedAccelerometerMeasurementListener.onGeneratedAccelerometerMeasurement(
                 calibrator,
                 measurement,
                 1,
                 StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
             )
-        }*/
+        }
     }
 
     @Test
@@ -6259,8 +6224,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6293,8 +6257,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             accelerometerMeasurement
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -6338,8 +6301,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6372,10 +6334,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             accelerometerMeasurement
         )
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -6633,8 +6593,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6669,8 +6628,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.accelerometerMeasurements.last()
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -7017,8 +6975,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7053,8 +7010,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.accelerometerMeasurements.last()
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -7152,22 +7108,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val triad = MagneticFluxDensityTriad()
         assertTrue(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(stoppedListener, only()).onStopped(calibrator)
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-        verifyNoInteractions(errorListener)
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
-//        verify { errorListener wasNot Called }
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify { errorListener wasNot Called }
     }
 
     @Test
@@ -7216,20 +7165,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(1, calibrator.gyroscopeMeasurements.size)
         assertSame(measurement, calibrator.gyroscopeMeasurements[0])
 
-        verify(generatedGyroscopeMeasurementListener, only()).onGeneratedGyroscopeMeasurement(
-            calibrator,
-            measurement,
-            1,
-            StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedGyroscopeMeasurementListener.onGeneratedGyroscopeMeasurement(
                 calibrator,
                 measurement,
                 1,
                 StaticIntervalGyroscopeCalibrator.GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
             )
-        }*/
+        }
     }
 
     @Test
@@ -7260,8 +7203,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7294,8 +7236,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             gyroscopeMeasurement
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -7340,8 +7281,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7374,10 +7314,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             gyroscopeMeasurement
         )
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -7635,8 +7573,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7671,8 +7608,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.gyroscopeMeasurements.last()
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -8019,8 +7955,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8055,8 +7990,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.gyroscopeMeasurements.last()
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -8154,22 +8088,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val triad = MagneticFluxDensityTriad()
         assertTrue(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(stoppedListener, only()).onStopped(calibrator)
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-        verifyNoInteractions(errorListener)
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
-//        verify { errorListener wasNot Called }
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify { errorListener wasNot Called }
     }
 
     @Test
@@ -8192,8 +8119,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val earthB = wmmEstimator.estimate(nedPosition, timestamp)
         val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, 0.0, 0.0, 0.0)
         val norm = truthMagnetic.norm
-        whenever(generator.initialMagneticFluxDensityNorm).thenReturn(norm)
-//        every { generator.initialMagneticFluxDensityNorm }.returns(norm)
+        every { generator.initialMagneticFluxDensityNorm }.returns(norm)
         val measurement = StandardDeviationBodyMagneticFluxDensity(truthMagnetic)
         generatorGeneratedMeasurementListener.onGeneratedMagnetometerMeasurement(
             generator,
@@ -8225,8 +8151,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val earthB = wmmEstimator.estimate(nedPosition, timestamp)
         val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, 0.0, 0.0, 0.0)
         val norm = truthMagnetic.norm
-        whenever(generator.initialMagneticFluxDensityNorm).thenReturn(norm)
-//        every { generator.initialMagneticFluxDensityNorm }.returns(norm)
+        every { generator.initialMagneticFluxDensityNorm }.returns(norm)
         val measurement1 = StandardDeviationBodyMagneticFluxDensity(truthMagnetic)
         generatorGeneratedMeasurementListener.onGeneratedMagnetometerMeasurement(
             generator,
@@ -8271,8 +8196,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, 0.0, 0.0, 0.0)
         val measurement = StandardDeviationBodyMagneticFluxDensity(truthMagnetic)
         val norm = truthMagnetic.norm
-        whenever(generator.initialMagneticFluxDensityNorm).thenReturn(norm)
-//        every { generator.initialMagneticFluxDensityNorm }.returns(norm)
+        every { generator.initialMagneticFluxDensityNorm }.returns(norm)
         generatorGeneratedMeasurementListener.onGeneratedMagnetometerMeasurement(
             generator,
             measurement
@@ -8281,20 +8205,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(1, calibrator.magnetometerMeasurements.size)
         assertSame(measurement, calibrator.magnetometerMeasurements[0])
 
-        verify(generatedMagnetometerMeasurementListener, only()).onGeneratedMagnetometerMeasurement(
-            calibrator,
-            measurement,
-            1,
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             generatedMagnetometerMeasurementListener.onGeneratedMagnetometerMeasurement(
                 calibrator,
                 measurement,
                 1,
                 StaticIntervalMagnetometerCalibrator.MAGNETOMETER_UNKNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
             )
-        }*/
+        }
     }
 
     @Test
@@ -8331,11 +8249,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val norm = truthMagnetic.norm
-        whenever(generatorSpy.initialMagneticFluxDensityNorm).thenReturn(norm)
-//        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8360,8 +8276,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             magnetometerMeasurement
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -8411,11 +8326,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val norm = truthMagnetic.norm
-        whenever(generatorSpy.initialMagneticFluxDensityNorm).thenReturn(norm)
-//        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8440,10 +8353,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             magnetometerMeasurement
         )
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -8701,13 +8612,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val earthB = wmmEstimator.estimate(nedPosition, timestamp)
         val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, 0.0, 0.0, 0.0)
         val norm = truthMagnetic.norm
-        whenever(generatorSpy.initialMagneticFluxDensityNorm).thenReturn(norm)
-//        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8734,8 +8643,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.magnetometerMeasurements.last()
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -9082,13 +8990,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val earthB = wmmEstimator.estimate(nedPosition, timestamp)
         val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, 0.0, 0.0, 0.0)
         val norm = truthMagnetic.norm
-        whenever(generatorSpy.initialMagneticFluxDensityNorm).thenReturn(norm)
-//        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -9115,8 +9021,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.magnetometerMeasurements.last()
         )
 
-        verify(generatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
 
         accelerometerInternalCalibrator =
             calibrator.getPrivateProperty("accelerometerInternalCalibrator")
@@ -9214,22 +9119,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val triad = MagneticFluxDensityTriad()
         assertTrue(calibrator.getEstimatedMagnetometerHardIronAsTriad(triad))
 
-        verify(readyToSolveCalibrationListener, only()).onReadyToSolveCalibration(calibrator)
-        verify(stoppedListener, only()).onStopped(calibrator)
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-        verifyNoInteractions(errorListener)
-//        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
-/*        verify(exactly = 1) {
+        verify(exactly = 1) { readyToSolveCalibrationListener.onReadyToSolveCalibration(calibrator) }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
-//        verify { errorListener wasNot Called }
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        verify { errorListener wasNot Called }
     }
 
     @Test
@@ -9245,10 +9143,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9299,10 +9195,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9352,10 +9246,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9405,10 +9297,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9461,10 +9351,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9501,20 +9389,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(bx.toDouble(), initialBiasY, 0.0)
         assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
-        verify(initialAccelerometerBiasAvailableListener, only()).onInitialBiasAvailable(
-            calibrator,
-            by.toDouble(),
-            bx.toDouble(),
-            -bz.toDouble()
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
                 by.toDouble(),
                 bx.toDouble(),
                 -bz.toDouble()
             )
-        }*/
+        }
     }
 
     @Test
@@ -9532,10 +9414,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedAccelerometerMeasurements).thenReturn(2)
-//        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
@@ -9566,8 +9446,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.accelerometerInitialBiasY)
         assertNull(calibrator.accelerometerInitialBiasZ)
 
-        verifyNoInteractions(initialAccelerometerBiasAvailableListener)
-//        verify { initialAccelerometerBiasAvailableListener wasNot Called }
+        verify { initialAccelerometerBiasAvailableListener wasNot Called }
     }
 
     @Test
@@ -9583,10 +9462,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedGyroscopeMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -9637,10 +9514,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedGyroscopeMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -9690,10 +9565,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedGyroscopeMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -9743,10 +9616,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
-        whenever(generatorSpy.numberOfProcessedGyroscopeMeasurements).thenReturn(0)
-//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -9798,10 +9669,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedGyroscopeMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -9838,20 +9707,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(bx.toDouble(), initialBiasY, 0.0)
         assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
 
-        verify(initialGyroscopeBiasAvailableListener, only()).onInitialBiasAvailable(
-            calibrator,
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initialGyroscopeBiasAvailableListener.onInitialBiasAvailable(
                 calibrator,
                 initialBiasX,
                 initialBiasY,
                 initialBiasZ
             )
-        }*/
+        }
     }
 
     @Test
@@ -9869,10 +9732,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedGyroscopeMeasurements).thenReturn(2)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(2)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(2)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
@@ -9903,8 +9764,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.gyroscopeInitialBiasY)
         assertNull(calibrator.gyroscopeInitialBiasZ)
 
-        verifyNoInteractions(initialGyroscopeBiasAvailableListener)
-//        verify { initialGyroscopeBiasAvailableListener wasNot Called }
+        verify { initialGyroscopeBiasAvailableListener wasNot Called }
     }
 
     @Test
@@ -9920,10 +9780,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedMagnetometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
@@ -9986,10 +9844,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedMagnetometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
@@ -10039,10 +9895,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedMagnetometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
@@ -10092,10 +9946,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedMagnetometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
@@ -10148,10 +10000,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedMagnetometerMeasurements).thenReturn(0)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
@@ -10200,20 +10050,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             0.0
         )
 
-        verify(initialMagnetometerHardIronAvailableListener, only()).onInitialHardIronAvailable(
-            calibrator,
-            initialHardIronX,
-            initialHardIronY,
-            initialHardIronZ
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             initialMagnetometerHardIronAvailableListener.onInitialHardIronAvailable(
                 calibrator,
                 initialHardIronX,
                 initialHardIronY,
                 initialHardIronZ
             )
-        }*/
+        }
     }
 
     @Test
@@ -10232,10 +10076,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        whenever(generatorSpy.numberOfProcessedMagnetometerMeasurements).thenReturn(2)
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(2)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(2)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
@@ -10266,8 +10108,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerInitialHardIronY)
         assertNull(calibrator.magnetometerInitialHardIronZ)
 
-        verifyNoInteractions(initialMagnetometerHardIronAvailableListener)
-//        verify { initialMagnetometerHardIronAvailableListener wasNot Called }
+        verify { initialMagnetometerHardIronAvailableListener wasNot Called }
     }
 
     @Test
@@ -10284,8 +10125,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         requireNotNull(gravityNormCompletedListener)
 
         val gravityNorm = GravityHelper.getGravityNormForLocation(getLocation())
-        whenever(gravityNormEstimator.averageNorm).thenReturn(gravityNorm)
-//        every { gravityNormEstimator.averageNorm }.returns(gravityNorm)
+        every { gravityNormEstimator.averageNorm }.returns(gravityNorm)
         gravityNormCompletedListener.onEstimationCompleted(gravityNormEstimator)
 
         // check
@@ -10329,14 +10169,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         gravityNormUnreliableListener.onUnreliable(gravityNormEstimator)
 
         assertTrue(calibrator.accelerometerResultUnreliable)
-        verify(unreliableGravityNormEstimationListener, only()).onUnreliableGravityEstimation(
-            calibrator
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             unreliableGravityNormEstimationListener.onUnreliableGravityEstimation(
                 calibrator
             )
-        }*/
+        }
     }
 
     @Test
@@ -10348,18 +10185,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.magnetometerBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevel, calibrator.magnetometerBaseNoiseLevel)
 
-        verify(generatorSpy, only()).magnetometerBaseNoiseLevel
-//        verify(exactly = 1) { generatorSpy.magnetometerBaseNoiseLevel }
+        verify(exactly = 1) { generatorSpy.magnetometerBaseNoiseLevel }
     }
 
     @Test
@@ -10371,20 +10205,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         val baseNoiseLevel1 = MagneticFluxDensity(baseNoiseLevel, MagneticFluxDensityUnit.TESLA)
-        whenever(generatorSpy.magnetometerBaseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
-//        every { generatorSpy.magnetometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        every { generatorSpy.magnetometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val baseNoiseLevel2 = calibrator.magnetometerBaseNoiseLevelAsMeasurement
         assertSame(baseNoiseLevel1, baseNoiseLevel2)
 
-        verify(generatorSpy, only()).magnetometerBaseNoiseLevelAsMeasurement
-//        verify(exactly = 1) { generatorSpy.magnetometerBaseNoiseLevelAsMeasurement }
+        verify(exactly = 1) { generatorSpy.magnetometerBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -10400,22 +10231,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensity>(0)
-            result.value = baseNoiseLevel
-            result.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(generatorSpy).getMagnetometerBaseNoiseLevelAsMeasurement(any())
-/*        every { generatorSpy.getMagnetometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        every { generatorSpy.getMagnetometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = baseNoiseLevel
             result.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getMagnetometerBaseNoiseLevelAsMeasurement(b))
@@ -10423,8 +10247,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // check
         assertEquals(baseNoiseLevel, b.value.toDouble(), 0.0)
         assertEquals(MagneticFluxDensityUnit.TESLA, b.unit)
-        verify(generatorSpy, only()).getMagnetometerBaseNoiseLevelAsMeasurement(b)
-//        verify(exactly = 1) { generatorSpy.getMagnetometerBaseNoiseLevelAsMeasurement(b) }
+        verify(exactly = 1) { generatorSpy.getMagnetometerBaseNoiseLevelAsMeasurement(b) }
     }
 
     @Test
@@ -10436,18 +10259,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.gyroscopeBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevel, calibrator.gyroscopeBaseNoiseLevel)
 
-        verify(generatorSpy, only()).gyroscopeBaseNoiseLevel
-//        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevel }
+        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevel }
     }
 
     @Test
@@ -10459,20 +10279,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val baseNoiseLevel1 = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        whenever(generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement).thenReturn(baseNoiseLevel1)
-//        every { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        every { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val baseNoiseLevel2 = calibrator.gyroscopeBaseNoiseLevelAsMeasurement
         assertSame(baseNoiseLevel1, baseNoiseLevel2)
 
-        verify(generatorSpy, only()).gyroscopeBaseNoiseLevelAsMeasurement
-//        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }
+        verify(exactly = 1) { generatorSpy.gyroscopeBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -10487,22 +10304,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = value
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getGyroscopeBaseNoiseLevelAsMeasurement(any())
-/*        every { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        every { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = value
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getGyroscopeBaseNoiseLevelAsMeasurement(w))
@@ -10510,8 +10320,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // check
         assertEquals(value, w.value.toDouble(), 0.0)
         assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, w.unit)
-        verify(generatorSpy, only()).getGyroscopeBaseNoiseLevelAsMeasurement(w)
-//        verify(exactly = 1) { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(w) }
+        verify(exactly = 1) { generatorSpy.getGyroscopeBaseNoiseLevelAsMeasurement(w) }
     }
 
     @Test
@@ -10523,18 +10332,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevel, calibrator.accelerometerBaseNoiseLevel)
 
-        verify(generatorSpy, times(1)).accelerometerBaseNoiseLevel
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevel }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevel }
     }
 
     @Test
@@ -10546,20 +10352,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         val baseNoiseLevel1 =
             Acceleration(baseNoiseLevel, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(baseNoiseLevel1).whenever(generatorSpy).accelerometerBaseNoiseLevelAsMeasurement
-//        every { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
+        every { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val baseNoiseLevel2 = calibrator.accelerometerBaseNoiseLevelAsMeasurement
         assertSame(baseNoiseLevel1, baseNoiseLevel2)
-        verify(generatorSpy, times(1)).accelerometerBaseNoiseLevelAsMeasurement
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelAsMeasurement }
     }
 
     @Test
@@ -10575,22 +10378,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = baseNoiseLevel
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getAccelerometerBaseNoiseLevelAsMeasurement(any())
-/*        every { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
+        every { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = baseNoiseLevel
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
@@ -10598,8 +10394,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // check
         assertEquals(baseNoiseLevel, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(generatorSpy, only()).getAccelerometerBaseNoiseLevelAsMeasurement(acceleration)
-//        verify(exactly = 1) { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration) }
+        verify(exactly = 1) { generatorSpy.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration) }
     }
 
     @Test
@@ -10611,17 +10406,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelPsd = randomizer.nextDouble()
-        doReturn(baseNoiseLevelPsd).whenever(generatorSpy).accelerometerBaseNoiseLevelPsd
-//        every { generatorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
+        every { generatorSpy.accelerometerBaseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevelPsd, calibrator.accelerometerBaseNoiseLevelPsd)
-        verify(generatorSpy, only()).accelerometerBaseNoiseLevelPsd
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelPsd }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelPsd }
     }
 
     @Test
@@ -10633,17 +10425,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val baseNoiseLevelRootPsd = randomizer.nextDouble()
-        doReturn(baseNoiseLevelRootPsd).whenever(generatorSpy).accelerometerBaseNoiseLevelRootPsd
-//        every { generatorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
+        every { generatorSpy.accelerometerBaseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(baseNoiseLevelRootPsd, calibrator.accelerometerBaseNoiseLevelRootPsd)
-        verify(generatorSpy, only()).accelerometerBaseNoiseLevelRootPsd
-//        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelRootPsd }
+        verify(exactly = 1) { generatorSpy.accelerometerBaseNoiseLevelRootPsd }
     }
 
     @Test
@@ -10658,17 +10447,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
-        doReturn(threshold).whenever(generatorSpy).threshold
-//        every { generatorSpy.threshold }.returns(threshold)
+        every { generatorSpy.threshold }.returns(threshold)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(threshold, calibrator.threshold)
-        verify(generatorSpy, only()).threshold
-//        verify(exactly = 1) { generatorSpy.threshold }
+        verify(exactly = 1) { generatorSpy.threshold }
     }
 
     @Test
@@ -10683,18 +10469,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
         val acceleration = Acceleration(threshold, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(acceleration).whenever(generatorSpy).thresholdAsMeasurement
-//        every { generatorSpy.thresholdAsMeasurement }.returns(acceleration)
+        every { generatorSpy.thresholdAsMeasurement }.returns(acceleration)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(acceleration, calibrator.thresholdAsMeasurement)
-        verify(generatorSpy, only()).thresholdAsMeasurement
-//        verify(exactly = 1) { generatorSpy.thresholdAsMeasurement }
+        verify(exactly = 1) { generatorSpy.thresholdAsMeasurement }
     }
 
     @Test
@@ -10710,29 +10493,21 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val threshold = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = threshold
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getThresholdAsMeasurement(any())
-/*        every { generatorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
+        every { generatorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = threshold
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getThresholdAsMeasurement(acceleration))
         assertEquals(threshold, acceleration.value.toDouble(), 0.0)
         assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, acceleration.unit)
-        verify(generatorSpy, only()).getThresholdAsMeasurement(acceleration)
-//        verify(exactly = 1) { generatorSpy.getThresholdAsMeasurement(acceleration) }
+        verify(exactly = 1) { generatorSpy.getThresholdAsMeasurement(acceleration) }
     }
 
     @Test
@@ -10744,17 +10519,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val processedStaticSamples = randomizer.nextInt()
-        doReturn(processedStaticSamples).whenever(generatorSpy).processedStaticSamples
-//        every { generatorSpy.processedStaticSamples }.returns(processedStaticSamples)
+        every { generatorSpy.processedStaticSamples }.returns(processedStaticSamples)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(processedStaticSamples, calibrator.processedStaticSamples)
-        verify(generatorSpy, only()).processedStaticSamples
-//        verify(exactly = 1) { generatorSpy.processedStaticSamples }
+        verify(exactly = 1) { generatorSpy.processedStaticSamples }
     }
 
     @Test
@@ -10766,17 +10538,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val processedDynamicSamples = randomizer.nextInt()
-        doReturn(processedDynamicSamples).whenever(generatorSpy).processedDynamicSamples
-//        every { generatorSpy.processedDynamicSamples }.returns(processedDynamicSamples)
+        every { generatorSpy.processedDynamicSamples }.returns(processedDynamicSamples)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(processedDynamicSamples, calibrator.processedDynamicSamples)
-        verify(generatorSpy, only()).processedDynamicSamples
-//        verify(exactly = 1) { generatorSpy.processedDynamicSamples }
+        verify(exactly = 1) { generatorSpy.processedDynamicSamples }
     }
 
     @Test
@@ -10788,15 +10557,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doReturn(true).whenever(generatorSpy).isStaticIntervalSkipped
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.isStaticIntervalSkipped }.returns(true)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.isStaticIntervalSkipped }.returns(true)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.isStaticIntervalSkipped)
-        verify(generatorSpy, only()).isStaticIntervalSkipped
-//        verify(exactly = 1) { generatorSpy.isStaticIntervalSkipped }
+        verify(exactly = 1) { generatorSpy.isStaticIntervalSkipped }
     }
 
     @Test
@@ -10808,15 +10574,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doReturn(true).whenever(generatorSpy).isDynamicIntervalSkipped
-//        val generatorSpy = spyk(generator)
-//        every { generatorSpy.isDynamicIntervalSkipped }.returns(true)
+        val generatorSpy = spyk(generator)
+        every { generatorSpy.isDynamicIntervalSkipped }.returns(true)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.isDynamicIntervalSkipped)
-        verify(generatorSpy, only()).isDynamicIntervalSkipped
-//        verify(exactly = 1) { generatorSpy.isDynamicIntervalSkipped }
+        verify(exactly = 1) { generatorSpy.isDynamicIntervalSkipped }
     }
 
     @Test
@@ -10828,17 +10591,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
-        doReturn(averageTimeInterval).whenever(generatorSpy).accelerometerAverageTimeInterval
-//        every { generatorSpy.accelerometerAverageTimeInterval }.returns(averageTimeInterval)
+        every { generatorSpy.accelerometerAverageTimeInterval }.returns(averageTimeInterval)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(averageTimeInterval, calibrator.accelerometerAverageTimeInterval)
-        verify(generatorSpy, only()).accelerometerAverageTimeInterval
-//        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeInterval }
+        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeInterval }
     }
 
     @Test
@@ -10850,18 +10610,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
         val time = Time(averageTimeInterval, TimeUnit.SECOND)
-        doReturn(time).whenever(generatorSpy).accelerometerAverageTimeIntervalAsTime
-//        every { generatorSpy.accelerometerAverageTimeIntervalAsTime }.returns(time)
+        every { generatorSpy.accelerometerAverageTimeIntervalAsTime }.returns(time)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(time, calibrator.accelerometerAverageTimeIntervalAsTime)
-        verify(generatorSpy, only()).accelerometerAverageTimeIntervalAsTime
-//        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeIntervalAsTime }
+        verify(exactly = 1) { generatorSpy.accelerometerAverageTimeIntervalAsTime }
     }
 
     @Test
@@ -10877,29 +10634,21 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val averageTimeInterval = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = averageTimeInterval
-            result.unit = TimeUnit.SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getAccelerometerAverageTimeIntervalAsTime(any())
-/*        every { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
+        every { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = averageTimeInterval
             result.unit = TimeUnit.SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
         assertEquals(averageTimeInterval, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)
-        verify(generatorSpy, only()).getAccelerometerAverageTimeIntervalAsTime(time)
-//        verify(exactly = 1) { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(time) }
+        verify(exactly = 1) { generatorSpy.getAccelerometerAverageTimeIntervalAsTime(time) }
     }
 
     @Test
@@ -10914,17 +10663,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val timeIntervalVariance = randomizer.nextDouble()
-        doReturn(timeIntervalVariance).whenever(generatorSpy).accelerometerTimeIntervalVariance
-//        every { generatorSpy.accelerometerTimeIntervalVariance }.returns(timeIntervalVariance)
+        every { generatorSpy.accelerometerTimeIntervalVariance }.returns(timeIntervalVariance)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(timeIntervalVariance, calibrator.accelerometerTimeIntervalVariance)
-        verify(generatorSpy, only()).accelerometerTimeIntervalVariance
-//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalVariance }
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalVariance }
     }
 
     @Test
@@ -10939,22 +10685,19 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val timeIntervalStandardDeviation = randomizer.nextDouble()
-        doReturn(timeIntervalStandardDeviation).whenever(generatorSpy).accelerometerTimeIntervalStandardDeviation
-/*        every { generatorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
+        every { generatorSpy.accelerometerTimeIntervalStandardDeviation }.returns(
             timeIntervalStandardDeviation
-        )*/
+        )
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
             timeIntervalStandardDeviation,
             calibrator.accelerometerTimeIntervalStandardDeviation
         )
-        verify(generatorSpy, only()).accelerometerTimeIntervalStandardDeviation
-//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviation }
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviation }
     }
 
     @Test
@@ -10966,18 +10709,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
         val time = Time(value, TimeUnit.SECOND)
-        doReturn(time).whenever(generatorSpy).accelerometerTimeIntervalStandardDeviationAsTime
-//        every { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(time)
+        every { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }.returns(time)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertSame(time, calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        verify(generatorSpy, only()).accelerometerTimeIntervalStandardDeviationAsTime
-//        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
+        verify(exactly = 1) { generatorSpy.accelerometerTimeIntervalStandardDeviationAsTime }
     }
 
     @Test
@@ -10993,29 +10733,21 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val value = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Time>(0)
-            result.value = value
-            result.unit = TimeUnit.SECOND
-            return@doAnswer true
-        }.whenever(generatorSpy).getAccelerometerTimeIntervalStandardDeviationAsTime(any())
-/*        every { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
+        every { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Time
             result.value = value
             result.unit = TimeUnit.SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertTrue(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(value, time.value.toDouble(), 0.0)
         assertEquals(TimeUnit.SECOND, time.unit)
-        verify(generatorSpy, only()).getAccelerometerTimeIntervalStandardDeviationAsTime(time)
-//        verify(exactly = 1) { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(time) }
+        verify(exactly = 1) { generatorSpy.getAccelerometerTimeIntervalStandardDeviationAsTime(time) }
     }
 
     @Test
@@ -11027,14 +10759,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val numberOfProcessedGyroscopeMeasurements = randomizer.nextInt()
-        doReturn(numberOfProcessedGyroscopeMeasurements).whenever(generatorSpy).numberOfProcessedGyroscopeMeasurements
-/*        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(
+        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(
             numberOfProcessedGyroscopeMeasurements
-        )*/
+        )
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
@@ -11042,8 +10772,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.numberOfProcessedGyroscopeMeasurements
         )
 
-        verify(generatorSpy, only()).numberOfProcessedGyroscopeMeasurements
-//        verify(exactly = 1) { generatorSpy.numberOfProcessedGyroscopeMeasurements }
+        verify(exactly = 1) { generatorSpy.numberOfProcessedGyroscopeMeasurements }
     }
 
     @Test
@@ -11055,14 +10784,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
         val numberOfProcessedMagnetometerMeasurements = randomizer.nextInt()
-        doReturn(numberOfProcessedMagnetometerMeasurements).whenever(generatorSpy).numberOfProcessedMagnetometerMeasurements
-/*        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(
+        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(
             numberOfProcessedMagnetometerMeasurements
-        )*/
+        )
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
@@ -11070,8 +10797,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.numberOfProcessedMagnetometerMeasurements
         )
 
-        verify(generatorSpy, only()).numberOfProcessedMagnetometerMeasurements
-//        verify(exactly = 1) { generatorSpy.numberOfProcessedMagnetometerMeasurements }
+        verify(exactly = 1) { generatorSpy.numberOfProcessedMagnetometerMeasurements }
     }
 
     @Test
@@ -11083,15 +10809,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val randomizer = UniformRandomizer()
 
         val numberOfProcessedAccelerometerMeasurements = randomizer.nextInt()
-        doReturn(numberOfProcessedAccelerometerMeasurements).whenever(generatorSpy).numberOfProcessedAccelerometerMeasurements
-/*        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
+        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(
             numberOfProcessedAccelerometerMeasurements
-        )*/
+        )
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(
@@ -11099,8 +10823,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.numberOfProcessedAccelerometerMeasurements
         )
 
-        verify(generatorSpy, only()).numberOfProcessedAccelerometerMeasurements
-//        verify(exactly = 1) { generatorSpy.numberOfProcessedAccelerometerMeasurements }
+        verify(exactly = 1) { generatorSpy.numberOfProcessedAccelerometerMeasurements }
     }
 
     @Test
@@ -11855,17 +11578,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).start()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.start() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.start() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         calibrator.start()
@@ -11888,10 +11608,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         assertTrue(calibrator.running)
 
-        verifyNoInteractions(gravityNormEstimatorSpy)
-        verify(generatorSpy, only()).start()
-//        verify { gravityNormEstimatorSpy wasNot Called }
-//        verify(exactly = 1) { generatorSpy.start() }
+        verify { gravityNormEstimatorSpy wasNot Called }
+        verify(exactly = 1) { generatorSpy.start() }
     }
 
     @Test
@@ -11937,19 +11655,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        doNothing().whenever(gravityNormEstimatorSpy).start()
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        justRun { gravityNormEstimatorSpy.start() }
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        justRun { gravityNormEstimatorSpy.start() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).start()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.start() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.start() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         calibrator.start()
@@ -11972,10 +11686,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         assertTrue(calibrator.running)
 
-        verify(gravityNormEstimatorSpy, only()).start()
-        verify(generatorSpy, only()).start()
-//        verify(exactly = 1) { gravityNormEstimatorSpy.start() }
-//        verify(exactly = 1) { generatorSpy.start() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.start() }
+        verify(exactly = 1) { generatorSpy.start() }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -12002,17 +11714,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).stop()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.stop() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
@@ -12026,12 +11735,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(generatorSpy, only()).stop()
-        verify(gravityNormEstimatorSpy, only()).running
-        verify(gravityNormEstimatorSpy, never()).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.running }
-//        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 0) { gravityNormEstimatorSpy.stop() }
         assertFalse(gravityNormEstimatorSpy.running)
     }
 
@@ -12044,19 +11750,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).stop()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.stop() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
             calibrator.getPrivateProperty("gravityNormEstimator")
         requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spy(gravityNormEstimator)
-        doReturn(true).whenever(gravityNormEstimatorSpy).running
-//        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-//        every { gravityNormEstimatorSpy.running }.returns(true)
+        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
+        every { gravityNormEstimatorSpy.running }.returns(true)
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
@@ -12070,12 +11772,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(generatorSpy, only()).stop()
-        verify(gravityNormEstimatorSpy, times(1)).running
-        verify(gravityNormEstimatorSpy, times(1)).stop()
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.running }
-//        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { gravityNormEstimatorSpy.running }
+        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
         assertTrue(gravityNormEstimatorSpy.running)
     }
 
@@ -12091,10 +11790,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-        doNothing().whenever(generatorSpy).stop()
-//        val generatorSpy = spyk(generator)
-//        justRun { generatorSpy.stop() }
+        val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         setPrivateProperty(
@@ -12108,10 +11805,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.stop()
 
         assertFalse(calibrator.running)
-        verify(generatorSpy, only()).stop()
-        verify(stoppedListener, only()).onStopped(calibrator)
-//        verify(exactly = 1) { generatorSpy.stop() }
-//        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
+        verify(exactly = 1) { generatorSpy.stop() }
+        verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
     @Test(expected = IllegalStateException::class)
@@ -12374,112 +12069,73 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        doNothing().whenever(accelerometerNonLinearInternalCalibrator).calibrate()
-        doReturn(ma.getElementAt(
-            0,
-            0
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedSx
-//        justRun { accelerometerNonLinearInternalCalibrator.calibrate() }
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        justRun { accelerometerNonLinearInternalCalibrator.calibrate() }
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        doReturn(ma.getElementAt(
-            1,
-            1
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedSy
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        doReturn(ma.getElementAt(
-            2,
-            2
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedSz
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        doReturn(ma.getElementAt(
-            0,
-            1
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMxy
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        doReturn(ma.getElementAt(
-            0,
-            2
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMxz
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        doReturn(ma.getElementAt(
-            1,
-            0
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMyx
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        doReturn(ma.getElementAt(
-            1,
-            2
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMyz
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        doReturn(ma.getElementAt(
-            2,
-            0
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMzx
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        doReturn(ma.getElementAt(
-            2,
-            1
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMzy
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
         )
 
-        doNothing().whenever(gyroscopeNonLinearInternalCalibrator).calibrate()
-//        justRun { gyroscopeNonLinearInternalCalibrator.calibrate() }
+        justRun { gyroscopeNonLinearInternalCalibrator.calibrate() }
         calibrator.setPrivateProperty(
             "gyroscopeInternalCalibrator",
             gyroscopeNonLinearInternalCalibrator
         )
 
-        doNothing().whenever(magnetometerNonLinearInternalCalibrator).calibrate()
-//        justRun { magnetometerNonLinearInternalCalibrator.calibrate() }
+        justRun { magnetometerNonLinearInternalCalibrator.calibrate() }
         calibrator.setPrivateProperty(
             "magnetometerInternalCalibrator",
             magnetometerNonLinearInternalCalibrator
@@ -12488,16 +12144,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.calibrate())
 
         assertFalse(calibrator.running)
-        verify(calibrationSolvingStartedListener, only()).onCalibrationSolvingStarted(
-            calibrator
-        )
-        verify(calibrationCompletedListener, only()).onCalibrationCompleted(calibrator)
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             calibrationSolvingStartedListener.onCalibrationSolvingStarted(
                 calibrator
             )
-        }*/
-//        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
+        }
+        verify(exactly = 1) { calibrationCompletedListener.onCalibrationCompleted(calibrator) }
     }
 
     @Test
@@ -12519,8 +12171,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        doThrow(CalibrationException()).whenever(accelerometerNonLinearInternalCalibrator).calibrate()
-//        every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(NavigationException())
+        every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(CalibrationException())
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -12551,8 +12202,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isReadyToSolveCalibration)
         assertFalse(calibrator.running)
 
-        doThrow(CalibrationException()).whenever(accelerometerNonLinearInternalCalibrator).calibrate()
-//        every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(NavigationException())
+        every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(CalibrationException())
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -12561,16 +12211,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertFalse(calibrator.calibrate())
 
         assertFalse(calibrator.running)
-        verify(errorListener, only()).onError(
-            calibrator,
-            CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
-        )
-/*        verify(exactly = 1) {
+        verify(exactly = 1) {
             errorListener.onError(
                 calibrator,
                 CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
             )
-        }*/
+        }
     }
 
     @Test
@@ -12589,12 +12235,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).estimatedBiasFx
-//        every { internalCalibratorSpy.estimatedBiasFx }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.estimatedBiasFx }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedAccelerometerBiasX)
@@ -12606,12 +12250,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).biasX
-//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedAccelerometerBiasX)
@@ -12633,12 +12275,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).estimatedBiasFy
-//        every { internalCalibratorSpy.estimatedBiasFy }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.estimatedBiasFy }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedAccelerometerBiasY)
@@ -12650,12 +12290,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).biasY
-//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedAccelerometerBiasY)
@@ -12677,12 +12315,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).estimatedBiasFz
-//        every { internalCalibratorSpy.estimatedBiasFz }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.estimatedBiasFz }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedAccelerometerBiasZ)
@@ -12694,12 +12330,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).biasZ
-//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedAccelerometerBiasZ)
@@ -12721,13 +12355,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(acceleration).whenever(internalCalibratorSpy).estimatedBiasFxAsAcceleration
-//        every { internalCalibratorSpy.estimatedBiasFxAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.estimatedBiasFxAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasXAsMeasurement)
@@ -12739,13 +12371,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(acceleration).whenever(internalCalibratorSpy).biasXAsAcceleration
-//        every { internalCalibratorSpy.biasXAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.biasXAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasXAsMeasurement)
@@ -12768,22 +12398,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasX
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasFxAsAcceleration(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasFxAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasFxAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasX
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -12799,20 +12422,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasX
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalCalibratorSpy).getBiasXAsAcceleration(any())
-/*        every { internalCalibratorSpy.getBiasXAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasXAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasX
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -12838,13 +12455,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(acceleration).whenever(internalCalibratorSpy).estimatedBiasFyAsAcceleration
-//        every { internalCalibratorSpy.estimatedBiasFyAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.estimatedBiasFyAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasYAsMeasurement)
@@ -12856,13 +12471,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(acceleration).whenever(internalCalibratorSpy).biasYAsAcceleration
-//        every { internalCalibratorSpy.biasYAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.biasYAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasYAsMeasurement)
@@ -12885,22 +12498,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasY
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasFyAsAcceleration(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasFyAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasFyAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasY
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -12916,20 +12522,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasY
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalCalibratorSpy).getBiasYAsAcceleration(any())
-/*        every { internalCalibratorSpy.getBiasYAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasYAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasY
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -12955,13 +12555,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(acceleration).whenever(internalCalibratorSpy).estimatedBiasFzAsAcceleration
-//        every { internalCalibratorSpy.estimatedBiasFzAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.estimatedBiasFzAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasZAsMeasurement)
@@ -12973,13 +12571,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val acceleration = Acceleration(estimatedBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        doReturn(acceleration).whenever(internalCalibratorSpy).biasZAsAcceleration
-//        every { internalCalibratorSpy.biasZAsAcceleration }.returns(acceleration)
+        every { internalCalibratorSpy.biasZAsAcceleration }.returns(acceleration)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(acceleration, calibrator.estimatedAccelerometerBiasZAsMeasurement)
@@ -13002,22 +12598,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasZ
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasFzAsAcceleration(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasFzAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasFzAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasZ
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -13033,20 +12622,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<Acceleration>(0)
-            result.value = estimatedBiasZ
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }.whenever(internalCalibratorSpy).getBiasZAsAcceleration(any())
-/*        every { internalCalibratorSpy.getBiasZAsAcceleration(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasZAsAcceleration(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as Acceleration
             result.value = estimatedBiasZ
             result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
@@ -13072,8 +12655,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -13084,8 +12666,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        doReturn(triad).whenever(internalCalibratorSpy).estimatedBiasAsTriad
-//        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
+        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedAccelerometerBiasAsTriad)
@@ -13097,8 +12678,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -13109,8 +12689,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        doReturn(triad).whenever(internalCalibratorSpy).biasAsTriad
-//        every { internalCalibratorSpy.biasAsTriad }.returns(triad)
+        every { internalCalibratorSpy.biasAsTriad }.returns(triad)
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedAccelerometerBiasAsTriad)
@@ -13134,23 +12713,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                estimatedBiasX,
-                estimatedBiasY,
-                estimatedBiasZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasAsTriad(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinatesAndUnit(
                 estimatedBiasX,
@@ -13159,7 +12727,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val triad = AccelerationTriad()
@@ -13177,22 +12745,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AccelerationTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                estimatedBiasX,
-                estimatedBiasY,
-                estimatedBiasZ,
-                AccelerationUnit.METERS_PER_SQUARED_SECOND
-            )
-        }.whenever(internalCalibratorSpy).getBiasAsTriad(any())
-/*        every { internalCalibratorSpy.getBiasAsTriad(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AccelerationTriad
             result.setValueCoordinatesAndUnit(
                 estimatedBiasX,
@@ -13200,7 +12758,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 estimatedBiasZ,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-        }*/
+        }
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         val triad = AccelerationTriad()
@@ -13229,14 +12787,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasStandardDeviationNorm = randomizer.nextDouble()
-        doReturn(estimatedBiasStandardDeviationNorm).whenever(internalCalibratorSpy).estimatedBiasStandardDeviationNorm
-/*        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
+        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
             estimatedBiasStandardDeviationNorm
-        )*/
+        )
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(
@@ -13251,8 +12807,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasAndPositionAccelerometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
         calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibratorSpy)
 
         assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
@@ -13274,12 +12829,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).estimatedBiasX
-//        every { internalCalibratorSpy.estimatedBiasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.estimatedBiasX }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
@@ -13291,12 +12844,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).biasX
-//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasX, calibrator.estimatedGyroscopeBiasX)
@@ -13318,12 +12869,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).estimatedBiasY
-//        every { internalCalibratorSpy.estimatedBiasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.estimatedBiasY }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
@@ -13335,12 +12884,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).biasY
-//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasY, calibrator.estimatedGyroscopeBiasY)
@@ -13362,12 +12909,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).estimatedBiasZ
-//        every { internalCalibratorSpy.estimatedBiasZ }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.estimatedBiasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
@@ -13379,12 +12924,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).biasZ
-//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedBiasZ, calibrator.estimatedGyroscopeBiasZ)
@@ -13406,13 +12949,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
-        doReturn(w).whenever(internalCalibratorSpy).estimatedBiasAngularSpeedX
-//        every { internalCalibratorSpy.estimatedBiasAngularSpeedX }.returns(w)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedX }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
@@ -13424,13 +12965,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
-        doReturn(w).whenever(internalCalibratorSpy).biasAngularSpeedX
-//        every { internalCalibratorSpy.biasAngularSpeedX }.returns(w)
+        every { internalCalibratorSpy.biasAngularSpeedX }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasXAsMeasurement)
@@ -13453,22 +12992,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = estimatedBiasX
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasAngularSpeedX(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedX(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedX(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasX
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -13484,20 +13016,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = estimatedBiasX
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalCalibratorSpy).getBiasAngularSpeedX(any())
-/*        every { internalCalibratorSpy.getBiasAngularSpeedX(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasAngularSpeedX(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasX
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasX, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -13523,13 +13049,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
-        doReturn(w).whenever(internalCalibratorSpy).estimatedBiasAngularSpeedY
-//        every { internalCalibratorSpy.estimatedBiasAngularSpeedY }.returns(w)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedY }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
@@ -13541,13 +13065,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
-        doReturn(w).whenever(internalCalibratorSpy).biasAngularSpeedY
-//        every { internalCalibratorSpy.biasAngularSpeedY }.returns(w)
+        every { internalCalibratorSpy.biasAngularSpeedY }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasYAsMeasurement)
@@ -13570,22 +13092,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = estimatedBiasY
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasAngularSpeedY(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedY(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedY(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasY
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -13601,20 +13116,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = estimatedBiasY
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalCalibratorSpy).getBiasAngularSpeedY(any())
-/*        every { internalCalibratorSpy.getBiasAngularSpeedY(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasAngularSpeedY(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasY
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasY, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -13640,13 +13149,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
-        doReturn(w).whenever(internalCalibratorSpy).estimatedBiasAngularSpeedZ
-//        every { internalCalibratorSpy.estimatedBiasAngularSpeedZ }.returns(w)
+        every { internalCalibratorSpy.estimatedBiasAngularSpeedZ }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
@@ -13658,13 +13165,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
-        doReturn(w).whenever(internalCalibratorSpy).biasAngularSpeedZ
-//        every { internalCalibratorSpy.biasAngularSpeedZ }.returns(w)
+        every { internalCalibratorSpy.biasAngularSpeedZ }.returns(w)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(w, calibrator.estimatedGyroscopeBiasZAsMeasurement)
@@ -13687,22 +13192,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = estimatedBiasZ
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasAngularSpeedZ(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedZ(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasAngularSpeedZ(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasZ
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -13718,20 +13216,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeed>(0)
-            result.value = estimatedBiasZ
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }.whenever(internalCalibratorSpy).getBiasAngularSpeedZ(any())
-/*        every { internalCalibratorSpy.getBiasAngularSpeedZ(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getBiasAngularSpeedZ(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeed
             result.value = estimatedBiasZ
             result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }*/
+        }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val w = AngularSpeed(estimatedBiasZ, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -13757,8 +13249,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -13769,8 +13260,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        doReturn(triad).whenever(internalCalibratorSpy).estimatedBiasAsTriad
-//        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
+        every { internalCalibratorSpy.estimatedBiasAsTriad }.returns(triad)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedGyroscopeBiasAsTriad)
@@ -13782,8 +13272,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
@@ -13794,12 +13283,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             estimatedBiasY,
             estimatedBiasZ
         )
-        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).biasX
-        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).biasY
-        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).biasZ
-//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
-//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
-//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(triad, calibrator.estimatedGyroscopeBiasAsTriad)
@@ -13822,23 +13308,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<AngularSpeedTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                estimatedBiasX,
-                estimatedBiasY,
-                estimatedBiasZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedBiasAsTriad(any())
-/*        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedBiasAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as AngularSpeedTriad
             result.setValueCoordinatesAndUnit(
                 estimatedBiasX,
@@ -13847,7 +13322,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 AngularSpeedUnit.RADIANS_PER_SECOND
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val triad = AngularSpeedTriad(
@@ -13870,18 +13345,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasX = randomizer.nextDouble()
         val estimatedBiasY = randomizer.nextDouble()
         val estimatedBiasZ = randomizer.nextDouble()
-        doReturn(estimatedBiasX).whenever(internalCalibratorSpy).biasX
-        doReturn(estimatedBiasY).whenever(internalCalibratorSpy).biasY
-        doReturn(estimatedBiasZ).whenever(internalCalibratorSpy).biasZ
-//        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
-//        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
-//        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
+        every { internalCalibratorSpy.biasX }.returns(estimatedBiasX)
+        every { internalCalibratorSpy.biasY }.returns(estimatedBiasY)
+        every { internalCalibratorSpy.biasZ }.returns(estimatedBiasZ)
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         val triad = AngularSpeedTriad(
@@ -13915,14 +13386,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(EasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(EasyGyroscopeCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedBiasStandardDeviationNorm = randomizer.nextDouble()
-        doReturn(estimatedBiasStandardDeviationNorm).whenever(internalCalibratorSpy).estimatedBiasStandardDeviationNorm
-/*        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
+        every { internalCalibratorSpy.estimatedBiasStandardDeviationNorm }.returns(
             estimatedBiasStandardDeviationNorm
-        )*/
+        )
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(
@@ -13937,8 +13406,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownBiasEasyGyroscopeCalibrator())
-//        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
+        val internalCalibratorSpy = spyk(KnownBiasEasyGyroscopeCalibrator())
         calibrator.setPrivateProperty("gyroscopeInternalCalibrator", internalCalibratorSpy)
 
         assertNull(calibrator.estimatedGyroscopeBiasStandardDeviationNorm)
@@ -13960,12 +13428,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
-        doReturn(estimatedHardIronX).whenever(internalCalibratorSpy).estimatedHardIronX
-//        every { internalCalibratorSpy.estimatedHardIronX }.returns(estimatedHardIronX)
+        every { internalCalibratorSpy.estimatedHardIronX }.returns(estimatedHardIronX)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedHardIronX, calibrator.estimatedMagnetometerHardIronX)
@@ -13977,12 +13443,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
-        doReturn(estimatedHardIronX).whenever(internalCalibratorSpy).hardIronX
-//        every { internalCalibratorSpy.hardIronX }.returns(estimatedHardIronX)
+        every { internalCalibratorSpy.hardIronX }.returns(estimatedHardIronX)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedHardIronX, calibrator.estimatedMagnetometerHardIronX)
@@ -14004,12 +13468,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronY = randomizer.nextDouble()
-        doReturn(estimatedHardIronY).whenever(internalCalibratorSpy).estimatedHardIronY
-//        every { internalCalibratorSpy.estimatedHardIronY }.returns(estimatedHardIronY)
+        every { internalCalibratorSpy.estimatedHardIronY }.returns(estimatedHardIronY)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedHardIronY, calibrator.estimatedMagnetometerHardIronY)
@@ -14021,12 +13483,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronY = randomizer.nextDouble()
-        doReturn(estimatedHardIronY).whenever(internalCalibratorSpy).hardIronY
-//        every { internalCalibratorSpy.hardIronY }.returns(estimatedHardIronY)
+        every { internalCalibratorSpy.hardIronY }.returns(estimatedHardIronY)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedHardIronY, calibrator.estimatedMagnetometerHardIronY)
@@ -14048,12 +13508,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronZ = randomizer.nextDouble()
-        doReturn(estimatedHardIronZ).whenever(internalCalibratorSpy).estimatedHardIronZ
-//        every { internalCalibratorSpy.estimatedHardIronZ }.returns(estimatedHardIronZ)
+        every { internalCalibratorSpy.estimatedHardIronZ }.returns(estimatedHardIronZ)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedHardIronZ, calibrator.estimatedMagnetometerHardIronZ)
@@ -14065,12 +13523,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronZ = randomizer.nextDouble()
-        doReturn(estimatedHardIronZ).whenever(internalCalibratorSpy).hardIronZ
-//        every { internalCalibratorSpy.hardIronZ }.returns(estimatedHardIronZ)
+        every { internalCalibratorSpy.hardIronZ }.returns(estimatedHardIronZ)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertEquals(estimatedHardIronZ, calibrator.estimatedMagnetometerHardIronZ)
@@ -14092,13 +13548,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
         val b = MagneticFluxDensity(estimatedHardIronX, MagneticFluxDensityUnit.TESLA)
-        doReturn(b).whenever(internalCalibratorSpy).estimatedHardIronXAsMagneticFluxDensity
-//        every { internalCalibratorSpy.estimatedHardIronXAsMagneticFluxDensity }.returns(b)
+        every { internalCalibratorSpy.estimatedHardIronXAsMagneticFluxDensity }.returns(b)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(b, calibrator.estimatedMagnetometerHardIronXAsMeasurement)
@@ -14110,13 +13564,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
         val b = MagneticFluxDensity(estimatedHardIronX, MagneticFluxDensityUnit.TESLA)
-        doReturn(b).whenever(internalCalibratorSpy).hardIronXAsMagneticFluxDensity
-//        every { internalCalibratorSpy.hardIronXAsMagneticFluxDensity }.returns(b)
+        every { internalCalibratorSpy.hardIronXAsMagneticFluxDensity }.returns(b)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(b, calibrator.estimatedMagnetometerHardIronXAsMeasurement)
@@ -14139,22 +13591,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensity>(0)
-            result.value = estimatedHardIronX
-            result.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedHardIronXAsMagneticFluxDensity(any())
-/*        every { internalCalibratorSpy.getEstimatedHardIronXAsMagneticFluxDensity(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedHardIronXAsMagneticFluxDensity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = estimatedHardIronX
             result.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -14170,20 +13615,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensity>(0)
-            result.value = estimatedHardIronX
-            result.unit = MagneticFluxDensityUnit.TESLA
-        }.whenever(internalCalibratorSpy).getHardIronXAsMagneticFluxDensity(any())
-/*        every { internalCalibratorSpy.getHardIronXAsMagneticFluxDensity(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getHardIronXAsMagneticFluxDensity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = estimatedHardIronX
             result.unit = MagneticFluxDensityUnit.TESLA
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -14209,13 +13648,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronY = randomizer.nextDouble()
         val b = MagneticFluxDensity(estimatedHardIronY, MagneticFluxDensityUnit.TESLA)
-        doReturn(b).whenever(internalCalibratorSpy).estimatedHardIronYAsMagneticFluxDensity
-//        every { internalCalibratorSpy.estimatedHardIronYAsMagneticFluxDensity }.returns(b)
+        every { internalCalibratorSpy.estimatedHardIronYAsMagneticFluxDensity }.returns(b)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(b, calibrator.estimatedMagnetometerHardIronYAsMeasurement)
@@ -14227,13 +13664,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronY = randomizer.nextDouble()
         val b = MagneticFluxDensity(estimatedHardIronY, MagneticFluxDensityUnit.TESLA)
-        doReturn(b).whenever(internalCalibratorSpy).hardIronYAsMagneticFluxDensity
-//        every { internalCalibratorSpy.hardIronYAsMagneticFluxDensity }.returns(b)
+        every { internalCalibratorSpy.hardIronYAsMagneticFluxDensity }.returns(b)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(b, calibrator.estimatedMagnetometerHardIronYAsMeasurement)
@@ -14256,22 +13691,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensity>(0)
-            result.value = estimatedHardIronY
-            result.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedHardIronYAsMagneticFluxDensity(any())
-/*        every { internalCalibratorSpy.getEstimatedHardIronYAsMagneticFluxDensity(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedHardIronYAsMagneticFluxDensity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = estimatedHardIronY
             result.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -14287,20 +13715,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronY = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensity>(0)
-            result.value = estimatedHardIronY
-            result.unit = MagneticFluxDensityUnit.TESLA
-        }.whenever(internalCalibratorSpy).getHardIronYAsMagneticFluxDensity(any())
-/*        every { internalCalibratorSpy.getHardIronYAsMagneticFluxDensity(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getHardIronYAsMagneticFluxDensity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = estimatedHardIronY
             result.unit = MagneticFluxDensityUnit.TESLA
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -14326,13 +13748,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronZ = randomizer.nextDouble()
         val b = MagneticFluxDensity(estimatedHardIronZ, MagneticFluxDensityUnit.TESLA)
-        doReturn(b).whenever(internalCalibratorSpy).estimatedHardIronZAsMagneticFluxDensity
-//        every { internalCalibratorSpy.estimatedHardIronZAsMagneticFluxDensity }.returns(b)
+        every { internalCalibratorSpy.estimatedHardIronZAsMagneticFluxDensity }.returns(b)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(b, calibrator.estimatedMagnetometerHardIronZAsMeasurement)
@@ -14344,13 +13764,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronZ = randomizer.nextDouble()
         val b = MagneticFluxDensity(estimatedHardIronZ, MagneticFluxDensityUnit.TESLA)
-        doReturn(b).whenever(internalCalibratorSpy).hardIronZAsMagneticFluxDensity
-//        every { internalCalibratorSpy.hardIronZAsMagneticFluxDensity }.returns(b)
+        every { internalCalibratorSpy.hardIronZAsMagneticFluxDensity }.returns(b)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(b, calibrator.estimatedMagnetometerHardIronZAsMeasurement)
@@ -14373,22 +13791,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensity>(0)
-            result.value = estimatedHardIronZ
-            result.unit = MagneticFluxDensityUnit.TESLA
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedHardIronZAsMagneticFluxDensity(any())
-/*        every { internalCalibratorSpy.getEstimatedHardIronZAsMagneticFluxDensity(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedHardIronZAsMagneticFluxDensity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = estimatedHardIronZ
             result.unit = MagneticFluxDensityUnit.TESLA
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -14404,20 +13815,14 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensity>(0)
-            result.value = estimatedHardIronZ
-            result.unit = MagneticFluxDensityUnit.TESLA
-        }.whenever(internalCalibratorSpy).getHardIronZAsMagneticFluxDensity(any())
-/*        every { internalCalibratorSpy.getHardIronZAsMagneticFluxDensity(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getHardIronZAsMagneticFluxDensity(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensity
             result.value = estimatedHardIronZ
             result.unit = MagneticFluxDensityUnit.TESLA
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val b = MagneticFluxDensity(0.0, MagneticFluxDensityUnit.TESLA)
@@ -14443,8 +13848,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
         val estimatedHardIronY = randomizer.nextDouble()
@@ -14455,8 +13859,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             estimatedHardIronY,
             estimatedHardIronZ
         )
-        doReturn(triad).whenever(internalCalibratorSpy).estimatedHardIronAsTriad
-//        every { internalCalibratorSpy.estimatedHardIronAsTriad }.returns(triad)
+        every { internalCalibratorSpy.estimatedHardIronAsTriad }.returns(triad)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedMagnetometerHardIronAsTriad)
@@ -14468,8 +13871,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
         val estimatedHardIronY = randomizer.nextDouble()
@@ -14480,8 +13882,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             estimatedHardIronY,
             estimatedHardIronZ
         )
-        doReturn(triad).whenever(internalCalibratorSpy).hardIronAsTriad
-//        every { internalCalibratorSpy.hardIronAsTriad }.returns(triad)
+        every { internalCalibratorSpy.hardIronAsTriad }.returns(triad)
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         assertSame(triad, calibrator.estimatedMagnetometerHardIronAsTriad)
@@ -14504,23 +13905,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
         val estimatedHardIronY = randomizer.nextDouble()
         val estimatedHardIronZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensityTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                estimatedHardIronX,
-                estimatedHardIronY,
-                estimatedHardIronZ,
-                MagneticFluxDensityUnit.TESLA
-            )
-            return@doAnswer true
-        }.whenever(internalCalibratorSpy).getEstimatedHardIronAsTriad(any())
-/*        every { internalCalibratorSpy.getEstimatedHardIronAsTriad(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getEstimatedHardIronAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensityTriad
             result.setValueCoordinatesAndUnit(
                 estimatedHardIronX,
@@ -14529,7 +13919,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 MagneticFluxDensityUnit.TESLA
             )
             return@answers true
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val triad = MagneticFluxDensityTriad()
@@ -14547,22 +13937,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        val internalCalibratorSpy = spy(KnownHardIronPositionAndInstantMagnetometerCalibrator())
-//        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
+        val internalCalibratorSpy = spyk(KnownHardIronPositionAndInstantMagnetometerCalibrator())
         val randomizer = UniformRandomizer()
         val estimatedHardIronX = randomizer.nextDouble()
         val estimatedHardIronY = randomizer.nextDouble()
         val estimatedHardIronZ = randomizer.nextDouble()
-        doAnswer { invocation ->
-            val result = invocation.getArgument<MagneticFluxDensityTriad>(0)
-            result.setValueCoordinatesAndUnit(
-                estimatedHardIronX,
-                estimatedHardIronY,
-                estimatedHardIronZ,
-                MagneticFluxDensityUnit.TESLA
-            )
-        }.whenever(internalCalibratorSpy).getHardIronAsTriad(any())
-/*        every { internalCalibratorSpy.getHardIronAsTriad(any()) }.answers { answer ->
+        every { internalCalibratorSpy.getHardIronAsTriad(any()) }.answers { answer ->
             val result = answer.invocation.args[0] as MagneticFluxDensityTriad
             result.setValueCoordinatesAndUnit(
                 estimatedHardIronX,
@@ -14570,7 +13950,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 estimatedHardIronZ,
                 MagneticFluxDensityUnit.TESLA
             )
-        }*/
+        }
         calibrator.setPrivateProperty("magnetometerInternalCalibrator", internalCalibratorSpy)
 
         val triad = MagneticFluxDensityTriad()
@@ -15342,12 +14722,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
 
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
@@ -15706,11 +15084,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
@@ -15842,10 +15218,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -15944,10 +15318,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16052,10 +15424,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16092,11 +15462,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
@@ -16166,10 +15534,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16465,11 +15831,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
@@ -16610,10 +15974,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16712,10 +16074,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16820,10 +16180,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -16861,11 +16219,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
@@ -16943,10 +16299,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17242,11 +16596,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
@@ -17606,11 +16958,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
@@ -17746,10 +17096,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17848,10 +17196,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17956,10 +17302,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -17996,11 +17340,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.accelerometerRobustMethod)
@@ -18070,10 +17412,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18368,11 +17708,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.accelerometerRobustMethod)
@@ -18508,10 +17846,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18610,10 +17946,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18718,10 +18052,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18759,11 +18091,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).accelerometerBaseNoiseLevel
-//        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.accelerometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.accelerometerRobustMethod)
@@ -18837,10 +18167,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
-        doReturn(specificForceStandardDeviation).whenever(measurement).specificForceStandardDeviation
-        doReturn(0.0).whenever(measurement).angularRateStandardDeviation
-//        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
-//        every { measurement.angularRateStandardDeviation }.returns(0.0)
+        every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
+        every { measurement.angularRateStandardDeviation }.returns(0.0)
         (1..13).forEach { _ ->
             calibrator.accelerometerMeasurements.add(measurement)
         }
@@ -18950,96 +18278,60 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        doReturn(ma.getElementAt(
-            0,
-            0
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedSx
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        doReturn(ma.getElementAt(
-            1,
-            1
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedSy
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        doReturn(ma.getElementAt(
-            2,
-            2
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedSz
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        doReturn(ma.getElementAt(
-            0,
-            1
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMxy
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        doReturn(ma.getElementAt(
-            0,
-            2
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMxz
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        doReturn(ma.getElementAt(
-            1,
-            0
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMyx
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        doReturn(ma.getElementAt(
-            1,
-            2
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMyz
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        doReturn(ma.getElementAt(
-            2,
-            0
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMzx
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        doReturn(ma.getElementAt(
-            2,
-            1
-        )).whenever(accelerometerNonLinearInternalCalibrator).estimatedMzy
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -19134,88 +18426,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -19280,88 +18539,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -19426,88 +18652,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -19572,88 +18765,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-//        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(null)
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -19718,88 +18878,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -19864,88 +18991,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -20010,88 +19104,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -20156,88 +19217,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(null)
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(
-            2,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(null)
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(
             ma.getElementAt(
                 2,
                 1
             )
-        )*/
+        )
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -20302,88 +19330,55 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
 
         val ma = generateMa()
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(
-            0,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
+        every { accelerometerNonLinearInternalCalibrator.estimatedSx }.returns(
             ma.getElementAt(
                 0,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(
-            1,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSy }.returns(
             ma.getElementAt(
                 1,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(
-            2,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedSz }.returns(
             ma.getElementAt(
                 2,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(
-            0,
-            1
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxy }.returns(
             ma.getElementAt(
                 0,
                 1
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(
-            0,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMxz }.returns(
             ma.getElementAt(
                 0,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(
-            1,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyx }.returns(
             ma.getElementAt(
                 1,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(
-            1,
-            2
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMyz }.returns(
             ma.getElementAt(
                 1,
                 2
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(
-            2,
-            0
-        ))
-/*        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzx }.returns(
             ma.getElementAt(
                 2,
                 0
             )
-        )*/
-        whenever(accelerometerNonLinearInternalCalibrator.estimatedMzy).thenReturn(null)
-//        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(null)
+        )
+        every { accelerometerNonLinearInternalCalibrator.estimatedMzy }.returns(null)
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerNonLinearInternalCalibrator
@@ -20451,30 +19446,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -20571,30 +19554,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -20691,30 +19662,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -20812,30 +19771,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -20964,30 +19911,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -21102,30 +20037,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -21240,30 +20163,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -21359,11 +20270,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
@@ -21383,30 +20292,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -21499,11 +20396,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        whenever(generatorSpy.gyroscopeBaseNoiseLevel).thenReturn(baseNoiseLevel)
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
@@ -21523,30 +20418,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -21725,30 +20608,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -21863,30 +20734,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -22001,30 +20860,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -22139,30 +20986,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -22258,11 +21093,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.gyroscopeRobustMethod)
@@ -22282,30 +21115,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -22398,11 +21219,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.gyroscopeRobustMethod)
@@ -22422,30 +21241,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -22624,30 +21431,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -22763,30 +21558,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -22902,30 +21685,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23041,30 +21812,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23161,11 +21920,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.gyroscopeRobustMethod)
@@ -23185,30 +21942,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23302,11 +22047,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.gyroscopeRobustMethod)
@@ -23326,30 +22069,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23457,30 +22188,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23562,30 +22281,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23700,30 +22407,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23838,30 +22533,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -23976,30 +22659,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -24096,11 +22767,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
@@ -24120,30 +22789,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -24241,11 +22898,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.gyroscopeRobustMethod)
@@ -24265,30 +22920,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -24471,30 +23114,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -24610,30 +23241,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -24749,30 +23368,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -24888,30 +23495,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -25009,11 +23604,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
@@ -25033,30 +23626,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -25155,11 +23736,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).gyroscopeBaseNoiseLevel
-//        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.gyroscopeBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.gyroscopeRobustMethod)
@@ -25179,30 +23758,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -25314,30 +23881,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val accelerometerBiasY = randomizer.nextDouble()
         val accelerometerBiasZ = randomizer.nextDouble()
         val ma = generateMa()
-        whenever(accelerometerInternalCalibrator.biasX).thenReturn(accelerometerBiasX)
-//        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
-        whenever(accelerometerInternalCalibrator.biasY).thenReturn(accelerometerBiasY)
-//        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
-        whenever(accelerometerInternalCalibrator.biasZ).thenReturn(accelerometerBiasZ)
-//        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
-        whenever(accelerometerInternalCalibrator.estimatedSx).thenReturn(ma.getElementAt(0, 0))
-//        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
-        whenever(accelerometerInternalCalibrator.estimatedSy).thenReturn(ma.getElementAt(1, 1))
-//        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
-        whenever(accelerometerInternalCalibrator.estimatedSz).thenReturn(ma.getElementAt(2, 2))
-//        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMxy).thenReturn(ma.getElementAt(0, 1))
-//        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
-        whenever(accelerometerInternalCalibrator.estimatedMxz).thenReturn(ma.getElementAt(0, 2))
-//        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMyx).thenReturn(ma.getElementAt(1, 0))
-//        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMyz).thenReturn(ma.getElementAt(1, 2))
-//        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
-        whenever(accelerometerInternalCalibrator.estimatedMzx).thenReturn(ma.getElementAt(2, 0))
-//        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
-        whenever(accelerometerInternalCalibrator.estimatedMzy).thenReturn(ma.getElementAt(2, 1))
-//        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
+        every { accelerometerInternalCalibrator.biasX }.returns(accelerometerBiasX)
+        every { accelerometerInternalCalibrator.biasY }.returns(accelerometerBiasY)
+        every { accelerometerInternalCalibrator.biasZ }.returns(accelerometerBiasZ)
+        every { accelerometerInternalCalibrator.estimatedSx }.returns(ma.getElementAt(0, 0))
+        every { accelerometerInternalCalibrator.estimatedSy }.returns(ma.getElementAt(1, 1))
+        every { accelerometerInternalCalibrator.estimatedSz }.returns(ma.getElementAt(2, 2))
+        every { accelerometerInternalCalibrator.estimatedMxy }.returns(ma.getElementAt(0, 1))
+        every { accelerometerInternalCalibrator.estimatedMxz }.returns(ma.getElementAt(0, 2))
+        every { accelerometerInternalCalibrator.estimatedMyx }.returns(ma.getElementAt(1, 0))
+        every { accelerometerInternalCalibrator.estimatedMyz }.returns(ma.getElementAt(1, 2))
+        every { accelerometerInternalCalibrator.estimatedMzx }.returns(ma.getElementAt(2, 0))
+        every { accelerometerInternalCalibrator.estimatedMzy }.returns(ma.getElementAt(2, 1))
         calibrator.setPrivateProperty(
             "accelerometerInternalCalibrator",
             accelerometerInternalCalibrator
@@ -26220,11 +24775,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.magnetometerRobustMethod)
@@ -26327,11 +24880,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.magnetometerRobustMethod)
@@ -26962,11 +25513,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
@@ -27069,11 +25618,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.magnetometerRobustMethod)
@@ -27277,10 +25824,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -27381,10 +25927,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -27485,10 +26030,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -27595,10 +26139,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -27705,10 +26248,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -27745,11 +26287,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
@@ -27821,10 +26361,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -27861,11 +26400,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROSAC, calibrator.magnetometerRobustMethod)
@@ -27937,10 +26474,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -28010,10 +26546,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -28511,11 +27046,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.magnetometerRobustMethod)
@@ -28623,11 +27156,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.LMEDS, calibrator.magnetometerRobustMethod)
@@ -28835,10 +27366,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -28939,10 +27469,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -29043,10 +27572,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -29149,10 +27677,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -29259,10 +27786,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -29300,11 +27826,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.magnetometerRobustMethod)
@@ -29380,10 +27904,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -29421,11 +27944,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
-        val generatorSpy = spy(generator)
-//        val generatorSpy = spyk(generator)
+        val generatorSpy = spyk(generator)
         val baseNoiseLevel = randomizer.nextDouble()
-        doReturn(baseNoiseLevel).whenever(generatorSpy).magnetometerBaseNoiseLevel
-//        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
+        every { generatorSpy.magnetometerBaseNoiseLevel }.returns(baseNoiseLevel)
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         assertEquals(RobustEstimatorMethod.PROMEDS, calibrator.magnetometerRobustMethod)
@@ -29506,10 +28027,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -29579,10 +28099,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        whenever(magneticFluxMeasurement.magneticFluxDensityStandardDeviation).thenReturn(magneticFluxDensityStandardDeviation)
-/*        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
+        every { magneticFluxMeasurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
-        )*/
+        )
         (1..13).forEach { _ ->
             calibrator.magnetometerMeasurements.add(magneticFluxMeasurement)
         }
@@ -29648,12 +28167,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
-        whenever(location.latitude).thenReturn(latitudeDegrees)
-        whenever(location.longitude).thenReturn(longitudeDegrees)
-        whenever(location.altitude).thenReturn(height)
-//        every { location.latitude }.returns(latitudeDegrees)
-//        every { location.longitude }.returns(longitudeDegrees)
-//        every { location.altitude }.returns(height)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
         return location
     }
