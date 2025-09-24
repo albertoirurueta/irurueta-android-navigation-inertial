@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.numerical.ExponentialMatrixEstimator
+import com.irurueta.numerical.ExponentialMatrixEstimator
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AngularSpeedUnit

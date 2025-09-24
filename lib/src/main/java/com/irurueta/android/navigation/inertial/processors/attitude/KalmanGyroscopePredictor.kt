@@ -17,9 +17,9 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.numerical.SuhQuaternionStepIntegrator
-import com.irurueta.android.navigation.inertial.numerical.TrawnyQuaternionStepIntegrator
-import com.irurueta.android.navigation.inertial.numerical.YuanQuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.SuhQuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.TrawnyQuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.YuanQuaternionStepIntegrator
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad

@@ -17,9 +17,9 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.numerical.integration.IntegrationException
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.numerical.integration.IntegrationException
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AngularSpeedUnit
 import org.junit.Assert.*

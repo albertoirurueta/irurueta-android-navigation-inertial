@@ -16,7 +16,7 @@
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.numerical.ExponentialMatrixEstimator
+import com.irurueta.numerical.ExponentialMatrixEstimator
 
 /**
  * Computes matrix that relates previous and predicted Kalman filter state by computing a precise

@@ -17,12 +17,12 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
-import com.irurueta.android.navigation.inertial.numerical.ExponentialMatrixEstimator
-import com.irurueta.android.navigation.inertial.numerical.integration.IntegrationException
-import com.irurueta.android.navigation.inertial.numerical.integration.IntegratorType
-import com.irurueta.android.navigation.inertial.numerical.integration.MatrixIntegrator
-import com.irurueta.android.navigation.inertial.numerical.integration.MatrixSingleDimensionFunctionEvaluatorListener
-import com.irurueta.android.navigation.inertial.numerical.integration.QuadratureType
+import com.irurueta.numerical.ExponentialMatrixEstimator
+import com.irurueta.numerical.integration.IntegrationException
+import com.irurueta.numerical.integration.IntegratorType
+import com.irurueta.numerical.integration.MatrixIntegrator
+import com.irurueta.numerical.integration.MatrixSingleDimensionFunctionEvaluatorListener
+import com.irurueta.numerical.integration.QuadratureType
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.units.AngularSpeedUnit

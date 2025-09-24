@@ -25,9 +25,9 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscop
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.numerical.SuhQuaternionStepIntegrator
-import com.irurueta.android.navigation.inertial.numerical.TrawnyQuaternionStepIntegrator
-import com.irurueta.android.navigation.inertial.numerical.YuanQuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.SuhQuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.TrawnyQuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.YuanQuaternionStepIntegrator
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
