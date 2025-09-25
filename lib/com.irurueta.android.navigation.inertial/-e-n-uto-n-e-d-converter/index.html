@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>ENUtoNEDConverter</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial/ENUtoNEDConverter///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial</a><span class="delimiter">/</span><span class="current">ENUtoNEDConverter</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>ENUto</span><wbr></wbr><span><span>NEDConverter</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">ENUtoNEDConverter</a></div><p class="paragraph">Converts between ENU (East, North, Up) coordinates system and NED (North, East, Down). It must be noticed that Android uses ENU coordinates system for its sensors. ENU is a RHS (Right Handed System) that matches the coordinate system used by OpenGL tod display 3D scenes. This converter can be used to convert from ENU to NED and conversely from NED to ENU.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1209438548%2FProperties%2F300442814" anchor-label="conversionRotation" id="1209438548%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="conversion-rotation.html"><span>conversion</span><wbr></wbr><span><span>Rotation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1209438548%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="conversion-rotation.html">conversionRotation</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></div><div class="brief "><p class="paragraph">Obtains a rotation to convert from ENU to NED and from NED to ENU coordinate systems.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1528213331%2FProperties%2F300442814" anchor-label="conversionRotationMatrix" id="1528213331%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="conversion-rotation-matrix.html"><span>conversion</span><wbr></wbr><span>Rotation</span><wbr></wbr><span><span>Matrix</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1528213331%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="conversion-rotation-matrix.html">conversionRotationMatrix</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Obtains a matrix to convert from ENU to NED and from NED to ENU coordinate systems.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="942236189%2FProperties%2F300442814" anchor-label="quaternionConversionJacobian" id="942236189%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="quaternion-conversion-jacobian.html"><span>quaternion</span><wbr></wbr><span>Conversion</span><wbr></wbr><span><span>Jacobian</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="942236189%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="quaternion-conversion-jacobian.html">quaternionConversionJacobian</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Obtains jacobian resulting from ENU to NED quaternion conversion.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-1796138297%2FFunctions%2F300442814" anchor-label="conversionRotation" id="-1796138297%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="conversion-rotation.html"><span>conversion</span><wbr></wbr><span><span>Rotation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1796138297%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="conversion-rotation.html"><span class="token function">conversionRotation</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Rotation3D///PointingToDeclaration/">Rotation3D</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Obtains a rotation to convert from ENU to NED and from NED to ENU coordinate systems.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1440104490%2FFunctions%2F300442814" anchor-label="conversionRotationMatrix" id="1440104490%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="conversion-rotation-matrix.html"><span>conversion</span><wbr></wbr><span>Rotation</span><wbr></wbr><span><span>Matrix</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1440104490%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="conversion-rotation-matrix.html"><span class="token function">conversionRotationMatrix</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Obtains a matrix to convert from ENU to NED and from NED to ENU coordinate systems.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1956899173%2FFunctions%2F300442814" anchor-label="convert" id="-1956899173%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="convert.html"><span><span>convert</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1956899173%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="convert.html">T</a><span class="token operator"> : </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/Triad///PointingToDeclaration/">Triad</span><span class="token operator">&lt;</span><a href="convert.html">U</a><span class="token punctuation">, </span><a href="convert.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="convert.html">U</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="convert.html">M</a><span class="token operator"> : </span><span data-unresolved-link="com.irurueta.units/Measurement///PointingToDeclaration/">Measurement</span><span class="token operator">&lt;</span><a href="convert.html">U</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span><a href="convert.html"><span class="token function">convert</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><a href="convert.html">T</a><span class="token punctuation">, </span></span><span class="parameter ">output<span class="token operator">: </span><a href="convert.html">T</a></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="convert.html">T</a><span class="token operator"> : </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/Triad///PointingToDeclaration/">Triad</span><span class="token operator">&lt;</span><a href="convert.html">U</a><span class="token punctuation">, </span><a href="convert.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="convert.html">U</a><span class="token operator"> : </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="convert.html">M</a><span class="token operator"> : </span><span data-unresolved-link="com.irurueta.units/Measurement///PointingToDeclaration/">Measurement</span><span class="token operator">&lt;</span><a href="convert.html">U</a><span class="token operator">&gt;</span><span class="token operator">&gt; </span><a href="convert.html"><span class="token function">convert</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">valueX<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token punctuation">, </span></span><span class="parameter ">valueY<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token punctuation">, </span></span><span class="parameter ">valueZ<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token punctuation">, </span></span><span class="parameter ">output<span class="token operator">: </span><a href="convert.html">T</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Converts from ENU to NED or from NED to ENU.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert.html"><span class="token function">convert</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/EuclideanTransformation3D///PointingToDeclaration/">EuclideanTransformation3D</span><span class="token punctuation">, </span></span><span class="parameter ">output<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/EuclideanTransformation3D///PointingToDeclaration/">EuclideanTransformation3D</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Converts an euclidean 3D transformation from ENU to NED or from NED to ENU, taking into account that: Tenu = Chom * Tned * Chom Tned = Chom * Tenu * Chom</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert.html"><span class="token function">convert</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span><span class="token punctuation">, </span></span><span class="parameter ">output<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Converts a rotation from ENU to NED or from NED to ENU, taking into account that: Renu = CONVERSION_ROTATION * Rned * CONVERSION_ROTATION And also: Rned = CONVERSION_ROTATION * Renu * CONVERSION_ROTATION</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-791005838%2FFunctions%2F300442814" anchor-label="convertAndReturnNew" id="-791005838%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="convert-and-return-new.html"><span>convert</span><wbr></wbr><span>And</span><wbr></wbr><span>Return</span><wbr></wbr><span><span>New</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-791005838%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-and-return-new.html"><span class="token function">convertAndReturnNew</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/EuclideanTransformation3D///PointingToDeclaration/">EuclideanTransformation3D</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/EuclideanTransformation3D///PointingToDeclaration/">EuclideanTransformation3D</span></div><div class="brief "><p class="paragraph">Converts an euclidean 3D transformation from ENU to NED or from NED to ENU, taking into account that: Tenu = Chom * Tned * Chom Tned = Chom * Tenu * Chom</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-and-return-new.html"><span class="token function">convertAndReturnNew</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">value<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></div><div class="brief "><p class="paragraph">Converts a rotation from ENU to NED or from NED to ENU, taking into account that: Renu = CONVERSION_ROTATION * Rned * CONVERSION_ROTATION And also: Rned = CONVERSION_ROTATION * Renu * CONVERSION_ROTATION</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-and-return-new.html"><span class="token function">convertAndReturnNew</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span></div><div class="brief "><p class="paragraph">Converts provided acceleration triad from ENU to NED or from NED to ENU.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-and-return-new.html"><span class="token function">convertAndReturnNew</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span></div><div class="brief "><p class="paragraph">Converts provided angular speed triad from ENU to NED or from NED to ENU.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-and-return-new.html"><span class="token function">convertAndReturnNew</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></div><div class="brief "><p class="paragraph">Converts provided magnetic flux density triad from ENU to NED or from NED to ENU.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-24394857%2FFunctions%2F300442814" anchor-label="convertPoint" id="-24394857%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="convert-point.html"><span>convert</span><wbr></wbr><span><span>Point</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-24394857%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-point.html"><span class="token function">convertPoint</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Point3D///PointingToDeclaration/">Point3D</span><span class="token punctuation">, </span></span><span class="parameter ">output<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Point3D///PointingToDeclaration/">Point3D</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-point.html"><span class="token function">convertPoint</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double-array/index.html">DoubleArray</a><span class="token punctuation">, </span></span><span class="parameter ">output<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double-array/index.html">DoubleArray</a></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-point.html"><span class="token function">convertPoint</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">valueX<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token punctuation">, </span></span><span class="parameter ">valueY<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token punctuation">, </span></span><span class="parameter ">valueZ<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token punctuation">, </span></span><span class="parameter ">output<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double-array/index.html">DoubleArray</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-876043400%2FFunctions%2F300442814" anchor-label="convertPointAndReturnNew" id="-876043400%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="convert-point-and-return-new.html"><span>convert</span><wbr></wbr><span>Point</span><wbr></wbr><span>And</span><wbr></wbr><span>Return</span><wbr></wbr><span><span>New</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-876043400%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-point-and-return-new.html"><span class="token function">convertPointAndReturnNew</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Point3D///PointingToDeclaration/">Point3D</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/InhomogeneousPoint3D///PointingToDeclaration/">InhomogeneousPoint3D</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="convert-point-and-return-new.html"><span class="token function">convertPointAndReturnNew</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">input<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double-array/index.html">DoubleArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double-array/index.html">DoubleArray</a></div><div class="brief "><p class="paragraph">Converts 3D inhomogeneous point from ENU to NED or from NED to ENU.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="966008608%2FFunctions%2F300442814" anchor-label="quaternionConversionJacobian" id="966008608%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="quaternion-conversion-jacobian.html"><span>quaternion</span><wbr></wbr><span>Conversion</span><wbr></wbr><span><span>Jacobian</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="966008608%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="quaternion-conversion-jacobian.html"><span class="token function">quaternionConversionJacobian</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Computes jacobian resulting from ENU to NED quaternion conversion.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

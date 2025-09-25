@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>FusedRelativePoseProcessor</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.processors.pose/FusedRelativePoseProcessor///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.processors.pose</a><span class="delimiter">/</span><span class="current">FusedRelativePoseProcessor</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Fused</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">FusedRelativePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialSpeed<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a><span class="token operator"> = </span>SpeedTriad()<span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="../-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../-base-fused-relative-pose-processor/index.html">BaseFusedRelativePoseProcessor</a><span class="token operator">&lt;</span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><p class="paragraph">Estimates relative pose from an unknown location. This class estimates device attitude by fusing gravity and gyroscope measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-1407638998%2FConstructors%2F300442814" anchor-label="FusedRelativePoseProcessor" id="-1407638998%2FConstructors%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-fused-relative-pose-processor.html"><span>Fused</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1407638998%2FConstructors%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialSpeed<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a><span class="token operator"> = </span>SpeedTriad()<span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="../-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1645520830%2FProperties%2F300442814" anchor-label="adjustGravityNorm" id="1645520830%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/adjust-gravity-norm.html"><span>adjust</span><wbr></wbr><span>Gravity</span><wbr></wbr><span><span>Norm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1645520830%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/adjust-gravity-norm.html">adjustGravityNorm</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether gravity norm must be adjusted to either Earth standard norm, or norm at provided location. If no location is provided, this should only be enabled when device is close to sea level.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1948327179%2FProperties%2F300442814" anchor-label="attitudeIndirectInterpolationWeight" id="-1948327179%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/attitude-indirect-interpolation-weight.html"><span>attitude</span><wbr></wbr><span>Indirect</span><wbr></wbr><span>Interpolation</span><wbr></wbr><span><span>Weight</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1948327179%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/attitude-indirect-interpolation-weight.html">attitudeIndirectInterpolationWeight</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Factor to take into account when interpolation value is computed and <a href="../-base-fused-relative-pose-processor/use-indirect-attitude-interpolation.html">useIndirectAttitudeInterpolation</a> is enabled to determine actual interpolation value based on current relative attitude rotation velocity.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1981788906%2FProperties%2F300442814" anchor-label="attitudeInterpolationValue" id="1981788906%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/attitude-interpolation-value.html"><span>attitude</span><wbr></wbr><span>Interpolation</span><wbr></wbr><span><span>Value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1981788906%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/attitude-interpolation-value.html">attitudeInterpolationValue</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Interpolation value to be used to combine both leveling and relative attitudes. Must be between 0.0 and 1.0 (both included). The closer to 0.0 this value is, the more resemblance the result will have to a pure leveling (which feels more jerky). On the contrary, the closer to 1.0 this value is, the more resemblance the result will have to a pure non-leveled relative attitude (which feels softer but might have arbitrary roll and pitch Euler angles).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1002400457%2FProperties%2F300442814" anchor-label="attitudeOutlierPanicThreshold" id="-1002400457%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/attitude-outlier-panic-threshold.html"><span>attitude</span><wbr></wbr><span>Outlier</span><wbr></wbr><span>Panic</span><wbr></wbr><span><span>Threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1002400457%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/attitude-outlier-panic-threshold.html">attitudeOutlierPanicThreshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Threshold to determine that geomagnetic attitude has largely diverged and if situation is not reverted soon, attitude will be reset to geomagnetic one.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-282420668%2FProperties%2F300442814" anchor-label="attitudeOutlierThreshold" id="-282420668%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/attitude-outlier-threshold.html"><span>attitude</span><wbr></wbr><span>Outlier</span><wbr></wbr><span><span>Threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-282420668%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/attitude-outlier-threshold.html">attitudeOutlierThreshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Threshold to determine that current geomagnetic attitude appears to be an outlier respect to estimated fused attitude. When geomagnetic attitude and fused attitudes diverge, fusion is not performed, and instead only gyroscope relative attitude is used for fusion estimation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-220830435%2FProperties%2F300442814" anchor-label="attitudePanicCounterThreshold" id="-220830435%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/attitude-panic-counter-threshold.html"><span>attitude</span><wbr></wbr><span>Panic</span><wbr></wbr><span>Counter</span><wbr></wbr><span><span>Threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-220830435%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/attitude-panic-counter-threshold.html">attitudePanicCounterThreshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Threshold to determine when fused attitude has largely diverged for a given number of samples and must be reset.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-373037136%2FProperties%2F300442814" anchor-label="gx" id="-373037136%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/gx.html"><span><span>gx</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-373037136%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-fused-relative-pose-processor/gx.html">gx</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">X-coordinates of last sensed gravity component of specific force expressed in NED coordinates and in meters per squared second (m/s^2).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-342017329%2FProperties%2F300442814" anchor-label="gy" id="-342017329%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/gy.html"><span><span>gy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-342017329%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-fused-relative-pose-processor/gy.html">gy</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Y-coordinate of last sensed gravity component of specific force expressed in NED coordinates and in meters per squared second (m/s^2).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-310997522%2FProperties%2F300442814" anchor-label="gz" id="-310997522%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/gz.html"><span><span>gz</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-310997522%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-fused-relative-pose-processor/gz.html">gz</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Z-coordinate of last sensed gravity component of specific force expressed in NED coordinates and in meters per squared second (m/s^2).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1834336575%2FProperties%2F300442814" anchor-label="initialSpeed" id="1834336575%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-relative-pose-processor/initial-speed.html"><span>initial</span><wbr></wbr><span><span>Speed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1834336575%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-relative-pose-processor/initial-speed.html">initialSpeed</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a></div><div class="brief "><p class="paragraph">initial device speed in body coordinates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-415345044%2FProperties%2F300442814" anchor-label="location" id="-415345044%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/location.html"><span><span>location</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-415345044%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/location.html">location</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets or sets device location</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1992265416%2FProperties%2F300442814" anchor-label="poseTransformation" id="1992265416%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-relative-pose-processor/pose-transformation.html"><span>pose</span><wbr></wbr><span><span>Transformation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1992265416%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-relative-pose-processor/pose-transformation.html">poseTransformation</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/EuclideanTransformation3D///PointingToDeclaration/">EuclideanTransformation3D</span></div><div class="brief "><p class="paragraph">Contains current pose respect to the start of this estimator.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1606578510%2FProperties%2F300442814" anchor-label="processorListener" id="-1606578510%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-relative-pose-processor/processor-listener.html"><span>processor</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1606578510%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-relative-pose-processor/processor-listener.html">processorListener</a><span class="token operator">: </span><a href="../-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify new poses.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-806369845%2FProperties%2F300442814" anchor-label="timeIntervalSeconds" id="-806369845%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-relative-pose-processor/time-interval-seconds.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Seconds</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-806369845%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-relative-pose-processor/time-interval-seconds.html">timeIntervalSeconds</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Time interval expressed in seconds between consecutive gyroscope measurements</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1791564968%2FProperties%2F300442814" anchor-label="useAccurateLevelingProcessor" id="1791564968%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/use-accurate-leveling-processor.html"><span>use</span><wbr></wbr><span>Accurate</span><wbr></wbr><span>Leveling</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1791564968%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-fused-relative-pose-processor/use-accurate-leveling-processor.html">useAccurateLevelingProcessor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether accurate leveling is used or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1356576079%2FProperties%2F300442814" anchor-label="useAccurateRelativeGyroscopeAttitudeProcessor" id="1356576079%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/use-accurate-relative-gyroscope-attitude-processor.html"><span>use</span><wbr></wbr><span>Accurate</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1356576079%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/use-accurate-relative-gyroscope-attitude-processor.html">useAccurateRelativeGyroscopeAttitudeProcessor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether accurate non-leveled relative attitude processor must be used or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1771732996%2FProperties%2F300442814" anchor-label="useIndirectAttitudeInterpolation" id="-1771732996%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/use-indirect-attitude-interpolation.html"><span>use</span><wbr></wbr><span>Indirect</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Interpolation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1771732996%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-fused-relative-pose-processor/use-indirect-attitude-interpolation.html">useIndirectAttitudeInterpolation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether fusion between leveling and relative attitudes occurs based on changing interpolation value that depends on actual relative attitude rotation velocity.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-1185474593%2FFunctions%2F300442814" anchor-label="getGravity" id="-1185474593%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/get-gravity.html"><span>get</span><wbr></wbr><span><span>Gravity</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1185474593%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-base-fused-relative-pose-processor/get-gravity.html"><span class="token function">getGravity</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Updates provided triad to contain gravity component of specific force expressed in NED coordinates and in meters per squared second (m/s^2).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1403288405%2FFunctions%2F300442814" anchor-label="process" id="1403288405%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="process.html"><span><span>process</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1403288405%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="process.html"><span class="token function">process</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">syncedMeasurement<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gravity-and-gyroscope-synced-sensor-measurement/index.html">AccelerometerGravityAndGyroscopeSyncedSensorMeasurement</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Processes provided synced measurement to estimate current attitude and position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2032662282%2FFunctions%2F300442814" anchor-label="reset" id="2032662282%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-fused-relative-pose-processor/reset.html"><span><span>reset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2032662282%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-base-fused-relative-pose-processor/reset.html"><span class="token function">reset</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Resets internal parameters.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

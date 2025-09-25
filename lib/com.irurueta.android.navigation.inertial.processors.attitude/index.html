@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>com.irurueta.android.navigation.inertial.processors.attitude</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.processors.attitude////PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../index.html">lib</a><span class="delimiter">/</span><span class="current">com.irurueta.android.navigation.inertial.processors.attitude</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-116127868%2FClasslikes%2F300442814" anchor-label="AccelerometerDoubleFusedGeomagneticAttitudeProcessor" id="-116127868%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-double-fused-geomagnetic-attitude-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-116127868%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-double-fused-geomagnetic-attitude-processor/index.html">AccelerometerDoubleFusedGeomagneticAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-double-fused-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseDoubleFusedGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-double-fused-geomagnetic-attitude-processor/index.html">BaseDoubleFusedGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute attitude by fusing absolute leveled geomagnetic attitude and leveled relative attitude.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-370915117%2FClasslikes%2F300442814" anchor-label="AccelerometerFusedGeomagneticAttitudeProcessor" id="-370915117%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-fused-geomagnetic-attitude-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-370915117%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-fused-geomagnetic-attitude-processor/index.html">AccelerometerFusedGeomagneticAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-fused-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseFusedGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-geomagnetic-attitude-processor/index.html">BaseFusedGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute attitude by fusing absolute leveled attitude and relative attitude.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-772076666%2FClasslikes%2F300442814" anchor-label="AccelerometerGeomagneticAttitudeProcessor" id="-772076666%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-geomagnetic-attitude-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-772076666%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-geomagnetic-attitude-processor/index.html">AccelerometerGeomagneticAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-geomagnetic-attitude-processor/index.html">BaseGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates leveled absolute attitude using accelerometer and magnetometer sensors. Roll and pitch Euler angles are leveled using accelerometer sensor. Yaw angle is obtained from magnetometer once the leveling is estimated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1663294987%2FClasslikes%2F300442814" anchor-label="AccelerometerGravityProcessor" id="-1663294987%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-gravity-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Gravity</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1663294987%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-gravity-processor/index.html">AccelerometerGravityProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>averagingFilter<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a><span class="token operator"> = </span>LowPassAveragingFilter()<span class="token punctuation">, </span></span><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">adjustGravityNorm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-gravity-processor/-on-processed-listener/index.html">BaseGravityProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-gravity-processor/index.html">BaseGravityProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Collects accelerometer measurements based on android coordinates system (ENU) and uses a low-pass filter to assume it is the gravity component of specific force and converts it to NED coordinates system.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1979684416%2FClasslikes%2F300442814" anchor-label="AccelerometerLeveledRelativeAttitudeProcessor" id="-1979684416%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-leveled-relative-attitude-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Leveled</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1979684416%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-leveled-relative-attitude-processor/index.html">AccelerometerLeveledRelativeAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-leveled-relative-attitude-processor/-on-processed-listener/index.html">BaseLeveledRelativeAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-and-gyroscope-synced-sensor-measurement/index.html">AccelerometerAndGyroscopeSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-leveled-relative-attitude-processor/index.html">BaseLeveledRelativeAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-and-gyroscope-synced-sensor-measurement/index.html">AccelerometerAndGyroscopeSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates leveled relative attitude by fusing leveling attitude obtained from accelerometer sensor, and relative attitude obtained from gyroscope sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-874139992%2FClasslikes%2F300442814" anchor-label="AccurateLevelingProcessor" id="-874139992%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accurate-leveling-processor/index.html"><span>Accurate</span><wbr></wbr><span>Leveling</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-874139992%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accurate-leveling-processor/index.html">AccurateLevelingProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-leveling-processor/-on-processed-listener/index.html">BaseLevelingProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-leveling-processor/index.html">BaseLevelingProcessor</a></div><div class="brief "><p class="paragraph">Estimates leveling of device (roll and pitch angle) by using estimated gravity vector. This processor does not estimate attitude yaw angle, as either a magnetometer or gyroscope would be needed. This estimator is more accurate than <a href="../com.irurueta.android.navigation.inertial.estimators.attitude/-leveling-estimator/index.html">LevelingEstimator</a> since it takes into account device location (which requires location permission), and at the expense of higher CPU load.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="918950327%2FClasslikes%2F300442814" anchor-label="AccurateRelativeGyroscopeAttitudeProcessor" id="918950327%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accurate-relative-gyroscope-attitude-processor/index.html"><span>Accurate</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="918950327%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accurate-relative-gyroscope-attitude-processor/index.html">AccurateRelativeGyroscopeAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-relative-gyroscope-attitude-processor/-on-processed-listener/index.html">BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-relative-gyroscope-attitude-processor/index.html">BaseRelativeGyroscopeAttitudeProcessor</a></div><div class="brief "><p class="paragraph">Estimates relative attitude of device respect to an arbitrary initial attitude using gyroscope measurements only. This processor uses Runge-Kutta integration to obtain greater accuracy than <a href="-relative-gyroscope-attitude-processor/index.html">RelativeGyroscopeAttitudeProcessor</a> at the expense of additional cpu usage.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1839512860%2FClasslikes%2F300442814" anchor-label="ApproximatedPhiMatrixEstimator" id="1839512860%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-approximated-phi-matrix-estimator/index.html"><span>Approximated</span><wbr></wbr><span>Phi</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1839512860%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-approximated-phi-matrix-estimator/index.html">ApproximatedPhiMatrixEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">a<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-phi-matrix-estimator/index.html">PhiMatrixEstimator</a></div><div class="brief "><p class="paragraph">Approximately computes matrix that relates previous and predicted Kalman filter state by assuming short time intervals and approximating the exponential of process equation matrix by the first term of its Taylor expansion series.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-53451861%2FClasslikes%2F300442814" anchor-label="ApproximatedProcessNoiseCovarianceIntegrator" id="-53451861%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-approximated-process-noise-covariance-integrator/index.html"><span>Approximated</span><wbr></wbr><span>Process</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Covariance</span><wbr></wbr><span><span>Integrator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-53451861%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-approximated-process-noise-covariance-integrator/index.html">ApproximatedProcessNoiseCovarianceIntegrator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">q<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">a<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-process-noise-covariance-integrator/index.html">ProcessNoiseCovarianceIntegrator</a></div><div class="brief "><p class="paragraph">Approximately integrates continuous time process noise covariance matrix.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-8912032%2FClasslikes%2F300442814" anchor-label="AttitudeProcessor" id="-8912032%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-attitude-processor/index.html"><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-8912032%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-attitude-processor/index.html">AttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-attitude-processor/-on-processed-listener/index.html">AttitudeProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Processes an absolute or relative attitude obtained by an Android Sensor expressed in ENU coordinates system and converts it to NED coordinates system.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="387064084%2FClasslikes%2F300442814" anchor-label="BaseDoubleFusedGeomagneticAttitudeProcessor" id="387064084%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-double-fused-geomagnetic-attitude-processor/index.html"><span>Base</span><wbr></wbr><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="387064084%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-double-fused-geomagnetic-attitude-processor/index.html">BaseDoubleFusedGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="-base-double-fused-geomagnetic-attitude-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-double-fused-geomagnetic-attitude-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-double-fused-geomagnetic-attitude-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-double-fused-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseDoubleFusedGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="-base-double-fused-geomagnetic-attitude-processor/index.html">M</a><span class="token punctuation">, </span><a href="-base-double-fused-geomagnetic-attitude-processor/index.html">S</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate absolute attitude by fusing absolute leveled geomagnetic attitude and leveled relative attitude.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2137469341%2FClasslikes%2F300442814" anchor-label="BaseFusedGeomagneticAttitudeProcessor" id="-2137469341%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-fused-geomagnetic-attitude-processor/index.html"><span>Base</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2137469341%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-fused-geomagnetic-attitude-processor/index.html">BaseFusedGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="-base-fused-geomagnetic-attitude-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-fused-geomagnetic-attitude-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-fused-geomagnetic-attitude-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-fused-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseFusedGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="-base-fused-geomagnetic-attitude-processor/index.html">M</a><span class="token punctuation">, </span><a href="-base-fused-geomagnetic-attitude-processor/index.html">S</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate absolute attitude by fusing absolute leveled geomagnetic attitude and relative attitude.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2083697674%2FClasslikes%2F300442814" anchor-label="BaseGeomagneticAttitudeProcessor" id="-2083697674%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-geomagnetic-attitude-processor/index.html"><span>Base</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2083697674%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-geomagnetic-attitude-processor/index.html">BaseGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="-base-geomagnetic-attitude-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-geomagnetic-attitude-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-geomagnetic-attitude-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="-base-geomagnetic-attitude-processor/index.html">M</a><span class="token punctuation">, </span><a href="-base-geomagnetic-attitude-processor/index.html">S</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate leveled absolute attitude using accelerometer (or gravity) and magnetometer sensors. Roll and pitch Euler angles are leveled using accelerometer or gravity sensors. Yaw angle is obtained from magnetometer once the leveling is estimated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1798802021%2FClasslikes%2F300442814" anchor-label="BaseGravityProcessor" id="1798802021%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-gravity-processor/index.html"><span>Base</span><wbr></wbr><span>Gravity</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1798802021%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-gravity-processor/index.html">BaseGravityProcessor</a><span class="token operator">&lt;</span><a href="-base-gravity-processor/index.html">T</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-gravity-processor/index.html">T</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>adjustGravityNorm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-gravity-processor/-on-processed-listener/index.html">BaseGravityProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="-base-gravity-processor/index.html">T</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class for a gravity processor. Collects accelerometer or gravity sensor measurements and processed them and converts them to NED coordinates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1898122704%2FClasslikes%2F300442814" anchor-label="BaseLeveledRelativeAttitudeProcessor" id="-1898122704%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-leveled-relative-attitude-processor/index.html"><span>Base</span><wbr></wbr><span>Leveled</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1898122704%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-leveled-relative-attitude-processor/index.html">BaseLeveledRelativeAttitudeProcessor</a><span class="token operator">&lt;</span><a href="-base-leveled-relative-attitude-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-leveled-relative-attitude-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-leveled-relative-attitude-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-leveled-relative-attitude-processor/-on-processed-listener/index.html">BaseLeveledRelativeAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="-base-leveled-relative-attitude-processor/index.html">M</a><span class="token punctuation">, </span><a href="-base-leveled-relative-attitude-processor/index.html">S</a><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate leveled relative attitude by fusing leveling attitude obtained from accelerometer or gravity sensors, and relative attitude obtained from gyroscope sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-295007803%2FClasslikes%2F300442814" anchor-label="BaseLevelingProcessor" id="-295007803%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-leveling-processor/index.html"><span>Base</span><wbr></wbr><span>Leveling</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-295007803%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-leveling-processor/index.html">BaseLevelingProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-leveling-processor/-on-processed-listener/index.html">BaseLevelingProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate leveling of device (roll and pitch angle) by using estimated gravity vector.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-38194118%2FClasslikes%2F300442814" anchor-label="BaseRelativeGyroscopeAttitudeProcessor" id="-38194118%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-relative-gyroscope-attitude-processor/index.html"><span>Base</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-38194118%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-relative-gyroscope-attitude-processor/index.html">BaseRelativeGyroscopeAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-relative-gyroscope-attitude-processor/-on-processed-listener/index.html">BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate relative attitude of device respect to an arbitrary initial attitude using gyroscope measurements only.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="147280971%2FClasslikes%2F300442814" anchor-label="BetterProcessNoiseCovarianceIntegrator" id="147280971%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-better-process-noise-covariance-integrator/index.html"><span>Better</span><wbr></wbr><span>Process</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Covariance</span><wbr></wbr><span><span>Integrator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="147280971%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-better-process-noise-covariance-integrator/index.html">BetterProcessNoiseCovarianceIntegrator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">q<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">a<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-process-noise-covariance-integrator/index.html">ProcessNoiseCovarianceIntegrator</a></div><div class="brief "><p class="paragraph">Better approximation to integrate continuous time process noise covariance matrix.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-922324573%2FClasslikes%2F300442814" anchor-label="DoubleFusedGeomagneticAttitudeProcessor" id="-922324573%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-double-fused-geomagnetic-attitude-processor/index.html"><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-922324573%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-double-fused-geomagnetic-attitude-processor/index.html">DoubleFusedGeomagneticAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-double-fused-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseDoubleFusedGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">GravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-double-fused-geomagnetic-attitude-processor/index.html">BaseDoubleFusedGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">GravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute attitude by fusing absolute leveled geomagnetic attitude and leveled relative attitude.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-832051387%2FClasslikes%2F300442814" anchor-label="ExternalAccelerationCovarianceMatrixEstimationMethod" id="-832051387%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-external-acceleration-covariance-matrix-estimation-method/index.html"><span>External</span><wbr></wbr><span>Acceleration</span><wbr></wbr><span>Covariance</span><wbr></wbr><span>Matrix</span><wbr></wbr><span>Estimation</span><wbr></wbr><span><span>Method</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-832051387%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-external-acceleration-covariance-matrix-estimation-method/index.html">ExternalAccelerationCovarianceMatrixEstimationMethod</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-external-acceleration-covariance-matrix-estimation-method/index.html">ExternalAccelerationCovarianceMatrixEstimationMethod</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Method to determine external acceleration covariance matrix.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="981367889%2FClasslikes%2F300442814" anchor-label="ExternalAccelerationCovarianceMatrixEstimator" id="981367889%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-external-acceleration-covariance-matrix-estimator/index.html"><span>External</span><wbr></wbr><span>Acceleration</span><wbr></wbr><span>Covariance</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="981367889%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-external-acceleration-covariance-matrix-estimator/index.html">ExternalAccelerationCovarianceMatrixEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Estimates external acceleration covariance matrix.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="301758002%2FClasslikes%2F300442814" anchor-label="FusedGeomagneticAttitudeProcessor" id="301758002%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-fused-geomagnetic-attitude-processor/index.html"><span>Fused</span><wbr></wbr><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="301758002%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-fused-geomagnetic-attitude-processor/index.html">FusedGeomagneticAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-fused-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseFusedGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">GravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-geomagnetic-attitude-processor/index.html">BaseFusedGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">GravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute attitude by fusing absolute leveled attitude and relative attitude.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1384496839%2FClasslikes%2F300442814" anchor-label="GeomagneticAttitudeProcessor" id="1384496839%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-geomagnetic-attitude-processor/index.html"><span>Geomagnetic</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1384496839%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-geomagnetic-attitude-processor/index.html">GeomagneticAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-geomagnetic-attitude-processor/-on-processed-listener/index.html">BaseGeomagneticAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-and-magnetometer-synced-sensor-measurement/index.html">GravityAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-geomagnetic-attitude-processor/index.html">BaseGeomagneticAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-and-magnetometer-synced-sensor-measurement/index.html">GravityAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates leveled absolute attitude using gravity and magnetometer sensors. Roll and pitch Euler angles are leveled using gravity sensor. Yaw angle is obtained from magnetometer once the leveling is estimated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="561049270%2FClasslikes%2F300442814" anchor-label="GravityProcessor" id="561049270%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-gravity-processor/index.html"><span>Gravity</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="561049270%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-gravity-processor/index.html">GravityProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">adjustGravityNorm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-gravity-processor/-on-processed-listener/index.html">BaseGravityProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-gravity-processor/index.html">BaseGravityProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Collects gravity measurements based on android coordinates system (ENU), and converts them to NED coordinates system.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="798600923%2FClasslikes%2F300442814" anchor-label="KalmanAbsoluteAttitudeProcessor" id="798600923%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-absolute-attitude-processor/index.html"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="798600923%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-absolute-attitude-processor/index.html">KalmanAbsoluteAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeQuaternionCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeAccelerometerCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeRotationAxisCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>magnetometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>quaternionStepIntegratorType<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.gyroscope/QuaternionStepIntegratorType///PointingToDeclaration/">QuaternionStepIntegratorType</span><span class="token operator"> = </span>QuaternionStepIntegrator.DEFAULT_TYPE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gravityNorm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>EARTH_GRAVITY<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>freeFallThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_FREE_FALL_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>symmetricThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>SYMMETRIC_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor/-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>numericalInstabilitiesListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor/-on-numerical-instabilities-detected-listener/index.html">KalmanAbsoluteAttitudeProcessor.OnNumericalInstabilitiesDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Estimates absolute attitude using a Kalman filter. This is based on Android native implementation: https://android.googlesource.com/platform/frameworks/native/+/refs/heads/master/services/sensorservice/Fusion.cpp And also based on: https://www.mdpi.com/1424-8220/20/23/6731</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1184386773%2FClasslikes%2F300442814" anchor-label="KalmanAbsoluteAttitudeProcessor2" id="1184386773%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-absolute-attitude-processor2/index.html"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor2</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1184386773%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-absolute-attitude-processor2/index.html">KalmanAbsoluteAttitudeProcessor2</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">averagingFilter<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a><span class="token operator"> = </span>LowPassAveragingFilter()<span class="token punctuation">, </span></span><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">adjustGravityNorm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeQuaternionCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeAccelerometerCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeRotationAxisCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>magnetometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>quaternionStepIntegratorType<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.gyroscope/QuaternionStepIntegratorType///PointingToDeclaration/">QuaternionStepIntegratorType</span><span class="token operator"> = </span>QuaternionStepIntegrator.DEFAULT_TYPE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>freeFallThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_FREE_FALL_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>symmetricThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>SYMMETRIC_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor2/-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor2.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>numericalInstabilitiesListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor2/-on-numerical-instabilities-detected-listener/index.html">KalmanAbsoluteAttitudeProcessor2.OnNumericalInstabilitiesDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Estimates absolute attitude using a Kalman filter. This is based on Android native implementation: https://android.googlesource.com/platform/frameworks/native/+/refs/heads/master/services/sensorservice/Fusion.cpp And also based on: https://www.mdpi.com/1424-8220/20/23/6731</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1215406580%2FClasslikes%2F300442814" anchor-label="KalmanAbsoluteAttitudeProcessor3" id="1215406580%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-absolute-attitude-processor3/index.html"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor3</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1215406580%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-absolute-attitude-processor3/index.html">KalmanAbsoluteAttitudeProcessor3</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>currentDate<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>currentTemperature<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_TEMPERATURE_CELSIUS<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEcefAttitudeCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEcefAccelerationCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeNedRotationAxisCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter ">magnetometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter ">temperatureStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_TEMPERATURE_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegratorType<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.gyroscope/QuaternionStepIntegratorType///PointingToDeclaration/">QuaternionStepIntegratorType</span><span class="token operator"> = </span>QuaternionStepIntegrator.DEFAULT_TYPE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>freeFallThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_FREE_FALL_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>symmetricThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>SYMMETRIC_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>processorListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor3/-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor3.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>numericalInstabilitiesListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor3/-on-numerical-instabilities-detected-listener/index.html">KalmanAbsoluteAttitudeProcessor3.OnNumericalInstabilitiesDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Class.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1246426387%2FClasslikes%2F300442814" anchor-label="KalmanAbsoluteAttitudeProcessor4" id="1246426387%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-absolute-attitude-processor4/index.html"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor4</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1246426387%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-absolute-attitude-processor4/index.html">KalmanAbsoluteAttitudeProcessor4</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>currentDate<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeExternalAcceleration<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>fixMagnetometerMeasurements<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">phiMatrixMethod<span class="token operator">: </span><a href="-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator"> = </span>PhiMatrixMethod.APPROXIMATED<span class="token punctuation">, </span></span><span class="parameter ">processNoiseCovarianceMethod<span class="token operator">: </span><a href="-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator"> = </span>ProcessNoiseCovarianceMethod.BETTER<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegrator<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor4/-quaternion-step-integrator-type/index.html">KalmanAbsoluteAttitudeProcessor4.QuaternionStepIntegratorType</a><span class="token operator"> = </span>QuaternionStepIntegratorType.RUNGE_KUTTA<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>magnetometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>processorListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor4/-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor4.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Estimates absolute attitude using a Kalman filter. This is based on: https://github.com/liviobisogni/quaternion-kalman-filter And: Young Soo Suh. Orientation estimation using a quaternion-based indirect Kalman filter with adaptive estimation of external acceleration.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1277446194%2FClasslikes%2F300442814" anchor-label="KalmanAbsoluteAttitudeProcessor5" id="1277446194%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-absolute-attitude-processor5/index.html"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor5</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1277446194%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-absolute-attitude-processor5/index.html">KalmanAbsoluteAttitudeProcessor5</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>currentDate<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeExternalAcceleration<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">phiMatrixMethod<span class="token operator">: </span><a href="-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator"> = </span>PhiMatrixMethod.APPROXIMATED<span class="token punctuation">, </span></span><span class="parameter ">processNoiseCovarianceMethod<span class="token operator">: </span><a href="-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator"> = </span>ProcessNoiseCovarianceMethod.BETTER<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegrator<span class="token operator">: </span><a href="-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a><span class="token operator"> = </span>QuaternionStepIntegratorType.SUH<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>magnetometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter ">externalAccelerationCovarianceMatrixEstimationMethod<span class="token operator">: </span><a href="-external-acceleration-covariance-matrix-estimation-method/index.html">ExternalAccelerationCovarianceMatrixEstimationMethod</a><span class="token operator"> = </span>DEFAULT_EXTERNAL_ACCELERATION_COVARIANCE_MATRIX_ESTIMATION_METHOD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>processorListener<span class="token operator">: </span><a href="-kalman-absolute-attitude-processor5/-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor5.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Estimates absolute attitude using a Kalman filter. This is based on: https://github.com/liviobisogni/quaternion-kalman-filter And: Young Soo Suh. Orientation estimation using a quaternion-based indirect Kalman filter with adaptive estimation of external acceleration.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1308466001%2FClasslikes%2F300442814" anchor-label="KalmanAbsoluteAttitudeProcessor6" id="1308466001%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-absolute-attitude-processor6/index.html"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor6</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1308466001%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-absolute-attitude-processor6/index.html">KalmanAbsoluteAttitudeProcessor6</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="546045880%2FClasslikes%2F300442814" anchor-label="KalmanAccelerometerCorrector" id="546045880%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-accelerometer-corrector/index.html"><span>Kalman</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span><span>Corrector</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="546045880%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-accelerometer-corrector/index.html">KalmanAccelerometerCorrector</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>externalAccelerationCovarianceMatrixEstimationMethod<span class="token operator">: </span><a href="-external-acceleration-covariance-matrix-estimation-method/index.html">ExternalAccelerationCovarianceMatrixEstimationMethod</a><span class="token operator"> = </span>DEFAULT_EXTERNAL_ACCELERATION_COVARIANCE_MATRIX_ESTIMATION_METHOD</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Corrects Kalman state from accelerometer measurement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1857781857%2FClasslikes%2F300442814" anchor-label="KalmanGyroscopePredictor" id="-1857781857%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-gyroscope-predictor/index.html"><span>Kalman</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span><span>Predictor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1857781857%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-gyroscope-predictor/index.html">KalmanGyroscopePredictor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">phiMatrixMethod<span class="token operator">: </span><a href="-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator"> = </span>PhiMatrixMethod.APPROXIMATED<span class="token punctuation">, </span></span><span class="parameter ">processNoiseCovarianceMethod<span class="token operator">: </span><a href="-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator"> = </span>ProcessNoiseCovarianceMethod.BETTER<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegratorType<span class="token operator">: </span><a href="-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a><span class="token operator"> = </span>QuaternionStepIntegratorType.RUNGE_KUTTA<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Predicts next Kalman filter state based on current gyroscope measurement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-383570461%2FClasslikes%2F300442814" anchor-label="KalmanMagnetometerCorrector" id="-383570461%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-magnetometer-corrector/index.html"><span>Kalman</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span><span>Corrector</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-383570461%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-magnetometer-corrector/index.html">KalmanMagnetometerCorrector</a></div><div class="brief "><p class="paragraph">Corrects Kalman state from magnetometer measurement.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1263411696%2FClasslikes%2F300442814" anchor-label="KalmanRelativeAttitudeProcessor" id="1263411696%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-relative-attitude-processor/index.html"><span>Kalman</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1263411696%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-relative-attitude-processor/index.html">KalmanRelativeAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeQuaternionCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeAccelerometerCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeRotationAxisCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>quaternionStepIntegratorType<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.gyroscope/QuaternionStepIntegratorType///PointingToDeclaration/">QuaternionStepIntegratorType</span><span class="token operator"> = </span>QuaternionStepIntegrator.DEFAULT_TYPE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gravityNorm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>EARTH_GRAVITY<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>freeFallThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_FREE_FALL_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>symmetricThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>SYMMETRIC_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-kalman-relative-attitude-processor/-on-processed-listener/index.html">KalmanRelativeAttitudeProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>numericalInstabilitiesListener<span class="token operator">: </span><a href="-kalman-relative-attitude-processor/-on-numerical-instabilities-detected-listener/index.html">KalmanRelativeAttitudeProcessor.OnNumericalInstabilitiesDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Estimates relative attitude using a Kalman filter. This is based on Android native implementation: https://android.googlesource.com/platform/frameworks/native/+/refs/heads/master/services/sensorservice/Fusion.cpp And also based on: https://www.mdpi.com/1424-8220/20/23/6731</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1586348448%2FClasslikes%2F300442814" anchor-label="KalmanRelativeAttitudeProcessor2" id="-1586348448%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-relative-attitude-processor2/index.html"><span>Kalman</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor2</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1586348448%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-kalman-relative-attitude-processor2/index.html">KalmanRelativeAttitudeProcessor2</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>averagingFilter<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a><span class="token operator"> = </span>LowPassAveragingFilter()<span class="token punctuation">, </span></span><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">adjustGravityNorm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeQuaternionCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeAccelerometerCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>computeRotationAxisCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>quaternionStepIntegratorType<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.gyroscope/QuaternionStepIntegratorType///PointingToDeclaration/">QuaternionStepIntegratorType</span><span class="token operator"> = </span>QuaternionStepIntegrator.DEFAULT_TYPE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>freeFallThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_FREE_FALL_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>symmetricThreshold<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>SYMMETRIC_THRESHOLD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-kalman-relative-attitude-processor2/-on-processed-listener/index.html">KalmanRelativeAttitudeProcessor2.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>numericalInstabilitiesListener<span class="token operator">: </span><a href="-kalman-relative-attitude-processor2/-on-numerical-instabilities-detected-listener/index.html">KalmanRelativeAttitudeProcessor2.OnNumericalInstabilitiesDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Estimates relative attitude using a Kalman filter. This is based on Android native implementation: https://android.googlesource.com/platform/frameworks/native/+/refs/heads/master/services/sensorservice/Fusion.cpp And also based on: https://www.mdpi.com/1424-8220/20/23/6731</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1819437951%2FClasslikes%2F300442814" anchor-label="LeveledRelativeAttitudeProcessor" id="-1819437951%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-leveled-relative-attitude-processor/index.html"><span>Leveled</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1819437951%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-leveled-relative-attitude-processor/index.html">LeveledRelativeAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-leveled-relative-attitude-processor/-on-processed-listener/index.html">BaseLeveledRelativeAttitudeProcessor.OnProcessedListener</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-and-gyroscope-synced-sensor-measurement/index.html">GravityAndGyroscopeSyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-leveled-relative-attitude-processor/index.html">BaseLeveledRelativeAttitudeProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-and-gyroscope-synced-sensor-measurement/index.html">GravityAndGyroscopeSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates leveled relative attitude by fusing leveling attitude obtained from gravity sensor, and relative attitude obtained from gyroscope sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-10637420%2FClasslikes%2F300442814" anchor-label="LevelingProcessor" id="-10637420%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-leveling-processor/index.html"><span>Leveling</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-10637420%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-leveling-processor/index.html">LevelingProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-leveling-processor/-on-processed-listener/index.html">BaseLevelingProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-leveling-processor/index.html">BaseLevelingProcessor</a></div><div class="brief "><p class="paragraph">Estimates leveling of device (roll and pitch angle) by using estimated gravity vector. This processor does not estimate attitude yaw angle, as either a magnetometer or gyroscope would be needed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-897301364%2FClasslikes%2F300442814" anchor-label="PhiMatrixEstimator" id="-897301364%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-phi-matrix-estimator/index.html"><span>Phi</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-897301364%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-phi-matrix-estimator/index.html">PhiMatrixEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">a<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Computes matrix that relates previous and predicted Kalman filter state.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-692888971%2FClasslikes%2F300442814" anchor-label="PhiMatrixMethod" id="-692888971%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-phi-matrix-method/index.html"><span>Phi</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Method</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-692888971%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-phi-matrix-method/index.html">PhiMatrixMethod</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Supported methods to estimate phi matrix relating previous and predicted Kalman filter state.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2052716609%2FClasslikes%2F300442814" anchor-label="PrecisePhiMatrixEstimator" id="-2052716609%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-precise-phi-matrix-estimator/index.html"><span>Precise</span><wbr></wbr><span>Phi</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2052716609%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-precise-phi-matrix-estimator/index.html">PrecisePhiMatrixEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">a<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-phi-matrix-estimator/index.html">PhiMatrixEstimator</a></div><div class="brief "><p class="paragraph">Computes matrix that relates previous and predicted Kalman filter state by computing a precise estimation of process equation matrix exponential.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="578606350%2FClasslikes%2F300442814" anchor-label="PreciseProcessNoiseCovarianceIntegrator" id="578606350%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-precise-process-noise-covariance-integrator/index.html"><span>Precise</span><wbr></wbr><span>Process</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Covariance</span><wbr></wbr><span><span>Integrator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="578606350%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-precise-process-noise-covariance-integrator/index.html">PreciseProcessNoiseCovarianceIntegrator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">q<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">a<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>integratorType<span class="token operator">: </span><span data-unresolved-link="com.irurueta.numerical.integration/IntegratorType///PointingToDeclaration/">IntegratorType</span><span class="token operator"> = </span>MatrixIntegrator.DEFAULT_INTEGRATOR_TYPE<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>quadratureType<span class="token operator">: </span><span data-unresolved-link="com.irurueta.numerical.integration/QuadratureType///PointingToDeclaration/">QuadratureType</span><span class="token operator"> = </span>MatrixIntegrator.DEFAULT_QUADRATURE_TYPE</span></span><span class="token punctuation">)</span> : <a href="-process-noise-covariance-integrator/index.html">ProcessNoiseCovarianceIntegrator</a></div><div class="brief "><p class="paragraph">Integrates continuous time process noise covariance matrix.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-327801061%2FClasslikes%2F300442814" anchor-label="ProcessNoiseCovarianceIntegrator" id="-327801061%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-process-noise-covariance-integrator/index.html"><span>Process</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Covariance</span><wbr></wbr><span><span>Integrator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-327801061%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-process-noise-covariance-integrator/index.html">ProcessNoiseCovarianceIntegrator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">q<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">a<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Integrates continuous time process noise covariance matrix.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="178314385%2FClasslikes%2F300442814" anchor-label="ProcessNoiseCovarianceMethod" id="178314385%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-process-noise-covariance-method/index.html"><span>Process</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Covariance</span><wbr></wbr><span><span>Method</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="178314385%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Supported methods to estimate process noise covariance matrix</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1309542111%2FClasslikes%2F300442814" anchor-label="QuaternionStepIntegratorType" id="1309542111%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-quaternion-step-integrator-type/index.html"><span>Quaternion</span><wbr></wbr><span>Step</span><wbr></wbr><span>Integrator</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1309542111%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Indicates type of quaternion integrator step. Different types exist with different levels of accuracy and computation accuracy.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1731557813%2FClasslikes%2F300442814" anchor-label="RelativeGyroscopeAttitudeProcessor" id="-1731557813%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-relative-gyroscope-attitude-processor/index.html"><span>Relative</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1731557813%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-relative-gyroscope-attitude-processor/index.html">RelativeGyroscopeAttitudeProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-relative-gyroscope-attitude-processor/-on-processed-listener/index.html">BaseRelativeGyroscopeAttitudeProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-relative-gyroscope-attitude-processor/index.html">BaseRelativeGyroscopeAttitudeProcessor</a></div><div class="brief "><p class="paragraph">Estimates relative attitude of device respect to an arbitrary initial attitude using gyroscope measurements only.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1235760338%2FClasslikes%2F300442814" anchor-label="SabatiniExternalAccelerationCovarianceMatrixEstimator" id="-1235760338%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-sabatini-external-acceleration-covariance-matrix-estimator/index.html"><span>Sabatini</span><wbr></wbr><span>External</span><wbr></wbr><span>Acceleration</span><wbr></wbr><span>Covariance</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1235760338%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-sabatini-external-acceleration-covariance-matrix-estimator/index.html">SabatiniExternalAccelerationCovarianceMatrixEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION</span></span><span class="token punctuation">)</span> : <a href="-external-acceleration-covariance-matrix-estimator/index.html">ExternalAccelerationCovarianceMatrixEstimator</a></div><div class="brief "><p class="paragraph">Estimates external acceleration covariance matrix using Sabatini's method.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1701759639%2FClasslikes%2F300442814" anchor-label="SuhExternalAccelerationCovarianceMatrixEstimator" id="-1701759639%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-suh-external-acceleration-covariance-matrix-estimator/index.html"><span>Suh</span><wbr></wbr><span>External</span><wbr></wbr><span>Acceleration</span><wbr></wbr><span>Covariance</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1701759639%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-suh-external-acceleration-covariance-matrix-estimator/index.html">SuhExternalAccelerationCovarianceMatrixEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION</span></span><span class="token punctuation">)</span> : <a href="-external-acceleration-covariance-matrix-estimator/index.html">ExternalAccelerationCovarianceMatrixEstimator</a></div><div class="brief "><p class="paragraph">Estimates external acceleration covariance matrix using Suh's method.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

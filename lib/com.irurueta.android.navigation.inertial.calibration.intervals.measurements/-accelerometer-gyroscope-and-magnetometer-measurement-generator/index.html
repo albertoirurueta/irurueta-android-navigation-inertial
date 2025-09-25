@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.calibration.intervals.measurements/AccelerometerGyroscopeAndMagnetometerMeasurementGenerator///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.calibration.intervals.measurements</a><span class="delimiter">/</span><span class="current">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Accelerometer</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>And</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Generator</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">accelerometerSensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a><span class="token operator"> = </span>AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">accelerometerSensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeSensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="token operator"> = </span>GyroscopeSensorType.GYROSCOPE_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeSensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>magnetometerSensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a><span class="token operator"> = </span>MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>magnetometerSensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>initializationStartedListener<span class="token operator">: </span><a href="-on-initialization-started-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>initializationCompletedListener<span class="token operator">: </span><a href="-on-initialization-completed-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>errorListener<span class="token operator">: </span><a href="-on-error-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>staticIntervalDetectedListener<span class="token operator">: </span><a href="-on-static-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>dynamicIntervalDetectedListener<span class="token operator">: </span><a href="-on-dynamic-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>staticIntervalSkippedListener<span class="token operator">: </span><a href="-on-static-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>dynamicIntervalSkippedListener<span class="token operator">: </span><a href="-on-dynamic-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>generatedAccelerometerMeasurementListener<span class="token operator">: </span><a href="-on-generated-accelerometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>generatedGyroscopeMeasurementListener<span class="token operator">: </span><a href="-on-generated-gyroscope-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>generatedMagnetometerMeasurementListener<span class="token operator">: </span><a href="-on-generated-magnetometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>resetListener<span class="token operator">: </span><a href="-on-reset-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>accelerometerMeasurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>gyroscopeMeasurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>magnetometerMeasurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">accuracyChangedListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../-calibration-measurement-generator/index.html">CalibrationMeasurementGenerator</a><span class="token operator">&lt;</span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/TimedBodyKinematicsAndMagneticFluxDensity///PointingToDeclaration/">TimedBodyKinematicsAndMagneticFluxDensity</span><span class="token operator">&gt; </span></div><p class="paragraph">Generates measurements that can later be used by accelerometer, gyroscope and magnetometer calibrators. Measurements are generated by taking into account static and dynamic intervals on the device, when the device is kept static (e.g. motionless), or when some force is applied to the device changing its position or orientation. Static and dynamic intervals are always measured using the accelerometer. Additionally, the gyroscope and magnetometer are also used, and measurements are generated to calibrate either accelerometers, gyroscopes or magnetometers. Measurement generator converts device ENU measurements into measurements expressed in local tangent plane NED coordinates.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-2006970107%2FConstructors%2F300442814" anchor-label="AccelerometerGyroscopeAndMagnetometerMeasurementGenerator" id="-2006970107%2FConstructors%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-gyroscope-and-magnetometer-measurement-generator.html"><span>Accelerometer</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>And</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Generator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2006970107%2FConstructors%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">accelerometerSensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a><span class="token operator"> = </span>AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">accelerometerSensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">gyroscopeSensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="token operator"> = </span>GyroscopeSensorType.GYROSCOPE_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">gyroscopeSensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">magnetometerSensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a><span class="token operator"> = </span>MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">magnetometerSensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">initializationStartedListener<span class="token operator">: </span><a href="-on-initialization-started-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">initializationCompletedListener<span class="token operator">: </span><a href="-on-initialization-completed-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">errorListener<span class="token operator">: </span><a href="-on-error-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">staticIntervalDetectedListener<span class="token operator">: </span><a href="-on-static-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">dynamicIntervalDetectedListener<span class="token operator">: </span><a href="-on-dynamic-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">staticIntervalSkippedListener<span class="token operator">: </span><a href="-on-static-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">dynamicIntervalSkippedListener<span class="token operator">: </span><a href="-on-dynamic-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">generatedAccelerometerMeasurementListener<span class="token operator">: </span><a href="-on-generated-accelerometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">generatedGyroscopeMeasurementListener<span class="token operator">: </span><a href="-on-generated-gyroscope-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">generatedMagnetometerMeasurementListener<span class="token operator">: </span><a href="-on-generated-magnetometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">resetListener<span class="token operator">: </span><a href="-on-reset-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">accelerometerMeasurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">gyroscopeMeasurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">magnetometerMeasurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">accuracyChangedListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-1298495267%2FClasslikes%2F300442814" anchor-label="OnDynamicIntervalDetectedListener" id="-1298495267%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-dynamic-interval-detected-listener/index.html"><span>On</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1298495267%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-dynamic-interval-detected-listener/index.html">OnDynamicIntervalDetectedListener</a></div><div class="brief "><p class="paragraph">Interface to notify when a dynamic interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="293637931%2FClasslikes%2F300442814" anchor-label="OnDynamicIntervalSkippedListener" id="293637931%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-dynamic-interval-skipped-listener/index.html"><span>On</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="293637931%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-dynamic-interval-skipped-listener/index.html">OnDynamicIntervalSkippedListener</a></div><div class="brief "><p class="paragraph">Interface to notify when a dynamic interval is skipped. This happens when interval is too long.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1474284891%2FClasslikes%2F300442814" anchor-label="OnErrorListener" id="1474284891%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-error-listener/index.html"><span>On</span><wbr></wbr><span>Error</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1474284891%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-error-listener/index.html">OnErrorListener</a></div><div class="brief "><p class="paragraph">Interface to notify when an error occurs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="420036679%2FClasslikes%2F300442814" anchor-label="OnGeneratedAccelerometerMeasurementListener" id="420036679%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-generated-accelerometer-measurement-listener/index.html"><span>On</span><wbr></wbr><span>Generated</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="420036679%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-generated-accelerometer-measurement-listener/index.html">OnGeneratedAccelerometerMeasurementListener</a></div><div class="brief "><p class="paragraph">Interface to notify when a new accelerometer calibration measurement is generated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1609484419%2FClasslikes%2F300442814" anchor-label="OnGeneratedGyroscopeMeasurementListener" id="-1609484419%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-generated-gyroscope-measurement-listener/index.html"><span>On</span><wbr></wbr><span>Generated</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1609484419%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-generated-gyroscope-measurement-listener/index.html">OnGeneratedGyroscopeMeasurementListener</a></div><div class="brief "><p class="paragraph">Interface to notify when a new gyroscope calibration measurement is generated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1919974258%2FClasslikes%2F300442814" anchor-label="OnGeneratedMagnetometerMeasurementListener" id="-1919974258%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-generated-magnetometer-measurement-listener/index.html"><span>On</span><wbr></wbr><span>Generated</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1919974258%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-generated-magnetometer-measurement-listener/index.html">OnGeneratedMagnetometerMeasurementListener</a></div><div class="brief "><p class="paragraph">Interface to notify when a new magnetometer calibration measurement is generated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="404698296%2FClasslikes%2F300442814" anchor-label="OnInitializationCompletedListener" id="404698296%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-initialization-completed-listener/index.html"><span>On</span><wbr></wbr><span>Initialization</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="404698296%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-initialization-completed-listener/index.html">OnInitializationCompletedListener</a></div><div class="brief "><p class="paragraph">Interface to notify when generator completes its initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="393691842%2FClasslikes%2F300442814" anchor-label="OnInitializationStartedListener" id="393691842%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-initialization-started-listener/index.html"><span>On</span><wbr></wbr><span>Initialization</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="393691842%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-initialization-started-listener/index.html">OnInitializationStartedListener</a></div><div class="brief "><p class="paragraph">Interface to notify when generator starts initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="865289972%2FClasslikes%2F300442814" anchor-label="OnResetListener" id="865289972%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-reset-listener/index.html"><span>On</span><wbr></wbr><span>Reset</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="865289972%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-reset-listener/index.html">OnResetListener</a></div><div class="brief "><p class="paragraph">Interface to notify when generator is reset (occurs when starting after stopping the generator).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1272588350%2FClasslikes%2F300442814" anchor-label="OnStaticIntervalDetectedListener" id="-1272588350%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-static-interval-detected-listener/index.html"><span>On</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1272588350%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-static-interval-detected-listener/index.html">OnStaticIntervalDetectedListener</a></div><div class="brief "><p class="paragraph">Interface to notify a new static interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="294473638%2FClasslikes%2F300442814" anchor-label="OnStaticIntervalSkippedListener" id="294473638%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-static-interval-skipped-listener/index.html"><span>On</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="294473638%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-static-interval-skipped-listener/index.html">OnStaticIntervalSkippedListener</a></div><div class="brief "><p class="paragraph">Interface to notify when a static interval is skipped. This happens when interval is too short.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-138779942%2FProperties%2F300442814" anchor-label="accelerometerAverageTimeInterval" id="-138779942%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-average-time-interval.html"><span>accelerometer</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Interval</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-138779942%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-average-time-interval.html">accelerometerAverageTimeInterval</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between accelerometer samples expressed in seconds (s). This is only available once this generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1566881723%2FProperties%2F300442814" anchor-label="accelerometerAverageTimeIntervalAsTime" id="1566881723%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-average-time-interval-as-time.html"><span>accelerometer</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1566881723%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-average-time-interval-as-time.html">accelerometerAverageTimeIntervalAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between accelerometer samples. This is only available once this generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="412073275%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevel" id="412073275%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="412073275%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level.html">accelerometerBaseNoiseLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets accelerometer measurement base noise level that has been detected during initialization expressed in meters per squared second (m/s^2). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-764235211%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevelAsMeasurement" id="-764235211%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level-as-measurement.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-764235211%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level-as-measurement.html">accelerometerBaseNoiseLevelAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1431797246%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevelPsd" id="1431797246%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level-psd.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1431797246%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level-psd.html">accelerometerBaseNoiseLevelPsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1217656064%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevelRootPsd" id="-1217656064%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level-root-psd.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Root</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1217656064%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level-root-psd.html">accelerometerBaseNoiseLevelRootPsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets measurement base noise level root PSD (Power Spectral Density) expressed in (m * s^-1.5). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="875308404%2FProperties%2F300442814" anchor-label="accelerometerMeasurementListener" id="875308404%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-measurement-listener.html"><span>accelerometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="875308404%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="accelerometer-measurement-listener.html">accelerometerMeasurementListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-collector/-on-measurement-listener/index.html">AccelerometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new accelerometer measurement is received.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="32656407%2FProperties%2F300442814" anchor-label="accelerometerSensor" id="32656407%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-sensor.html"><span>accelerometer</span><wbr></wbr><span><span>Sensor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="32656407%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-sensor.html">accelerometerSensor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets accelerometer sensor being used to obtain measurements and detect static/dynamic intervals, or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1279549536%2FProperties%2F300442814" anchor-label="accelerometerSensorDelay" id="-1279549536%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-sensor-delay.html"><span>accelerometer</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Delay</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1279549536%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-sensor-delay.html">accelerometerSensorDelay</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a></div><div class="brief "><p class="paragraph">Delay of sensor between samples.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-661969667%2FProperties%2F300442814" anchor-label="accelerometerSensorType" id="-661969667%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-sensor-type.html"><span>accelerometer</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-661969667%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-sensor-type.html">accelerometerSensorType</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a></div><div class="brief "><p class="paragraph">One of the supported accelerometer sensor types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-158403337%2FProperties%2F300442814" anchor-label="accelerometerTimeIntervalStandardDeviation" id="-158403337%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation.html"><span>accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-158403337%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation.html">accelerometerTimeIntervalStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements expressed in seconds (s). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="957906968%2FProperties%2F300442814" anchor-label="accelerometerTimeIntervalStandardDeviationAsTime" id="957906968%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation-as-time.html"><span>accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="957906968%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-time-interval-standard-deviation-as-time.html">accelerometerTimeIntervalStandardDeviationAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1921783378%2FProperties%2F300442814" anchor-label="accelerometerTimeIntervalVariance" id="-1921783378%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accelerometer-time-interval-variance.html"><span>accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Variance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1921783378%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/accelerometer-time-interval-variance.html">accelerometerTimeIntervalVariance</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance of time interval between accelerometer measurements expressed in squared seconds (s^2). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1762096369%2FProperties%2F300442814" anchor-label="accuracyChangedListener" id="1762096369%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/accuracy-changed-listener.html"><span>accuracy</span><wbr></wbr><span>Changed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1762096369%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-calibration-measurement-generator/accuracy-changed-listener.html">accuracyChangedListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when sensor accuracy changes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1404770508%2FProperties%2F300442814" anchor-label="baseNoiseLevelAbsoluteThreshold" id="1404770508%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="base-noise-level-absolute-threshold.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span><span>Threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1404770508%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="base-noise-level-absolute-threshold.html">baseNoiseLevelAbsoluteThreshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes. This threshold is expressed in meters per squared second (m/s^2).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="443705924%2FProperties%2F300442814" anchor-label="baseNoiseLevelAbsoluteThresholdAsMeasurement" id="443705924%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="base-noise-level-absolute-threshold-as-measurement.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="443705924%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="base-noise-level-absolute-threshold-as-measurement.html">baseNoiseLevelAbsoluteThresholdAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></div><div class="brief "><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2009762159%2FProperties%2F300442814" anchor-label="context" id="-2009762159%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/context.html"><span><span>context</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2009762159%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-calibration-measurement-generator/context.html">context</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a></div><div class="brief "><p class="paragraph">Android context.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1479346187%2FProperties%2F300442814" anchor-label="dynamicIntervalDetectedListener" id="1479346187%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="dynamic-interval-detected-listener.html"><span>dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1479346187%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="dynamic-interval-detected-listener.html">dynamicIntervalDetectedListener</a><span class="token operator">: </span><a href="-on-dynamic-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a dynamic interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="191557333%2FProperties%2F300442814" anchor-label="dynamicIntervalSkippedListener" id="191557333%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="dynamic-interval-skipped-listener.html"><span>dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="191557333%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="dynamic-interval-skipped-listener.html">dynamicIntervalSkippedListener</a><span class="token operator">: </span><a href="-on-dynamic-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a dynamic interval is skipped if its duration is too long.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-762130167%2FProperties%2F300442814" anchor-label="errorListener" id="-762130167%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="error-listener.html"><span>error</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-762130167%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="error-listener.html">errorListener</a><span class="token operator">: </span><a href="-on-error-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify errors.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1286890251%2FProperties%2F300442814" anchor-label="generatedAccelerometerMeasurementListener" id="-1286890251%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="generated-accelerometer-measurement-listener.html"><span>generated</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1286890251%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="generated-accelerometer-measurement-listener.html">generatedAccelerometerMeasurementListener</a><span class="token operator">: </span><a href="-on-generated-accelerometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new accelerometer calibration measurement is generated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1089238315%2FProperties%2F300442814" anchor-label="generatedGyroscopeMeasurementListener" id="1089238315%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="generated-gyroscope-measurement-listener.html"><span>generated</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1089238315%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="generated-gyroscope-measurement-listener.html">generatedGyroscopeMeasurementListener</a><span class="token operator">: </span><a href="-on-generated-gyroscope-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new gyroscope calibration measurement is generated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1989695160%2FProperties%2F300442814" anchor-label="generatedMagnetometerMeasurementListener" id="1989695160%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="generated-magnetometer-measurement-listener.html"><span>generated</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1989695160%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="generated-magnetometer-measurement-listener.html">generatedMagnetometerMeasurementListener</a><span class="token operator">: </span><a href="-on-generated-magnetometer-measurement-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new magnetometer calibration measurement is generated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1009036347%2FProperties%2F300442814" anchor-label="gyroscopeBaseNoiseLevel" id="-1009036347%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-base-noise-level.html"><span>gyroscope</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1009036347%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="gyroscope-base-noise-level.html">gyroscopeBaseNoiseLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets gyroscope measurement base noise level that has been detected during initialization expressed in radians per second (rad/s). This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-826700821%2FProperties%2F300442814" anchor-label="gyroscopeBaseNoiseLevelAsMeasurement" id="-826700821%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-base-noise-level-as-measurement.html"><span>gyroscope</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-826700821%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="gyroscope-base-noise-level-as-measurement.html">gyroscopeBaseNoiseLevelAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets gyroscope measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1037363926%2FProperties%2F300442814" anchor-label="gyroscopeMeasurementListener" id="-1037363926%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-measurement-listener.html"><span>gyroscope</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1037363926%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="gyroscope-measurement-listener.html">gyroscopeMeasurementListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new gyroscope measurement is received.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-50813402%2FProperties%2F300442814" anchor-label="gyroscopeSensor" id="-50813402%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-sensor.html"><span>gyroscope</span><wbr></wbr><span><span>Sensor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-50813402%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="gyroscope-sensor.html">gyroscopeSensor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets gyroscope sensor being used to obtain measurements, or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1513502449%2FProperties%2F300442814" anchor-label="gyroscopeSensorDelay" id="1513502449%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-sensor-delay.html"><span>gyroscope</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Delay</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1513502449%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="gyroscope-sensor-delay.html">gyroscopeSensorDelay</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a></div><div class="brief "><p class="paragraph">Delay of gyroscope sensor between samples.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-710418548%2FProperties%2F300442814" anchor-label="gyroscopeSensorType" id="-710418548%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-sensor-type.html"><span>gyroscope</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-710418548%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="gyroscope-sensor-type.html">gyroscopeSensorType</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a></div><div class="brief "><p class="paragraph">One of the supported gyroscope sensor types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1112427546%2FProperties%2F300442814" anchor-label="initializationCompletedListener" id="-1112427546%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initialization-completed-listener.html"><span>initialization</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1112427546%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="initialization-completed-listener.html">initializationCompletedListener</a><span class="token operator">: </span><a href="-on-initialization-completed-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when initialization successfully completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-494026128%2FProperties%2F300442814" anchor-label="initializationStartedListener" id="-494026128%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initialization-started-listener.html"><span>initialization</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-494026128%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="initialization-started-listener.html">initializationStartedListener</a><span class="token operator">: </span><a href="-on-initialization-started-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when initialization starts.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1637991710%2FProperties%2F300442814" anchor-label="initialMagneticFluxDensityNorm" id="-1637991710%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initial-magnetic-flux-density-norm.html"><span>initial</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span>Flux</span><wbr></wbr><span>Density</span><wbr></wbr><span><span>Norm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1637991710%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="initial-magnetic-flux-density-norm.html">initialMagneticFluxDensityNorm</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Norm of average magnetic flux density obtained during initialization and expressed in Teslas (T).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1317395438%2FProperties%2F300442814" anchor-label="initialMagneticFluxDensityNormAsMeasurement" id="1317395438%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initial-magnetic-flux-density-norm-as-measurement.html"><span>initial</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span>Flux</span><wbr></wbr><span>Density</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1317395438%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="initial-magnetic-flux-density-norm-as-measurement.html">initialMagneticFluxDensityNormAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets norm of average magnetic flux density obtained during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1534485218%2FProperties%2F300442814" anchor-label="initialStaticSamples" id="-1534485218%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initial-static-samples.html"><span>initial</span><wbr></wbr><span>Static</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1534485218%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="initial-static-samples.html">initialStaticSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets number of samples to be processed initially while keeping the sensor static in order to find the base noise level when device is static.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="106525974%2FProperties%2F300442814" anchor-label="instantaneousNoiseLevelFactor" id="106525974%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="instantaneous-noise-level-factor.html"><span>instantaneous</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span><span>Factor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="106525974%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="instantaneous-noise-level-factor.html">instantaneousNoiseLevelFactor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets factor to determine that a sudden movement has occurred during initialization if instantaneous noise level exceeds accumulated noise level by this factor amount. This factor is unit-less.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1405693793%2FProperties%2F300442814" anchor-label="isDynamicIntervalSkipped" id="-1405693793%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-dynamic-interval-skipped.html"><span>is</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Skipped</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1405693793%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="is-dynamic-interval-skipped.html">isDynamicIntervalSkipped</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether last dynamic interval must be skipped.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="501584498%2FProperties%2F300442814" anchor-label="isStaticIntervalSkipped" id="501584498%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-static-interval-skipped.html"><span>is</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Skipped</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="501584498%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="is-static-interval-skipped.html">isStaticIntervalSkipped</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether last static interval must be skipped.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1399285046%2FProperties%2F300442814" anchor-label="magnetometerBaseNoiseLevel" id="1399285046%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetometer-base-noise-level.html"><span>magnetometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1399285046%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="magnetometer-base-noise-level.html">magnetometerBaseNoiseLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets magnetometer measurement base noise level that has been detected during initialization expressed in Teslas (T). This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1341594138%2FProperties%2F300442814" anchor-label="magnetometerBaseNoiseLevelAsMeasurement" id="1341594138%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetometer-base-noise-level-as-measurement.html"><span>magnetometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1341594138%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="magnetometer-base-noise-level-as-measurement.html">magnetometerBaseNoiseLevelAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets magnetometer measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-850050471%2FProperties%2F300442814" anchor-label="magnetometerMeasurementListener" id="-850050471%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetometer-measurement-listener.html"><span>magnetometer</span><wbr></wbr><span>Measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-850050471%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="magnetometer-measurement-listener.html">magnetometerMeasurementListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new magnetometer measurement is received.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-478037865%2FProperties%2F300442814" anchor-label="magnetometerSensor" id="-478037865%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetometer-sensor.html"><span>magnetometer</span><wbr></wbr><span><span>Sensor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-478037865%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="magnetometer-sensor.html">magnetometerSensor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets magnetometer sensor being used to obtain measurements, or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1722023136%2FProperties%2F300442814" anchor-label="magnetometerSensorDelay" id="-1722023136%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetometer-sensor-delay.html"><span>magnetometer</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Delay</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1722023136%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="magnetometer-sensor-delay.html">magnetometerSensorDelay</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a></div><div class="brief "><p class="paragraph">Delay of magnetometer sensor between samples.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1401966973%2FProperties%2F300442814" anchor-label="magnetometerSensorType" id="1401966973%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetometer-sensor-type.html"><span>magnetometer</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1401966973%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="magnetometer-sensor-type.html">magnetometerSensorType</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a></div><div class="brief "><p class="paragraph">One of the supported gyroscope sensor types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1366606121%2FProperties%2F300442814" anchor-label="maxDynamicSamples" id="-1366606121%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="max-dynamic-samples.html"><span>max</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1366606121%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="max-dynamic-samples.html">maxDynamicSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets maximum number of samples allowed in dynamic intervals. Dynamic intervals exceeding this value are discarded.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="173219244%2FProperties%2F300442814" anchor-label="minStaticSamples" id="173219244%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="min-static-samples.html"><span>min</span><wbr></wbr><span>Static</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="173219244%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="min-static-samples.html">minStaticSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets minimum number of samples required in a static interval to be taken into account. Smaller static intervals will be discarded.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="210727074%2FProperties%2F300442814" anchor-label="numberOfProcessedAccelerometerMeasurements" id="210727074%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/number-of-processed-accelerometer-measurements.html"><span>number</span><wbr></wbr><span>Of</span><wbr></wbr><span>Processed</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="210727074%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-calibration-measurement-generator/number-of-processed-accelerometer-measurements.html">numberOfProcessedAccelerometerMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Number of accelerometer measurements that have been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1273598343%2FProperties%2F300442814" anchor-label="numberOfProcessedGyroscopeMeasurements" id="1273598343%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="number-of-processed-gyroscope-measurements.html"><span>number</span><wbr></wbr><span>Of</span><wbr></wbr><span>Processed</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1273598343%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="number-of-processed-gyroscope-measurements.html">numberOfProcessedGyroscopeMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Number of gyroscope measurements that have been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1088844932%2FProperties%2F300442814" anchor-label="numberOfProcessedMagnetometerMeasurements" id="-1088844932%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="number-of-processed-magnetometer-measurements.html"><span>number</span><wbr></wbr><span>Of</span><wbr></wbr><span>Processed</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1088844932%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="number-of-processed-magnetometer-measurements.html">numberOfProcessedMagnetometerMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Number of magnetometer measurements that have been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1227753389%2FProperties%2F300442814" anchor-label="processedDynamicSamples" id="1227753389%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="processed-dynamic-samples.html"><span>processed</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1227753389%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="processed-dynamic-samples.html">processedDynamicSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets number of samples that have been processed in a dynamic period so far.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1820130392%2FProperties%2F300442814" anchor-label="processedStaticSamples" id="-1820130392%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="processed-static-samples.html"><span>processed</span><wbr></wbr><span>Static</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1820130392%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="processed-static-samples.html">processedStaticSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets number of samples that have been processed in a static period so far.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1371125086%2FProperties%2F300442814" anchor-label="resetListener" id="-1371125086%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="reset-listener.html"><span>reset</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1371125086%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="reset-listener.html">resetListener</a><span class="token operator">: </span><a href="-on-reset-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when generator is restarted.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1991166081%2FProperties%2F300442814" anchor-label="running" id="1991166081%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/running.html"><span><span>running</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1991166081%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-calibration-measurement-generator/running.html">running</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether this generator is already running.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1374668948%2FProperties%2F300442814" anchor-label="staticIntervalDetectedListener" id="-1374668948%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="static-interval-detected-listener.html"><span>static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1374668948%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="static-interval-detected-listener.html">staticIntervalDetectedListener</a><span class="token operator">: </span><a href="-on-static-interval-detected-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a static interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-593244332%2FProperties%2F300442814" anchor-label="staticIntervalSkippedListener" id="-593244332%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="static-interval-skipped-listener.html"><span>static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-593244332%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="static-interval-skipped-listener.html">staticIntervalSkippedListener</a><span class="token operator">: </span><a href="-on-static-interval-skipped-listener/index.html">AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a static interval is skipped if its duration is too short.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1253817245%2FProperties%2F300442814" anchor-label="status" id="-1253817245%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="status.html"><span><span>status</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1253817245%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="status.html">status</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.calibration.intervals/-status/index.html">Status</a></div><div class="brief "><p class="paragraph">Gets status of measurement generator. Initially the generator will be idle. Once it starts, it will start the initialization phase, and once initialization is complete, it will switch between static or dynamic interval until generator is stopped or an error occurs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1115128410%2FProperties%2F300442814" anchor-label="threshold" id="1115128410%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="threshold.html"><span><span>threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1115128410%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="threshold.html">threshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes expressed in meters per squared second (m/s^2). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1039038326%2FProperties%2F300442814" anchor-label="thresholdAsMeasurement" id="1039038326%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="threshold-as-measurement.html"><span>threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1039038326%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="threshold-as-measurement.html">thresholdAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-429318645%2FProperties%2F300442814" anchor-label="thresholdFactor" id="-429318645%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="threshold-factor.html"><span>threshold</span><wbr></wbr><span><span>Factor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-429318645%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="threshold-factor.html">thresholdFactor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets factor to be applied to detected base noise level in order to determine threshold for static/dynamic period changes. This factor is unit-less.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1907457756%2FProperties%2F300442814" anchor-label="windowSize" id="-1907457756%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="window-size.html"><span>window</span><wbr></wbr><span><span>Size</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1907457756%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">var </span><a href="window-size.html">windowSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets length of number of samples to keep within the window being processed to determine instantaneous sensor noise level. Window size must always be larger than allowed minimum value, which is 2 and must have an odd value.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="1950751181%2FFunctions%2F300442814" anchor-label="getAccelerometerAverageTimeIntervalAsTime" id="1950751181%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/get-accelerometer-average-time-interval-as-time.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1950751181%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-calibration-measurement-generator/get-accelerometer-average-time-interval-as-time.html"><span class="token function">getAccelerometerAverageTimeIntervalAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets average time interval between accelerometer measurements. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1967469610%2FFunctions%2F300442814" anchor-label="getAccelerometerBaseNoiseLevelAsMeasurement" id="-1967469610%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-accelerometer-base-noise-level-as-measurement.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1967469610%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="get-accelerometer-base-noise-level-as-measurement.html"><span class="token function">getAccelerometerBaseNoiseLevelAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1573530416%2FFunctions%2F300442814" anchor-label="getAccelerometerTimeIntervalStandardDeviationAsTime" id="-1573530416%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-calibration-measurement-generator/get-accelerometer-time-interval-standard-deviation-as-time.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1573530416%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-calibration-measurement-generator/get-accelerometer-time-interval-standard-deviation-as-time.html"><span class="token function">getAccelerometerTimeIntervalStandardDeviationAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1868615399%2FFunctions%2F300442814" anchor-label="getBaseNoiseLevelAbsoluteThresholdAsMeasurement" id="1868615399%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-base-noise-level-absolute-threshold-as-measurement.html"><span>get</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1868615399%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="get-base-noise-level-absolute-threshold-as-measurement.html"><span class="token function">getBaseNoiseLevelAbsoluteThresholdAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-631644741%2FFunctions%2F300442814" anchor-label="getGyroscopeBaseNoiseLevelAsMeasurement" id="-631644741%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-gyroscope-base-noise-level-as-measurement.html"><span>get</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-631644741%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-gyroscope-base-noise-level-as-measurement.html"><span class="token function">getGyroscopeBaseNoiseLevelAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets gyroscope measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1649593290%2FFunctions%2F300442814" anchor-label="getInitialMagneticFluxDensityNormAsMeasurement" id="-1649593290%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-initial-magnetic-flux-density-norm-as-measurement.html"><span>get</span><wbr></wbr><span>Initial</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span>Flux</span><wbr></wbr><span>Density</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1649593290%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-initial-magnetic-flux-density-norm-as-measurement.html"><span class="token function">getInitialMagneticFluxDensityNormAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets norm of average magnetic flux density obtained during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1947415650%2FFunctions%2F300442814" anchor-label="getMagnetometerBaseNoiseLevelAsMeasurement" id="1947415650%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-magnetometer-base-noise-level-as-measurement.html"><span>get</span><wbr></wbr><span>Magnetometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1947415650%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-magnetometer-base-noise-level-as-measurement.html"><span class="token function">getMagnetometerBaseNoiseLevelAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets magnetometer measurement base noise level that has been detected during initialization. This is only available once generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="641842165%2FFunctions%2F300442814" anchor-label="getThresholdAsMeasurement" id="641842165%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-threshold-as-measurement.html"><span>get</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="641842165%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="get-threshold-as-measurement.html"><span class="token function">getThresholdAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-244102589%2FFunctions%2F300442814" anchor-label="start" id="-244102589%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="start.html"><span><span>start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-244102589%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="start.html"><span class="token function">start</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Starts collection of sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-513575853%2FFunctions%2F300442814" anchor-label="stop" id="-513575853%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="stop.html"><span><span>stop</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-513575853%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="stop.html"><span class="token function">stop</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Stops collection of sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

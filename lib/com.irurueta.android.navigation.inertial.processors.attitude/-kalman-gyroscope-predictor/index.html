@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>KalmanGyroscopePredictor</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.processors.attitude/KalmanGyroscopePredictor///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.processors.attitude</a><span class="delimiter">/</span><span class="current">KalmanGyroscopePredictor</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Kalman</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span><span>Predictor</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">KalmanGyroscopePredictor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">phiMatrixMethod<span class="token operator">: </span><a href="../-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator"> = </span>PhiMatrixMethod.APPROXIMATED<span class="token punctuation">, </span></span><span class="parameter ">processNoiseCovarianceMethod<span class="token operator">: </span><a href="../-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator"> = </span>ProcessNoiseCovarianceMethod.BETTER<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegratorType<span class="token operator">: </span><a href="../-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a><span class="token operator"> = </span>QuaternionStepIntegratorType.RUNGE_KUTTA<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD</span></span><span class="token punctuation">)</span></div><p class="paragraph">Predicts next Kalman filter state based on current gyroscope measurement.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>phi</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Method</span></span></u></div></span></div><div><div class="title"><p class="paragraph">method to estimate phi matrix relating previous and current filter state.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>process</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Covariance</span><wbr></wbr><span><span>Method</span></span></u></div></span></div><div><div class="title"><p class="paragraph">method to estimate process noise covariance matrix.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>quaternion</span><wbr></wbr><span>Step</span><wbr></wbr><span>Integrator</span><wbr></wbr><span><span>Type</span></span></u></div></span></div><div><div class="title"><p class="paragraph">method to integrate quaternions on each measurement.</p></div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-1132428701%2FConstructors%2F300442814" anchor-label="KalmanGyroscopePredictor" id="-1132428701%2FConstructors%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-gyroscope-predictor.html"><span>Kalman</span><wbr></wbr><span>Gyroscope</span><wbr></wbr><span><span>Predictor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1132428701%2FConstructors%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">phiMatrixMethod<span class="token operator">: </span><a href="../-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator"> = </span>PhiMatrixMethod.APPROXIMATED<span class="token punctuation">, </span></span><span class="parameter ">processNoiseCovarianceMethod<span class="token operator">: </span><a href="../-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator"> = </span>ProcessNoiseCovarianceMethod.BETTER<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegratorType<span class="token operator">: </span><a href="../-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a><span class="token operator"> = </span>QuaternionStepIntegratorType.RUNGE_KUTTA<span class="token punctuation">, </span></span><span class="parameter ">gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-572563103%2FClasslikes%2F300442814" anchor-label="Companion" id="-572563103%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-572563103%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1537109202%2FProperties%2F300442814" anchor-label="gyroscopeNoisePsd" id="-1537109202%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-noise-psd.html"><span>gyroscope</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1537109202%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="gyroscope-noise-psd.html">gyroscopeNoisePsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">gyroscope noise PSD.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="115921224%2FProperties%2F300442814" anchor-label="kalmanErrorCovPostPredicted" id="115921224%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="kalman-error-cov-post-predicted.html"><span>kalman</span><wbr></wbr><span>Error</span><wbr></wbr><span>Cov</span><wbr></wbr><span>Post</span><wbr></wbr><span><span>Predicted</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="115921224%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="kalman-error-cov-post-predicted.html">kalmanErrorCovPostPredicted</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Kalman filter error covariance matrix after prediction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1964358693%2FProperties%2F300442814" anchor-label="kalmanErrorCovPrePredicted" id="1964358693%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="kalman-error-cov-pre-predicted.html"><span>kalman</span><wbr></wbr><span>Error</span><wbr></wbr><span>Cov</span><wbr></wbr><span>Pre</span><wbr></wbr><span><span>Predicted</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1964358693%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="kalman-error-cov-pre-predicted.html">kalmanErrorCovPrePredicted</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Kalman filter error covariance matrix before prediction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-419668011%2FProperties%2F300442814" anchor-label="kalmanStatePostPredicted" id="-419668011%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="kalman-state-post-predicted.html"><span>kalman</span><wbr></wbr><span>State</span><wbr></wbr><span>Post</span><wbr></wbr><span><span>Predicted</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-419668011%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="kalman-state-post-predicted.html">kalmanStatePostPredicted</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Kalman filter state after prediction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="977250296%2FProperties%2F300442814" anchor-label="kalmanStatePrePredicted" id="977250296%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="kalman-state-pre-predicted.html"><span>kalman</span><wbr></wbr><span>State</span><wbr></wbr><span>Pre</span><wbr></wbr><span><span>Predicted</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="977250296%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="kalman-state-pre-predicted.html">kalmanStatePrePredicted</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Kalman filter state before prediction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-493234810%2FProperties%2F300442814" anchor-label="nedBodyAngularSpeedTriad" id="-493234810%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ned-body-angular-speed-triad.html"><span>ned</span><wbr></wbr><span>Body</span><wbr></wbr><span>Angular</span><wbr></wbr><span>Speed</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-493234810%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="ned-body-angular-speed-triad.html">nedBodyAngularSpeedTriad</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span></div><div class="brief "><p class="paragraph">Contains gyroscope data expressed in NED coordinates respect to body.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1859965641%2FProperties%2F300442814" anchor-label="predictedBodyQ" id="1859965641%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="predicted-body-q.html"><span>predicted</span><wbr></wbr><span>Body</span><wbr></wbr><span><span>Q</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1859965641%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="predicted-body-q.html">predictedBodyQ</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></div><div class="brief "><p class="paragraph">Contains predicted attitude respect to body for next step. Because rotation is defined respect to body, rotation converts from body coordinates to leveled local NED coordinates respect to Earth: pn = previousBodyQ * pb</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="922351202%2FProperties%2F300442814" anchor-label="previousBodyQ" id="922351202%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="previous-body-q.html"><span>previous</span><wbr></wbr><span>Body</span><wbr></wbr><span><span>Q</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="922351202%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="previous-body-q.html">previousBodyQ</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></div><div class="brief "><p class="paragraph">Previous step attitude respect to body. Because rotation is defined respect to body, rotation converts from body coordinates to leveled local NED coordinates respect to Earth: pn = previousBodyQ * pb</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1440944695%2FProperties%2F300442814" anchor-label="q" id="-1440944695%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="q.html"><span><span>q</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1440944695%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="q.html">q</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Continuous time process noise covariance matrix.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1381204842%2FProperties%2F300442814" anchor-label="qba" id="1381204842%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="qba.html"><span><span>qba</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1381204842%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="qba.html">qba</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Covariance noise matrix of the accelerometer bias</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1567323684%2FProperties%2F300442814" anchor-label="qbg" id="1567323684%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="qbg.html"><span><span>qbg</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1567323684%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="qbg.html">qbg</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Covariance noise matrix of the gyroscope bias</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="436018539%2FProperties%2F300442814" anchor-label="rg" id="436018539%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="rg.html"><span><span>rg</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="436018539%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="rg.html">rg</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Covariance measurement matrix of the gyroscope measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1682510579%2FProperties%2F300442814" anchor-label="timeIntervalSeconds" id="-1682510579%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="time-interval-seconds.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Seconds</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1682510579%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="time-interval-seconds.html">timeIntervalSeconds</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Time interval between measurements expressed in seconds (s).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-1616558943%2FFunctions%2F300442814" anchor-label="predict" id="-1616558943%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="predict.html"><span><span>predict</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1616558943%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="predict.html"><span class="token function">predict</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Predicts expected orientation, orientation error, gyroscope and accelerometer biases using current gyroscope measurements and current orientation estimation.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="27160619%2FFunctions%2F300442814" anchor-label="reset" id="27160619%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="reset.html"><span><span>reset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="27160619%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="reset.html"><span class="token function">reset</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Resets internal parameter.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

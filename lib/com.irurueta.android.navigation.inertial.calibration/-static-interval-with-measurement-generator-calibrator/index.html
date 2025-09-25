@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>StaticIntervalWithMeasurementGeneratorCalibrator</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.calibration/StaticIntervalWithMeasurementGeneratorCalibrator///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.calibration</a><span class="delimiter">/</span><span class="current">StaticIntervalWithMeasurementGeneratorCalibrator</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>With</span><wbr></wbr><span>Measurement</span><wbr></wbr><span>Generator</span><wbr></wbr><span><span>Calibrator</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">interface </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token punctuation">, </span><a href="index.html">I</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="index.html">I</a><span class="token operator">&gt;</span></div><p class="paragraph">Base class for static interval calibrators, which detects static period of accelerometer measurements along with other sensors (if needed) to solve calibration.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>C</span></span></u></div></span></div><div><div class="title"><p class="paragraph">an implementation of <a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a>.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>I</span></span></u></div></span></div><div><div class="title"><p class="paragraph">type of input data to be processed by internal generator.</p></div></div></div></div></div><h4 class="">Inheritors</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-base-static-interval-with-measurement-generator-calibrator/index.html">BaseStaticIntervalWithMeasurementGeneratorCalibrator</a></div></span></div><div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="../-static-interval-accelerometer-gyroscope-and-magnetometer-calibrator2/index.html">StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2</a></div></span></div><div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-1803575612%2FClasslikes%2F300442814" anchor-label="OnCalibrationCompletedListener" id="-1803575612%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-calibration-completed-listener/index.html"><span>On</span><wbr></wbr><span>Calibration</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1803575612%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-calibration-completed-listener/index.html">OnCalibrationCompletedListener</a><span class="token operator">&lt;</span><a href="-on-calibration-completed-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-calibration-completed-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when calibration is solved and completed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="165050438%2FClasslikes%2F300442814" anchor-label="OnCalibrationSolvingStartedListener" id="165050438%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-calibration-solving-started-listener/index.html"><span>On</span><wbr></wbr><span>Calibration</span><wbr></wbr><span>Solving</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="165050438%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-calibration-solving-started-listener/index.html">OnCalibrationSolvingStartedListener</a><span class="token operator">&lt;</span><a href="-on-calibration-solving-started-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-calibration-solving-started-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when calibration starts being solved.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="284800143%2FClasslikes%2F300442814" anchor-label="OnDynamicIntervalDetectedListener" id="284800143%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-dynamic-interval-detected-listener/index.html"><span>On</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="284800143%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-dynamic-interval-detected-listener/index.html">OnDynamicIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="-on-dynamic-interval-detected-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-dynamic-interval-detected-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify that a new dynamic interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="898901305%2FClasslikes%2F300442814" anchor-label="OnDynamicIntervalSkippedListener" id="898901305%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-dynamic-interval-skipped-listener/index.html"><span>On</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="898901305%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-dynamic-interval-skipped-listener/index.html">OnDynamicIntervalSkippedListener</a><span class="token operator">&lt;</span><a href="-on-dynamic-interval-skipped-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-dynamic-interval-skipped-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when a dynamic interval is skipped. This happens when interval is too long.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1634410099%2FClasslikes%2F300442814" anchor-label="OnErrorListener" id="-1634410099%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-error-listener/index.html"><span>On</span><wbr></wbr><span>Error</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1634410099%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-error-listener/index.html">OnErrorListener</a><span class="token operator">&lt;</span><a href="-on-error-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-error-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when an error occurs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1987993706%2FClasslikes%2F300442814" anchor-label="OnInitializationCompletedListener" id="1987993706%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-initialization-completed-listener/index.html"><span>On</span><wbr></wbr><span>Initialization</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1987993706%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-initialization-completed-listener/index.html">OnInitializationCompletedListener</a><span class="token operator">&lt;</span><a href="-on-initialization-completed-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-initialization-completed-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when calibrator successfully completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1521595124%2FClasslikes%2F300442814" anchor-label="OnInitializationStartedListener" id="1521595124%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-initialization-started-listener/index.html"><span>On</span><wbr></wbr><span>Initialization</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1521595124%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-initialization-started-listener/index.html">OnInitializationStartedListener</a><span class="token operator">&lt;</span><a href="-on-initialization-started-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-initialization-started-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when calibrator starts initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1140954604%2FClasslikes%2F300442814" anchor-label="OnReadyToSolveCalibrationListener" id="1140954604%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-ready-to-solve-calibration-listener/index.html"><span>On</span><wbr></wbr><span>Ready</span><wbr></wbr><span>To</span><wbr></wbr><span>Solve</span><wbr></wbr><span>Calibration</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1140954604%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-ready-to-solve-calibration-listener/index.html">OnReadyToSolveCalibrationListener</a><span class="token operator">&lt;</span><a href="-on-ready-to-solve-calibration-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-ready-to-solve-calibration-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when enough measurements are obtained to start solving calibration.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-667324976%2FClasslikes%2F300442814" anchor-label="OnStaticIntervalDetectedListener" id="-667324976%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-static-interval-detected-listener/index.html"><span>On</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-667324976%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-static-interval-detected-listener/index.html">OnStaticIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="-on-static-interval-detected-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-static-interval-detected-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify that a new static interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1422376920%2FClasslikes%2F300442814" anchor-label="OnStaticIntervalSkippedListener" id="1422376920%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-static-interval-skipped-listener/index.html"><span>On</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1422376920%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-static-interval-skipped-listener/index.html">OnStaticIntervalSkippedListener</a><span class="token operator">&lt;</span><a href="-on-static-interval-skipped-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-static-interval-skipped-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when a static interval is skipped. This happens when interval is too short.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="601301096%2FClasslikes%2F300442814" anchor-label="OnStoppedListener" id="601301096%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-stopped-listener/index.html"><span>On</span><wbr></wbr><span>Stopped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="601301096%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-stopped-listener/index.html">OnStoppedListener</a><span class="token operator">&lt;</span><a href="-on-stopped-listener/index.html">C</a><span class="token operator"> : </span><a href="index.html">StaticIntervalWithMeasurementGeneratorCalibrator</a><span class="token operator">&lt;</span><a href="-on-stopped-listener/index.html">C</a><span class="token punctuation">, </span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Interface to notify when measurement collection stops. This happens automatically when enough measurements are found after periods when device stops being static, or if an error occurs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1634320259%2FProperties%2F300442814" anchor-label="accelerometerAverageTimeInterval" id="1634320259%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-average-time-interval.html"><span>accelerometer</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Interval</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1634320259%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-average-time-interval.html">accelerometerAverageTimeInterval</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between accelerometer samples expressed in seconds (s). This is only available once the internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="823931300%2FProperties%2F300442814" anchor-label="accelerometerAverageTimeIntervalAsTime" id="823931300%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-average-time-interval-as-time.html"><span>accelerometer</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="823931300%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-average-time-interval-as-time.html">accelerometerAverageTimeIntervalAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between accelerometer samples. This is only available once the internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-908192147%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevel" id="-908192147%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-908192147%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level.html">accelerometerBaseNoiseLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets accelerometer measurement base noise level that has been detected during initialization expressed in meters per squared second (m/s^2). This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1749965379%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevelAsMeasurement" id="1749965379%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level-as-measurement.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1749965379%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level-as-measurement.html">accelerometerBaseNoiseLevelAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets accelerometer measurement base noise level that has been detected during initialization. This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1579860084%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevelPsd" id="-1579860084%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level-psd.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1579860084%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level-psd.html">accelerometerBaseNoiseLevelPsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3). This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="619861390%2FProperties%2F300442814" anchor-label="accelerometerBaseNoiseLevelRootPsd" id="619861390%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-base-noise-level-root-psd.html"><span>accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Root</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="619861390%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-base-noise-level-root-psd.html">accelerometerBaseNoiseLevelRootPsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets measurement base noise level root PSD (Power Spectral Density) expressed in (m * s^-1.5). This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2073858254%2FProperties%2F300442814" anchor-label="accelerometerSensor" id="2073858254%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-sensor.html"><span>accelerometer</span><wbr></wbr><span><span>Sensor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2073858254%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-sensor.html">accelerometerSensor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets accelerometer sensor being used for interval detection. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-165497527%2FProperties%2F300442814" anchor-label="accelerometerSensorDelay" id="-165497527%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-sensor-delay.html"><span>accelerometer</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Delay</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-165497527%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-sensor-delay.html">accelerometerSensorDelay</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a></div><div class="brief "><p class="paragraph">Delay of sensor between samples.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="897988148%2FProperties%2F300442814" anchor-label="accelerometerSensorType" id="897988148%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-sensor-type.html"><span>accelerometer</span><wbr></wbr><span>Sensor</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="897988148%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-sensor-type.html">accelerometerSensorType</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-type/index.html">AccelerometerSensorType</a></div><div class="brief "><p class="paragraph">One of the supported accelerometer sensor types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-860532128%2FProperties%2F300442814" anchor-label="accelerometerTimeIntervalStandardDeviation" id="-860532128%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-time-interval-standard-deviation.html"><span>accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-860532128%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-time-interval-standard-deviation.html">accelerometerTimeIntervalStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements expressed in seconds (s). This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1330419007%2FProperties%2F300442814" anchor-label="accelerometerTimeIntervalStandardDeviationAsTime" id="-1330419007%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-time-interval-standard-deviation-as-time.html"><span>accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1330419007%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-time-interval-standard-deviation-as-time.html">accelerometerTimeIntervalStandardDeviationAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements. This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1504715301%2FProperties%2F300442814" anchor-label="accelerometerTimeIntervalVariance" id="1504715301%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-time-interval-variance.html"><span>accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Variance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1504715301%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="accelerometer-time-interval-variance.html">accelerometerTimeIntervalVariance</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance of time interval between accelerometer measurements expressed in squared seconds (s^2). This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-972913112%2FProperties%2F300442814" anchor-label="accuracyChangedListener" id="-972913112%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accuracy-changed-listener.html"><span>accuracy</span><wbr></wbr><span>Changed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-972913112%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="accuracy-changed-listener.html">accuracyChangedListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when sensor accuracy changes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1762293506%2FProperties%2F300442814" anchor-label="baseNoiseLevelAbsoluteThreshold" id="-1762293506%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="base-noise-level-absolute-threshold.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span><span>Threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1762293506%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="base-noise-level-absolute-threshold.html">baseNoiseLevelAbsoluteThreshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes. This threshold is expressed in meters per squared second (m/s^2).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1962976430%2FProperties%2F300442814" anchor-label="baseNoiseLevelAbsoluteThresholdAsMeasurement" id="-1962976430%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="base-noise-level-absolute-threshold-as-measurement.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1962976430%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="base-noise-level-absolute-threshold-as-measurement.html">baseNoiseLevelAbsoluteThresholdAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></div><div class="brief "><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-870123154%2FProperties%2F300442814" anchor-label="calibrationCompletedListener" id="-870123154%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="calibration-completed-listener.html"><span>calibration</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-870123154%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="calibration-completed-listener.html">calibrationCompletedListener</a><span class="token operator">: </span><a href="-on-calibration-completed-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when calibration solving completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-167822476%2FProperties%2F300442814" anchor-label="calibrationSolvingStartedListener" id="-167822476%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="calibration-solving-started-listener.html"><span>calibration</span><wbr></wbr><span>Solving</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-167822476%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="calibration-solving-started-listener.html">calibrationSolvingStartedListener</a><span class="token operator">: </span><a href="-on-calibration-solving-started-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when calibration solving starts.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-78654008%2FProperties%2F300442814" anchor-label="context" id="-78654008%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="context.html"><span><span>context</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-78654008%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="context.html">context</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a></div><div class="brief "><p class="paragraph">Android context.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1687717827%2FProperties%2F300442814" anchor-label="dynamicIntervalDetectedListener" id="-1687717827%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="dynamic-interval-detected-listener.html"><span>dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1687717827%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="dynamic-interval-detected-listener.html">dynamicIntervalDetectedListener</a><span class="token operator">: </span><a href="-on-dynamic-interval-detected-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when a dynamic interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1474867299%2FProperties%2F300442814" anchor-label="dynamicIntervalSkippedListener" id="1474867299%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="dynamic-interval-skipped-listener.html"><span>dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1474867299%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="dynamic-interval-skipped-listener.html">dynamicIntervalSkippedListener</a><span class="token operator">: </span><a href="-on-dynamic-interval-skipped-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when a dynamic interval is skipped if its duration is too long.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1820112453%2FProperties%2F300442814" anchor-label="errorListener" id="-1820112453%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="error-listener.html"><span>error</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1820112453%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="error-listener.html">errorListener</a><span class="token operator">: </span><a href="-on-error-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify errors.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="15475736%2FProperties%2F300442814" anchor-label="initializationCompletedListener" id="15475736%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initialization-completed-listener.html"><span>initialization</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="15475736%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="initialization-completed-listener.html">initializationCompletedListener</a><span class="token operator">: </span><a href="-on-initialization-completed-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2041222946%2FProperties%2F300442814" anchor-label="initializationStartedListener" id="2041222946%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initialization-started-listener.html"><span>initialization</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2041222946%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="initialization-started-listener.html">initializationStartedListener</a><span class="token operator">: </span><a href="-on-initialization-started-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when initialization starts.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1120708564%2FProperties%2F300442814" anchor-label="initialStaticSamples" id="-1120708564%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initial-static-samples.html"><span>initial</span><wbr></wbr><span>Static</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1120708564%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="initial-static-samples.html">initialStaticSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets number of samples to be processed initially by the internal measurement generator, while keeping the sensor static in order to find the base noise level when device is static.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1653192248%2FProperties%2F300442814" anchor-label="instantaneousNoiseLevelFactor" id="-1653192248%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="instantaneous-noise-level-factor.html"><span>instantaneous</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span><span>Factor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1653192248%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="instantaneous-noise-level-factor.html">instantaneousNoiseLevelFactor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets factor to determine that a sudden movement has occurred during initialization if instantaneous noise level exceeds accumulated noise level by this factor amount. This factor is unit-less.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1806674771%2FProperties%2F300442814" anchor-label="isDynamicIntervalSkipped" id="-1806674771%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-dynamic-interval-skipped.html"><span>is</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Skipped</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1806674771%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="is-dynamic-interval-skipped.html">isDynamicIntervalSkipped</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether last dynamic interval must be skipped.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-884689992%2FProperties%2F300442814" anchor-label="isReadyToSolveCalibration" id="-884689992%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-ready-to-solve-calibration.html"><span>is</span><wbr></wbr><span>Ready</span><wbr></wbr><span>To</span><wbr></wbr><span>Solve</span><wbr></wbr><span><span>Calibration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-884689992%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="is-ready-to-solve-calibration.html">isReadyToSolveCalibration</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether enough measurements have been picked at static intervals so that the calibration process can be solved.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="765744292%2FProperties%2F300442814" anchor-label="isStaticIntervalSkipped" id="765744292%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-static-interval-skipped.html"><span>is</span><wbr></wbr><span>Static</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Skipped</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="765744292%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="is-static-interval-skipped.html">isStaticIntervalSkipped</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether last static interval must be skipped.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-699739789%2FProperties%2F300442814" anchor-label="minimumRequiredMeasurements" id="-699739789%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="minimum-required-measurements.html"><span>minimum</span><wbr></wbr><span>Required</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-699739789%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="minimum-required-measurements.html">minimumRequiredMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets minimum number of required measurements to start calibration. Each time that the device is kept static, a new measurement is collected. When the required number of measurements is collected, calibration can start.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-491401717%2FProperties%2F300442814" anchor-label="numberOfProcessedAccelerometerMeasurements" id="-491401717%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="number-of-processed-accelerometer-measurements.html"><span>number</span><wbr></wbr><span>Of</span><wbr></wbr><span>Processed</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-491401717%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="number-of-processed-accelerometer-measurements.html">numberOfProcessedAccelerometerMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Number of accelerometer measurements that have been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1491913183%2FProperties%2F300442814" anchor-label="processedDynamicSamples" id="1491913183%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="processed-dynamic-samples.html"><span>processed</span><wbr></wbr><span>Dynamic</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1491913183%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="processed-dynamic-samples.html">processedDynamicSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets number of samples that have been processed in a dynamic period so far.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="682242870%2FProperties%2F300442814" anchor-label="processedStaticSamples" id="682242870%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="processed-static-samples.html"><span>processed</span><wbr></wbr><span>Static</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="682242870%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="processed-static-samples.html">processedStaticSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets number of samples that have been processed in a static period so far.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-831563366%2FProperties%2F300442814" anchor-label="readyToSolveCalibrationListener" id="-831563366%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ready-to-solve-calibration-listener.html"><span>ready</span><wbr></wbr><span>To</span><wbr></wbr><span>Solve</span><wbr></wbr><span>Calibration</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-831563366%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="ready-to-solve-calibration-listener.html">readyToSolveCalibrationListener</a><span class="token operator">: </span><a href="-on-ready-to-solve-calibration-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when enough measurements have been collected and calibrator is ready to solve calibration.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-107336595%2FProperties%2F300442814" anchor-label="requiredMeasurements" id="-107336595%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="required-measurements.html"><span>required</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-107336595%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="required-measurements.html">requiredMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Required number of measurements to be collected before calibration can start. The number of required measurements must be greater than <a href="minimum-required-measurements.html">minimumRequiredMeasurements</a>, otherwise at least <a href="minimum-required-measurements.html">minimumRequiredMeasurements</a> will be collected before calibration can start.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-372693064%2FProperties%2F300442814" anchor-label="running" id="-372693064%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="running.html"><span><span>running</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-372693064%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="running.html">running</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether calibrator is running. While calibrator is running, calibrator parameters cannot be changed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2043041911%2FProperties%2F300442814" anchor-label="solveCalibrationWhenEnoughMeasurements" id="2043041911%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="solve-calibration-when-enough-measurements.html"><span>solve</span><wbr></wbr><span>Calibration</span><wbr></wbr><span>When</span><wbr></wbr><span>Enough</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2043041911%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="solve-calibration-when-enough-measurements.html">solveCalibrationWhenEnoughMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether calibration is automatically solved when enough measurements are available.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-91358982%2FProperties%2F300442814" anchor-label="staticIntervalDetectedListener" id="-91358982%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="static-interval-detected-listener.html"><span>static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-91358982%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="static-interval-detected-listener.html">staticIntervalDetectedListener</a><span class="token operator">: </span><a href="-on-static-interval-detected-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when a static interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1942004742%2FProperties%2F300442814" anchor-label="staticIntervalSkippedListener" id="1942004742%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="static-interval-skipped-listener.html"><span>static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Skipped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1942004742%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="static-interval-skipped-listener.html">staticIntervalSkippedListener</a><span class="token operator">: </span><a href="-on-static-interval-skipped-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when a static interval is skipped if its duration is too short.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-588683242%2FProperties%2F300442814" anchor-label="stoppedListener" id="-588683242%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="stopped-listener.html"><span>stopped</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-588683242%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="stopped-listener.html">stoppedListener</a><span class="token operator">: </span><a href="-on-stopped-listener/index.html">StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener</a><span class="token operator">&lt;</span><a href="index.html">C</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when calibrator is stopped.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1428937716%2FProperties%2F300442814" anchor-label="threshold" id="-1428937716%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="threshold.html"><span><span>threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1428937716%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="threshold.html">threshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes expressed in meters per squared second (m/s^2). This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-753555708%2FProperties%2F300442814" anchor-label="thresholdAsMeasurement" id="-753555708%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="threshold-as-measurement.html"><span>threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-753555708%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">val </span><a href="threshold-as-measurement.html">thresholdAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="756953661%2FProperties%2F300442814" anchor-label="thresholdFactor" id="756953661%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="threshold-factor.html"><span>threshold</span><wbr></wbr><span><span>Factor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="756953661%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="threshold-factor.html">thresholdFactor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets factor to be applied to detected base noise level in order to determine a threshold for static/dynamic period changes. This factor is unit-less.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="830870962%2FProperties%2F300442814" anchor-label="windowSize" id="830870962%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="window-size.html"><span>window</span><wbr></wbr><span><span>Size</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="830870962%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">var </span><a href="window-size.html">windowSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets length of number of samples to keep within the window being processed to determine instantaneous sensor noise level during initialization of the internal calibrator measurement generator. Window size must always be larger than allowed minimum value, which is 2 and must have an odd value.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="2146342192%2FFunctions%2F300442814" anchor-label="calibrate" id="2146342192%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="calibrate.html"><span><span>calibrate</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2146342192%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="calibrate.html"><span class="token function">calibrate</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Solves calibration using collected measurements. This must be explicitly called after enough measurements are collected if <a href="solve-calibration-when-enough-measurements.html">solveCalibrationWhenEnoughMeasurements</a> is false.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-51342730%2FFunctions%2F300442814" anchor-label="getAccelerometerAverageTimeIntervalAsTime" id="-51342730%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-accelerometer-average-time-interval-as-time.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-51342730%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-accelerometer-average-time-interval-as-time.html"><span class="token function">getAccelerometerAverageTimeIntervalAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets average time interval between accelerometer measurements. This is only available once the internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-947457948%2FFunctions%2F300442814" anchor-label="getAccelerometerBaseNoiseLevelAsMeasurement" id="-947457948%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-accelerometer-base-noise-level-as-measurement.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-947457948%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-accelerometer-base-noise-level-as-measurement.html"><span class="token function">getAccelerometerBaseNoiseLevelAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1562660409%2FFunctions%2F300442814" anchor-label="getAccelerometerTimeIntervalStandardDeviationAsTime" id="1562660409%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-accelerometer-time-interval-standard-deviation-as-time.html"><span>get</span><wbr></wbr><span>Accelerometer</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1562660409%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-accelerometer-time-interval-standard-deviation-as-time.html"><span class="token function">getAccelerometerTimeIntervalStandardDeviationAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between accelerometer measurements. This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1766587509%2FFunctions%2F300442814" anchor-label="getBaseNoiseLevelAbsoluteThresholdAsMeasurement" id="1766587509%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-base-noise-level-absolute-threshold-as-measurement.html"><span>get</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1766587509%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-base-noise-level-absolute-threshold-as-measurement.html"><span class="token function">getBaseNoiseLevelAbsoluteThresholdAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1994946557%2FFunctions%2F300442814" anchor-label="getThresholdAsMeasurement" id="-1994946557%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-threshold-as-measurement.html"><span>get</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1994946557%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="get-threshold-as-measurement.html"><span class="token function">getThresholdAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Acceleration///PointingToDeclaration/">Acceleration</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once internal generator completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-407333643%2FFunctions%2F300442814" anchor-label="start" id="-407333643%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="start.html"><span><span>start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-407333643%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="start.html"><span class="token function">start</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Starts calibrator. This method starts collecting sensor measurements. When calibrator is started, it begins with an initialization stage where sensor noise is estimated while device remains static. Once initialization is completed, calibrator determines intervals where device remains static when device has different poses, so that measurements are collected to solve calibration. If <a href="solve-calibration-when-enough-measurements.html">solveCalibrationWhenEnoughMeasurements</a> is true, calibration is automatically solved once enough measurements are collected, otherwise a call to <a href="calibrate.html">calibrate</a> must be done to solve calibration.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-657388703%2FFunctions%2F300442814" anchor-label="stop" id="-657388703%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="stop.html"><span><span>stop</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-657388703%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">fun </span><a href="stop.html"><span class="token function">stop</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Stops calibrator. When this is called, no more sensor measurements are collected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

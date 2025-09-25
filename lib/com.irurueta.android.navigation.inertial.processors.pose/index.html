@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>com.irurueta.android.navigation.inertial.processors.pose</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.processors.pose////PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../index.html">lib</a><span class="delimiter">/</span><span class="current">com.irurueta.android.navigation.inertial.processors.pose</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="684517753%2FClasslikes%2F300442814" anchor-label="AccelerometerDoubleFusedECEFAbsolutePoseProcessor" id="684517753%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-double-fused-e-c-e-f-absolute-pose-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="684517753%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-double-fused-e-c-e-f-absolute-pose-processor/index.html">AccelerometerDoubleFusedECEFAbsolutePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-double-fused-e-c-e-f-absolute-pose-processor/index.html">BaseDoubleFusedECEFAbsolutePoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute pose expressed in ECEF coordinates. This class estimates device attitude by double fusing accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-924816984%2FClasslikes%2F300442814" anchor-label="AccelerometerDoubleFusedLocalPoseProcessor" id="-924816984%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-double-fused-local-pose-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-924816984%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-double-fused-local-pose-processor/index.html">AccelerometerDoubleFusedLocalPoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-double-fused-local-pose-processor/index.html">BaseDoubleFusedLocalPoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute pose using local plane navigation. This class estimates device attitude by double fusing accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="277053770%2FClasslikes%2F300442814" anchor-label="AccelerometerFusedECEFAbsolutePoseProcessor" id="277053770%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-fused-e-c-e-f-absolute-pose-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Fused</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="277053770%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-fused-e-c-e-f-absolute-pose-processor/index.html">AccelerometerFusedECEFAbsolutePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-e-c-e-f-absolute-pose-processor/index.html">BaseFusedECEFAbsolutePoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute pose expressed in ECEF coordinates. This class estimates device attitude by fusing accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1670351607%2FClasslikes%2F300442814" anchor-label="AccelerometerFusedLocalPoseProcessor" id="1670351607%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-fused-local-pose-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1670351607%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-fused-local-pose-processor/index.html">AccelerometerFusedLocalPoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-local-pose-processor/index.html">BaseFusedLocalPoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute pose using local plane navigation. This class estimates device attitude by fusing accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="999144800%2FClasslikes%2F300442814" anchor-label="AccelerometerFusedRelativePoseProcessor" id="999144800%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-accelerometer-fused-relative-pose-processor/index.html"><span>Accelerometer</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="999144800%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-accelerometer-fused-relative-pose-processor/index.html">AccelerometerFusedRelativePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialSpeed<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a><span class="token operator"> = </span>SpeedTriad()<span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-relative-pose-processor/index.html">BaseFusedRelativePoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-and-gyroscope-synced-sensor-measurement/index.html">AccelerometerAndGyroscopeSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates relative pose from an unknown location. This class estimates device attitude by fusing accelerometer and gyroscope measurements and. then they are taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1500036704%2FClasslikes%2F300442814" anchor-label="AttitudeECEFAbsolutePoseProcessor" id="1500036704%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-attitude-e-c-e-f-absolute-pose-processor/index.html"><span>Attitude</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1500036704%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-attitude-e-c-e-f-absolute-pose-processor/index.html">AttitudeECEFAbsolutePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-e-c-e-f-absolute-pose-processor/index.html">BaseECEFAbsolutePoseProcessor</a></div><div class="brief "><p class="paragraph">Estimates absolute pose expressed in ECEF coordinates. This class estimates attitude by using Android's absolute attitude sensor. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-654361951%2FClasslikes%2F300442814" anchor-label="AttitudeLocalPoseProcessor" id="-654361951%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-attitude-local-pose-processor/index.html"><span>Attitude</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-654361951%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-attitude-local-pose-processor/index.html">AttitudeLocalPoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-local-pose-processor/index.html">BaseLocalPoseProcessor</a></div><div class="brief "><p class="paragraph">Estimates absolute pose using local plane navigation. This class estimates attitude by using Android's absolute attitude sensor. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1805186422%2FClasslikes%2F300442814" anchor-label="AttitudeRelativePoseProcessor" id="1805186422%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-attitude-relative-pose-processor/index.html"><span>Attitude</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1805186422%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-attitude-relative-pose-processor/index.html">AttitudeRelativePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialSpeed<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a><span class="token operator"> = </span>SpeedTriad()<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>averagingFilter<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.filter/-averaging-filter/index.html">AveragingFilter</a><span class="token operator"> = </span>LowPassAveragingFilter()<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-relative-pose-processor/index.html">BaseRelativePoseProcessor</a></div><div class="brief "><p class="paragraph">Estimates relative (or absolute) pose from an unknown location. This class estimates attitude by using Android's relative attitude sensor. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1046358103%2FClasslikes%2F300442814" anchor-label="BaseDoubleFusedECEFAbsolutePoseProcessor" id="1046358103%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-double-fused-e-c-e-f-absolute-pose-processor/index.html"><span>Base</span><wbr></wbr><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1046358103%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-double-fused-e-c-e-f-absolute-pose-processor/index.html">BaseDoubleFusedECEFAbsolutePoseProcessor</a><span class="token operator">&lt;</span><a href="-base-double-fused-e-c-e-f-absolute-pose-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-double-fused-e-c-e-f-absolute-pose-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-double-fused-e-c-e-f-absolute-pose-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="-base-e-c-e-f-absolute-pose-processor/index.html">BaseECEFAbsolutePoseProcessor</a></div><div class="brief "><p class="paragraph">Base class to estimate absolute pose expressed in ECEF coordinates. This class estimated device attitude by double fusing gravity/accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope is then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1903490934%2FClasslikes%2F300442814" anchor-label="BaseDoubleFusedLocalPoseProcessor" id="-1903490934%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-double-fused-local-pose-processor/index.html"><span>Base</span><wbr></wbr><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1903490934%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-double-fused-local-pose-processor/index.html">BaseDoubleFusedLocalPoseProcessor</a><span class="token operator">&lt;</span><a href="-base-double-fused-local-pose-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-double-fused-local-pose-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-double-fused-local-pose-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="-base-local-pose-processor/index.html">BaseLocalPoseProcessor</a></div><div class="brief "><p class="paragraph">Base class to estimate absolute pose using local plane navigation. This class estimated device attitude by double fusing gravity/accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope is then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1185996601%2FClasslikes%2F300442814" anchor-label="BaseECEFAbsolutePoseProcessor" id="-1185996601%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-e-c-e-f-absolute-pose-processor/index.html"><span>Base</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1185996601%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-e-c-e-f-absolute-pose-processor/index.html">BaseECEFAbsolutePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate absolute pose expressed in ECEF coordinates. Implementations of this subclass might use a combination of: accelerometer, gyroscope, magnetometer, gravity or attitude measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2932392%2FClasslikes%2F300442814" anchor-label="BaseFusedECEFAbsolutePoseProcessor" id="2932392%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-fused-e-c-e-f-absolute-pose-processor/index.html"><span>Base</span><wbr></wbr><span>Fused</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2932392%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-fused-e-c-e-f-absolute-pose-processor/index.html">BaseFusedECEFAbsolutePoseProcessor</a><span class="token operator">&lt;</span><a href="-base-fused-e-c-e-f-absolute-pose-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-fused-e-c-e-f-absolute-pose-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-fused-e-c-e-f-absolute-pose-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="-base-e-c-e-f-absolute-pose-processor/index.html">BaseECEFAbsolutePoseProcessor</a></div><div class="brief "><p class="paragraph">Base class to estimate absolute pose expressed in ECEF coordinates. This class estimated device attitude by fusing gravity/accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope is then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-372540583%2FClasslikes%2F300442814" anchor-label="BaseFusedLocalPoseProcessor" id="-372540583%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-fused-local-pose-processor/index.html"><span>Base</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-372540583%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-fused-local-pose-processor/index.html">BaseFusedLocalPoseProcessor</a><span class="token operator">&lt;</span><a href="-base-fused-local-pose-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-fused-local-pose-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-fused-local-pose-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="-base-local-pose-processor/index.html">BaseLocalPoseProcessor</a></div><div class="brief "><p class="paragraph">Base class to estimate absolute pose using local plane navigation. This class estimates device attitude by fusing gravity/accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="884496830%2FClasslikes%2F300442814" anchor-label="BaseFusedRelativePoseProcessor" id="884496830%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-fused-relative-pose-processor/index.html"><span>Base</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="884496830%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-fused-relative-pose-processor/index.html">BaseFusedRelativePoseProcessor</a><span class="token operator">&lt;</span><a href="-base-fused-relative-pose-processor/index.html">M</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-sensor-measurement/index.html">SensorMeasurement</a><span class="token operator">&lt;</span><a href="-base-fused-relative-pose-processor/index.html">M</a><span class="token operator">&gt;</span><span class="token punctuation">, </span><a href="-base-fused-relative-pose-processor/index.html">S</a><span class="token operator"> : </span><a href="../com.irurueta.android.navigation.inertial.collectors/-synced-sensor-measurement/index.html">SyncedSensorMeasurement</a><span class="token operator">&gt;</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialSpeed<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="-base-relative-pose-processor/index.html">BaseRelativePoseProcessor</a></div><div class="brief "><p class="paragraph">Base class to estimate relative pose from an unknown location. This class estimates device attitude by fusing gravity/accelerometer, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1404022298%2FClasslikes%2F300442814" anchor-label="BaseLocalPoseProcessor" id="1404022298%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-local-pose-processor/index.html"><span>Base</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1404022298%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-local-pose-processor/index.html">BaseLocalPoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate absolute pose using local plane navigation. Implementations of this subclass might use a combination of: accelerometer, gyroscope, magnetometer, gravity or attitude measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-412703907%2FClasslikes%2F300442814" anchor-label="BaseRelativePoseProcessor" id="-412703907%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-base-relative-pose-processor/index.html"><span>Base</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-412703907%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-base-relative-pose-processor/index.html">BaseRelativePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>initialSpeed<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>processorListener<span class="token operator">: </span><a href="-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Base class to estimate relative pose from an unknown location.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1894128216%2FClasslikes%2F300442814" anchor-label="DoubleFusedECEFAbsolutePoseProcessor" id="-1894128216%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-double-fused-e-c-e-f-absolute-pose-processor/index.html"><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1894128216%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-double-fused-e-c-e-f-absolute-pose-processor/index.html">DoubleFusedECEFAbsolutePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-double-fused-e-c-e-f-absolute-pose-processor/index.html">BaseDoubleFusedECEFAbsolutePoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimate absolute pose expressed in ECEF coordinates. This class estimated device attitude by double fusing gravity, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1145844825%2FClasslikes%2F300442814" anchor-label="DoubleFusedLocalPoseProcessor" id="1145844825%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-double-fused-local-pose-processor/index.html"><span>Double</span><wbr></wbr><span>Fused</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1145844825%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-double-fused-local-pose-processor/index.html">DoubleFusedLocalPoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-double-fused-local-pose-processor/index.html">BaseDoubleFusedLocalPoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute pose using local plane navigation. This class estimated device attitude by double fusing gravity, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="43060409%2FClasslikes%2F300442814" anchor-label="FusedECEFAbsolutePoseProcessor" id="43060409%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-fused-e-c-e-f-absolute-pose-processor/index.html"><span>Fused</span><wbr></wbr><span>ECEFAbsolute</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="43060409%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-fused-e-c-e-f-absolute-pose-processor/index.html">FusedECEFAbsolutePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-e-c-e-f-absolute-pose-processor/-on-processed-listener/index.html">BaseECEFAbsolutePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-e-c-e-f-absolute-pose-processor/index.html">BaseFusedECEFAbsolutePoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimate absolute pose expressed in ECEF coordinates. This class estimated device attitude by fusing gravity, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="596733544%2FClasslikes%2F300442814" anchor-label="FusedLocalPoseProcessor" id="596733544%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-fused-local-pose-processor/index.html"><span>Fused</span><wbr></wbr><span>Local</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="596733544%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-fused-local-pose-processor/index.html">FusedLocalPoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialLocation<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token punctuation">, </span></span><span class="parameter ">initialVelocity<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.frames/NEDVelocity///PointingToDeclaration/">NEDVelocity</span><span class="token operator"> = </span>NEDVelocity()<span class="token punctuation">, </span></span><span class="parameter ">estimatePoseTransformation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">false</span><span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-local-pose-processor/-on-processed-listener/index.html">BaseLocalPoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-local-pose-processor/index.html">BaseFusedLocalPoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates absolute pose using local plane navigation. This class estimated device attitude by fusing gravity, gyroscope and magnetometer measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1464883279%2FClasslikes%2F300442814" anchor-label="FusedRelativePoseProcessor" id="1464883279%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-fused-relative-pose-processor/index.html"><span>Fused</span><wbr></wbr><span>Relative</span><wbr></wbr><span>Pose</span><wbr></wbr><span><span>Processor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1464883279%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-fused-relative-pose-processor/index.html">FusedRelativePoseProcessor</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">initialSpeed<span class="token operator">: </span><a href="../com.irurueta.android.navigation.inertial.estimators.pose/-speed-triad/index.html">SpeedTriad</a><span class="token operator"> = </span>SpeedTriad()<span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-base-relative-pose-processor/-on-processed-listener/index.html">BaseRelativePoseProcessor.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="-base-fused-relative-pose-processor/index.html">BaseFusedRelativePoseProcessor</a><span class="token operator">&lt;</span><a href="../com.irurueta.android.navigation.inertial.collectors/-gravity-sensor-measurement/index.html">GravitySensorMeasurement</a><span class="token punctuation">, </span><a href="../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gravity-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Estimates relative pose from an unknown location. This class estimates device attitude by fusing gravity and gyroscope measurements. Accelerometer and gyroscope are then taken into account to update device position.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

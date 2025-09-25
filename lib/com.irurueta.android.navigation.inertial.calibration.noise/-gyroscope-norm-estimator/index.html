@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>GyroscopeNormEstimator</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.calibration.noise/GyroscopeNormEstimator///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.calibration.noise</a><span class="delimiter">/</span><span class="current">GyroscopeNormEstimator</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Gyroscope</span><wbr></wbr><span>Norm</span><wbr></wbr><span><span>Estimator</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">GyroscopeNormEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>sensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="token operator"> = </span>GyroscopeSensorType.GYROSCOPE_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">sensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">maxSamples<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>DEFAULT_MAX_SAMPLES<span class="token punctuation">, </span></span><span class="parameter ">maxDurationMillis<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span>DEFAULT_MAX_DURATION_MILLIS<span class="token punctuation">, </span></span><span class="parameter ">stopMode<span class="token operator">: </span><a href="../-stop-mode/index.html">StopMode</a><span class="token operator"> = </span>StopMode.MAX_SAMPLES_OR_DURATION<span class="token punctuation">, </span></span><span class="parameter ">completedListener<span class="token operator">: </span><a href="../-accumulated-measurement-estimator/-on-estimation-completed-listener/index.html">AccumulatedMeasurementEstimator.OnEstimationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNormEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">unreliableListener<span class="token operator">: </span><a href="../-accumulated-measurement-estimator/-on-unreliable-listener/index.html">AccumulatedMeasurementEstimator.OnUnreliableListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNormEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>measurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../-accumulated-measurement-estimator/index.html">AccumulatedMeasurementEstimator</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNormEstimator</a><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.noise/AccumulatedAngularSpeedMeasurementNoiseEstimator///PointingToDeclaration/">AccumulatedAngularSpeedMeasurementNoiseEstimator</span><span class="token punctuation">, </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/index.html">GyroscopeSensorCollector</a><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.units/AngularSpeedUnit///PointingToDeclaration/">AngularSpeedUnit</span><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">&gt; </span></div><p class="paragraph">Estimates gyroscope measurement norm. This estimator takes a given number of gyroscope measurements during a given duration of time to estimate gyroscope norm average, standard deviation and variance, as well as average time interval between measurements. For best accuracy of estimated results, device should remain static while data is being collected. In such case, average gyroscope norm should match expected Earth rotation rate.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>context</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Android context.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>sensor</span><wbr></wbr><span><span>Delay</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Delay of sensor between samples.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>max</span><wbr></wbr><span><span>Samples</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Maximum number of samples to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-n-l-y/index.html">StopMode.MAX_SAMPLES_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>max</span><wbr></wbr><span>Duration</span><wbr></wbr><span><span>Millis</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Maximum duration expressed in milliseconds to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-d-u-r-a-t-i-o-n_-o-n-l-y/index.html">StopMode.MAX_DURATION_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>stop</span><wbr></wbr><span><span>Mode</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Determines when this estimator will consider its estimation completed.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>completed</span><wbr></wbr><span><span>Listener</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Listener to notify when estimation is complete.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>unreliable</span><wbr></wbr><span><span>Listener</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Listener to notify when sensor becomes unreliable, and thus, estimation must be discarded.</p></div></div></div></div></div><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://developer.android.com/reference/kotlin/java/lang/IllegalArgumentException.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">when either <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/GyroscopeNormEstimator/maxSamples/#/PointingToDeclaration/">maxSamples</span> or <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/GyroscopeNormEstimator/maxDurationMillis/#/PointingToDeclaration/">maxDurationMillis</span> is negative.</p></div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="694504212%2FConstructors%2F300442814" anchor-label="GyroscopeNormEstimator" id="694504212%2FConstructors%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-gyroscope-norm-estimator.html"><span>Gyroscope</span><wbr></wbr><span>Norm</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="694504212%2FConstructors%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">sensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="token operator"> = </span>GyroscopeSensorType.GYROSCOPE_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">sensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">maxSamples<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>DEFAULT_MAX_SAMPLES<span class="token punctuation">, </span></span><span class="parameter ">maxDurationMillis<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span>DEFAULT_MAX_DURATION_MILLIS<span class="token punctuation">, </span></span><span class="parameter ">stopMode<span class="token operator">: </span><a href="../-stop-mode/index.html">StopMode</a><span class="token operator"> = </span>StopMode.MAX_SAMPLES_OR_DURATION<span class="token punctuation">, </span></span><span class="parameter ">completedListener<span class="token operator">: </span><a href="../-accumulated-measurement-estimator/-on-estimation-completed-listener/index.html">AccumulatedMeasurementEstimator.OnEstimationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNormEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">unreliableListener<span class="token operator">: </span><a href="../-accumulated-measurement-estimator/-on-unreliable-listener/index.html">AccumulatedMeasurementEstimator.OnUnreliableListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNormEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">measurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1464550747%2FProperties%2F300442814" anchor-label="averageNorm" id="-1464550747%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/average-norm.html"><span>average</span><wbr></wbr><span><span>Norm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1464550747%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/average-norm.html">averageNorm</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average of measurement norm expressed in measurement unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1390825739%2FProperties%2F300442814" anchor-label="averageNormAsMeasurement" id="1390825739%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/average-norm-as-measurement.html"><span>average</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1390825739%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/average-norm-as-measurement.html">averageNormAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average measurement norm as a measurement. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-989785578%2FProperties%2F300442814" anchor-label="averageTimeInterval" id="-989785578%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/average-time-interval.html"><span>average</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Interval</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-989785578%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/average-time-interval.html">averageTimeInterval</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between measurements expressed in seconds (s). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1721895415%2FProperties%2F300442814" anchor-label="averageTimeIntervalAsTime" id="1721895415%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/average-time-interval-as-time.html"><span>average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1721895415%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/average-time-interval-as-time.html">averageTimeIntervalAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-197676033%2FProperties%2F300442814" anchor-label="completedListener" id="-197676033%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/completed-listener.html"><span>completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-197676033%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-accumulated-measurement-estimator/completed-listener.html">completedListener</a><span class="token operator">: </span><a href="../-accumulated-measurement-estimator/-on-estimation-completed-listener/index.html">AccumulatedMeasurementEstimator.OnEstimationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNormEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when estimation is complete.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-888127057%2FProperties%2F300442814" anchor-label="context" id="-888127057%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/context.html"><span><span>context</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-888127057%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/context.html">context</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a></div><div class="brief "><p class="paragraph">Android context.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="314350172%2FProperties%2F300442814" anchor-label="elapsedTime" id="314350172%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/elapsed-time.html"><span>elapsed</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="314350172%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/elapsed-time.html">elapsedTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></div><div class="brief "><p class="paragraph">Gets amount of elapsed time to compute sensor noise, either if computation succeeds or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2070453567%2FProperties%2F300442814" anchor-label="elapsedTimeNanos" id="2070453567%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/elapsed-time-nanos.html"><span>elapsed</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Nanos</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2070453567%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/elapsed-time-nanos.html">elapsedTimeNanos</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Gets amount of elapsed time to compute sensor noise estimation expressed in nanoseconds (ns), either if computation succeeds or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1526345959%2FProperties%2F300442814" anchor-label="maxDurationMillis" id="1526345959%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/max-duration-millis.html"><span>max</span><wbr></wbr><span>Duration</span><wbr></wbr><span><span>Millis</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1526345959%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/max-duration-millis.html">maxDurationMillis</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Gets maximum duration expressed in milliseconds to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-d-u-r-a-t-i-o-n_-o-n-l-y/index.html">StopMode.MAX_DURATION_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1548676240%2FProperties%2F300442814" anchor-label="maxSamples" id="-1548676240%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/max-samples.html"><span>max</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1548676240%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/max-samples.html">maxSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets maximum number of samples to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-n-l-y/index.html">StopMode.MAX_SAMPLES_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-877809979%2FProperties%2F300442814" anchor-label="measurementListener" id="-877809979%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="measurement-listener.html"><span>measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-877809979%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="measurement-listener.html">measurementListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify collected sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1038525994%2FProperties%2F300442814" anchor-label="normStandardDeviation" id="-1038525994%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/norm-standard-deviation.html"><span>norm</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1038525994%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/norm-standard-deviation.html">normStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of norm expressed in the default unit of measurement (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1750095494%2FProperties%2F300442814" anchor-label="normStandardDeviationAsMeasurement" id="-1750095494%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/norm-standard-deviation-as-measurement.html"><span>norm</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1750095494%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/norm-standard-deviation-as-measurement.html">normStandardDeviationAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of norm as a measurement. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-799162897%2FProperties%2F300442814" anchor-label="normVariance" id="-799162897%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/norm-variance.html"><span>norm</span><wbr></wbr><span><span>Variance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-799162897%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/norm-variance.html">normVariance</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance of measurement norm expressed in the default squared unit of measurement (m^2/s^4 for acceleration, rad^2/s^2 for angular speed or T^2 for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1773122240%2FProperties%2F300442814" anchor-label="numberOfProcessedMeasurements" id="1773122240%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/number-of-processed-measurements.html"><span>number</span><wbr></wbr><span>Of</span><wbr></wbr><span>Processed</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1773122240%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/number-of-processed-measurements.html">numberOfProcessedMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Number of measurements that have been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-873675427%2FProperties%2F300442814" anchor-label="psd" id="-873675427%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/psd.html"><span><span>psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-873675427%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/psd.html">psd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets PSD (Power Spectral Density) of norm noise expressed in (m^2 * s^-3) for accelerometer, (rad^2/s) for gyroscope or (T^2 * s) for magnetometer. This is only available when estimation completes successfully and average time interval between measurements is reliably estimated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="532512505%2FProperties%2F300442814" anchor-label="resultAvailable" id="532512505%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/result-available.html"><span>result</span><wbr></wbr><span><span>Available</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="532512505%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether estimated average and time interval between measurements are available or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2064709109%2FProperties%2F300442814" anchor-label="resultUnreliable" id="2064709109%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/result-unreliable.html"><span>result</span><wbr></wbr><span><span>Unreliable</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2064709109%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/result-unreliable.html">resultUnreliable</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether estimated result is unreliable or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-918517025%2FProperties%2F300442814" anchor-label="rootPsd" id="-918517025%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/root-psd.html"><span>root</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-918517025%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/root-psd.html">rootPsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets root PSD (Power Spectral Density) of norm expressed in (m * s^-1.5) for accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer. This is only available when estimation completes successfully and average time interval between measurements is reliably estimated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1182166113%2FProperties%2F300442814" anchor-label="running" id="-1182166113%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/running.html"><span><span>running</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1182166113%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-accumulated-measurement-estimator/running.html">running</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether this estimator is already running.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2562146%2FProperties%2F300442814" anchor-label="sensor" id="2562146%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/sensor.html"><span><span>sensor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2562146%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/sensor.html">sensor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor being used to obtain measurements or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="312592949%2FProperties%2F300442814" anchor-label="sensorDelay" id="312592949%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/sensor-delay.html"><span>sensor</span><wbr></wbr><span><span>Delay</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="312592949%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-measurement-estimator/sensor-delay.html">sensorDelay</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a></div><div class="brief "><p class="paragraph">Delay of sensor between samples.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-546047087%2FProperties%2F300442814" anchor-label="sensorType" id="-546047087%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sensor-type.html"><span>sensor</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-546047087%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="sensor-type.html">sensorType</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a></div><div class="brief "><p class="paragraph">One of the supported gyroscope sensor types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1417181520%2FProperties%2F300442814" anchor-label="stopMode" id="-1417181520%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/stop-mode.html"><span>stop</span><wbr></wbr><span><span>Mode</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1417181520%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/stop-mode.html">stopMode</a><span class="token operator">: </span><a href="../-stop-mode/index.html">StopMode</a></div><div class="brief "><p class="paragraph">Determines when this estimator will consider its estimation completed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1608464077%2FProperties%2F300442814" anchor-label="timeIntervalStandardDeviation" id="-1608464077%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/time-interval-standard-deviation.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1608464077%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/time-interval-standard-deviation.html">timeIntervalStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements expressed in seconds (s). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1057933484%2FProperties%2F300442814" anchor-label="timeIntervalStandardDeviationAsTime" id="-1057933484%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/time-interval-standard-deviation-as-time.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1057933484%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/time-interval-standard-deviation-as-time.html">timeIntervalStandardDeviationAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1761812978%2FProperties%2F300442814" anchor-label="timeIntervalVariance" id="1761812978%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/time-interval-variance.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Variance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1761812978%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/time-interval-variance.html">timeIntervalVariance</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance of time interval between measurements expressed in squared seconds (s^2). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1687406725%2FProperties%2F300442814" anchor-label="unreliableListener" id="1687406725%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/unreliable-listener.html"><span>unreliable</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1687406725%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-accumulated-measurement-estimator/unreliable-listener.html">unreliableListener</a><span class="token operator">: </span><a href="../-accumulated-measurement-estimator/-on-unreliable-listener/index.html">AccumulatedMeasurementEstimator.OnUnreliableListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNormEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when sensor becomes unreliable, and thus, estimation must be discarded.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="686891721%2FFunctions%2F300442814" anchor-label="getAverageNormAsMeasurement" id="686891721%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#686891721%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="686891721%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#686891721%2FFunctions%2F300442814"><span class="token function">getAverageNormAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated average measurement norm as a measurement instance. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1432751909%2FFunctions%2F300442814" anchor-label="getAverageTimeIntervalAsTime" id="-1432751909%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/get-average-time-interval-as-time.html"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1432751909%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-base-accumulated-estimator/get-average-time-interval-as-time.html"><span class="token function">getAverageTimeIntervalAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets average time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1831136170%2FFunctions%2F300442814" anchor-label="getElapsedTime" id="-1831136170%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/get-elapsed-time.html"><span>get</span><wbr></wbr><span>Elapsed</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1831136170%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-base-accumulated-estimator/get-elapsed-time.html"><span class="token function">getElapsedTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets amount of time elapsed, either if computation succeeds or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="473801594%2FFunctions%2F300442814" anchor-label="getNormStandardDeviationAsMeasurement" id="473801594%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#473801594%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Norm</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="473801594%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#473801594%2FFunctions%2F300442814"><span class="token function">getNormStandardDeviationAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of norm as a measurement. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedMeasurementEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2090159522%2FFunctions%2F300442814" anchor-label="getTimeIntervalStandardDeviationAsTime" id="-2090159522%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/get-time-interval-standard-deviation-as-time.html"><span>get</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2090159522%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-base-accumulated-estimator/get-time-interval-standard-deviation-as-time.html"><span class="token function">getTimeIntervalStandardDeviationAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1352715932%2FFunctions%2F300442814" anchor-label="start" id="1352715932%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/start.html"><span><span>start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1352715932%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-accumulated-measurement-estimator/start.html"><span class="token function">start</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Starts collection of sensor norm measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-323518246%2FFunctions%2F300442814" anchor-label="stop" id="-323518246%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-measurement-estimator/stop.html"><span><span>stop</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-323518246%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-accumulated-measurement-estimator/stop.html"><span class="token function">stop</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Stops collection of sensor norm measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

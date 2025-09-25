@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Companion</title>
+    <link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.processors.attitude/KalmanAbsoluteAttitudeProcessor3.Companion///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../../index.html">lib</a><span class="delimiter">/</span><a href="../../index.html">com.irurueta.android.navigation.inertial.processors.attitude</a><span class="delimiter">/</span><a href="../index.html">KalmanAbsoluteAttitudeProcessor3</a><span class="delimiter">/</span><span class="current">Companion</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Companion</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">Companion</a></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1311216041%2FProperties%2F300442814" anchor-label="DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION" id="-1311216041%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-e-f-a-u-l-t_-a-c-c-e-l-e-r-o-m-e-t-e-r_-n-o-i-s-e_-s-t-a-n-d-a-r-d_-d-e-v-i-a-t-i-o-n.html"><span>DEFAULT_</span><wbr></wbr><span>ACCELEROMETER_</span><wbr></wbr><span>NOISE_</span><wbr></wbr><span>STANDARD_</span><wbr></wbr><span>DEVIATION</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1311216041%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-e-f-a-u-l-t_-a-c-c-e-l-e-r-o-m-e-t-e-r_-n-o-i-s-e_-s-t-a-n-d-a-r-d_-d-e-v-i-a-t-i-o-n.html">DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">0.015</span></div><div class="brief "><p class="paragraph">Default standard deviation for accelerometer noise expressed in m/s^2.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1270362133%2FProperties%2F300442814" anchor-label="DEFAULT_FREE_FALL_THRESHOLD" id="1270362133%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-e-f-a-u-l-t_-f-r-e-e_-f-a-l-l_-t-h-r-e-s-h-o-l-d.html"><span>DEFAULT_</span><wbr></wbr><span>FREE_</span><wbr></wbr><span>FALL_</span><wbr></wbr><span>THRESHOLD</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1270362133%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-e-f-a-u-l-t_-f-r-e-e_-f-a-l-l_-t-h-r-e-s-h-o-l-d.html">DEFAULT_FREE_FALL_THRESHOLD</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Default threshold to consider that device is in free fall. When device is in free fall, accelerometer measurements are considered unreliable and are ignored (only gyroscope predictions are made).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1060632883%2FProperties%2F300442814" anchor-label="DEFAULT_GYROSCOPE_NOISE_PSD" id="-1060632883%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-e-f-a-u-l-t_-g-y-r-o-s-c-o-p-e_-n-o-i-s-e_-p-s-d.html"><span>DEFAULT_</span><wbr></wbr><span>GYROSCOPE_</span><wbr></wbr><span>NOISE_</span><wbr></wbr><span>PSD</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1060632883%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-e-f-a-u-l-t_-g-y-r-o-s-c-o-p-e_-n-o-i-s-e_-p-s-d.html">DEFAULT_GYROSCOPE_NOISE_PSD</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">1.0E-7</span></div><div class="brief "><p class="paragraph">Default variance of the gyroscope output per Hz (or variance at 1 Hz). This is equivalent to the gyroscope PSD (Power Spectral Density) that can be obtained during calibration or with noise estimators. This is a typical value that can be used for non-calibrated devices. This is expressed as (rad/s)^2 / Hz or rad^2/s.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-427561040%2FProperties%2F300442814" anchor-label="DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION" id="-427561040%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-e-f-a-u-l-t_-m-a-g-n-e-t-o-m-e-t-e-r_-n-o-i-s-e_-s-t-a-n-d-a-r-d_-d-e-v-i-a-t-i-o-n.html"><span>DEFAULT_</span><wbr></wbr><span>MAGNETOMETER_</span><wbr></wbr><span>NOISE_</span><wbr></wbr><span>STANDARD_</span><wbr></wbr><span>DEVIATION</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-427561040%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-e-f-a-u-l-t_-m-a-g-n-e-t-o-m-e-t-e-r_-n-o-i-s-e_-s-t-a-n-d-a-r-d_-d-e-v-i-a-t-i-o-n.html">DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">5.0E-7</span></div><div class="brief "><p class="paragraph">Default standard deviation for magnetometer noise expressed in Teslas (T).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1628642756%2FProperties%2F300442814" anchor-label="DEFAULT_TEMPERATURE_CELSIUS" id="-1628642756%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-e-f-a-u-l-t_-t-e-m-p-e-r-a-t-u-r-e_-c-e-l-s-i-u-s.html"><span>DEFAULT_</span><wbr></wbr><span>TEMPERATURE_</span><wbr></wbr><span>CELSIUS</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1628642756%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-e-f-a-u-l-t_-t-e-m-p-e-r-a-t-u-r-e_-c-e-l-s-i-u-s.html">DEFAULT_TEMPERATURE_CELSIUS</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">20.0</span></div><div class="brief "><p class="paragraph">Default temperature expressed in Celsius (20 ºC).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-605261892%2FProperties%2F300442814" anchor-label="DEFAULT_TEMPERATURE_NOISE_STANDARD_DEVIATION" id="-605261892%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-e-f-a-u-l-t_-t-e-m-p-e-r-a-t-u-r-e_-n-o-i-s-e_-s-t-a-n-d-a-r-d_-d-e-v-i-a-t-i-o-n.html"><span>DEFAULT_</span><wbr></wbr><span>TEMPERATURE_</span><wbr></wbr><span>NOISE_</span><wbr></wbr><span>STANDARD_</span><wbr></wbr><span>DEVIATION</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-605261892%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-e-f-a-u-l-t_-t-e-m-p-e-r-a-t-u-r-e_-n-o-i-s-e_-s-t-a-n-d-a-r-d_-d-e-v-i-a-t-i-o-n.html">DEFAULT_TEMPERATURE_NOISE_STANDARD_DEVIATION</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">1.0</span></div><div class="brief "><p class="paragraph">Default standard deviation for temperature noise expressed in Celsius (C).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-184551880%2FProperties%2F300442814" anchor-label="EARTH_GRAVITY" id="-184551880%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-e-a-r-t-h_-g-r-a-v-i-t-y.html"><span>EARTH_</span><wbr></wbr><span>GRAVITY</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-184551880%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-e-a-r-t-h_-g-r-a-v-i-t-y.html">EARTH_GRAVITY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Average gravity at Earth's sea level expressed in m/s^2.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

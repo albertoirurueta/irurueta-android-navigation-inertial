@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>MagnetometerIntervalDetector</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.calibration.intervals/MagnetometerIntervalDetector///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.calibration.intervals</a><span class="delimiter">/</span><span class="current">MagnetometerIntervalDetector</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Magnetometer</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Detector</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">MagnetometerIntervalDetector</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>sensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a><span class="token operator"> = </span>MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">sensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">initializationStartedListener<span class="token operator">: </span><a href="../-interval-detector/-on-initialization-started-listener/index.html">IntervalDetector.OnInitializationStartedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">initializationCompletedListener<span class="token operator">: </span><a href="../-interval-detector/-on-initialization-completed-listener/index.html">IntervalDetector.OnInitializationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">errorListener<span class="token operator">: </span><a href="../-interval-detector/-on-error-listener/index.html">IntervalDetector.OnErrorListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">staticIntervalDetectedListener<span class="token operator">: </span><a href="../-interval-detector/-on-static-interval-detected-listener/index.html">IntervalDetector.OnStaticIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">dynamicIntervalDetectedListener<span class="token operator">: </span><a href="../-interval-detector/-on-dynamic-interval-detected-listener/index.html">IntervalDetector.OnDynamicIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">resetListener<span class="token operator">: </span><a href="../-interval-detector/-on-reset-listener/index.html">IntervalDetector.OnResetListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>measurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">accuracyChangedListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../-interval-detector/index.html">IntervalDetector</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token punctuation">, </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/index.html">MagnetometerSensorCollector</a><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensityUnit///PointingToDeclaration/">MagneticFluxDensityUnit</span><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.intervals/MagneticFluxDensityTriadStaticIntervalDetector///PointingToDeclaration/">MagneticFluxDensityTriadStaticIntervalDetector</span><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.intervals/MagneticFluxDensityTriadStaticIntervalDetectorListener///PointingToDeclaration/">MagneticFluxDensityTriadStaticIntervalDetectorListener</span><span class="token operator">&gt; </span></div><p class="paragraph">Detects static or motion intervals of time by using the magnetometer of the device to determine whether the device is moving or not. When detector is started, initialization occurs to determine the magnetometer noise level while keeping device static. Once the detector is initialized, then static or dynamic intervals can be detected. This detector uses accumulated average values during static intervals, and windowed averages as &quot;instantaneous&quot; values during dynamic intervals. Length of windows, as well as thresholds to determine when changes between static and dynamic intervals occur can be easily configured. This interval detector converts sensor measurements from device ENU coordinates to local plane NED coordinates. Thus, all values referring to a given x-y-z coordinate refers to local plane NED system of coordinates.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="649808447%2FConstructors%2F300442814" anchor-label="MagnetometerIntervalDetector" id="649808447%2FConstructors%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-magnetometer-interval-detector.html"><span>Magnetometer</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Detector</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="649808447%2FConstructors%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">sensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a><span class="token operator"> = </span>MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">sensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">initializationStartedListener<span class="token operator">: </span><a href="../-interval-detector/-on-initialization-started-listener/index.html">IntervalDetector.OnInitializationStartedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">initializationCompletedListener<span class="token operator">: </span><a href="../-interval-detector/-on-initialization-completed-listener/index.html">IntervalDetector.OnInitializationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">errorListener<span class="token operator">: </span><a href="../-interval-detector/-on-error-listener/index.html">IntervalDetector.OnErrorListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">staticIntervalDetectedListener<span class="token operator">: </span><a href="../-interval-detector/-on-static-interval-detected-listener/index.html">IntervalDetector.OnStaticIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">dynamicIntervalDetectedListener<span class="token operator">: </span><a href="../-interval-detector/-on-dynamic-interval-detected-listener/index.html">IntervalDetector.OnDynamicIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">resetListener<span class="token operator">: </span><a href="../-interval-detector/-on-reset-listener/index.html">IntervalDetector.OnResetListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">measurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">accuracyChangedListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="1165928447%2FProperties%2F300442814" anchor-label="accumulatedAvgTriad" id="1165928447%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-avg-triad.html"><span>accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1165928447%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-avg-triad.html">accumulatedAvgTriad</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></div><div class="brief "><p class="paragraph">Gets average sensor measurements triad accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1328117291%2FProperties%2F300442814" anchor-label="accumulatedAvgX" id="-1328117291%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-avg-x.html"><span>accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1328117291%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-avg-x.html">accumulatedAvgX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets average x-coordinate of sensor measurements accumulated during last static period expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-134041637%2FProperties%2F300442814" anchor-label="accumulatedAvgXAsMeasurement" id="-134041637%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-avg-x-as-measurement.html"><span>accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-134041637%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-avg-x-as-measurement.html">accumulatedAvgXAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets average x-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1297097484%2FProperties%2F300442814" anchor-label="accumulatedAvgY" id="-1297097484%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-avg-y.html"><span>accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1297097484%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-avg-y.html">accumulatedAvgY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets average y-coordinate of sensor measurements accumulated during last static period expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1056725220%2FProperties%2F300442814" anchor-label="accumulatedAvgYAsMeasurement" id="-1056725220%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-avg-y-as-measurement.html"><span>accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1056725220%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-avg-y-as-measurement.html">accumulatedAvgYAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets average y-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1266077677%2FProperties%2F300442814" anchor-label="accumulatedAvgZ" id="-1266077677%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-avg-z.html"><span>accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1266077677%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-avg-z.html">accumulatedAvgZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets average z-coordinate of sensor measurements accumulated during last static period expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1979408803%2FProperties%2F300442814" anchor-label="accumulatedAvgZAsMeasurement" id="-1979408803%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-avg-z-as-measurement.html"><span>accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1979408803%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-avg-z-as-measurement.html">accumulatedAvgZAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets average z-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-812710000%2FProperties%2F300442814" anchor-label="accumulatedStdTriad" id="-812710000%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-std-triad.html"><span>accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-812710000%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-std-triad.html">accumulatedStdTriad</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></div><div class="brief "><p class="paragraph">Gets standard deviation of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="182409702%2FProperties%2F300442814" anchor-label="accumulatedStdX" id="182409702%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-std-x.html"><span>accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="182409702%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-std-x.html">accumulatedStdX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets standard deviation of x-coordinate of sensor measurements accumulated during last static period expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1585857386%2FProperties%2F300442814" anchor-label="accumulatedStdXAsMeasurement" id="1585857386%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-std-x-as-measurement.html"><span>accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1585857386%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-std-x-as-measurement.html">accumulatedStdXAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets standard deviation of x-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="213429509%2FProperties%2F300442814" anchor-label="accumulatedStdY" id="213429509%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-std-y.html"><span>accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="213429509%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-std-y.html">accumulatedStdY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets standard deviation of y-coordinate of sensor measurements accumulated during last static period expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="663173803%2FProperties%2F300442814" anchor-label="accumulatedStdYAsMeasurement" id="663173803%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-std-y-as-measurement.html"><span>accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="663173803%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-std-y-as-measurement.html">accumulatedStdYAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets standard deviation of y-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="244449316%2FProperties%2F300442814" anchor-label="accumulatedStdZ" id="244449316%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-std-z.html"><span>accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="244449316%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-std-z.html">accumulatedStdZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets standard deviation of z-coordinate of sensor measurements accumulated during last static period expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-259509780%2FProperties%2F300442814" anchor-label="accumulatedStdZAsMeasurement" id="-259509780%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accumulated-std-z-as-measurement.html"><span>accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-259509780%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/accumulated-std-z-as-measurement.html">accumulatedStdZAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets standard deviation of z-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1721219214%2FProperties%2F300442814" anchor-label="accuracyChangedListener" id="1721219214%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/accuracy-changed-listener.html"><span>accuracy</span><wbr></wbr><span>Changed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1721219214%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/accuracy-changed-listener.html">accuracyChangedListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-collector/-on-accuracy-changed-listener/index.html">SensorCollector.OnAccuracyChangedListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when sensor accuracy changes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2099426414%2FProperties%2F300442814" anchor-label="averageTimeInterval" id="2099426414%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/average-time-interval.html"><span>average</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Interval</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2099426414%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/average-time-interval.html">averageTimeInterval</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between sensor samples expressed in seconds (s). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1566143921%2FProperties%2F300442814" anchor-label="averageTimeIntervalAsTime" id="-1566143921%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/average-time-interval-as-time.html"><span>average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1566143921%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/average-time-interval-as-time.html">averageTimeIntervalAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between sensor samples. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-353076574%2FProperties%2F300442814" anchor-label="baseNoiseLevel" id="-353076574%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/base-noise-level.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-353076574%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/base-noise-level.html">baseNoiseLevel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope and Teslas (T) for magnetometer. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1132262756%2FProperties%2F300442814" anchor-label="baseNoiseLevelAbsoluteThreshold" id="1132262756%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/base-noise-level-absolute-threshold.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span><span>Threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1132262756%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/base-noise-level-absolute-threshold.html">baseNoiseLevelAbsoluteThreshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes. This threshold is expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope and Teslas (T) for magnetometer.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1095091372%2FProperties%2F300442814" anchor-label="baseNoiseLevelAbsoluteThresholdAsMeasurement" id="1095091372%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/base-noise-level-absolute-threshold-as-measurement.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1095091372%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/base-noise-level-absolute-threshold-as-measurement.html">baseNoiseLevelAbsoluteThresholdAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets or sets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1599785938%2FProperties%2F300442814" anchor-label="baseNoiseLevelAsMeasurement" id="-1599785938%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/base-noise-level-as-measurement.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1599785938%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/base-noise-level-as-measurement.html">baseNoiseLevelAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="244085559%2FProperties%2F300442814" anchor-label="baseNoiseLevelPsd" id="244085559%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/base-noise-level-psd.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="244085559%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/base-noise-level-psd.html">baseNoiseLevelPsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3) for accelerometer, (rad^2/s) for gyroscope or (T^2 * s) for magnetometer.. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="910277561%2FProperties%2F300442814" anchor-label="baseNoiseLevelRootPsd" id="910277561%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/base-noise-level-root-psd.html"><span>base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Root</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="910277561%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/base-noise-level-root-psd.html">baseNoiseLevelRootPsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets measurement base noise level root PSD (Power Spectral Density) expressed in (m * s^-1.5) for accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-378366930%2FProperties%2F300442814" anchor-label="context" id="-378366930%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/context.html"><span><span>context</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-378366930%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/context.html">context</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a></div><div class="brief "><p class="paragraph">Android context.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1206838435%2FProperties%2F300442814" anchor-label="dynamicIntervalDetectedListener" id="1206838435%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/dynamic-interval-detected-listener.html"><span>dynamic</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1206838435%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/dynamic-interval-detected-listener.html">dynamicIntervalDetectedListener</a><span class="token operator">: </span><a href="../-interval-detector/-on-dynamic-interval-detected-listener/index.html">IntervalDetector.OnDynamicIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new dynamic interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-740613215%2FProperties%2F300442814" anchor-label="errorListener" id="-740613215%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/error-listener.html"><span>error</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-740613215%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/error-listener.html">errorListener</a><span class="token operator">: </span><a href="../-interval-detector/-on-error-listener/index.html">IntervalDetector.OnErrorListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify errors such as sudden motion during initialization or sensor unreliability.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1384935298%2FProperties%2F300442814" anchor-label="initializationCompletedListener" id="-1384935298%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/initialization-completed-listener.html"><span>initialization</span><wbr></wbr><span>Completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1384935298%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/initialization-completed-listener.html">initializationCompletedListener</a><span class="token operator">: </span><a href="../-interval-detector/-on-initialization-completed-listener/index.html">IntervalDetector.OnInitializationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when this detector completes initialization after being started.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1580342008%2FProperties%2F300442814" anchor-label="initializationStartedListener" id="-1580342008%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/initialization-started-listener.html"><span>initialization</span><wbr></wbr><span>Started</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1580342008%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/initialization-started-listener.html">initializationStartedListener</a><span class="token operator">: </span><a href="../-interval-detector/-on-initialization-started-listener/index.html">IntervalDetector.OnInitializationStartedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when this detector starts initialization after being started.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-262951034%2FProperties%2F300442814" anchor-label="initialStaticSamples" id="-262951034%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/initial-static-samples.html"><span>initial</span><wbr></wbr><span>Static</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-262951034%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/initial-static-samples.html">initialStaticSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets number of samples to be processed initially while keeping the sensor static in order to find the base noise level when device is static.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1953421867%2FProperties%2F300442814" anchor-label="instantaneousAvgTriad" id="1953421867%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-avg-triad.html"><span>instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1953421867%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-avg-triad.html">instantaneousAvgTriad</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></div><div class="brief "><p class="paragraph">Gets windowed average of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-709971455%2FProperties%2F300442814" anchor-label="instantaneousAvgX" id="-709971455%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-avg-x.html"><span>instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-709971455%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-avg-x.html">instantaneousAvgX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets windowed average x-coordinate of sensor measurements for each processed triad expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-339071185%2FProperties%2F300442814" anchor-label="instantaneousAvgXAsMeasurement" id="-339071185%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-avg-x-as-measurement.html"><span>instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-339071185%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-avg-x-as-measurement.html">instantaneousAvgXAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets windowed average x-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-678951648%2FProperties%2F300442814" anchor-label="instantaneousAvgY" id="-678951648%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-avg-y.html"><span>instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-678951648%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-avg-y.html">instantaneousAvgY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets windowed average y-coordinate of sensor measurements for each processed triad expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1261754768%2FProperties%2F300442814" anchor-label="instantaneousAvgYAsMeasurement" id="-1261754768%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-avg-y-as-measurement.html"><span>instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1261754768%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-avg-y-as-measurement.html">instantaneousAvgYAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets windowed average y-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-647931841%2FProperties%2F300442814" anchor-label="instantaneousAvgZ" id="-647931841%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-avg-z.html"><span>instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-647931841%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-avg-z.html">instantaneousAvgZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets windowed average z-coordinate of sensor measurements for each processed triad expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2110528945%2FProperties%2F300442814" anchor-label="instantaneousAvgZAsMeasurement" id="2110528945%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-avg-z-as-measurement.html"><span>instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2110528945%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-avg-z-as-measurement.html">instantaneousAvgZAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets windowed average z-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-979789906%2FProperties%2F300442814" anchor-label="instantaneousNoiseLevelFactor" id="-979789906%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-noise-level-factor.html"><span>instantaneous</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span><span>Factor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-979789906%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/instantaneous-noise-level-factor.html">instantaneousNoiseLevelFactor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets factor to determine that a sudden movement has occurred during initialization if instantaneous noise level exceeds accumulated noise level by this factor amount. This factor is unit-less.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-25216580%2FProperties%2F300442814" anchor-label="instantaneousStdTriad" id="-25216580%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-std-triad.html"><span>instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-25216580%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-std-triad.html">instantaneousStdTriad</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of sensor measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="800555538%2FProperties%2F300442814" anchor-label="instantaneousStdX" id="800555538%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-std-x.html"><span>instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="800555538%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-std-x.html">instantaneousStdX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of x-coordinate of sensor measurements for each processed triad expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1380827838%2FProperties%2F300442814" anchor-label="instantaneousStdXAsMeasurement" id="1380827838%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-std-x-as-measurement.html"><span>instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1380827838%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-std-x-as-measurement.html">instantaneousStdXAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of x-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="831575345%2FProperties%2F300442814" anchor-label="instantaneousStdY" id="831575345%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-std-y.html"><span>instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="831575345%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-std-y.html">instantaneousStdY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of y-coordinate of sensor measurements for each processed triad expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="458144255%2FProperties%2F300442814" anchor-label="instantaneousStdYAsMeasurement" id="458144255%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-std-y-as-measurement.html"><span>instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="458144255%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-std-y-as-measurement.html">instantaneousStdYAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of y-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="862595152%2FProperties%2F300442814" anchor-label="instantaneousStdZ" id="862595152%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-std-z.html"><span>instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="862595152%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-std-z.html">instantaneousStdZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of z-coordinate of sensor measurements for each processed triad expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-464539328%2FProperties%2F300442814" anchor-label="instantaneousStdZAsMeasurement" id="-464539328%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/instantaneous-std-z-as-measurement.html"><span>instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-464539328%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/instantaneous-std-z-as-measurement.html">instantaneousStdZAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of z-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1591898007%2FProperties%2F300442814" anchor-label="measurementListener" id="-1591898007%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="measurement-listener.html"><span>measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1591898007%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="measurement-listener.html">measurementListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-collector/-on-measurement-listener/index.html">MagnetometerSensorCollector.OnMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify collected magnetometer measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="340543256%2FProperties%2F300442814" anchor-label="numberOfProcessedMeasurements" id="340543256%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/number-of-processed-measurements.html"><span>number</span><wbr></wbr><span>Of</span><wbr></wbr><span>Processed</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="340543256%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/number-of-processed-measurements.html">numberOfProcessedMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Number of measurements that have been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1349608134%2FProperties%2F300442814" anchor-label="resetListener" id="-1349608134%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/reset-listener.html"><span>reset</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1349608134%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/reset-listener.html">resetListener</a><span class="token operator">: </span><a href="../-interval-detector/-on-reset-listener/index.html">IntervalDetector.OnResetListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a reset occurs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-672405986%2FProperties%2F300442814" anchor-label="running" id="-672405986%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/running.html"><span><span>running</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-672405986%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/running.html">running</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether this detector is already running.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2097216003%2FProperties%2F300442814" anchor-label="sensor" id="2097216003%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/sensor.html"><span><span>sensor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2097216003%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/sensor.html">sensor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor being used to obtain measurements, or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1165441740%2FProperties%2F300442814" anchor-label="sensorDelay" id="-1165441740%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/sensor-delay.html"><span>sensor</span><wbr></wbr><span><span>Delay</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1165441740%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/sensor-delay.html">sensorDelay</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a></div><div class="brief "><p class="paragraph">Delay of sensor between samples.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1348792685%2FProperties%2F300442814" anchor-label="sensorType" id="1348792685%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sensor-type.html"><span>sensor</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1348792685%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="sensor-type.html">sensorType</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-type/index.html">MagnetometerSensorType</a></div><div class="brief "><p class="paragraph">One of the supported magnetometer sensor types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-690722860%2FProperties%2F300442814" anchor-label="staticIntervalDetectedListener" id="-690722860%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/static-interval-detected-listener.html"><span>static</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Detected</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-690722860%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/static-interval-detected-listener.html">staticIntervalDetectedListener</a><span class="token operator">: </span><a href="../-interval-detector/-on-static-interval-detected-listener/index.html">IntervalDetector.OnStaticIntervalDetectedListener</a><span class="token operator">&lt;</span><a href="index.html">MagnetometerIntervalDetector</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">listener to notify when a new static interval is detected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1197396789%2FProperties%2F300442814" anchor-label="status" id="-1197396789%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/status.html"><span><span>status</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1197396789%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/status.html">status</a><span class="token operator">: </span><a href="../-status/index.html">Status</a></div><div class="brief "><p class="paragraph">Gets status of interval detector. Initially the interval detector will be idle. Once it starts, it will start the initialization phase, and once initialization is complete, it will switch between static or dynamic interval until detector is stopped or an error occurs.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1690246926%2FProperties%2F300442814" anchor-label="threshold" id="-1690246926%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/threshold.html"><span><span>threshold</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1690246926%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/threshold.html">threshold</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes expressed in meters per squared second (m/s^2) for accelerometer, radians per second (rad/s) for gyroscope or Teslas (T) for magnetometer. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1082290210%2FProperties%2F300442814" anchor-label="thresholdAsMeasurement" id="-1082290210%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/threshold-as-measurement.html"><span>threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1082290210%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/threshold-as-measurement.html">thresholdAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1226364253%2FProperties%2F300442814" anchor-label="thresholdFactor" id="-1226364253%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/threshold-factor.html"><span>threshold</span><wbr></wbr><span><span>Factor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1226364253%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/threshold-factor.html">thresholdFactor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets or sets factor to be applied to detected base noise level in order to determine threshold for static/dynamic period changes. This factor is unit-less.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1253924235%2FProperties%2F300442814" anchor-label="timeIntervalStandardDeviation" id="1253924235%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/time-interval-standard-deviation.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1253924235%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/time-interval-standard-deviation.html">timeIntervalStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements expressed in seconds (s). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1341335980%2FProperties%2F300442814" anchor-label="timeIntervalStandardDeviationAsTime" id="1341335980%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/time-interval-standard-deviation-as-time.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1341335980%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/time-interval-standard-deviation-as-time.html">timeIntervalStandardDeviationAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1256863078%2FProperties%2F300442814" anchor-label="timeIntervalVariance" id="-1256863078%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/time-interval-variance.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Variance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1256863078%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-interval-detector/time-interval-variance.html">timeIntervalVariance</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance of time interval between measurements expressed in squared seconds (s^2). This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1320220044%2FProperties%2F300442814" anchor-label="windowSize" id="1320220044%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/window-size.html"><span>window</span><wbr></wbr><span><span>Size</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1320220044%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-interval-detector/window-size.html">windowSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets or sets length of number of samples to keep within the window being processed to determine instantaneous sensor noise level. Window size must always be larger than allowed minimum value, which is 2 and must have an odd value.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-861457546%2FFunctions%2F300442814" anchor-label="getAccumulatedAvgTriad" id="-861457546%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-861457546%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-861457546%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-861457546%2FFunctions%2F300442814"><span class="token function">getAccumulatedAvgTriad</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets average sensor measurements triad accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="968604167%2FFunctions%2F300442814" anchor-label="getAccumulatedAvgXAsMeasurement" id="968604167%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#968604167%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="968604167%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#968604167%2FFunctions%2F300442814"><span class="token function">getAccumulatedAvgXAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets average x-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="982136968%2FFunctions%2F300442814" anchor-label="getAccumulatedAvgYAsMeasurement" id="982136968%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#982136968%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="982136968%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#982136968%2FFunctions%2F300442814"><span class="token function">getAccumulatedAvgYAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets average y-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="995669769%2FFunctions%2F300442814" anchor-label="getAccumulatedAvgZAsMeasurement" id="995669769%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#995669769%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Avg</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="995669769%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#995669769%2FFunctions%2F300442814"><span class="token function">getAccumulatedAvgZAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets average z-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one, or after initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="126414469%2FFunctions%2F300442814" anchor-label="getAccumulatedStdTriad" id="126414469%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#126414469%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="126414469%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#126414469%2FFunctions%2F300442814"><span class="token function">getAccumulatedStdTriad</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets standard deviation of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2072193622%2FFunctions%2F300442814" anchor-label="getAccumulatedStdXAsMeasurement" id="2072193622%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2072193622%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2072193622%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#2072193622%2FFunctions%2F300442814"><span class="token function">getAccumulatedStdXAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets standard deviation of x-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2085726423%2FFunctions%2F300442814" anchor-label="getAccumulatedStdYAsMeasurement" id="2085726423%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2085726423%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2085726423%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#2085726423%2FFunctions%2F300442814"><span class="token function">getAccumulatedStdYAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets standard deviation of y-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2099259224%2FFunctions%2F300442814" anchor-label="getAccumulatedStdZAsMeasurement" id="2099259224%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2099259224%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Accumulated</span><wbr></wbr><span>Std</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2099259224%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#2099259224%2FFunctions%2F300442814"><span class="token function">getAccumulatedStdZAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets standard deviation of z-coordinate of sensor measurements accumulated during last static period. This value is updated when switching from a static period to a dynamic one or after completing initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1708929843%2FFunctions%2F300442814" anchor-label="getAverageTimeIntervalAsTime" id="1708929843%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/get-average-time-interval-as-time.html"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1708929843%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-interval-detector/get-average-time-interval-as-time.html"><span class="token function">getAverageTimeIntervalAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets average time interval between measurements. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1944988136%2FFunctions%2F300442814" anchor-label="getBaseNoiseLevelAbsoluteThresholdAsMeasurement" id="-1944988136%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1944988136%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1944988136%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-1944988136%2FFunctions%2F300442814"><span class="token function">getBaseNoiseLevelAbsoluteThresholdAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets overall absolute threshold to determine whether there has been excessive motion during the whole initialization phase. Failure will be detected if estimated base noise level exceeds this threshold when initialization completes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="470570054%2FFunctions%2F300442814" anchor-label="getBaseNoiseLevelAsMeasurement" id="470570054%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#470570054%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Base</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Level</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="470570054%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#470570054%2FFunctions%2F300442814"><span class="token function">getBaseNoiseLevelAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets sensor measurement base noise level that has been detected during initialization. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="434278986%2FFunctions%2F300442814" anchor-label="getInstantaneousAvgTriad" id="434278986%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#434278986%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="434278986%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#434278986%2FFunctions%2F300442814"><span class="token function">getInstantaneousAvgTriad</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed average of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="397012955%2FFunctions%2F300442814" anchor-label="getInstantaneousAvgXAsMeasurement" id="397012955%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#397012955%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="397012955%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#397012955%2FFunctions%2F300442814"><span class="token function">getInstantaneousAvgXAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed average x-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="410545756%2FFunctions%2F300442814" anchor-label="getInstantaneousAvgYAsMeasurement" id="410545756%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#410545756%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="410545756%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#410545756%2FFunctions%2F300442814"><span class="token function">getInstantaneousAvgYAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed average y-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="424078557%2FFunctions%2F300442814" anchor-label="getInstantaneousAvgZAsMeasurement" id="424078557%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#424078557%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Avg</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="424078557%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#424078557%2FFunctions%2F300442814"><span class="token function">getInstantaneousAvgZAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed average z-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing an average value for the sample within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1422151001%2FFunctions%2F300442814" anchor-label="getInstantaneousStdTriad" id="1422151001%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1422151001%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1422151001%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#1422151001%2FFunctions%2F300442814"><span class="token function">getInstantaneousStdTriad</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1500602410%2FFunctions%2F300442814" anchor-label="getInstantaneousStdXAsMeasurement" id="1500602410%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1500602410%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1500602410%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#1500602410%2FFunctions%2F300442814"><span class="token function">getInstantaneousStdXAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of x-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1514135211%2FFunctions%2F300442814" anchor-label="getInstantaneousStdYAsMeasurement" id="1514135211%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1514135211%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1514135211%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#1514135211%2FFunctions%2F300442814"><span class="token function">getInstantaneousStdYAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of y-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1527668012%2FFunctions%2F300442814" anchor-label="getInstantaneousStdZAsMeasurement" id="1527668012%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1527668012%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Instantaneous</span><wbr></wbr><span>Std</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1527668012%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#1527668012%2FFunctions%2F300442814"><span class="token function">getInstantaneousStdZAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets windowed standard deviation of z-coordinate of sensor measurements for each processed triad. This value is updated for each processed sample containing measured standard deviation for the samples within the window.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1327415114%2FFunctions%2F300442814" anchor-label="getThresholdAsMeasurement" id="1327415114%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1327415114%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Threshold</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1327415114%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#1327415114%2FFunctions%2F300442814"><span class="token function">getThresholdAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/MagneticFluxDensity///PointingToDeclaration/">MagneticFluxDensity</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated threshold to determine static/dynamic period changes. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1193285962%2FFunctions%2F300442814" anchor-label="getTimeIntervalStandardDeviationAsTime" id="-1193285962%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/get-time-interval-standard-deviation-as-time.html"><span>get</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1193285962%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-interval-detector/get-time-interval-standard-deviation-as-time.html"><span class="token function">getTimeIntervalStandardDeviationAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available once detector completes initialization.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1143190747%2FFunctions%2F300442814" anchor-label="start" id="1143190747%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/start.html"><span><span>start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1143190747%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-interval-detector/start.html"><span class="token function">start</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Starts collection of sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1747932859%2FFunctions%2F300442814" anchor-label="stop" id="1747932859%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-interval-detector/stop.html"><span><span>stop</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1747932859%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-interval-detector/stop.html"><span class="token function">stop</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Stops collection of sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

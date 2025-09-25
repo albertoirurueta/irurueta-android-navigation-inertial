@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>GyroscopeNoiseEstimator</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.calibration.noise/GyroscopeNoiseEstimator///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.calibration.noise</a><span class="delimiter">/</span><span class="current">GyroscopeNoiseEstimator</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Gyroscope</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Estimator</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>sensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="token operator"> = </span>GyroscopeSensorType.GYROSCOPE_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">sensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">maxSamples<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>DEFAULT_MAX_SAMPLES<span class="token punctuation">, </span></span><span class="parameter ">maxDurationMillis<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span>DEFAULT_MAX_DURATION_MILLIS<span class="token punctuation">, </span></span><span class="parameter ">stopMode<span class="token operator">: </span><a href="../-stop-mode/index.html">StopMode</a><span class="token operator"> = </span>StopMode.MAX_SAMPLES_OR_DURATION<span class="token punctuation">, </span></span><span class="parameter ">completedListener<span class="token operator">: </span><a href="../-accumulated-triad-estimator/-on-estimation-completed-listener/index.html">AccumulatedTriadEstimator.OnEstimationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">unreliableListener<span class="token operator">: </span><a href="../-accumulated-triad-estimator/-on-unreliable-listener/index.html">AccumulatedTriadEstimator.OnUnreliableListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>measurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span> : <a href="../-accumulated-triad-estimator/index.html">AccumulatedTriadEstimator</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration.noise/AccumulatedAngularSpeedTriadNoiseEstimator///PointingToDeclaration/">AccumulatedAngularSpeedTriadNoiseEstimator</span><span class="token punctuation">, </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/index.html">GyroscopeSensorCollector</a><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.units/AngularSpeedUnit///PointingToDeclaration/">AngularSpeedUnit</span><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token punctuation">, </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span><span class="token operator">&gt; </span></div><p class="paragraph">Estimates gyroscope noise. This estimator takes a given number of gyroscope measurements during a given duration of time to estimate gyroscope measurements average, standard deviation and variance, as well as average time interval between measurements. To be able to measure gyroscope noise, device should remain static so that average gyroscope measurements are constant and their standard deviations reflect actual sensor noise, otherwise only norm values will be reliable. This estimator converts sensor measurements from device ENU coordinates to local plane NED coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane NED system of coordinates.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>context</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Android context.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>sensor</span><wbr></wbr><span><span>Delay</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Delay of sensor between samples.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>max</span><wbr></wbr><span><span>Samples</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Maximum number of samples to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-n-l-y/index.html">StopMode.MAX_SAMPLES_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>max</span><wbr></wbr><span>Duration</span><wbr></wbr><span><span>Millis</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Maximum duration expressed in milliseconds to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-d-u-r-a-t-i-o-n_-o-n-l-y/index.html">StopMode.MAX_DURATION_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>stop</span><wbr></wbr><span><span>Mode</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Determines when this estimator will consider its estimation completed.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>completed</span><wbr></wbr><span><span>Listener</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Listener to notify when estimation is complete.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>unreliable</span><wbr></wbr><span><span>Listener</span></span></u></div></span></div><div><div class="title"><p class="paragraph">Listener to notify when sensor becomes unreliable, and thus, estimation must be discarded.</p></div></div></div></div></div><h4 class="">Throws</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><a href="https://developer.android.com/reference/kotlin/java/lang/IllegalArgumentException.html"><span>Illegal</span><wbr></wbr><span>Argument</span><wbr></wbr><span><span>Exception</span></span></a></div></span></div><div><div class="title"><p class="paragraph">when either <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/GyroscopeNoiseEstimator/maxSamples/#/PointingToDeclaration/">maxSamples</span> or <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/GyroscopeNoiseEstimator/maxDurationMillis/#/PointingToDeclaration/">maxDurationMillis</span> is negative.</p></div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="537978094%2FConstructors%2F300442814" anchor-label="GyroscopeNoiseEstimator" id="537978094%2FConstructors%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-gyroscope-noise-estimator.html"><span>Gyroscope</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Estimator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="537978094%2FConstructors%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">context<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a><span class="token punctuation">, </span></span><span class="parameter ">sensorType<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a><span class="token operator"> = </span>GyroscopeSensorType.GYROSCOPE_UNCALIBRATED<span class="token punctuation">, </span></span><span class="parameter ">sensorDelay<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a><span class="token operator"> = </span>SensorDelay.FASTEST<span class="token punctuation">, </span></span><span class="parameter ">maxSamples<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span>DEFAULT_MAX_SAMPLES<span class="token punctuation">, </span></span><span class="parameter ">maxDurationMillis<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span>DEFAULT_MAX_DURATION_MILLIS<span class="token punctuation">, </span></span><span class="parameter ">stopMode<span class="token operator">: </span><a href="../-stop-mode/index.html">StopMode</a><span class="token operator"> = </span>StopMode.MAX_SAMPLES_OR_DURATION<span class="token punctuation">, </span></span><span class="parameter ">completedListener<span class="token operator">: </span><a href="../-accumulated-triad-estimator/-on-estimation-completed-listener/index.html">AccumulatedTriadEstimator.OnEstimationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">unreliableListener<span class="token operator">: </span><a href="../-accumulated-triad-estimator/-on-unreliable-listener/index.html">AccumulatedTriadEstimator.OnUnreliableListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">measurementListener<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1265463092%2FProperties%2F300442814" anchor-label="averageNoisePsd" id="-1265463092%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-noise-psd.html"><span>average</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1265463092%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-noise-psd.html">averageNoisePsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average sensor measurement noise PSD (Power Spectral Density) expressed in (m^2 * s^-3) for accelerometer, (rad^2/s) for gyroscope or (T^2 * s) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-617918729%2FProperties%2F300442814" anchor-label="averageNorm" id="-617918729%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-norm.html"><span>average</span><wbr></wbr><span><span>Norm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-617918729%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-norm.html">averageNorm</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average norm of sensor measurements expressed in sensor default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to gravity norm (for accelerometer sensor), Earth rotation rate (for gyroscope sensor), or magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-506801671%2FProperties%2F300442814" anchor-label="averageNormAsMeasurement" id="-506801671%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-norm-as-measurement.html"><span>average</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-506801671%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-norm-as-measurement.html">averageNormAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average norm of sensor measurements expressed in sensor default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to gravity norm (for accelerometer sensor), Earth rotation rate (for gyroscope sensor), or magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="642260547%2FProperties%2F300442814" anchor-label="averageStandardDeviation" id="642260547%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-standard-deviation.html"><span>average</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="642260547%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-standard-deviation.html">averageStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average of estimated standard deviations of sensor measurements expressed in its default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-401719763%2FProperties%2F300442814" anchor-label="averageStandardDeviationAsMeasurement" id="-401719763%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-standard-deviation-as-measurement.html"><span>average</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-401719763%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-standard-deviation-as-measurement.html">averageStandardDeviationAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average of estimated standard deviations of sensor measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-989785578%2FProperties%2F300442814" anchor-label="averageTimeInterval" id="-989785578%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/average-time-interval.html"><span>average</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Interval</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-989785578%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/average-time-interval.html">averageTimeInterval</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between measurements expressed in seconds (s). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1721895415%2FProperties%2F300442814" anchor-label="averageTimeIntervalAsTime" id="1721895415%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/average-time-interval-as-time.html"><span>average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1721895415%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/average-time-interval-as-time.html">averageTimeIntervalAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets average time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="615743417%2FProperties%2F300442814" anchor-label="averageTriad" id="615743417%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-triad.html"><span>average</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="615743417%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-triad.html">averageTriad</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average values of sensor. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="542133903%2FProperties%2F300442814" anchor-label="averageX" id="542133903%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-x.html"><span>average</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="542133903%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-x.html">averageX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average value of sensor x-axis measurements expressed in sensor default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="514582881%2FProperties%2F300442814" anchor-label="averageXAsMeasurement" id="514582881%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-x-as-measurement.html"><span>average</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="514582881%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-x-as-measurement.html">averageXAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average value of sensor x-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="573153710%2FProperties%2F300442814" anchor-label="averageY" id="573153710%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-y.html"><span>average</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="573153710%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-y.html">averageY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average value of accelerometer y-axis measurements expressed in sensor default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-408100702%2FProperties%2F300442814" anchor-label="averageYAsMeasurement" id="-408100702%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-y-as-measurement.html"><span>average</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-408100702%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-y-as-measurement.html">averageYAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average value of accelerometer y-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="604173517%2FProperties%2F300442814" anchor-label="averageZ" id="604173517%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-z.html"><span>average</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="604173517%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-z.html">averageZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average value of accelerometer z-axis measurements expressed in sensor default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1330784285%2FProperties%2F300442814" anchor-label="averageZAsMeasurement" id="-1330784285%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/average-z-as-measurement.html"><span>average</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1330784285%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/average-z-as-measurement.html">averageZAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated average value of sensor z-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="36586193%2FProperties%2F300442814" anchor-label="completedListener" id="36586193%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/completed-listener.html"><span>completed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="36586193%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-accumulated-triad-estimator/completed-listener.html">completedListener</a><span class="token operator">: </span><a href="../-accumulated-triad-estimator/-on-estimation-completed-listener/index.html">AccumulatedTriadEstimator.OnEstimationCompletedListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when estimation is complete.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-560869631%2FProperties%2F300442814" anchor-label="context" id="-560869631%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/context.html"><span><span>context</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-560869631%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/context.html">context</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/content/Context.html">Context</a></div><div class="brief "><p class="paragraph">Android context.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="314350172%2FProperties%2F300442814" anchor-label="elapsedTime" id="314350172%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/elapsed-time.html"><span>elapsed</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="314350172%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/elapsed-time.html">elapsedTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></div><div class="brief "><p class="paragraph">Gets amount of elapsed time to compute sensor noise, either if computation succeeds or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2070453567%2FProperties%2F300442814" anchor-label="elapsedTimeNanos" id="2070453567%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/elapsed-time-nanos.html"><span>elapsed</span><wbr></wbr><span>Time</span><wbr></wbr><span><span>Nanos</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2070453567%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/elapsed-time-nanos.html">elapsedTimeNanos</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Gets amount of elapsed time to compute sensor noise estimation expressed in nanoseconds (ns), either if computation succeeds or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1526345959%2FProperties%2F300442814" anchor-label="maxDurationMillis" id="1526345959%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/max-duration-millis.html"><span>max</span><wbr></wbr><span>Duration</span><wbr></wbr><span><span>Millis</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1526345959%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/max-duration-millis.html">maxDurationMillis</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Gets maximum duration expressed in milliseconds to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-d-u-r-a-t-i-o-n_-o-n-l-y/index.html">StopMode.MAX_DURATION_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1548676240%2FProperties%2F300442814" anchor-label="maxSamples" id="-1548676240%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/max-samples.html"><span>max</span><wbr></wbr><span><span>Samples</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1548676240%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/max-samples.html">maxSamples</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Gets maximum number of samples to take into account before completion. This is only taken into account if using either <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-n-l-y/index.html">StopMode.MAX_SAMPLES_ONLY</a> or <a href="../-stop-mode/-m-a-x_-s-a-m-p-l-e-s_-o-r_-d-u-r-a-t-i-o-n/index.html">StopMode.MAX_SAMPLES_OR_DURATION</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="718215209%2FProperties%2F300442814" anchor-label="measurementListener" id="718215209%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="measurement-listener.html"><span>measurement</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="718215209%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="measurement-listener.html">measurementListener</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-collector/-on-measurement-listener/index.html">GyroscopeSensorCollector.OnMeasurementListener</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify collected sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1460144841%2FProperties%2F300442814" anchor-label="noiseRootPsdNorm" id="1460144841%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/noise-root-psd-norm.html"><span>noise</span><wbr></wbr><span>Root</span><wbr></wbr><span>Psd</span><wbr></wbr><span><span>Norm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1460144841%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/noise-root-psd-norm.html">noiseRootPsdNorm</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets norm of sensor noise root PSD (Power Spectral Density) expressed in (m * s^-1.5) for accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1773122240%2FProperties%2F300442814" anchor-label="numberOfProcessedMeasurements" id="1773122240%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/number-of-processed-measurements.html"><span>number</span><wbr></wbr><span>Of</span><wbr></wbr><span>Processed</span><wbr></wbr><span><span>Measurements</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1773122240%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/number-of-processed-measurements.html">numberOfProcessedMeasurements</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Number of measurements that have been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1605694285%2FProperties%2F300442814" anchor-label="psdX" id="-1605694285%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/psd-x.html"><span>psd</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1605694285%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/psd-x.html">psdX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor noise PSD (Power Spectral Density) on x axis expressed in  (m^2 * s^-3) for accelerometer, (rad^2/s) for gyroscope or (T^2 * s) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1574674478%2FProperties%2F300442814" anchor-label="psdY" id="-1574674478%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/psd-y.html"><span>psd</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1574674478%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/psd-y.html">psdY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor noise PSD (Power Spectral Density) on y axis expressed in  (m^2 * s^-3) for accelerometer, (rad^2/s) for gyroscope or (T^2 * s) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1543654671%2FProperties%2F300442814" anchor-label="psdZ" id="-1543654671%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/psd-z.html"><span>psd</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1543654671%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/psd-z.html">psdZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor noise PSD (Power Spectral Density) on z axis expressed in  (m^2 * s^-3) for accelerometer, (rad^2/s) for gyroscope or (T^2 * s) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="532512505%2FProperties%2F300442814" anchor-label="resultAvailable" id="532512505%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/result-available.html"><span>result</span><wbr></wbr><span><span>Available</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="532512505%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether estimated average and time interval between measurements are available or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2064709109%2FProperties%2F300442814" anchor-label="resultUnreliable" id="2064709109%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/result-unreliable.html"><span>result</span><wbr></wbr><span><span>Unreliable</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2064709109%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-base-accumulated-estimator/result-unreliable.html">resultUnreliable</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether estimated result is unreliable or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-420458383%2FProperties%2F300442814" anchor-label="rootPsdX" id="-420458383%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/root-psd-x.html"><span>root</span><wbr></wbr><span>Psd</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-420458383%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/root-psd-x.html">rootPsdX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor noise root PSD (Power Spectral Density) on x axis expressed in (m * s^-1.5) for accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-389438576%2FProperties%2F300442814" anchor-label="rootPsdY" id="-389438576%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/root-psd-y.html"><span>root</span><wbr></wbr><span>Psd</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-389438576%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/root-psd-y.html">rootPsdY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor noise root PSD (Power Spectral Density) on y axis expressed in (m * s^-1.5) for accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-358418769%2FProperties%2F300442814" anchor-label="rootPsdZ" id="-358418769%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/root-psd-z.html"><span>root</span><wbr></wbr><span>Psd</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-358418769%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/root-psd-z.html">rootPsdZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor noise root PSD (Power Spectral Density) on z axis expressed in (m * s^-1.5) for accelerometer, (rad * s^-0.5) for gyroscope or (T * s^0.5) for magnetometer. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-854908687%2FProperties%2F300442814" anchor-label="running" id="-854908687%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/running.html"><span><span>running</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-854908687%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-accumulated-triad-estimator/running.html">running</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether this estimator is already running.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1233807152%2FProperties%2F300442814" anchor-label="sensor" id="-1233807152%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/sensor.html"><span><span>sensor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1233807152%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/sensor.html">sensor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/hardware/Sensor.html">Sensor</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets sensor being used to obtain measurements or null if not available. This can be used to obtain additional information about the sensor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1159224967%2FProperties%2F300442814" anchor-label="sensorDelay" id="1159224967%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/sensor-delay.html"><span>sensor</span><wbr></wbr><span><span>Delay</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1159224967%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/sensor-delay.html">sensorDelay</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-sensor-delay/index.html">SensorDelay</a></div><div class="brief "><p class="paragraph">Delay of sensor between samples.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2010664531%2FProperties%2F300442814" anchor-label="sensorType" id="-2010664531%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="sensor-type.html"><span>sensor</span><wbr></wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2010664531%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="sensor-type.html">sensorType</a><span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-type/index.html">GyroscopeSensorType</a></div><div class="brief "><p class="paragraph">One of the supported gyroscope sensor types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1663351920%2FProperties%2F300442814" anchor-label="standardDeviationNorm" id="1663351920%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-norm.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span><span>Norm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1663351920%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-norm.html">standardDeviationNorm</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets norm of estimated standard deviations of sensor measurements expressed in its default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="119460128%2FProperties%2F300442814" anchor-label="standardDeviationNormAsMeasurement" id="119460128%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-norm-as-measurement.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="119460128%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-norm-as-measurement.html">standardDeviationNormAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets norm of estimated standard deviations of sensor measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1679310496%2FProperties%2F300442814" anchor-label="standardDeviationTriad" id="-1679310496%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-triad.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1679310496%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-triad.html">standardDeviationTriad</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation values of sensor. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1715635274%2FProperties%2F300442814" anchor-label="standardDeviationX" id="-1715635274%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-x.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1715635274%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-x.html">standardDeviationX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor x-axis measurements expressed in its default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2087087206%2FProperties%2F300442814" anchor-label="standardDeviationXAsMeasurement" id="-2087087206%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-x-as-measurement.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2087087206%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-x-as-measurement.html">standardDeviationXAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor x-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1684615467%2FProperties%2F300442814" anchor-label="standardDeviationY" id="-1684615467%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-y.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1684615467%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-y.html">standardDeviationY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor y-axis measurements expressed in its default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1285196507%2FProperties%2F300442814" anchor-label="standardDeviationYAsMeasurement" id="1285196507%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-y-as-measurement.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1285196507%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-y-as-measurement.html">standardDeviationYAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor y-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1653595660%2FProperties%2F300442814" anchor-label="standardDeviationZ" id="-1653595660%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-z.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1653595660%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-z.html">standardDeviationZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor z-axis measurements expressed in its default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="362512924%2FProperties%2F300442814" anchor-label="standardDeviationZAsMeasurement" id="362512924%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/standard-deviation-z-as-measurement.html"><span>standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="362512924%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/standard-deviation-z-as-measurement.html">standardDeviationZAsMeasurement</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor z-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1417181520%2FProperties%2F300442814" anchor-label="stopMode" id="-1417181520%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/stop-mode.html"><span>stop</span><wbr></wbr><span><span>Mode</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1417181520%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/stop-mode.html">stopMode</a><span class="token operator">: </span><a href="../-stop-mode/index.html">StopMode</a></div><div class="brief "><p class="paragraph">Determines when this estimator will consider its estimation completed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1608464077%2FProperties%2F300442814" anchor-label="timeIntervalStandardDeviation" id="-1608464077%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/time-interval-standard-deviation.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1608464077%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/time-interval-standard-deviation.html">timeIntervalStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements expressed in seconds (s). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1057933484%2FProperties%2F300442814" anchor-label="timeIntervalStandardDeviationAsTime" id="-1057933484%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/time-interval-standard-deviation-as-time.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1057933484%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/time-interval-standard-deviation-as-time.html">timeIntervalStandardDeviationAsTime</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1761812978%2FProperties%2F300442814" anchor-label="timeIntervalVariance" id="1761812978%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/time-interval-variance.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Variance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1761812978%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-base-accumulated-estimator/time-interval-variance.html">timeIntervalVariance</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance of time interval between measurements expressed in squared seconds (s^2). This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="359601139%2FProperties%2F300442814" anchor-label="unreliableListener" id="359601139%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/unreliable-listener.html"><span>unreliable</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="359601139%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="../-accumulated-triad-estimator/unreliable-listener.html">unreliableListener</a><span class="token operator">: </span><a href="../-accumulated-triad-estimator/-on-unreliable-listener/index.html">AccumulatedTriadEstimator.OnUnreliableListener</a><span class="token operator">&lt;</span><a href="index.html">GyroscopeNoiseEstimator</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Listener to notify when sensor becomes unreliable, and thus, estimation must be discarded.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="486592233%2FProperties%2F300442814" anchor-label="varianceX" id="486592233%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/variance-x.html"><span>variance</span><wbr></wbr><span><span>X</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="486592233%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/variance-x.html">varianceX</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance value of sensor x-axis measurements expressed in its default squared unit (m^2/s^4 for acceleration, rad^2/s^2 for angular speed or T^2 for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this variance is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="517612040%2FProperties%2F300442814" anchor-label="varianceY" id="517612040%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/variance-y.html"><span>variance</span><wbr></wbr><span><span>Y</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="517612040%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/variance-y.html">varianceY</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance value of sensor y-axis measurements expressed in its default squared unit (m^2/s^4 for acceleration, rad^2/s^2 for angular speed or T^2 for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this variance is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="548631847%2FProperties%2F300442814" anchor-label="varianceZ" id="548631847%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/variance-z.html"><span>variance</span><wbr></wbr><span><span>Z</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="548631847%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="../-accumulated-triad-estimator/variance-z.html">varianceZ</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets estimated variance value of sensor z-axis measurements expressed in its default squared unit (m^2/s^4 for acceleration, rad^2/s^2 for angular speed or T^2 for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this variance is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-63444937%2FFunctions%2F300442814" anchor-label="getAverageNormAsMeasurement" id="-63444937%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-63444937%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-63444937%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-63444937%2FFunctions%2F300442814"><span class="token function">getAverageNormAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated average norm of sensor measurements expressed in sensor default unit (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density). This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to gravity norm (for accelerometer sensor), Earth rotation rate (for gyroscope sensor), or magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="534980259%2FFunctions%2F300442814" anchor-label="getAverageStandardDeviationAsMeasurement" id="534980259%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#534980259%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="534980259%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#534980259%2FFunctions%2F300442814"><span class="token function">getAverageStandardDeviationAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets average of estimated standard deviations of sensor measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1432751909%2FFunctions%2F300442814" anchor-label="getAverageTimeIntervalAsTime" id="-1432751909%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/get-average-time-interval-as-time.html"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1432751909%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-base-accumulated-estimator/get-average-time-interval-as-time.html"><span class="token function">getAverageTimeIntervalAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets average time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1355986876%2FFunctions%2F300442814" anchor-label="getAverageTriad" id="-1355986876%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1355986876%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1355986876%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-1355986876%2FFunctions%2F300442814"><span class="token function">getAverageTriad</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated average values of sensor. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1540764911%2FFunctions%2F300442814" anchor-label="getAverageXAsMeasurement" id="1540764911%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1540764911%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1540764911%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#1540764911%2FFunctions%2F300442814"><span class="token function">getAverageXAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated average value of sensor x-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1799973490%2FFunctions%2F300442814" anchor-label="getAverageYAsMeasurement" id="-1799973490%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1799973490%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1799973490%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-1799973490%2FFunctions%2F300442814"><span class="token function">getAverageYAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated average value of accelerometer y-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-845744595%2FFunctions%2F300442814" anchor-label="getAverageZAsMeasurement" id="-845744595%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-845744595%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Average</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-845744595%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-845744595%2FFunctions%2F300442814"><span class="token function">getAverageZAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated average value of sensor z-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this should be equal to the x-axis component of gravity acceleration (for accelerometer sensor), x-axis component of Earth rotation rate (for gyroscope sensor), or x-axis component of magnetic field intensity (for magnetometer).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1831136170%2FFunctions%2F300442814" anchor-label="getElapsedTime" id="-1831136170%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/get-elapsed-time.html"><span>get</span><wbr></wbr><span>Elapsed</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1831136170%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-base-accumulated-estimator/get-elapsed-time.html"><span class="token function">getElapsedTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Gets amount of time elapsed, either if computation succeeds or not.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="390690864%2FFunctions%2F300442814" anchor-label="getStandardDeviationNormAsMeasurement" id="390690864%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#390690864%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>Norm</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="390690864%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#390690864%2FFunctions%2F300442814"><span class="token function">getStandardDeviationNormAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets norm of estimated standard deviations of sensor measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1549476949%2FFunctions%2F300442814" anchor-label="getStandardDeviationTriad" id="-1549476949%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1549476949%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span><span>Triad</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1549476949%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-1549476949%2FFunctions%2F300442814"><span class="token function">getStandardDeviationTriad</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AngularSpeedTriad///PointingToDeclaration/">AngularSpeedTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation values of sensor. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-782086250%2FFunctions%2F300442814" anchor-label="getStandardDeviationXAsMeasurement" id="-782086250%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-782086250%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>XAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-782086250%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-782086250%2FFunctions%2F300442814"><span class="token function">getStandardDeviationXAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor x-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="172142645%2FFunctions%2F300442814" anchor-label="getStandardDeviationYAsMeasurement" id="172142645%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#172142645%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>YAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="172142645%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#172142645%2FFunctions%2F300442814"><span class="token function">getStandardDeviationYAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor y-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1126371540%2FFunctions%2F300442814" anchor-label="getStandardDeviationZAsMeasurement" id="1126371540%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1126371540%2FFunctions%2F300442814"><span>get</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>ZAs</span><wbr></wbr><span><span>Measurement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1126371540%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#1126371540%2FFunctions%2F300442814"><span class="token function">getStandardDeviationZAsMeasurement</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/AngularSpeed///PointingToDeclaration/">AngularSpeed</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation value of sensor z-axis measurements. This is only available when estimation completes successfully and <span data-unresolved-link="com.irurueta.android.navigation.inertial.calibration.noise/AccumulatedTriadEstimator/resultAvailable/#/PointingToDeclaration/">resultAvailable</span> is true. If device remained completely static during estimation, this standard deviation is an indication of sensor noise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2090159522%2FFunctions%2F300442814" anchor-label="getTimeIntervalStandardDeviationAsTime" id="-2090159522%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-base-accumulated-estimator/get-time-interval-standard-deviation-as-time.html"><span>get</span><wbr></wbr><span>Time</span><wbr></wbr><span>Interval</span><wbr></wbr><span>Standard</span><wbr></wbr><span>Deviation</span><wbr></wbr><span>As</span><wbr></wbr><span><span>Time</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2090159522%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-base-accumulated-estimator/get-time-interval-standard-deviation-as-time.html"><span class="token function">getTimeIntervalStandardDeviationAsTime</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.units/Time///PointingToDeclaration/">Time</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated standard deviation of time interval between measurements. This is only available when estimation completes successfully and <a href="../-base-accumulated-estimator/result-available.html">resultAvailable</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-211187602%2FFunctions%2F300442814" anchor-label="start" id="-211187602%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/start.html"><span><span>start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-211187602%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-accumulated-triad-estimator/start.html"><span class="token function">start</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Starts collection of sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1343798072%2FFunctions%2F300442814" anchor-label="stop" id="-1343798072%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-accumulated-triad-estimator/stop.html"><span><span>stop</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1343798072%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-accumulated-triad-estimator/stop.html"><span class="token function">stop</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Stops collection of sensor measurements.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

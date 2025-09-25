@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>KalmanAbsoluteAttitudeProcessor5</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer="defer"></script>
+</head>
+<body>
+    <div class="root">
+    <nav class="navigation theme-dark" id="navigation-wrapper">
+            <a class="library-name--link" href="../../../index.html">
+                    lib
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <div class="filter-section filter-section_loading" id="filter-section">
+                <button class="platform-tag platform-selector jvm-like" data-active=""
+                        data-filter=":lib/release">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox">
+                    <div class="dropdown--header"><span>Platform filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close platform filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":lib/release"
+                                       data-filter=":lib/release"/>
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </div>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                    <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                        data-role="dropdown-listbox">
+                        <div class="dropdown--header">
+                            <span>
+                                    lib
+                            </span>
+                            <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                                <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                            </button>
+                        </div>
+                        <div class="sidebar--inner" id="sideMenu"></div>
+                    </ul>
+                    <div class="dropdown--overlay"></div>
+                </div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="lib::com.irurueta.android.navigation.inertial.processors.attitude/KalmanAbsoluteAttitudeProcessor5///PointingToDeclaration//300442814">
+  <div class="breadcrumbs"><a href="../../../index.html">lib</a><span class="delimiter">/</span><a href="../index.html">com.irurueta.android.navigation.inertial.processors.attitude</a><span class="delimiter">/</span><span class="current">KalmanAbsoluteAttitudeProcessor5</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor5</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">KalmanAbsoluteAttitudeProcessor5</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>currentDate<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeExternalAcceleration<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">var </span>computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">phiMatrixMethod<span class="token operator">: </span><a href="../-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator"> = </span>PhiMatrixMethod.APPROXIMATED<span class="token punctuation">, </span></span><span class="parameter ">processNoiseCovarianceMethod<span class="token operator">: </span><a href="../-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator"> = </span>ProcessNoiseCovarianceMethod.BETTER<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegrator<span class="token operator">: </span><a href="../-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a><span class="token operator"> = </span>QuaternionStepIntegratorType.SUH<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>magnetometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter ">externalAccelerationCovarianceMatrixEstimationMethod<span class="token operator">: </span><a href="../-external-acceleration-covariance-matrix-estimation-method/index.html">ExternalAccelerationCovarianceMatrixEstimationMethod</a><span class="token operator"> = </span>DEFAULT_EXTERNAL_ACCELERATION_COVARIANCE_MATRIX_ESTIMATION_METHOD<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>processorListener<span class="token operator">: </span><a href="-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor5.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><p class="paragraph">Estimates absolute attitude using a Kalman filter. This is based on: https://github.com/liviobisogni/quaternion-kalman-filter And: Young Soo Suh. Orientation estimation using a quaternion-based indirect Kalman filter with adaptive estimation of external acceleration.</p><h4 class="">Parameters</h4><div class="table"><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span><span>location</span></span></u></div></span></div><div><div class="title"><p class="paragraph">current device location or null if location is not known. When location and <a href="current-date.html">currentDate</a> are provided, magnetic field dip and declination angles are estimated along with current gravity norm.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>phi</span><wbr></wbr><span>Matrix</span><wbr></wbr><span><span>Method</span></span></u></div></span></div><div><div class="title"><p class="paragraph">method to compute the matrix exponential to integrate orientation.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>process</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Covariance</span><wbr></wbr><span><span>Method</span></span></u></div></span></div><div><div class="title"><p class="paragraph">method to compute process noise covariance matrix.</p></div></div></div></div><div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release"><div class="main-subrow keyValue "><div class=""><span class="inline-flex"><div><u><span>quaternion</span><wbr></wbr><span>Step</span><wbr></wbr><span><span>Integrator</span></span></u></div></span></div><div><div class="title"><p class="paragraph">type of integrator to use to compute quaternions.</p></div></div></div></div></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-421078533%2FConstructors%2F300442814" anchor-label="KalmanAbsoluteAttitudeProcessor5" id="-421078533%2FConstructors%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-kalman-absolute-attitude-processor5.html"><span>Kalman</span><wbr></wbr><span>Absolute</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Processor5</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-421078533%2FConstructors%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">location<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">currentDate<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">computeExternalAcceleration<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">computeEulerAngles<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">computeCovariances<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">computeEulerAnglesCovariance<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a><span class="token operator"> = </span><span class="token boolean">true</span><span class="token punctuation">, </span></span><span class="parameter ">phiMatrixMethod<span class="token operator">: </span><a href="../-phi-matrix-method/index.html">PhiMatrixMethod</a><span class="token operator"> = </span>PhiMatrixMethod.APPROXIMATED<span class="token punctuation">, </span></span><span class="parameter ">processNoiseCovarianceMethod<span class="token operator">: </span><a href="../-process-noise-covariance-method/index.html">ProcessNoiseCovarianceMethod</a><span class="token operator"> = </span>ProcessNoiseCovarianceMethod.BETTER<span class="token punctuation">, </span></span><span class="parameter ">quaternionStepIntegrator<span class="token operator">: </span><a href="../-quaternion-step-integrator-type/index.html">QuaternionStepIntegratorType</a><span class="token operator"> = </span>QuaternionStepIntegratorType.SUH<span class="token punctuation">, </span></span><span class="parameter ">gyroscopeNoisePsd<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_GYROSCOPE_NOISE_PSD<span class="token punctuation">, </span></span><span class="parameter ">accelerometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter ">magnetometerNoiseStandardDeviation<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span>DEFAULT_MAGNETOMETER_NOISE_STANDARD_DEVIATION<span class="token punctuation">, </span></span><span class="parameter ">externalAccelerationCovarianceMatrixEstimationMethod<span class="token operator">: </span><a href="../-external-acceleration-covariance-matrix-estimation-method/index.html">ExternalAccelerationCovarianceMatrixEstimationMethod</a><span class="token operator"> = </span>DEFAULT_EXTERNAL_ACCELERATION_COVARIANCE_MATRIX_ESTIMATION_METHOD<span class="token punctuation">, </span></span><span class="parameter ">processorListener<span class="token operator">: </span><a href="-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor5.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="-117977548%2FClasslikes%2F300442814" anchor-label="Companion" id="-117977548%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-117977548%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2086589347%2FClasslikes%2F300442814" anchor-label="OnProcessedListener" id="-2086589347%2FClasslikes%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-on-processed-listener/index.html"><span>On</span><wbr></wbr><span>Processed</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2086589347%2FClasslikes%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-on-processed-listener/index.html">OnProcessedListener</a></div><div class="brief "><p class="paragraph">Interface to notify when a new attitude has been processed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-1376126572%2FProperties%2F300442814" anchor-label="accelerometerNoiseStandardDeviation" id="-1376126572%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accelerometer-noise-standard-deviation.html"><span>accelerometer</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1376126572%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="accelerometer-noise-standard-deviation.html">accelerometerNoiseStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">accelerometer noise standard deviation expressed in meters per squared second (m/s^2).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="969025838%2FProperties%2F300442814" anchor-label="ba" id="969025838%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ba.html"><span><span>ba</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="969025838%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="ba.html">ba</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Estimated accelerometer bias.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1155144680%2FProperties%2F300442814" anchor-label="bg" id="1155144680%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="bg.html"><span><span>bg</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1155144680%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="bg.html">bg</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Estimated gyroscope bias.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="592154017%2FProperties%2F300442814" anchor-label="bodyAttitude" id="592154017%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="body-attitude.html"><span>body</span><wbr></wbr><span><span>Attitude</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="592154017%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-attitude.html">bodyAttitude</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></div><div class="brief "><p class="paragraph">Estimated device attitude expressed in body coordinates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1002867584%2FProperties%2F300442814" anchor-label="bodyExternalAcceleration" id="-1002867584%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="body-external-acceleration.html"><span>body</span><wbr></wbr><span>External</span><wbr></wbr><span><span>Acceleration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1002867584%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="body-external-acceleration.html">bodyExternalAcceleration</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Estimated external acceleration applied on the device expressed in NED coordinates respect to device body.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1336755986%2FProperties%2F300442814" anchor-label="computeCovariances" id="-1336755986%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compute-covariances.html"><span>compute</span><wbr></wbr><span><span>Covariances</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1336755986%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="compute-covariances.html">computeCovariances</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">true to compute covariances, false otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1332322629%2FProperties%2F300442814" anchor-label="computeEulerAngles" id="-1332322629%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compute-euler-angles.html"><span>compute</span><wbr></wbr><span>Euler</span><wbr></wbr><span><span>Angles</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1332322629%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="compute-euler-angles.html">computeEulerAngles</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">true to compute Euler angles of estimated attitude, false otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1673651422%2FProperties%2F300442814" anchor-label="computeEulerAnglesCovariance" id="1673651422%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compute-euler-angles-covariance.html"><span>compute</span><wbr></wbr><span>Euler</span><wbr></wbr><span>Angles</span><wbr></wbr><span><span>Covariance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1673651422%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="compute-euler-angles-covariance.html">computeEulerAnglesCovariance</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">true to compute Euler angles covariance, false otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-76242837%2FProperties%2F300442814" anchor-label="computeExternalAcceleration" id="-76242837%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="compute-external-acceleration.html"><span>compute</span><wbr></wbr><span>External</span><wbr></wbr><span><span>Acceleration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-76242837%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="compute-external-acceleration.html">computeExternalAcceleration</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">true to compute external acceleration, false otherwise.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2113262086%2FProperties%2F300442814" anchor-label="currentDate" id="2113262086%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="current-date.html"><span>current</span><wbr></wbr><span><span>Date</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2113262086%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="current-date.html">currentDate</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/util/Date.html">Date</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">current date. This is used to estimate magnetic field dip and declination angles and provided location. If null, current date is assumed.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-926313180%2FProperties%2F300442814" anchor-label="ecefAttitude" id="-926313180%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ecef-attitude.html"><span>ecef</span><wbr></wbr><span><span>Attitude</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-926313180%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="ecef-attitude.html">ecefAttitude</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></div><div class="brief "><p class="paragraph">Estimated device attitude expressed in ECEF coordinates respect to Earth.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1091481725%2FProperties%2F300442814" anchor-label="ecefExternalAcceleration" id="-1091481725%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ecef-external-acceleration.html"><span>ecef</span><wbr></wbr><span>External</span><wbr></wbr><span><span>Acceleration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1091481725%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="ecef-external-acceleration.html">ecefExternalAcceleration</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Estimated external acceleration applied on the device expressed in ECEF coordinates respect to Earth.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1975041468%2FProperties%2F300442814" anchor-label="eulerAngles" id="-1975041468%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="euler-angles.html"><span>euler</span><wbr></wbr><span><span>Angles</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1975041468%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="euler-angles.html">eulerAngles</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double-array/index.html">DoubleArray</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Euler angles associated to estimated NED attitude. Array contains roll, pitch and yaw angles expressed in radians (rad) and following order indicated here. This is only available if <a href="compute-covariances.html">computeCovariances</a> and <a href="compute-euler-angles.html">computeEulerAngles</a> are true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1515630887%2FProperties%2F300442814" anchor-label="eulerAnglesCovariance" id="1515630887%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="euler-angles-covariance.html"><span>euler</span><wbr></wbr><span>Angles</span><wbr></wbr><span><span>Covariance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1515630887%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="euler-angles-covariance.html">eulerAnglesCovariance</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Error covariance of estimated Euler angles for NED attitude. This is only available if <a href="compute-covariances.html">computeCovariances</a> and <a href="compute-euler-angles-covariance.html">computeEulerAnglesCovariance</a> are true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="150353155%2FProperties%2F300442814" anchor-label="gravityNorm" id="150353155%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gravity-norm.html"><span>gravity</span><wbr></wbr><span><span>Norm</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="150353155%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="gravity-norm.html">gravityNorm</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Gets expected gravity norm at current location. If no location is available, average gravity at sea level is returned instead.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="984972545%2FProperties%2F300442814" anchor-label="gyroscopeNoisePsd" id="984972545%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="gyroscope-noise-psd.html"><span>gyroscope</span><wbr></wbr><span>Noise</span><wbr></wbr><span><span>Psd</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="984972545%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="gyroscope-noise-psd.html">gyroscopeNoisePsd</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">gyroscope noise PSD (Power Spectral Density) expressed in (rad^2/s)/Hz.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-257594760%2FProperties%2F300442814" anchor-label="location" id="-257594760%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="location.html"><span><span>location</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-257594760%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="location.html">location</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/location/Location.html">Location</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Gets or sets current device location. When location and <a href="current-date.html">currentDate</a> are provided, magnetic field dip and declination angles are estimated along with current gravity norm.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-736582965%2FProperties%2F300442814" anchor-label="magneticDeclination" id="-736582965%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetic-declination.html"><span>magnetic</span><wbr></wbr><span><span>Declination</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-736582965%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="magnetic-declination.html">magneticDeclination</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Obtains magnetic field declination of local NED reference system expressed in radians if World Magnetic Model is used, otherwise zero is returned. Magnetic field declination indicates how much deviation the heading angle has between the magnetic north pole and the true geographic north pole.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="883273446%2FProperties%2F300442814" anchor-label="magneticDip" id="883273446%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetic-dip.html"><span>magnetic</span><wbr></wbr><span><span>Dip</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="883273446%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="magnetic-dip.html">magneticDip</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Returns magnetic field dip angle of local NED reference system expressed in radians if World Magnetic Model is used, otherwise zero is returned. Magnetic field dip angle indicates how much the magnetic field points towards Earth's center. At magnetic equator dip angle is zero, at Norm magnetic pole is +90º, and at South magnetic pole is -90º. At the north hemisphere dip angle is positive (magnetic field points downwards), indicating the vertical deviation of magnetic field respect local Earth surface at a given position (latitude, longitude and height). At the south hemisphere dip angle is negative (magnetic field points upwards), indicating the vertical deviation of magnetic field respect local Earth surface at a given position (latitude, longitude and height).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1712676658%2FProperties%2F300442814" anchor-label="magneticFluxDensity" id="1712676658%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetic-flux-density.html"><span>magnetic</span><wbr></wbr><span>Flux</span><wbr></wbr><span><span>Density</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1712676658%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="magnetic-flux-density.html">magneticFluxDensity</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/MagneticFluxDensityTriad///PointingToDeclaration/">MagneticFluxDensityTriad</span></div><div class="brief "><p class="paragraph">Returns magnetic flux density at current location expressed in local NED reference system. This is only available if World Magnetic Model is used, otherwise a zero triad is returned.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-737243009%2FProperties%2F300442814" anchor-label="magnetometerNoiseStandardDeviation" id="-737243009%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="magnetometer-noise-standard-deviation.html"><span>magnetometer</span><wbr></wbr><span>Noise</span><wbr></wbr><span>Standard</span><wbr></wbr><span><span>Deviation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-737243009%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="magnetometer-noise-standard-deviation.html">magnetometerNoiseStandardDeviation</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">magnetometer noise standard deviation expressed in Teslas (T).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="204798838%2FProperties%2F300442814" anchor-label="nedAttitude" id="204798838%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ned-attitude.html"><span>ned</span><wbr></wbr><span><span>Attitude</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="204798838%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="ned-attitude.html">nedAttitude</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.geometry/Quaternion///PointingToDeclaration/">Quaternion</span></div><div class="brief "><p class="paragraph">Estimated device attitude expressed in leveled local NED coordinates respect to Earth.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1910248409%2FProperties%2F300442814" anchor-label="nedAttitudeCovariance" id="1910248409%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ned-attitude-covariance.html"><span>ned</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Covariance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1910248409%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="ned-attitude-covariance.html">nedAttitudeCovariance</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Error covariance of estimated quaternion attitude expressed in NED coordinates. This is only available if <a href="compute-covariances.html">computeCovariances</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-731133227%2FProperties%2F300442814" anchor-label="nedExternalAcceleration" id="-731133227%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ned-external-acceleration.html"><span>ned</span><wbr></wbr><span>External</span><wbr></wbr><span><span>Acceleration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-731133227%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="ned-external-acceleration.html">nedExternalAcceleration</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Estimated external acceleration applied on the device expressed in leveled local NED coordinates respect to Earth.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1964869703%2FProperties%2F300442814" anchor-label="processorListener" id="1964869703%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="processor-listener.html"><span>processor</span><wbr></wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1964869703%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="processor-listener.html">processorListener</a><span class="token operator">: </span><a href="-on-processed-listener/index.html">KalmanAbsoluteAttitudeProcessor5.OnProcessedListener</a><span class="token operator">?</span><span class="token operator"> = </span>null</div><div class="brief "><p class="paragraph">listener to handle events raised by this processor.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1876505987%2FProperties%2F300442814" anchor-label="qba" id="-1876505987%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="qba.html"><span><span>qba</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1876505987%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="qba.html">qba</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Covariance noise matrix of the accelerometer bias</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1690387145%2FProperties%2F300442814" anchor-label="qbg" id="-1690387145%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="qbg.html"><span><span>qbg</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1690387145%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">val </span><a href="qbg.html">qbg</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></div><div class="brief "><p class="paragraph">Covariance noise matrix of the gyroscope bias</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-323506656%2FProperties%2F300442814" anchor-label="timeIntervalSeconds" id="-323506656%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="time-interval-seconds.html"><span>time</span><wbr></wbr><span>Interval</span><wbr></wbr><span><span>Seconds</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-323506656%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="time-interval-seconds.html">timeIntervalSeconds</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a></div><div class="brief "><p class="paragraph">Time interval between measurements expressed in seconds (s).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1432629043%2FProperties%2F300442814" anchor-label="useWorldMagneticModel" id="1432629043%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="use-world-magnetic-model.html"><span>use</span><wbr></wbr><span>World</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1432629043%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="use-world-magnetic-model.html">useWorldMagneticModel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Indicates whether world magnetic model is taken into account magnetic field dip and declination angles, so that orientation pointing to the true north is estimated.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1934640858%2FProperties%2F300442814" anchor-label="worldMagneticModel" id="1934640858%2FProperties%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="world-magnetic-model.html"><span>world</span><wbr></wbr><span>Magnetic</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1934640858%2FProperties%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">var </span><a href="world-magnetic-model.html">worldMagneticModel</a><span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.wmm/WorldMagneticModel///PointingToDeclaration/">WorldMagneticModel</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Earth's magnetic model. If null, the default model is used if <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is true. If <a href="use-world-magnetic-model.html">useWorldMagneticModel</a> is false, this is ignored.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-1583080723%2FFunctions%2F300442814" anchor-label="getAttitudeCovariance" id="-1583080723%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-attitude-covariance.html"><span>get</span><wbr></wbr><span>Attitude</span><wbr></wbr><span><span>Covariance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1583080723%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-attitude-covariance.html"><span class="token function">getAttitudeCovariance</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets error covariance of estimated quaternion attitude expressed in NED coordinates. This is only available if <a href="compute-covariances.html">computeCovariances</a> is true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-791011360%2FFunctions%2F300442814" anchor-label="getBodyExternalAcceleration" id="-791011360%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-body-external-acceleration.html"><span>get</span><wbr></wbr><span>Body</span><wbr></wbr><span>External</span><wbr></wbr><span><span>Acceleration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-791011360%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-body-external-acceleration.html"><span class="token function">getBodyExternalAcceleration</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated external acceleration applied on the device expressed in NED coordinates respect to device body.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1982023587%2FFunctions%2F300442814" anchor-label="getEcefExternalAcceleration" id="1982023587%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-ecef-external-acceleration.html"><span>get</span><wbr></wbr><span>Ecef</span><wbr></wbr><span>External</span><wbr></wbr><span><span>Acceleration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1982023587%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-ecef-external-acceleration.html"><span class="token function">getEcefExternalAcceleration</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated external acceleration applied on the device end expressed in ECEF coordinates respect to Earth.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2035232705%2FFunctions%2F300442814" anchor-label="getEulerAngles" id="-2035232705%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-euler-angles.html"><span>get</span><wbr></wbr><span>Euler</span><wbr></wbr><span><span>Angles</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2035232705%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-euler-angles.html"><span class="token function">getEulerAngles</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double-array/index.html">DoubleArray</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets Euler angles associated to estimated NED attitude. Array contains roll, pitch and yaw angles expressed in radians (rad) and following order indicated here. This is only available if <a href="compute-covariances.html">computeCovariances</a> and <a href="compute-euler-angles.html">computeEulerAngles</a> are true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1580791936%2FFunctions%2F300442814" anchor-label="getEulerAnglesCovariance" id="-1580791936%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-euler-angles-covariance.html"><span>get</span><wbr></wbr><span>Euler</span><wbr></wbr><span>Angles</span><wbr></wbr><span><span>Covariance</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1580791936%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-euler-angles-covariance.html"><span class="token function">getEulerAnglesCovariance</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.algebra/Matrix///PointingToDeclaration/">Matrix</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets error covariance of estimated Euler angles for NED attitude. This is only available if <a href="compute-covariances.html">computeCovariances</a> and <a href="compute-euler-angles-covariance.html">computeEulerAnglesCovariance</a> are true.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-434637343%2FFunctions%2F300442814" anchor-label="getNedExternalAcceleration" id="-434637343%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-ned-external-acceleration.html"><span>get</span><wbr></wbr><span>Ned</span><wbr></wbr><span>External</span><wbr></wbr><span><span>Acceleration</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-434637343%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-ned-external-acceleration.html"><span class="token function">getNedExternalAcceleration</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">result<span class="token operator">: </span><span data-unresolved-link="com.irurueta.navigation.inertial.calibration/AccelerationTriad///PointingToDeclaration/">AccelerationTriad</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Gets estimated external acceleration applied on the device and expressed in leveled local NED coordinates respect to Earth.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-501378601%2FFunctions%2F300442814" anchor-label="initKalmanErrorCov" id="-501378601%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="init-kalman-error-cov.html"><span>init</span><wbr></wbr><span>Kalman</span><wbr></wbr><span>Error</span><wbr></wbr><span><span>Cov</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-501378601%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="init-kalman-error-cov.html"><span class="token function">initKalmanErrorCov</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-897664007%2FFunctions%2F300442814" anchor-label="process" id="-897664007%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="process.html"><span><span>process</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-897664007%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="process.html"><span class="token function">process</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">syncedMeasurement<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-gyroscope-and-magnetometer-synced-sensor-measurement/index.html">AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Processes provided synced accelerometer, gyroscope and magnetometer measurement to obtain  a relative leveled attitude.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="process.html"><span class="token function">process</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">accelerometerMeasurement<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-accelerometer-sensor-measurement/index.html">AccelerometerSensorMeasurement</a><span class="token punctuation">, </span></span><span class="parameter ">gyroscopeMeasurement<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-gyroscope-sensor-measurement/index.html">GyroscopeSensorMeasurement</a><span class="token punctuation">, </span></span><span class="parameter ">magnetometerMeasurement<span class="token operator">: </span><a href="../../com.irurueta.android.navigation.inertial.collectors/-magnetometer-sensor-measurement/index.html">MagnetometerSensorMeasurement</a><span class="token punctuation">, </span></span><span class="parameter ">timestamp<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span>gyroscopeMeasurement.timestamp</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Processes provided accelerometer, gyroscope and magnetometer measurements at provided timestamp to obtain a relative leveled attitude.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="398212734%2FFunctions%2F300442814" anchor-label="reset" id="398212734%2FFunctions%2F300442814" data-filterable-set=":lib/release"></a>
+          <div class="table-row" data-filterable-current=":lib/release" data-filterable-set=":lib/release">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="reset.html"><span><span>reset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="398212734%2FFunctions%2F300442814"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":lib/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="reset.html"><span class="token function">reset</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Resets internal parameter.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+        <span>© 2025 Copyright</span>
+        <span class="pull-right">
+            <span>Generated by </span>
+            <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                <span>dokka</span>
+            </a>
+        </span>
+    </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
