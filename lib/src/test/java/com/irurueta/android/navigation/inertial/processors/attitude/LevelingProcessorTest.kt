@@ -23,18 +23,23 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Rule
 import org.junit.Test
 
 class LevelingProcessorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var listener: BaseLevelingProcessor.OnProcessedListener
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -55,7 +60,6 @@ class LevelingProcessorTest {
 
     @Test
     fun constructor_whenListener_returnsExpectedValues() {
-        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>()
         val processor = LevelingProcessor(listener)
 
         assertSame(listener, processor.processorListener)
@@ -79,7 +83,6 @@ class LevelingProcessorTest {
         assertNull(processor.processorListener)
 
         // set new value
-        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>()
         processor.processorListener = listener
 
         // check
@@ -88,7 +91,6 @@ class LevelingProcessorTest {
 
     @Test
     fun process_setsExpectedAttitudeAndNotifies() {
-        val listener = mockk<BaseLevelingProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = LevelingProcessor(listener)
 
         val randomizer = UniformRandomizer()

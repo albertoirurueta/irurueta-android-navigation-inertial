@@ -26,21 +26,14 @@ import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType
+import com.irurueta.numerical.JacobianEstimator
+import com.irurueta.numerical.MultiVariateFunctionEvaluatorListener
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.sqrt
 
 class ENUtoNEDConverterTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun convert_whenAccelerationTriad_returnsExpectedResult() {
@@ -58,6 +51,7 @@ class ENUtoNEDConverterTest {
         assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
         assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
         assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad.unit, enuTriad1.unit)
 
         // convert back from NED to ENU
         val enuTriad2 = AccelerationTriad()
@@ -93,6 +87,7 @@ class ENUtoNEDConverterTest {
         assertEquals(nedTriad1.valueX, enuTriad1.valueY, 0.0)
         assertEquals(nedTriad1.valueY, enuTriad1.valueX, 0.0)
         assertEquals(nedTriad1.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad1.unit, enuTriad1.unit)
 
         // convert back from NED to ENU
         val enuTriad2 = AngularSpeedTriad()
@@ -124,6 +119,7 @@ class ENUtoNEDConverterTest {
         assertEquals(nedTriad.valueX, enuTriad1.valueY, 0.0)
         assertEquals(nedTriad.valueY, enuTriad1.valueX, 0.0)
         assertEquals(nedTriad.valueZ, -enuTriad1.valueZ, 0.0)
+        assertEquals(nedTriad.unit, enuTriad1.unit)
 
         // convert back from NED to ENU
         val enuTriad2 = MagneticFluxDensityTriad()
@@ -424,7 +420,7 @@ class ENUtoNEDConverterTest {
     }
 
     @Test
-    fun convert_whenRotation_returnsExpectedResult() {
+    fun convert_whenRotationWithoutJacobian_returnsExpectedResult() {
         // Xenu =  [0   1   0 ] * Xned
         //         [1   0   0 ]
         //	       [0   0   -1]
@@ -851,6 +847,82 @@ class ENUtoNEDConverterTest {
         val enuT2 = ENUtoNEDConverter.convertAndReturnNew(nedT1)
 
         assertTrue(enuT1.asMatrix().equals(enuT2.asMatrix(), ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun quaternionConversionJacobian_whenValidSize_returnsExpectedResult() {
+        val j1 = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+        ENUtoNEDConverter.quaternionConversionJacobian(j1)
+        val j2 = ENUtoNEDConverter.quaternionConversionJacobian
+
+        assertEquals(j1, j2)
+
+        val j3 = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+        j3.setElementAt(0, 0, -1.0)
+        j3.setElementAt(2, 1, -1.0)
+        j3.setElementAt(1, 2, -1.0)
+        j3.setElementAt(3, 3, 1.0)
+
+        assertEquals(j1, j3)
+
+        val randomizer = UniformRandomizer()
+        val a1 = randomizer.nextDouble()
+        val b1 = randomizer.nextDouble()
+        val c1 = randomizer.nextDouble()
+        val d1 = randomizer.nextDouble()
+
+        val q1 = Quaternion(a1, b1, c1, d1)
+
+        val jacobianEstimator = JacobianEstimator(object: MultiVariateFunctionEvaluatorListener {
+            override fun evaluate(point: DoubleArray, result: DoubleArray) {
+                val q = Quaternion(point)
+                val convertedQ = ENUtoNEDConverter.convertAndReturnNew(q)
+                convertedQ.values(result)
+            }
+
+            override fun getNumberOfVariables(): Int {
+                return Quaternion.N_PARAMS
+            }
+        })
+
+        val j4 = jacobianEstimator.jacobian(q1.values)
+
+        assertTrue(j4.equals(j1, ABSOLUTE_ERROR))
+    }
+
+    @Test
+    fun quaternionConversionJacobian_whenInvalidRows_returnsExpectedResult() {
+        val j1 = Matrix(1, Quaternion.N_PARAMS)
+        ENUtoNEDConverter.quaternionConversionJacobian(j1)
+        val j2 = ENUtoNEDConverter.quaternionConversionJacobian
+
+        assertEquals(j1, j2)
+
+        val j3 = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+        j3.setElementAt(0, 0, -1.0)
+        j3.setElementAt(2, 1, -1.0)
+        j3.setElementAt(1, 2, -1.0)
+        j3.setElementAt(3, 3, 1.0)
+
+        assertEquals(j1, j3)
+    }
+
+    @Test
+    fun quaternionConversionJacobian_whenInvalidColumns_returnsExpectedResult() {
+        val j1 = Matrix(Quaternion.N_PARAMS, 1)
+        ENUtoNEDConverter.conversionRotationMatrix(j1)
+        ENUtoNEDConverter.quaternionConversionJacobian(j1)
+        val j2 = ENUtoNEDConverter.quaternionConversionJacobian
+
+        assertEquals(j1, j2)
+
+        val j3 = Matrix(Quaternion.N_PARAMS, Quaternion.N_PARAMS)
+        j3.setElementAt(0, 0, -1.0)
+        j3.setElementAt(2, 1, -1.0)
+        j3.setElementAt(1, 2, -1.0)
+        j3.setElementAt(3, 3, 1.0)
+
+        assertEquals(j1, j3)
     }
 
     private companion object {

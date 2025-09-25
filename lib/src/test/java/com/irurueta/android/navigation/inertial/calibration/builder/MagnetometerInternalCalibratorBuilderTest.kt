@@ -21,30 +21,61 @@ import com.irurueta.android.navigation.inertial.calibration.StaticIntervalMagnet
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultMagnetometerQualityScoreMapper
-import com.irurueta.navigation.inertial.calibration.magnetometer.*
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.KnownPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.LMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.LMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.LMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.LMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.MSACRobustKnownPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROMedSRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROMedSRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROMedSRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROMedSRobustKnownPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.PROSACRobustKnownPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.RANSACRobustKnownHardIronMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.RANSACRobustKnownHardIronPositionAndInstantMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.RANSACRobustKnownMagneticFluxDensityNormMagnetometerCalibrator
+import com.irurueta.navigation.inertial.calibration.magnetometer.RANSACRobustKnownPositionAndInstantMagnetometerCalibrator
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockk
-import io.mockk.unmockkAll
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
+import java.util.Date
+import java.util.GregorianCalendar
 
 @RunWith(RobolectricTestRunner::class)
 class MagnetometerInternalCalibratorBuilderTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var measurement: StandardDeviationBodyMagneticFluxDensity
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenRequiredValues_setsExpectedValues() {
@@ -84,10 +115,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             0.0
         )
         assertFalse(builder.isGroundTruthInitialHardIron)
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        assertFalse(builder.isCommonAxisUsed)
         assertNull(builder.initialHardIronX)
         assertNull(builder.initialHardIronY)
         assertNull(builder.initialHardIronZ)
@@ -263,7 +291,7 @@ class MagnetometerInternalCalibratorBuilderTest {
         val measurements = emptyList<StandardDeviationBodyMagneticFluxDensity>()
         val robustPreliminarySubsetSize = 0
         val minimumRequiredMeasurements =
-            randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
+            randomizer.nextInt(robustPreliminarySubsetSize, robustPreliminarySubsetSize)
 
         MagnetometerInternalCalibratorBuilder(
             measurements,
@@ -770,19 +798,14 @@ class MagnetometerInternalCalibratorBuilderTest {
         )
 
         // check default value
-        assertEquals(
-            StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        assertFalse(builder.isCommonAxisUsed)
 
         // set new value
-        builder.isCommonAxisUsed = !StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS
+        builder.isCommonAxisUsed = true
 
         // check
-        assertEquals(
-            !StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        @Suppress("KotlinConstantConditions")
+        assertTrue(builder.isCommonAxisUsed)
     }
 
     @Test
@@ -1230,7 +1253,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1299,7 +1322,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1368,7 +1391,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1443,7 +1466,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1518,7 +1541,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1596,7 +1619,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1674,7 +1697,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1758,7 +1781,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1842,7 +1865,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1922,7 +1945,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2002,7 +2025,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2051,7 +2074,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2100,7 +2123,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2178,7 +2201,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2256,7 +2279,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2340,7 +2363,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2424,7 +2447,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2504,7 +2527,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2584,7 +2607,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2633,7 +2656,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2680,12 +2703,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2762,12 +2784,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2844,12 +2865,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2932,12 +2952,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3020,12 +3039,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3104,12 +3122,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3188,12 +3205,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3240,12 +3256,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3294,7 +3309,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3316,7 +3331,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3372,7 +3387,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3394,7 +3409,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3450,7 +3465,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3475,7 +3490,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3534,7 +3549,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3559,7 +3574,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3618,7 +3633,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3641,7 +3656,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3703,7 +3718,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3726,7 +3741,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3788,7 +3803,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3810,7 +3825,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3837,7 +3852,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3859,7 +3874,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3884,12 +3899,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3911,7 +3925,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3966,12 +3980,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3993,7 +4006,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4048,12 +4061,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4078,7 +4090,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4136,12 +4148,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4166,7 +4177,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4224,12 +4235,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4252,7 +4262,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4313,12 +4323,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4341,7 +4350,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4402,12 +4411,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4429,7 +4437,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4454,12 +4462,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4481,7 +4488,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             robustPreliminarySubsetSize,
             groundTruthMagneticFluxDensityNorm,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4508,7 +4515,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4585,7 +4592,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4662,7 +4669,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4745,7 +4752,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4828,7 +4835,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4914,7 +4921,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5000,7 +5007,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5092,7 +5099,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5184,7 +5191,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5272,7 +5279,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5360,7 +5367,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5413,7 +5420,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5466,7 +5473,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5552,7 +5559,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5638,7 +5645,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5730,7 +5737,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5822,7 +5829,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5910,7 +5917,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5998,7 +6005,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6051,7 +6058,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6102,12 +6109,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6192,12 +6198,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6282,12 +6287,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6378,12 +6382,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6474,12 +6477,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6566,12 +6568,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6658,12 +6659,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6714,12 +6714,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6772,7 +6771,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6797,7 +6796,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -6858,7 +6857,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6883,7 +6882,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -6944,7 +6943,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -6972,7 +6971,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -7036,7 +7035,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7064,7 +7063,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -7128,7 +7127,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7154,7 +7153,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -7221,7 +7220,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7247,7 +7246,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -7314,7 +7313,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7339,7 +7338,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -7367,7 +7366,7 @@ class MagnetometerInternalCalibratorBuilderTest {
 
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7392,7 +7391,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -7418,12 +7417,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7448,7 +7446,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -7508,12 +7506,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7538,7 +7535,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -7598,12 +7595,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7631,7 +7627,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -7694,12 +7690,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndCommonAxisWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7727,7 +7722,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -7790,12 +7785,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7821,7 +7815,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -7887,12 +7881,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetAndNoRobustThresholdWithLocation_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -7918,7 +7911,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -7984,12 +7977,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -8014,7 +8006,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -8040,12 +8032,11 @@ class MagnetometerInternalCalibratorBuilderTest {
     fun build_whenPROMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevelWithLocation_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
         val magneticFluxDensityStandardDeviation = randomizer.nextDouble()
-        val measurement = mockk<StandardDeviationBodyMagneticFluxDensity>()
         every { measurement.magneticFluxDensityStandardDeviation }.returns(
             magneticFluxDensityStandardDeviation
         )
         val measurements = mutableListOf<StandardDeviationBodyMagneticFluxDensity>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -8070,7 +8061,7 @@ class MagnetometerInternalCalibratorBuilderTest {
             robustPreliminarySubsetSize,
             location = location,
             timestamp = timestamp,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -8090,6 +8081,20 @@ class MagnetometerInternalCalibratorBuilderTest {
         )
 
         builder.build()
+    }
+
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
     }
 
     private companion object {
@@ -8115,20 +8120,5 @@ class MagnetometerInternalCalibratorBuilderTest {
         const val ROBUST_STOP_THRESHOLD_FACTOR = 1e-3
 
         const val ABSOLUTE_ERROR = 1e-6
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

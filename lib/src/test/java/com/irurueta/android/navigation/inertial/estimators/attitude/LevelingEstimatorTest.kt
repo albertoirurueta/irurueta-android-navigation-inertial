@@ -26,16 +26,28 @@ import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorTy
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -43,11 +55,24 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class LevelingEstimatorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var levelingAvailableListener: LevelingEstimator.OnLevelingAvailableListener
+
+    @MockK
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
+
+    @MockK
+    private lateinit var display: Display
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -74,12 +99,7 @@ class LevelingEstimatorTest {
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
-        val levelingAvailableListener = mockk<LevelingEstimator.OnLevelingAvailableListener>()
         val accelerometerAveragingFilter = MeanAveragingFilter()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
-        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LevelingEstimator(
             context,
@@ -130,11 +150,10 @@ class LevelingEstimatorTest {
         assertNull(estimator.levelingAvailableListener)
 
         // set new value
-        val listener = mockk<LevelingEstimator.OnLevelingAvailableListener>()
-        estimator.levelingAvailableListener = listener
+        estimator.levelingAvailableListener = levelingAvailableListener
 
         // check
-        assertSame(listener, estimator.levelingAvailableListener)
+        assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
     }
 
     @Test
@@ -146,8 +165,9 @@ class LevelingEstimatorTest {
         assertNull(estimator.gravityEstimationListener)
 
         // set new value
-        val listener = mockk<GravityEstimator.OnEstimationListener>()
-        estimator.gravityEstimationListener = listener
+        estimator.gravityEstimationListener = gravityEstimationListener
+
+        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
     }
 
     @Test
@@ -164,12 +184,14 @@ class LevelingEstimatorTest {
         assertNull(gravityEstimator.accelerometerMeasurementListener)
 
         // set new value
-        val listener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        estimator.accelerometerMeasurementListener = listener
+        estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
-        assertSame(listener, estimator.accelerometerMeasurementListener)
-        assertSame(listener, gravityEstimator.accelerometerMeasurementListener)
+        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
+        assertSame(
+            accelerometerMeasurementListener,
+            gravityEstimator.accelerometerMeasurementListener
+        )
     }
 
     @Test
@@ -181,11 +203,10 @@ class LevelingEstimatorTest {
         assertNull(estimator.gravityMeasurementListener)
 
         // set new value
-        val listener = mockk<GravitySensorCollector.OnMeasurementListener>()
-        estimator.gravityMeasurementListener = listener
+        estimator.gravityMeasurementListener = gravityMeasurementListener
 
         // check
-        assertSame(listener, estimator.gravityMeasurementListener)
+        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
     }
 
     @Test
@@ -238,7 +259,6 @@ class LevelingEstimatorTest {
 
     @Test
     fun onGravityEstimation_whenNoListenerNotEstimateCoordinateTransformationAndNotEstimateEulerAngles_updatesAttitude() {
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
@@ -331,15 +351,10 @@ class LevelingEstimatorTest {
 
     @Test
     fun onGravityEstimation_whenListenerNotEstimateCoordinateTransformationAndNotEstimateEulerAngles_updatesAttitude() {
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
 
-        val levelingAvailableListener =
-            mockk<LevelingEstimator.OnLevelingAvailableListener>(relaxUnitFun = true)
-        val gravityEstimationListener =
-            mockk<GravityEstimator.OnEstimationListener>(relaxUnitFun = true)
         val estimator = LevelingEstimator(
             context,
             estimateCoordinateTransformation = false,
@@ -448,13 +463,9 @@ class LevelingEstimatorTest {
 
     @Test
     fun onGravityEstimation_whenListenerEstimateCoordinateTransformationAndEstimateEulerAngles_updatesAttitude() {
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
-
-        val levelingAvailableListener =
-            mockk<LevelingEstimator.OnLevelingAvailableListener>(relaxUnitFun = true)
 
         val estimator = LevelingEstimator(
             context,
@@ -555,13 +566,9 @@ class LevelingEstimatorTest {
 
     @Test
     fun onGravityEstimation_whenListenerIgnoreDisplayOrientation_updatesAttitude() {
-        val display = mockk<Display>()
         every { display.rotation }.returns(Surface.ROTATION_0)
         val context = spyk(ApplicationProvider.getApplicationContext())
         every { context.display }.returns(display)
-
-        val levelingAvailableListener =
-            mockk<LevelingEstimator.OnLevelingAvailableListener>(relaxUnitFun = true)
 
         val estimator = LevelingEstimator(
             context,

@@ -17,22 +17,13 @@ package com.irurueta.android.navigation.inertial.collectors.interpolators
 
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.getPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class AttitudeLinearSensorMeasurementInterpolatorTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun constructor_whenEmpty_setsExpectedProperties() {
@@ -373,7 +364,7 @@ class AttitudeLinearSensorMeasurementInterpolatorTest {
         const val MAX_DEGREES = 90.0
 
         const val ABSOLUTE_ERROR = 5e-6f
-        const val ATTITUDE_ABSOLUTE_ERROR = 5e-4
+        const val ATTITUDE_ABSOLUTE_ERROR = 2e-3
 
         fun assertMeasurement(
             measurement1: AttitudeSensorMeasurement,

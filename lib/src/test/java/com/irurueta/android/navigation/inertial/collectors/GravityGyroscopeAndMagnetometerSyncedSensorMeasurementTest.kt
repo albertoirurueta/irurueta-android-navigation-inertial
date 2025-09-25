@@ -15,19 +15,10 @@
  */
 package com.irurueta.android.navigation.inertial.collectors
 
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class GravityGyroscopeAndMagnetometerSyncedSensorMeasurementTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun constructor_whenNoParameters_setsExpectedValues() {

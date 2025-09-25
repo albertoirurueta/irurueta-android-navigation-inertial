@@ -41,7 +41,7 @@ enum class GyroscopeSensorType(val value: Int) {
          * @return gyroscope sensor type as an enum or null if value has no match.
          */
         fun from(value: Int): GyroscopeSensorType? {
-            return values().find { it.value == value }
+            return entries.find { it.value == value }
         }
     }
 }

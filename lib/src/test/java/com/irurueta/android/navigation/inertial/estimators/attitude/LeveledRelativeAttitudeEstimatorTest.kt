@@ -20,18 +20,37 @@ import android.location.Location
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.mockkObject
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -40,11 +59,32 @@ import kotlin.math.abs
 @RunWith(RobolectricTestRunner::class)
 class LeveledRelativeAttitudeEstimatorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var listener: LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener
+
+    @MockK
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var gyroscopeMeasurementListener:
+            GyroscopeSensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var attitudeAvailableListener:
+            LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -109,12 +149,6 @@ class LeveledRelativeAttitudeEstimatorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val accelerometerAveragingFilter = MeanAveragingFilter()
-        val listener = mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
-        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
             location,
@@ -255,8 +289,6 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertNull(estimator.attitudeAvailableListener)
 
         // set new value
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
         estimator.attitudeAvailableListener = attitudeAvailableListener
 
         // check
@@ -272,8 +304,6 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertNull(estimator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
@@ -297,7 +327,6 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertNull(estimator.gravityMeasurementListener)
 
         // set new value
-        val gravityMeasurementListener = mockk<GravitySensorCollector.OnMeasurementListener>()
         estimator.gravityMeasurementListener = gravityMeasurementListener
 
         // check
@@ -318,7 +347,6 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertNull(estimator.gyroscopeMeasurementListener)
 
         // set new value
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
 
         // check
@@ -334,7 +362,6 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertNull(estimator.gravityEstimationListener)
 
         // set new value
-        val gravityEstimationListener = mockk<GravityEstimator.OnEstimationListener>()
         estimator.gravityEstimationListener = gravityEstimationListener
 
         // check
@@ -1185,8 +1212,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun processLeveling_whenNoRelativeAttitudeAndNonAccurateLeveling_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -1234,8 +1259,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun processLeveling_whenNoRelativeAttitudeAndAccurateLeveling_makesNoAction() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
@@ -1285,8 +1308,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun processLeveling_whenRelativeAttitudeAndNonAccurateLeveling_copiesAttitude() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -1336,8 +1357,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun processLeveling_whenRelativeAttitudeAndAccurateLeveling_copiesAttitude() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
         val location = getLocation()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
@@ -1389,8 +1408,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun processLeveling_whenDeltaRelativeAttitudeAndResetLeveling_resets() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -1495,8 +1512,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun processLeveling_whenDeltaRelativeAttitudeSmallDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -1558,117 +1573,114 @@ class LeveledRelativeAttitudeEstimatorTest {
         val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
         deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
 
-        mockkObject(QuaternionHelper)
-        every {
-            QuaternionHelper.dotProduct(
-                any(),
-                any()
-            )
-        }.returns(estimator.outlierThreshold)
+        mockkObject(QuaternionHelper) {
+            every {
+                QuaternionHelper.dotProduct(
+                    any(),
+                    any()
+                )
+            }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
+            val fusedAttitude2 = Quaternion(internalFusedAttitude)
+            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
-        estimator.setPrivateProperty("panicCounter", 1)
-        val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter1)
-        assertEquals(1, panicCounter1)
+            estimator.setPrivateProperty("panicCounter", 1)
+            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter1)
+            assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
+            requireNotNull(resetToLeveling)
+            assertFalse(resetToLeveling)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+            val levelingEstimator: LevelingEstimator? =
+                estimator.getPrivateProperty("levelingEstimator")
+            requireNotNull(levelingEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("timestamp", timestamp)
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-
-        val angles = DoubleArray(3)
-        internalAttitude.toEulerAngles(angles)
-        val levelingRoll = angles[0]
-        val levelingPitch = angles[1]
-        attitude.toEulerAngles(angles)
-        val relativeYaw = angles[2]
-
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-        val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-        requireNotNull(eulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-        }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-        val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter2)
-        assertEquals(0, panicCounter2)
-
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-
-        val fusedAttitude4 = Quaternion()
-        Quaternion.slerp(
-            fusedAttitude3,
-            levelingAttitudeSpy,
-            estimator.interpolationValue,
-            fusedAttitude4
-        )
-
-        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
-
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-        assertTrue(absDot >= estimator.outlierThreshold)
-
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-
-        verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
+            val internalAttitude = spyk(getAttitude())
+            val listener = levelingEstimator.levelingAvailableListener
+            requireNotNull(listener)
+            val timestamp = SystemClock.elapsedRealtimeNanos()
+            estimator.setPrivateProperty("timestamp", timestamp)
+            listener.onLevelingAvailable(
+                levelingEstimator,
+                internalAttitude,
                 timestamp,
-                null,
                 null,
                 null,
                 null
             )
-        }
 
-        unmockkObject(QuaternionHelper)
+            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
+            requireNotNull(levelingAttitude2)
+
+            val angles = DoubleArray(3)
+            internalAttitude.toEulerAngles(angles)
+            val levelingRoll = angles[0]
+            val levelingPitch = angles[1]
+            attitude.toEulerAngles(angles)
+            val relativeYaw = angles[2]
+
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+
+            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
+            requireNotNull(eulerAngles)
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
+                levelingAttitudeSpy.setFromEulerAngles(
+                    levelingRoll,
+                    levelingPitch,
+                    relativeYaw
+                )
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+
+            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter2)
+            assertEquals(0, panicCounter2)
+
+            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+            requireNotNull(hasRelativeAttitude2)
+            assertTrue(hasRelativeAttitude2)
+
+            val fusedAttitude4 = Quaternion()
+            Quaternion.slerp(
+                fusedAttitude3,
+                levelingAttitudeSpy,
+                estimator.interpolationValue,
+                fusedAttitude4
+            )
+
+            assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
+
+            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+            assertTrue(absDot >= estimator.outlierThreshold)
+
+            val previousRelativeAttitude2: Quaternion? =
+                estimator.getPrivateProperty("previousRelativeAttitude")
+            requireNotNull(previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+
+            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+            requireNotNull(fusedAttitude)
+
+            verify(exactly = 1) {
+                attitudeAvailableListener.onAttitudeAvailable(
+                    estimator,
+                    fusedAttitude,
+                    timestamp,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            }
+        }
     }
 
     @Test
     fun processLeveling_whenDeltaRelativeAttitudeMediumDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -1730,110 +1742,107 @@ class LeveledRelativeAttitudeEstimatorTest {
         val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
         deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
 
-        mockkObject(QuaternionHelper)
-        every {
-            QuaternionHelper.dotProduct(
-                any(),
-                any()
-            )
-        }.returns(0.5 * (estimator.outlierThreshold + estimator.outlierPanicThreshold))
+        mockkObject(QuaternionHelper) {
+            every {
+                QuaternionHelper.dotProduct(
+                    any(),
+                    any()
+                )
+            }.returns(0.5 * (estimator.outlierThreshold + estimator.outlierPanicThreshold))
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
+            val fusedAttitude2 = Quaternion(internalFusedAttitude)
+            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
-        estimator.setPrivateProperty("panicCounter", 1)
-        val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter1)
-        assertEquals(1, panicCounter1)
+            estimator.setPrivateProperty("panicCounter", 1)
+            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter1)
+            assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
+            requireNotNull(resetToLeveling)
+            assertFalse(resetToLeveling)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+            val levelingEstimator: LevelingEstimator? =
+                estimator.getPrivateProperty("levelingEstimator")
+            requireNotNull(levelingEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("timestamp", timestamp)
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-
-        val angles = DoubleArray(3)
-        internalAttitude.toEulerAngles(angles)
-        val levelingRoll = angles[0]
-        val levelingPitch = angles[1]
-        attitude.toEulerAngles(angles)
-        val relativeYaw = angles[2]
-
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-        val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-        requireNotNull(eulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-        }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-        val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter2)
-        assertEquals(1, panicCounter2)
-
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-
-        assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
-
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-        assertTrue(absDot < estimator.outlierThreshold)
-        assertTrue(absDot > estimator.outlierPanicThreshold)
-
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-
-        verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
+            val internalAttitude = spyk(getAttitude())
+            val listener = levelingEstimator.levelingAvailableListener
+            requireNotNull(listener)
+            val timestamp = SystemClock.elapsedRealtimeNanos()
+            estimator.setPrivateProperty("timestamp", timestamp)
+            listener.onLevelingAvailable(
+                levelingEstimator,
+                internalAttitude,
                 timestamp,
-                null,
                 null,
                 null,
                 null
             )
-        }
 
-        unmockkObject(QuaternionHelper)
+            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
+            requireNotNull(levelingAttitude2)
+
+            val angles = DoubleArray(3)
+            internalAttitude.toEulerAngles(angles)
+            val levelingRoll = angles[0]
+            val levelingPitch = angles[1]
+            attitude.toEulerAngles(angles)
+            val relativeYaw = angles[2]
+
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+
+            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
+            requireNotNull(eulerAngles)
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
+                levelingAttitudeSpy.setFromEulerAngles(
+                    levelingRoll,
+                    levelingPitch,
+                    relativeYaw
+                )
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+
+            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter2)
+            assertEquals(1, panicCounter2)
+
+            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+            requireNotNull(hasRelativeAttitude2)
+            assertTrue(hasRelativeAttitude2)
+
+            assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
+
+            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+            assertTrue(absDot < estimator.outlierThreshold)
+            assertTrue(absDot > estimator.outlierPanicThreshold)
+
+            val previousRelativeAttitude2: Quaternion? =
+                estimator.getPrivateProperty("previousRelativeAttitude")
+            requireNotNull(previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+
+            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+            requireNotNull(fusedAttitude)
+
+            verify(exactly = 1) {
+                attitudeAvailableListener.onAttitudeAvailable(
+                    estimator,
+                    fusedAttitude,
+                    timestamp,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            }
+        }
     }
 
     @Test
     fun processLeveling_whenDeltaRelativeAttitudeLargeDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -1895,110 +1904,107 @@ class LeveledRelativeAttitudeEstimatorTest {
         val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
         deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
 
-        mockkObject(QuaternionHelper)
-        every {
-            QuaternionHelper.dotProduct(
-                any(),
-                any()
-            )
-        }.returns(0.0)
+        mockkObject(QuaternionHelper) {
+            every {
+                QuaternionHelper.dotProduct(
+                    any(),
+                    any()
+                )
+            }.returns(0.0)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
+            val fusedAttitude2 = Quaternion(internalFusedAttitude)
+            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
-        estimator.setPrivateProperty("panicCounter", 1)
-        val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter1)
-        assertEquals(1, panicCounter1)
+            estimator.setPrivateProperty("panicCounter", 1)
+            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter1)
+            assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
+            requireNotNull(resetToLeveling)
+            assertFalse(resetToLeveling)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+            val levelingEstimator: LevelingEstimator? =
+                estimator.getPrivateProperty("levelingEstimator")
+            requireNotNull(levelingEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("timestamp", timestamp)
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-
-        val angles = DoubleArray(3)
-        internalAttitude.toEulerAngles(angles)
-        val levelingRoll = angles[0]
-        val levelingPitch = angles[1]
-        attitude.toEulerAngles(angles)
-        val relativeYaw = angles[2]
-
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-        val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-        requireNotNull(eulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-        }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-        val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter2)
-        assertEquals(2, panicCounter2)
-
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-
-        assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
-
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-        assertTrue(absDot < estimator.outlierThreshold)
-        assertTrue(absDot < estimator.outlierPanicThreshold)
-
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-
-        verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
+            val internalAttitude = spyk(getAttitude())
+            val listener = levelingEstimator.levelingAvailableListener
+            requireNotNull(listener)
+            val timestamp = SystemClock.elapsedRealtimeNanos()
+            estimator.setPrivateProperty("timestamp", timestamp)
+            listener.onLevelingAvailable(
+                levelingEstimator,
+                internalAttitude,
                 timestamp,
-                null,
                 null,
                 null,
                 null
             )
-        }
 
-        unmockkObject(QuaternionHelper)
+            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
+            requireNotNull(levelingAttitude2)
+
+            val angles = DoubleArray(3)
+            internalAttitude.toEulerAngles(angles)
+            val levelingRoll = angles[0]
+            val levelingPitch = angles[1]
+            attitude.toEulerAngles(angles)
+            val relativeYaw = angles[2]
+
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+
+            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
+            requireNotNull(eulerAngles)
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
+                levelingAttitudeSpy.setFromEulerAngles(
+                    levelingRoll,
+                    levelingPitch,
+                    relativeYaw
+                )
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+
+            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter2)
+            assertEquals(2, panicCounter2)
+
+            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+            requireNotNull(hasRelativeAttitude2)
+            assertTrue(hasRelativeAttitude2)
+
+            assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
+
+            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+            assertTrue(absDot < estimator.outlierThreshold)
+            assertTrue(absDot < estimator.outlierPanicThreshold)
+
+            val previousRelativeAttitude2: Quaternion? =
+                estimator.getPrivateProperty("previousRelativeAttitude")
+            requireNotNull(previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+
+            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+            requireNotNull(fusedAttitude)
+
+            verify(exactly = 1) {
+                attitudeAvailableListener.onAttitudeAvailable(
+                    estimator,
+                    fusedAttitude,
+                    timestamp,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            }
+        }
     }
 
     @Test
     fun processLeveling_whenIndirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -2061,126 +2067,123 @@ class LeveledRelativeAttitudeEstimatorTest {
         val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
         deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
 
-        mockkObject(QuaternionHelper)
-        every {
-            QuaternionHelper.dotProduct(
-                any(),
-                any()
-            )
-        }.returns(estimator.outlierThreshold)
+        mockkObject(QuaternionHelper) {
+            every {
+                QuaternionHelper.dotProduct(
+                    any(),
+                    any()
+                )
+            }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
+            val fusedAttitude2 = Quaternion(internalFusedAttitude)
+            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
-        estimator.setPrivateProperty("panicCounter", 1)
-        val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter1)
-        assertEquals(1, panicCounter1)
+            estimator.setPrivateProperty("panicCounter", 1)
+            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter1)
+            assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
+            requireNotNull(resetToLeveling)
+            assertFalse(resetToLeveling)
 
-        val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+            val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
+                estimator.getPrivateProperty("attitudeEstimator")
+            requireNotNull(attitudeEstimator)
+            val attitudeEstimatorSpy = spyk(attitudeEstimator)
+            every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
+            estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+            val levelingEstimator: LevelingEstimator? =
+                estimator.getPrivateProperty("levelingEstimator")
+            requireNotNull(levelingEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("timestamp", timestamp)
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-
-        val angles = DoubleArray(3)
-        internalAttitude.toEulerAngles(angles)
-        val levelingRoll = angles[0]
-        val levelingPitch = angles[1]
-        attitude.toEulerAngles(angles)
-        val relativeYaw = angles[2]
-
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-        val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-        requireNotNull(eulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-        }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-        val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter2)
-        assertEquals(0, panicCounter2)
-
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-
-        val fusedAttitude4 = Quaternion()
-        val t = estimator.interpolationValue + estimator.indirectInterpolationWeight *
-                abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL)
-        Quaternion.slerp(
-            fusedAttitude3,
-            levelingAttitudeSpy,
-            t,
-            fusedAttitude4
-        )
-
-        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
-
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-        assertTrue(absDot >= estimator.outlierThreshold)
-
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-
-        verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
+            val internalAttitude = spyk(getAttitude())
+            val listener = levelingEstimator.levelingAvailableListener
+            requireNotNull(listener)
+            val timestamp = SystemClock.elapsedRealtimeNanos()
+            estimator.setPrivateProperty("timestamp", timestamp)
+            listener.onLevelingAvailable(
+                levelingEstimator,
+                internalAttitude,
                 timestamp,
-                null,
                 null,
                 null,
                 null
             )
-        }
 
-        unmockkObject(QuaternionHelper)
+            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
+            requireNotNull(levelingAttitude2)
+
+            val angles = DoubleArray(3)
+            internalAttitude.toEulerAngles(angles)
+            val levelingRoll = angles[0]
+            val levelingPitch = angles[1]
+            attitude.toEulerAngles(angles)
+            val relativeYaw = angles[2]
+
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+
+            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
+            requireNotNull(eulerAngles)
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
+                levelingAttitudeSpy.setFromEulerAngles(
+                    levelingRoll,
+                    levelingPitch,
+                    relativeYaw
+                )
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+
+            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter2)
+            assertEquals(0, panicCounter2)
+
+            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+            requireNotNull(hasRelativeAttitude2)
+            assertTrue(hasRelativeAttitude2)
+
+            val fusedAttitude4 = Quaternion()
+            val t = estimator.interpolationValue + estimator.indirectInterpolationWeight *
+                    abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL)
+            Quaternion.slerp(
+                fusedAttitude3,
+                levelingAttitudeSpy,
+                t,
+                fusedAttitude4
+            )
+
+            assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
+
+            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+            assertTrue(absDot >= estimator.outlierThreshold)
+
+            val previousRelativeAttitude2: Quaternion? =
+                estimator.getPrivateProperty("previousRelativeAttitude")
+            requireNotNull(previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+
+            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+            requireNotNull(fusedAttitude)
+
+            verify(exactly = 1) {
+                attitudeAvailableListener.onAttitudeAvailable(
+                    estimator,
+                    fusedAttitude,
+                    timestamp,
+                    null,
+                    null,
+                    null,
+                    null
+                )
+            }
+        }
     }
 
     @Test
     fun processLeveling_whenEstimateEulerAnglesAndCoordinateTransformationEnabled_notifies() {
-        val attitudeAvailableListener =
-            mockk<LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
@@ -2242,135 +2245,156 @@ class LeveledRelativeAttitudeEstimatorTest {
         val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
         deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
 
-        mockkObject(QuaternionHelper)
-        every {
-            QuaternionHelper.dotProduct(
-                any(),
-                any()
-            )
-        }.returns(estimator.outlierThreshold)
+        mockkObject(QuaternionHelper) {
+            every {
+                QuaternionHelper.dotProduct(
+                    any(),
+                    any()
+                )
+            }.returns(estimator.outlierThreshold)
 
-        val fusedAttitude2 = Quaternion(internalFusedAttitude)
-        val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
+            val fusedAttitude2 = Quaternion(internalFusedAttitude)
+            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
 
-        estimator.setPrivateProperty("panicCounter", 1)
-        val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter1)
-        assertEquals(1, panicCounter1)
+            estimator.setPrivateProperty("panicCounter", 1)
+            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter1)
+            assertEquals(1, panicCounter1)
 
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertFalse(resetToLeveling)
+            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
+            requireNotNull(resetToLeveling)
+            assertFalse(resetToLeveling)
 
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
+            val levelingEstimator: LevelingEstimator? =
+                estimator.getPrivateProperty("levelingEstimator")
+            requireNotNull(levelingEstimator)
 
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        estimator.setPrivateProperty("timestamp", timestamp)
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-
-        val angles = DoubleArray(3)
-        internalAttitude.toEulerAngles(angles)
-        val levelingRoll = angles[0]
-        val levelingPitch = angles[1]
-        attitude.toEulerAngles(angles)
-        val relativeYaw = angles[2]
-
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-        val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-        requireNotNull(eulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
-            )
-        }
-        verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-        val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter2)
-        assertEquals(0, panicCounter2)
-
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-
-        val fusedAttitude4 = Quaternion()
-        Quaternion.slerp(
-            fusedAttitude3,
-            levelingAttitudeSpy,
-            estimator.interpolationValue,
-            fusedAttitude4
-        )
-
-        assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
-
-        val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-        assertTrue(absDot >= estimator.outlierThreshold)
-
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-        val rollSlot = slot<Double>()
-        val pitchSlot = slot<Double>()
-        val yawSlot = slot<Double>()
-        val coordinateTransformationSlot = slot<CoordinateTransformation>()
-
-        val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-        requireNotNull(fusedAttitude)
-
-        verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
-                estimator,
-                fusedAttitude,
+            val internalAttitude = spyk(getAttitude())
+            val listener = levelingEstimator.levelingAvailableListener
+            requireNotNull(listener)
+            val timestamp = SystemClock.elapsedRealtimeNanos()
+            estimator.setPrivateProperty("timestamp", timestamp)
+            listener.onLevelingAvailable(
+                levelingEstimator,
+                internalAttitude,
                 timestamp,
-                capture(rollSlot),
-                capture(pitchSlot),
-                capture(yawSlot),
-                capture(coordinateTransformationSlot)
+                null,
+                null,
+                null
             )
+
+            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
+            requireNotNull(levelingAttitude2)
+
+            val angles = DoubleArray(3)
+            internalAttitude.toEulerAngles(angles)
+            val levelingRoll = angles[0]
+            val levelingPitch = angles[1]
+            attitude.toEulerAngles(angles)
+            val relativeYaw = angles[2]
+
+            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+
+            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
+            requireNotNull(eulerAngles)
+            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+            verify(exactly = 1) {
+                levelingAttitudeSpy.setFromEulerAngles(
+                    levelingRoll,
+                    levelingPitch,
+                    relativeYaw
+                )
+            }
+            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+
+            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
+            requireNotNull(panicCounter2)
+            assertEquals(0, panicCounter2)
+
+            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
+            requireNotNull(hasRelativeAttitude2)
+            assertTrue(hasRelativeAttitude2)
+
+            val fusedAttitude4 = Quaternion()
+            Quaternion.slerp(
+                fusedAttitude3,
+                levelingAttitudeSpy,
+                estimator.interpolationValue,
+                fusedAttitude4
+            )
+
+            assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
+
+            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
+            assertTrue(absDot >= estimator.outlierThreshold)
+
+            val previousRelativeAttitude2: Quaternion? =
+                estimator.getPrivateProperty("previousRelativeAttitude")
+            requireNotNull(previousRelativeAttitude2)
+            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
+
+            val rollSlot = slot<Double>()
+            val pitchSlot = slot<Double>()
+            val yawSlot = slot<Double>()
+            val coordinateTransformationSlot = slot<CoordinateTransformation>()
+
+            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+            requireNotNull(fusedAttitude)
+
+            verify(exactly = 1) {
+                attitudeAvailableListener.onAttitudeAvailable(
+                    estimator,
+                    fusedAttitude,
+                    timestamp,
+                    capture(rollSlot),
+                    capture(pitchSlot),
+                    capture(yawSlot),
+                    capture(coordinateTransformationSlot)
+                )
+            }
+
+            assertTrue(rollSlot.isCaptured)
+            assertFalse(rollSlot.isNull)
+            assertNotNull(rollSlot.captured)
+
+            assertTrue(pitchSlot.isCaptured)
+            assertFalse(pitchSlot.isNull)
+            assertNotNull(pitchSlot.captured)
+
+            assertTrue(yawSlot.isCaptured)
+            assertFalse(yawSlot.isNull)
+            assertNotNull(yawSlot.captured)
+
+            assertTrue(coordinateTransformationSlot.isCaptured)
+            assertFalse(coordinateTransformationSlot.isNull)
+            val c = coordinateTransformationSlot.captured
+            assertNotNull(c)
+            assertEquals(FrameType.BODY_FRAME, c.sourceType)
+            assertEquals(FrameType.LOCAL_NAVIGATION_FRAME, c.destinationType)
         }
+    }
 
-        assertTrue(rollSlot.isCaptured)
-        assertFalse(rollSlot.isNull)
-        assertNotNull(rollSlot.captured)
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
 
-        assertTrue(pitchSlot.isCaptured)
-        assertFalse(pitchSlot.isNull)
-        assertNotNull(pitchSlot.captured)
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
 
-        assertTrue(yawSlot.isCaptured)
-        assertFalse(yawSlot.isNull)
-        assertNotNull(yawSlot.captured)
-
-        assertTrue(coordinateTransformationSlot.isCaptured)
-        assertFalse(coordinateTransformationSlot.isNull)
-        val c = coordinateTransformationSlot.captured
-        assertNotNull(c)
-        assertEquals(FrameType.BODY_FRAME, c.sourceType)
-        assertEquals(FrameType.LOCAL_NAVIGATION_FRAME, c.destinationType)
-
-        unmockkObject(QuaternionHelper)
+        return location
     }
 
     private companion object {
@@ -2389,29 +2413,6 @@ class LeveledRelativeAttitudeEstimatorTest {
         const val DELTA_DEGREES = 1e-6
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

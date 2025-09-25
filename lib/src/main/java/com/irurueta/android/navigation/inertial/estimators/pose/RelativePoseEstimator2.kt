@@ -23,7 +23,6 @@ import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilte
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.processors.pose.*
 import com.irurueta.geometry.EuclideanTransformation3D
-import java.util.*
 
 /**
  * Estimates relative pose with 6DOF (Degrees of Freedom) containing relative attitude and position.

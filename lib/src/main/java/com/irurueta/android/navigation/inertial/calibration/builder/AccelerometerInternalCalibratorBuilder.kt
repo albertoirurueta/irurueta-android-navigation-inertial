@@ -144,7 +144,7 @@ class AccelerometerInternalCalibratorBuilder private constructor(
         location: Location? = null,
         gravityNorm: Double? = null,
         isGroundTruthInitialBias: Boolean = false,
-        isCommonAxisUsed: Boolean = StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
+        isCommonAxisUsed: Boolean = false,
         initialBiasX: Double? = null,
         initialBiasY: Double? = null,
         initialBiasZ: Double? = null,

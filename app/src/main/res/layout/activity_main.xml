@@ -599,6 +599,20 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/kalman_relative_attitude_estimator_button"
+                android:text="@string/kalman_relative_attitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/kalman_absolute_attitude_estimator_button"
+                android:text="@string/kalman_absolute_attitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="24dp" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="wrap_content"

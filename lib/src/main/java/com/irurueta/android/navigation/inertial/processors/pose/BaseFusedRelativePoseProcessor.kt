@@ -22,7 +22,6 @@ import com.irurueta.android.navigation.inertial.collectors.SyncedSensorMeasureme
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseLeveledRelativeAttitudeProcessor
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import java.util.*
 
 /**
  * Base class to estimate relative pose from an unknown location.

@@ -18,17 +18,32 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorCollector2
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.SensorType
 import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -36,11 +51,14 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AttitudeEstimator2Test {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var attitudeAvailableListener: AttitudeEstimator2.OnAttitudeAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: AttitudeEstimator2.OnAccuracyChangedListener
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -62,8 +80,6 @@ class AttitudeEstimator2Test {
     @Test
     fun constructor_whenAllProperties_setsDefaultValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val attitudeAvailableListener = mockk<AttitudeEstimator2.OnAttitudeAvailableListener>()
-        val accuracyChangedListener = mockk<AttitudeEstimator2.OnAccuracyChangedListener>()
         val estimator = AttitudeEstimator2(
             context,
             SensorDelay.FASTEST,
@@ -96,7 +112,6 @@ class AttitudeEstimator2Test {
         assertNull(estimator.attitudeAvailableListener)
 
         // set new value
-        val attitudeAvailableListener = mockk<AttitudeEstimator2.OnAttitudeAvailableListener>()
         estimator.attitudeAvailableListener = attitudeAvailableListener
 
         // check
@@ -112,7 +127,6 @@ class AttitudeEstimator2Test {
         assertNull(estimator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<AttitudeEstimator2.OnAccuracyChangedListener>()
         estimator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -192,8 +206,6 @@ class AttitudeEstimator2Test {
 
     @Test
     fun attitudeSensorCollector_whenAccuracyChangedAndListener_notifies() {
-        val accuracyChangedListener =
-            mockk<AttitudeEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             AttitudeEstimator2(context, accuracyChangedListener = accuracyChangedListener)
@@ -285,8 +297,6 @@ class AttitudeEstimator2Test {
 
     @Test
     fun attitudeSensorCollector_whenMeasurementListenerCoordinateTransformationAndEulerAnglesDisabled_notifies() {
-        val attitudeAvailableListener =
-            mockk<AttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AttitudeEstimator2(
             context,
@@ -369,8 +379,6 @@ class AttitudeEstimator2Test {
 
     @Test
     fun attitudeSensorCollector_whenMeasurementListenerCoordinateTransformationAndEulerAnglesEnabled_notifies() {
-        val attitudeAvailableListener =
-            mockk<AttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AttitudeEstimator2(
             context,

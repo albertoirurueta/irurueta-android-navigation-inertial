@@ -35,6 +35,7 @@ import android.hardware.SensorEvent
  * @property stopWhenFilledBuffer true to stop collector when buffer completely fills, false to
  * continue collection at the expense of loosing old data. This will be notified using
  * [bufferFilledListener].
+ * @property skipWhenProcessing true to skip new measurements when processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -50,6 +51,7 @@ class BufferedGyroscopeSensorCollector(
     capacity: Int = DEFAULT_CAPACITY,
     startOffsetEnabled: Boolean = true,
     stopWhenFilledBuffer: Boolean = true,
+    skipWhenProcessing: Boolean = true,
     accuracyChangedListener: OnAccuracyChangedListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>? = null,
     bufferFilledListener: OnBufferFilledListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>? = null,
     measurementListener: OnMeasurementListener<GyroscopeSensorMeasurement, BufferedGyroscopeSensorCollector>? = null
@@ -59,6 +61,7 @@ class BufferedGyroscopeSensorCollector(
     capacity,
     startOffsetEnabled,
     stopWhenFilledBuffer,
+    skipWhenProcessing,
     accuracyChangedListener,
     bufferFilledListener,
     measurementListener

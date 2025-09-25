@@ -19,10 +19,19 @@ import android.content.Context
 import android.hardware.Sensor
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
-import com.irurueta.navigation.frames.*
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.ECEFPosition
+import com.irurueta.navigation.frames.ECEFVelocity
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
@@ -33,9 +42,18 @@ import com.irurueta.units.AngularSpeed
 import com.irurueta.units.AngularSpeedUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -45,11 +63,22 @@ import kotlin.math.sqrt
 @RunWith(RobolectricTestRunner::class)
 class GyroscopeNormEstimatorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var completedListener:
+            AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GyroscopeNormEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var unreliableListener:
+            AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener: GyroscopeSensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -404,8 +433,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun constructor_whenCompletedListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GyroscopeNormEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
@@ -462,10 +489,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun constructor_whenUnreliableListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GyroscopeNormEstimator>>()
-        val unreliableListener = mockk<AccumulatedMeasurementEstimator
-        .OnUnreliableListener<GyroscopeNormEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
@@ -523,11 +546,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GyroscopeNormEstimator>>()
-        val unreliableListener = mockk<AccumulatedMeasurementEstimator
-        .OnUnreliableListener<GyroscopeNormEstimator>>()
-        val measurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
@@ -593,8 +611,6 @@ class GyroscopeNormEstimatorTest {
         assertNull(estimator.completedListener)
 
         // set new value
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GyroscopeNormEstimator>>()
         estimator.completedListener = completedListener
 
         // check
@@ -610,8 +626,6 @@ class GyroscopeNormEstimatorTest {
         assertNull(estimator.unreliableListener)
 
         // set new value
-        val unreliableListener = mockk<AccumulatedMeasurementEstimator
-        .OnUnreliableListener<GyroscopeNormEstimator>>()
         estimator.unreliableListener = unreliableListener
 
         // check
@@ -627,7 +641,6 @@ class GyroscopeNormEstimatorTest {
         assertNull(estimator.measurementListener)
 
         // set new value
-        val measurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         estimator.measurementListener = measurementListener
 
         // check
@@ -644,7 +657,6 @@ class GyroscopeNormEstimatorTest {
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
-        val sensor = mockk<Sensor>()
         every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
@@ -882,8 +894,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenMeasurementListener_notifies() {
-        val measurementListener =
-            mockk<GyroscopeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(context, measurementListener = measurementListener)
 
@@ -1139,10 +1149,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndListener() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GyroscopeNormEstimator>>(
-            relaxUnitFun = true
-        )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
@@ -1255,8 +1261,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxDurationOnlyAndListener() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GyroscopeNormEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
@@ -1372,8 +1376,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndListener() {
-        val completedListener = mockk<AccumulatedMeasurementEstimator
-        .OnEstimationCompletedListener<GyroscopeNormEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(
             context,
@@ -1457,10 +1459,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliable() {
-        val unreliableListener =
-            mockk<AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(context, unreliableListener = unreliableListener)
 
@@ -1484,10 +1482,6 @@ class GyroscopeNormEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val unreliableListener =
-            mockk<AccumulatedMeasurementEstimator.OnUnreliableListener<GyroscopeNormEstimator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GyroscopeNormEstimator(context, unreliableListener = unreliableListener)
 

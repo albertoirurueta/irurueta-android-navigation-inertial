@@ -17,25 +17,41 @@ package com.irurueta.android.navigation.inertial.processors.pose
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeAndAccelerometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
-import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGravityProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDFrame
+import com.irurueta.navigation.frames.NEDPosition
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.navigation.inertial.estimators.NEDKinematicsEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -43,11 +59,14 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AttitudeRelativePoseProcessorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var processorListener: BaseRelativePoseProcessor.OnProcessedListener
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -68,8 +87,6 @@ class AttitudeRelativePoseProcessorTest {
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialSpeed = getSpeed()
         val averagingFilter = MeanAveragingFilter()
-        val processorListener =
-            mockk<BaseRelativePoseProcessor.OnProcessedListener>()
         val processor =
             AttitudeRelativePoseProcessor(initialSpeed, averagingFilter, processorListener)
 
@@ -91,7 +108,6 @@ class AttitudeRelativePoseProcessorTest {
         assertNull(processor.processorListener)
 
         // set new value
-        val processorListener = mockk<BaseRelativePoseProcessor.OnProcessedListener>()
         processor.processorListener = processorListener
 
         // check
@@ -571,8 +587,6 @@ class AttitudeRelativePoseProcessorTest {
 
     @Test
     fun process_whenAttitudeAndGravityAndTimeIntervalProcessedWithListener_returnsTrueAndNotifies() {
-        val processorListener =
-            mockk<BaseRelativePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AttitudeRelativePoseProcessor(processorListener = processorListener)
 
         val timestamp = System.nanoTime()
@@ -716,6 +730,29 @@ class AttitudeRelativePoseProcessorTest {
         verify(exactly = 1) { processorListener.onProcessed(processor, timestamp, transformation) }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees =
+            randomizer.nextDouble(
+                MIN_LONGITUDE_DEGREES,
+                MAX_LONGITUDE_DEGREES
+            )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -767,30 +804,6 @@ class AttitudeRelativePoseProcessorTest {
                 Math.toRadians(longitudeDegrees),
                 height
             )
-        }
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees =
-                randomizer.nextDouble(
-                    MIN_LONGITUDE_DEGREES,
-                    MAX_LONGITUDE_DEGREES
-                )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
         }
     }
 }

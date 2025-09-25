@@ -27,6 +27,7 @@ import androidx.annotation.RequiresPermission
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.concurrent.Executors
 
@@ -364,7 +365,7 @@ class LocationService(val context: Context) {
              * @return code expressed as an enum or null if code has no match.
              */
             fun from(value: Int): GooglePlayStatus? {
-                return values().find { it.value == value }
+                return GooglePlayStatus.entries.find { it.value == value }
             }
         }
     }

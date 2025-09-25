@@ -454,18 +454,18 @@ class GeomagneticAttitudeEstimator private constructor(
                 null
             }
 
-        val displayRoll: Double?
-        val displayPitch: Double?
-        val displayYaw: Double?
+        val roll2: Double?
+        val pitch2: Double?
+        val yaw2: Double?
         if (estimateEulerAngles) {
             fusedAttitude.toEulerAngles(eulerAngles)
-            displayRoll = eulerAngles[0]
-            displayPitch = eulerAngles[1]
-            displayYaw = eulerAngles[2]
+            roll2 = eulerAngles[0]
+            pitch2 = eulerAngles[1]
+            yaw2 = eulerAngles[2]
         } else {
-            displayRoll = null
-            displayPitch = null
-            displayYaw = null
+            roll2 = null
+            pitch2 = null
+            yaw2 = null
         }
 
         // notify
@@ -473,9 +473,9 @@ class GeomagneticAttitudeEstimator private constructor(
             this@GeomagneticAttitudeEstimator,
             fusedAttitude,
             timestamp,
-            displayRoll,
-            displayPitch,
-            displayYaw,
+            roll2,
+            pitch2,
+            yaw2,
             c
         )
     }

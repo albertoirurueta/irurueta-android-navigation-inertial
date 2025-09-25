@@ -3,34 +3,72 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.location.Location
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GravityGyroscopeAndMagnetometerSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.GravityGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.SensorType
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.processors.*
-import com.irurueta.android.navigation.inertial.processors.attitude.*
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerDoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGravityProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.DoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.GravityProcessor
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
+import java.util.Date
 
 @RunWith(RobolectricTestRunner::class)
 class DoubleFusedGeomagneticAttitudeEstimator2Test {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var attitudeListener:
+            DoubleFusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            DoubleFusedGeomagneticAttitudeEstimator2.OnAccuracyChangedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener:
+            DoubleFusedGeomagneticAttitudeEstimator2.OnBufferFilledListener
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -104,12 +142,6 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         val accelerometerAveragingFilter = MedianAveragingFilter()
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
-        val attitudeListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
-        val accuracyChangedListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAccuracyChangedListener>()
-        val bufferFilledListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnBufferFilledListener>()
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             location,
@@ -357,11 +389,10 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         assertNull(estimator.attitudeAvailableListener)
 
         // set new value
-        val listener = mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>()
-        estimator.attitudeAvailableListener = listener
+        estimator.attitudeAvailableListener = attitudeListener
 
         // check
-        assertSame(listener, estimator.attitudeAvailableListener)
+        assertSame(attitudeListener, estimator.attitudeAvailableListener)
     }
 
     @Test
@@ -373,11 +404,10 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         assertNull(estimator.accuracyChangedListener)
 
         // set new value
-        val listener = mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAccuracyChangedListener>()
-        estimator.accuracyChangedListener = listener
+        estimator.accuracyChangedListener = accuracyChangedListener
 
         // check
-        assertSame(listener, estimator.accuracyChangedListener)
+        assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
     }
 
     @Test
@@ -389,11 +419,10 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         assertNull(estimator.bufferFilledListener)
 
         // set new value
-        val listener = mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnBufferFilledListener>()
-        estimator.bufferFilledListener = listener
+        estimator.bufferFilledListener = bufferFilledListener
 
         // check
-        assertSame(listener, estimator.bufferFilledListener)
+        assertSame(bufferFilledListener, estimator.bufferFilledListener)
     }
 
     @Test
@@ -620,7 +649,6 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         estimator.useIndirectInterpolation = false
 
         // check
-        @Suppress("KotlinConstantConditions")
         assertFalse(estimator.useIndirectInterpolation)
         assertFalse(accelerometerProcessorSpy.useIndirectInterpolation)
         assertFalse(gravityProcessorSpy.useIndirectInterpolation)
@@ -1278,8 +1306,6 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gravityGyroscopeAndMagnetometerSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             useAccelerometer = false,
@@ -1331,8 +1357,6 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gravityGyroscopeAndMagnetometerSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bufferFilledListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             useAccelerometer = false,
@@ -1453,17 +1477,15 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gravityGyroscopeAndMagnetometerSyncer_whenSyncedMeasurementProcessedAndCoordinateTransformationAndEulerAnglesEstimatedAndListener_makesEstimationAndNotifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val attitudeAvailableListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             useAccelerometer = false,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = true,
-            attitudeAvailableListener = attitudeAvailableListener
+            attitudeAvailableListener = attitudeListener
         )
 
-        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+        assertSame(attitudeListener, estimator.attitudeAvailableListener)
 
         val gravityProcessor: DoubleFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("gravityProcessor")
@@ -1514,7 +1536,7 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         assertArrayEquals(attitude.toEulerAngles(), eulerAngles, 0.0)
 
         verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
+            attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
                 timestamp,
@@ -1529,16 +1551,14 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun gravityGyroscopeAndMagnetometerSyncer_whenSyncedMeasurementProcessedAndCoordinateTransformationAndEulerAnglesNotEstimatedAndListener_makesEstimationAndNotifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val attitudeAvailableListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
-            attitudeAvailableListener = attitudeAvailableListener
+            attitudeAvailableListener = attitudeListener
         )
 
-        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+        assertSame(attitudeListener, estimator.attitudeAvailableListener)
 
         val accelerometerProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
@@ -1573,7 +1593,7 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         assertNotSame(attitude, fusedAttitude)
 
         verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
+            attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
                 timestamp,
@@ -1608,8 +1628,6 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun accelerometerGyroscopeAndMagnetometerSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             useAccelerometer = true,
@@ -1661,8 +1679,6 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun accelerometerGyroscopeAndMagnetometerSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bufferFilledListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             useAccelerometer = true,
@@ -1783,17 +1799,15 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun accelerometerGyroscopeAndMagnetometerSyncer_whenSyncedMeasurementProcessedAndCoordinateTransformationAndEulerAnglesEstimatedAndListener_makesEstimationAndNotifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val attitudeAvailableListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             useAccelerometer = true,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = true,
-            attitudeAvailableListener = attitudeAvailableListener
+            attitudeAvailableListener = attitudeListener
         )
 
-        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+        assertSame(attitudeListener, estimator.attitudeAvailableListener)
 
         val accelerometerProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
@@ -1844,7 +1858,7 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         assertArrayEquals(attitude.toEulerAngles(), eulerAngles, 0.0)
 
         verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
+            attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
                 timestamp,
@@ -1859,17 +1873,15 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
     @Test
     fun accelerometerGyroscopeAndMagnetometerSyncer_whenSyncedMeasurementProcessedAndCoordinateTransformationAndEulerAnglesNotEstimatedAndListener_makesEstimationAndNotifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val attitudeAvailableListener =
-            mockk<DoubleFusedGeomagneticAttitudeEstimator2.OnAttitudeAvailableListener>(relaxUnitFun = true)
         val estimator = DoubleFusedGeomagneticAttitudeEstimator2(
             context,
             useAccelerometer = true,
             estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
-            attitudeAvailableListener = attitudeAvailableListener
+            attitudeAvailableListener = attitudeListener
         )
 
-        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+        assertSame(attitudeListener, estimator.attitudeAvailableListener)
 
         val accelerometerProcessor: AccelerometerDoubleFusedGeomagneticAttitudeProcessor? =
             estimator.getPrivateProperty("accelerometerProcessor")
@@ -1904,7 +1916,7 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         assertNotSame(attitude, fusedAttitude)
 
         verify(exactly = 1) {
-            attitudeAvailableListener.onAttitudeAvailable(
+            attitudeListener.onAttitudeAvailable(
                 estimator,
                 fusedAttitude,
                 timestamp,
@@ -1914,6 +1926,28 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
                 null
             )
         }
+    }
+
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
     }
 
     private companion object {
@@ -1930,29 +1964,6 @@ class DoubleFusedGeomagneticAttitudeEstimator2Test {
         const val MAX_ANGLE_DEGREES = 45.0
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

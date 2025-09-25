@@ -18,16 +18,23 @@ package com.irurueta.android.navigation.inertial.processors.pose
 import android.location.Location
 import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
-import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D
 import com.irurueta.geometry.Quaternion
 import com.irurueta.geometry.Rotation3D
-import com.irurueta.navigation.frames.*
+import com.irurueta.navigation.frames.CoordinateTransformation
+import com.irurueta.navigation.frames.ECEFFrame
+import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.frames.NEDFrame
+import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.ECEFtoNEDFrameConverter
 import com.irurueta.navigation.frames.converters.NEDtoECEFFrameConverter
 import com.irurueta.navigation.inertial.BodyKinematics
@@ -35,22 +42,33 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.navigators.ECEFInertialNavigator
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
 
 @RunWith(RobolectricTestRunner::class)
 class AttitudeECEFAbsolutePoseProcessorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var processorListener: BaseECEFAbsolutePoseProcessor.OnProcessedListener
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenRequiredParameters_returnsExpectedValues() {
@@ -77,7 +95,6 @@ class AttitudeECEFAbsolutePoseProcessorTest {
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener = mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>()
         val processor = AttitudeECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -119,7 +136,6 @@ class AttitudeECEFAbsolutePoseProcessorTest {
         assertNull(processor.processorListener)
 
         // set new value
-        val processorListener = mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>()
         processor.processorListener = processorListener
 
         // check
@@ -523,8 +539,6 @@ class AttitudeECEFAbsolutePoseProcessorTest {
     fun process_whenAttitudeTimeIntervalProcessedAndPoseTransformationNotEstimatedWithListener_returnsTrueAndNotifies() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AttitudeECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -728,8 +742,6 @@ class AttitudeECEFAbsolutePoseProcessorTest {
     fun process_whenAttitudeTimeIntervalProcessedAndPoseTransformationEstimatedNotUseLeveledRelativeAttitudeRespectStart_returnsTrueAndNotifies() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AttitudeECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -999,8 +1011,6 @@ class AttitudeECEFAbsolutePoseProcessorTest {
     fun process_whenAttitudeTimeIntervalProcessedAndPoseTransformationEstimatedUseLeveledRelativeAttitudeRespectStart_returnsTrueAndNotifies() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
-        val processorListener =
-            mockk<BaseECEFAbsolutePoseProcessor.OnProcessedListener>(relaxUnitFun = true)
         val processor = AttitudeECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
@@ -1270,6 +1280,20 @@ class AttitudeECEFAbsolutePoseProcessorTest {
         }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -1291,21 +1315,6 @@ class AttitudeECEFAbsolutePoseProcessorTest {
         const val TIME_INTERVAL_NANOS = 10_000_000L
 
         const val ABSOLUTE_ERROR = 1e-8
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getVelocity(): NEDVelocity {
             val randomizer = UniformRandomizer()

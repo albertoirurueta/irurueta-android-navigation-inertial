@@ -21,11 +21,15 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.callPrivateFunc
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.testutils.callPrivateFunc
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
@@ -34,10 +38,25 @@ import com.irurueta.navigation.inertial.calibration.generators.AccelerometerMeas
 import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.statistics.UniformRandomizer
-import com.irurueta.units.*
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeConverter
+import com.irurueta.units.TimeUnit
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -45,11 +64,57 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerMeasurementGeneratorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalSkippedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalSkippedListener:
+            SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedMeasurementListener:
+            SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var resetListener:
+            SingleSensorCalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var internalGenerator: AccelerometerMeasurementsGenerator
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -324,8 +389,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -419,10 +482,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -517,12 +576,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -618,14 +671,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -722,16 +767,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -829,18 +864,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenStaticIntervalSkippedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -939,20 +962,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalSkippedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -1052,22 +1061,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenGeneratedMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -1168,24 +1161,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -1287,26 +1262,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenAccelerometerMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -1409,27 +1364,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -1540,8 +1474,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>()
         generator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -1557,8 +1489,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>()
         generator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -1574,8 +1504,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.errorListener)
 
         // set new value
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>()
         generator.errorListener = errorListener
 
         // check
@@ -1591,8 +1519,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
         generator.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -1608,8 +1534,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>()
         generator.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -1625,8 +1549,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.staticIntervalSkippedListener)
 
         // set new value
-        val staticIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
         generator.staticIntervalSkippedListener = staticIntervalSkippedListener
 
         // check
@@ -1642,8 +1564,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.dynamicIntervalSkippedListener)
 
         // set new value
-        val dynamicIntervalSkippedListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>()
         generator.dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
 
         // check
@@ -1659,8 +1579,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.generatedMeasurementListener)
 
         // set new value
-        val generatedMeasurementListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>()
         generator.generatedMeasurementListener = generatedMeasurementListener
 
         // check
@@ -1676,8 +1594,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.resetListener)
 
         // set new value
-        val resetListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>()
         generator.resetListener = resetListener
 
         // check
@@ -1693,8 +1609,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         generator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
@@ -1710,7 +1624,6 @@ class AccelerometerMeasurementGeneratorTest {
         assertNull(generator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         generator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -1733,7 +1646,6 @@ class AccelerometerMeasurementGeneratorTest {
         )
         requireNotNull(accelerometerCollector)
         val accelerometerCollectorSpy = spyk(accelerometerCollector)
-        val sensor = mockk<Sensor>()
         every { accelerometerCollectorSpy.sensor }.returns(sensor)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3249,8 +3161,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun onAccelerometerMeasurementListener_whenListenerAvailable_notifies() {
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -3382,12 +3292,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun collectorAccuracyChangedListener_whenUnreliableAndListenersAvailable_setsStopsAndSetsUnreliable() {
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -3436,12 +3340,6 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun collectorAccuracyChangedListener_whenNotUnreliableAndListenersAvailable_makesNoAction() {
-        val errorListener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerMeasurementGenerator(
             context,
@@ -3560,7 +3458,6 @@ class AccelerometerMeasurementGeneratorTest {
 
         // start
         assertThrows(IllegalStateException::class.java) { generator.start() }
-
 
         verify(exactly = 1) { accelerometerTimeIntervalEstimatorSpy.reset() }
         verify(exactly = 1) { measurementsGeneratorSpy.reset() }
@@ -3788,28 +3685,25 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
     }
 
     @Test
     fun onInitializationStarted_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, initializationStartedListener = listener)
+            AccelerometerMeasurementGenerator(
+                context,
+                initializationStartedListener = initializationStartedListener
+            )
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
 
-        verify(exactly = 1) { listener.onInitializationStarted(generator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(generator) }
     }
 
     @Test
@@ -3821,7 +3715,6 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
@@ -3829,24 +3722,27 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnInitializationCompletedListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, initializationCompletedListener = listener)
+            AccelerometerMeasurementGenerator(
+                context,
+                initializationCompletedListener = initializationCompletedListener
+            )
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
 
-        verify(exactly = 1) { listener.onInitializationCompleted(generator, baseNoiseLevel) }
+        verify(exactly = 1) {
+            initializationCompletedListener.onInitializationCompleted(
+                generator,
+                baseNoiseLevel
+            )
+        }
     }
 
     @Test
@@ -3858,7 +3754,6 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
@@ -3867,25 +3762,20 @@ class AccelerometerMeasurementGeneratorTest {
 
     @Test
     fun onError_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context, errorListener = listener)
+        val generator = AccelerometerMeasurementGenerator(context, errorListener = errorListener)
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
         verify(exactly = 1) {
-            listener.onError(
+            errorListener.onError(
                 generator,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
@@ -3901,28 +3791,25 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, staticIntervalDetectedListener = listener)
+            AccelerometerMeasurementGenerator(
+                context,
+                staticIntervalDetectedListener = staticIntervalDetectedListener
+            )
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { listener.onStaticIntervalDetected(generator) }
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(generator) }
     }
 
     @Test
@@ -3934,28 +3821,25 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, dynamicIntervalDetectedListener = listener)
+            AccelerometerMeasurementGenerator(
+                context,
+                dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
+            )
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { listener.onDynamicIntervalDetected(generator) }
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(generator) }
     }
 
     @Test
@@ -3967,28 +3851,25 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalSkipped_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, staticIntervalSkippedListener = listener)
+            AccelerometerMeasurementGenerator(
+                context,
+                staticIntervalSkippedListener = staticIntervalSkippedListener
+            )
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { listener.onStaticIntervalSkipped(generator) }
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(generator) }
     }
 
     @Test
@@ -4000,28 +3881,25 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalSkipped_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, dynamicIntervalSkippedListener = listener)
+            AccelerometerMeasurementGenerator(
+                context,
+                dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
+            )
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { listener.onDynamicIntervalSkipped(generator) }
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator) }
     }
 
     @Test
@@ -4033,30 +3911,32 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyKinematics()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
     }
 
     @Test
     fun onGeneratedMeasurement_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
-            AccelerometerMeasurementGenerator(context, generatedMeasurementListener = listener)
+            AccelerometerMeasurementGenerator(
+                context,
+                generatedMeasurementListener = generatedMeasurementListener
+            )
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyKinematics()
         measurementsGeneratorListener.onGeneratedMeasurement(internalGenerator, measurement)
 
-        verify(exactly = 1) { listener.onGeneratedMeasurement(generator, measurement) }
+        verify(exactly = 1) {
+            generatedMeasurementListener.onGeneratedMeasurement(
+                generator,
+                measurement
+            )
+        }
     }
 
     @Test
@@ -4068,27 +3948,21 @@ class AccelerometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
     }
 
     @Test
     fun onReset_whenListener_notifies() {
-        val listener =
-            mockk<SingleSensorCalibrationMeasurementGenerator.OnResetListener<AccelerometerMeasurementGenerator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val generator = AccelerometerMeasurementGenerator(context, resetListener = listener)
+        val generator = AccelerometerMeasurementGenerator(context, resetListener = resetListener)
 
         val measurementsGeneratorListener: AccelerometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
 
-        verify(exactly = 1) { listener.onReset(generator) }
+        verify(exactly = 1) { resetListener.onReset(generator) }
     }
 
     private companion object {

@@ -19,20 +19,11 @@ import com.irurueta.algebra.Matrix
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Speed
 import com.irurueta.units.SpeedUnit
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import kotlin.math.sqrt
 
 class SpeedTriadTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun constructor_whenNoParameters_setsExpectedValues() {

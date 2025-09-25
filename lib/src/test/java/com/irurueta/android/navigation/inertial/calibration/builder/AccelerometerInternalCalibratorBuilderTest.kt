@@ -20,16 +20,33 @@ import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerCalibrator
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
-import com.irurueta.navigation.inertial.calibration.accelerometer.*
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockk
-import io.mockk.unmockkAll
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -38,11 +55,14 @@ import kotlin.math.max
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerInternalCalibratorBuilderTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var measurement: StandardDeviationBodyKinematics
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenRequiredValues_setsExpectedValues() {
@@ -86,10 +106,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         assertNull(builder.location)
         assertNull(builder.gravityNorm)
         assertFalse(builder.isGroundTruthInitialBias)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        assertFalse(builder.isCommonAxisUsed)
         assertNull(builder.initialBiasX)
         assertNull(builder.initialBiasY)
         assertNull(builder.initialBiasZ)
@@ -254,7 +271,7 @@ class AccelerometerInternalCalibratorBuilderTest {
         val measurements = emptyList<StandardDeviationBodyKinematics>()
         val robustPreliminarySubsetSize = 0
         val minimumRequiredMeasurements =
-            randomizer.nextInt(robustPreliminarySubsetSize, 2 * robustPreliminarySubsetSize)
+            randomizer.nextInt(robustPreliminarySubsetSize, robustPreliminarySubsetSize)
 
         AccelerometerInternalCalibratorBuilder(
             measurements,
@@ -749,19 +766,14 @@ class AccelerometerInternalCalibratorBuilderTest {
         )
 
         // check default value
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        assertFalse(builder.isCommonAxisUsed)
 
         // set new value
-        builder.isCommonAxisUsed = !StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS
+        builder.isCommonAxisUsed = true
 
         // check
-        assertEquals(
-            !StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
-            builder.isCommonAxisUsed
-        )
+        @Suppress("KotlinConstantConditions")
+        assertTrue(builder.isCommonAxisUsed)
     }
 
     @Test
@@ -1146,9 +1158,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustGroundTruthBiasAndPositionBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1209,9 +1220,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustGroundTruthBiasAndPositionBiasSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1278,9 +1288,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustGroundTruthBiasAndPositionBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1341,9 +1350,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustGroundTruthBiasAndGravityBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1405,9 +1413,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustGroundTruthBiasAndGravityBiasSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1475,9 +1482,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustGroundTruthBiasAndGravityBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1539,9 +1545,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustGroundTruthBiasAndGravityMissingGravityNorm_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1581,9 +1586,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustNoGroundTruthBiasAndPositionBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1644,9 +1648,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustNoGroundTruthBiasAndPositionBiasNotAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1712,9 +1715,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustNoGroundTruthBiasAndPositionBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1774,9 +1776,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustNoGroundTruthBiasAndGravityBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1836,9 +1837,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustNoGroundTruthBiasAndGravityBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1898,9 +1898,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenNonRobustNoGroundTruthBiasAndGravityMissingGravityNorm_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -1940,9 +1939,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2016,9 +2014,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2098,9 +2095,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2177,9 +2173,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2227,9 +2222,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2303,9 +2297,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2385,9 +2378,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2464,9 +2456,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2515,11 +2506,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2595,11 +2585,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2681,11 +2670,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2764,11 +2752,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2816,9 +2803,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2840,7 +2826,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -2892,9 +2878,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2919,7 +2904,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -2974,9 +2959,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -2999,7 +2983,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3058,9 +3042,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3082,7 +3065,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3109,11 +3092,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3135,7 +3117,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3189,11 +3171,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3218,7 +3199,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -3275,11 +3256,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3302,7 +3282,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3363,11 +3343,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3389,7 +3368,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -3415,9 +3394,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3491,9 +3469,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3573,9 +3550,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3652,9 +3628,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3702,9 +3677,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenRANSACGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3752,9 +3726,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3828,9 +3801,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3910,9 +3882,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -3989,9 +3960,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4039,9 +4009,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenMSACGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4090,11 +4059,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4170,11 +4138,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4256,11 +4223,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4339,11 +4305,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4392,11 +4357,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4444,9 +4408,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4468,7 +4431,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4520,9 +4483,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4547,7 +4509,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4602,9 +4564,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4627,7 +4588,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4686,9 +4647,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSCGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4710,7 +4670,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4736,9 +4696,8 @@ class AccelerometerInternalCalibratorBuilderTest {
     fun build_whenLMedSGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
         val randomizer = UniformRandomizer()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4760,7 +4719,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.LMedS,
+            robustMethod = RobustEstimatorMethod.LMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -4787,11 +4746,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4813,7 +4771,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4867,11 +4825,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4896,7 +4853,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = ROBUST_THRESHOLD,
@@ -4953,11 +4910,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -4980,7 +4936,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -5041,11 +4997,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5067,7 +5022,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -5094,11 +5049,10 @@ class AccelerometerInternalCalibratorBuilderTest {
         val randomizer = UniformRandomizer()
         val specificForceStandardDeviation = randomizer.nextDouble()
 
-        val measurement = mockk<StandardDeviationBodyKinematics>()
         every { measurement.specificForceStandardDeviation }.returns(specificForceStandardDeviation)
         every { measurement.angularRateStandardDeviation }.returns(0.0)
         val measurements = mutableListOf<StandardDeviationBodyKinematics>()
-        for (i in 1..13) {
+        (1..13).forEach { _ ->
             measurements.add(measurement)
         }
 
@@ -5120,7 +5074,7 @@ class AccelerometerInternalCalibratorBuilderTest {
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
-            robustMethod = RobustEstimatorMethod.PROMedS,
+            robustMethod = RobustEstimatorMethod.PROMEDS,
             robustConfidence = ROBUST_CONFIDENCE,
             robustMaxIterations = ROBUST_MAX_ITERATIONS,
             robustThreshold = null,
@@ -5140,6 +5094,20 @@ class AccelerometerInternalCalibratorBuilderTest {
         )
 
         builder.build()
+    }
+
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
     }
 
     private companion object {
@@ -5165,20 +5133,5 @@ class AccelerometerInternalCalibratorBuilderTest {
         const val ROBUST_STOP_THRESHOLD_FACTOR = 1e-3
 
         const val ABSOLUTE_ERROR = 1e-6
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

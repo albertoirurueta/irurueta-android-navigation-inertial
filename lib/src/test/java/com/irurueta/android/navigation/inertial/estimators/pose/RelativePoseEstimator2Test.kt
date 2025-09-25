@@ -18,18 +18,40 @@ package com.irurueta.android.navigation.inertial.estimators.pose
 import android.content.Context
 import android.location.Location
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.AttitudeAndAccelerometerSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.AttitudeAndAccelerometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.SensorType
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.getPrivateProperty
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
-import com.irurueta.android.navigation.inertial.processors.pose.*
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.processors.pose.AccelerometerFusedRelativePoseProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.AttitudeRelativePoseProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.FusedRelativePoseProcessor
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -37,11 +59,20 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class RelativePoseEstimator2Test {
 
-    @After
-    fun tearDown() {
-        clearAllMocks()
-        unmockkAll()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var poseAvailableListener: RelativePoseEstimator2.OnPoseAvailableListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: RelativePoseEstimator2.OnAccuracyChangedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener: RelativePoseEstimator2.OnBufferFilledListener
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
@@ -102,9 +133,6 @@ class RelativePoseEstimator2Test {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val initialSpeed = SpeedTriad()
         val accelerometerAveragingFilter = MedianAveragingFilter()
-        val poseAvailableListener = mockk<RelativePoseEstimator2.OnPoseAvailableListener>()
-        val accuracyChangedListener = mockk<RelativePoseEstimator2.OnAccuracyChangedListener>()
-        val bufferFilledListener = mockk<RelativePoseEstimator2.OnBufferFilledListener>()
         val estimator = RelativePoseEstimator2(
             context,
             initialSpeed,
@@ -1014,8 +1042,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun fusedSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<RelativePoseEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1058,8 +1084,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun fusedSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bufferFilledListener =
-            mockk<RelativePoseEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             bufferFilledListener = bufferFilledListener
@@ -1086,7 +1110,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun fusedSyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val poseAvailableListener = mockk<RelativePoseEstimator2.OnPoseAvailableListener>()
         val estimator = RelativePoseEstimator2(
             context,
             poseAvailableListener = poseAvailableListener
@@ -1144,8 +1167,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun fusedSyncer_whenSyncedMeasurementProcessedAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val poseAvailableListener =
-            mockk<RelativePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             poseAvailableListener = poseAvailableListener
@@ -1206,8 +1227,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun accelerometerFusedSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<RelativePoseEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1254,8 +1273,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun accelerometerFusedSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bufferFilledListener =
-            mockk<RelativePoseEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             bufferFilledListener = bufferFilledListener
@@ -1282,7 +1299,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun accelerometerFusedSyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val poseAvailableListener = mockk<RelativePoseEstimator2.OnPoseAvailableListener>()
         val estimator = RelativePoseEstimator2(
             context,
             poseAvailableListener = poseAvailableListener
@@ -1343,8 +1359,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun accelerometerFusedSyncer_whenSyncedMeasurementProcessedAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val poseAvailableListener =
-            mockk<RelativePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             poseAvailableListener = poseAvailableListener
@@ -1405,8 +1419,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun attitudeSyncer_whenAccuracyChangedAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<RelativePoseEstimator2.OnAccuracyChangedListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1453,8 +1465,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun attitudeSyncer_whenBufferFilledAndListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val bufferFilledListener =
-            mockk<RelativePoseEstimator2.OnBufferFilledListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             bufferFilledListener = bufferFilledListener
@@ -1481,7 +1491,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun attitudeSyncer_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val poseAvailableListener = mockk<RelativePoseEstimator2.OnPoseAvailableListener>()
         val estimator = RelativePoseEstimator2(
             context,
             poseAvailableListener = poseAvailableListener
@@ -1539,8 +1548,6 @@ class RelativePoseEstimator2Test {
     @Test
     fun attitudeSyncer_whenSyncedMeasurementAttitudeProcessedNotEstimatePoseTransformationAndListener_makesExpectedCalls() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val poseAvailableListener =
-            mockk<RelativePoseEstimator2.OnPoseAvailableListener>(relaxUnitFun = true)
         val estimator = RelativePoseEstimator2(
             context,
             poseAvailableListener = poseAvailableListener
@@ -1579,6 +1586,28 @@ class RelativePoseEstimator2Test {
         }
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(
+            MIN_LATITUDE_DEGREES,
+            MAX_LATITUDE_DEGREES
+        )
+        val longitudeDegrees = randomizer.nextDouble(
+            MIN_LONGITUDE_DEGREES,
+            MAX_LONGITUDE_DEGREES
+        )
+        val height = randomizer.nextDouble(
+            MIN_HEIGHT,
+            MAX_HEIGHT
+        )
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -1590,28 +1619,5 @@ class RelativePoseEstimator2Test {
         const val MAX_HEIGHT = 4000.0
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(
-                MIN_LATITUDE_DEGREES,
-                MAX_LATITUDE_DEGREES
-            )
-            val longitudeDegrees = randomizer.nextDouble(
-                MIN_LONGITUDE_DEGREES,
-                MAX_LONGITUDE_DEGREES
-            )
-            val height = randomizer.nextDouble(
-                MIN_HEIGHT,
-                MAX_HEIGHT
-            )
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

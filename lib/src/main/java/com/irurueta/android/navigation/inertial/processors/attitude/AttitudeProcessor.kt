@@ -23,6 +23,8 @@ import com.irurueta.geometry.Quaternion
 /**
  * Processes an absolute or relative attitude obtained by an Android Sensor expressed in ENU
  * coordinates system and converts it to NED coordinates system.
+ *
+ * @property processorListener listener to notify new attitudes.
  */
 class AttitudeProcessor(var processorListener: OnProcessedListener? = null) {
 

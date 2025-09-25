@@ -140,7 +140,7 @@ class SpeedTriad constructor(unit: SpeedUnit = DEFAULT_UNIT) : Triad<SpeedUnit, 
     }
 
     /**
-     * Gets z coordinae of measurement value.
+     * Gets z coordinate of measurement value.
      *
      * @return z coordinate of measurement value.
      */

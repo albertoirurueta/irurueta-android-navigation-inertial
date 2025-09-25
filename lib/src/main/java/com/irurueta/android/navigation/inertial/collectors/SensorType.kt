@@ -99,7 +99,7 @@ enum class SensorType(val value: Int) {
             ) {
                 return null
             }
-            return values().find { it.value == value }
+            return entries.find { it.value == value }
         }
 
         /**

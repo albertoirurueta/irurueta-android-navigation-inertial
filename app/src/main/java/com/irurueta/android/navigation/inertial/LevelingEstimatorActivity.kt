@@ -62,10 +62,10 @@ class LevelingEstimatorActivity : AppCompatActivity() {
         val averagingFilterType = extras?.getString(AVERAGING_FILTER_TYPE)
         val averagingFilter = buildAveragingFilter(averagingFilterType)
 
-        setContentView(R.layout.activity_leveling_estimator)
-        cubeView = findViewById(R.id.cube)
-        rollView = findViewById(R.id.roll)
-        pitchView = findViewById(R.id.pitch)
+        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_leveling_estimator)
+        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
+        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
+        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -88,8 +88,14 @@ class LevelingEstimatorActivity : AppCompatActivity() {
             levelingAvailableListener = { _, attitude, _, roll, pitch, _ ->
                 attitude.toQuaternion(rotation)
 
-                rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
-                pitchView?.text = getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
+                rollView?.text = getString(
+                    com.irurueta.android.navigation.inertial.app.R.string.roll_degrees,
+                    Math.toDegrees(roll ?: 0.0)
+                )
+                pitchView?.text = getString(
+                    com.irurueta.android.navigation.inertial.app.R.string.pitch_degrees,
+                    Math.toDegrees(pitch ?: 0.0)
+                )
 
                 // rotation refers to pinhole camera point of view, to apply rotation to the cube
                 // its inverse must be used.

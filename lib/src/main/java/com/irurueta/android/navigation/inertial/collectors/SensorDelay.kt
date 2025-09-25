@@ -52,7 +52,7 @@ enum class SensorDelay(val value: Int) {
          * @return sensor delay as an enum or null if value has no match.
          */
         fun from(value: Int): SensorDelay? {
-            return values().find { it.value == value }
+            return entries.find { it.value == value }
         }
     }
 }

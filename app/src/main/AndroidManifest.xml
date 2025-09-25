@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Iruruetaandroidnavigationinertial">
         <activity
-            android:name=".MainActivity"
+            android:name="com.irurueta.android.navigation.inertial.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,18 +21,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LevelingEstimatorActivity"/>
-        <activity android:name=".AccurateLevelingEstimatorActivity"/>
-        <activity android:name=".RelativeGyroscopeAttitudeEstimatorActivity"/>
-        <activity android:name=".AccurateRelativeGyroscopeAttitudeEstimatorActivity"/>
-        <activity android:name=".LeveledRelativeAttitudeEstimatorActivity"/>
-        <activity android:name=".GeomagneticAttitudeEstimatorActivity"/>
-        <activity android:name=".FusedGeomagneticAttitudeEstimatorActivity"/>
-        <activity android:name=".DoubleFusedGeomagneticAttitudeEstimatorActivity"/>
-        <activity android:name=".PoseEstimatorActivity"/>
-        <activity android:name=".LocalPoseEstimatorActivity"/>
-        <activity android:name=".RelativePoseEstimatorActivity"/>
-        <activity android:name=".AttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.LevelingEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.AccurateLevelingEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.RelativeGyroscopeAttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.AccurateRelativeGyroscopeAttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.LeveledRelativeAttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.GeomagneticAttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.FusedGeomagneticAttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.DoubleFusedGeomagneticAttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.PoseEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.LocalPoseEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.RelativePoseEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.AttitudeEstimatorActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.KalmanRelativeAttitudeActivity"/>
+        <activity android:name="com.irurueta.android.navigation.inertial.KalmanAbsoluteAttitudeActivity"/>
     </application>
 
 </manifest>

@@ -20,9 +20,9 @@ import com.irurueta.android.navigation.inertial.collectors.GravityAndMagnetomete
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
 import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
@@ -33,19 +33,33 @@ import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
-import java.util.*
+import java.util.Date
 
 class GeomagneticAttitudeProcessorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var listener:
+            BaseGeomagneticAttitudeProcessor.OnProcessedListener<GravitySensorMeasurement, GravityAndMagnetometerSyncedSensorMeasurement>
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -71,9 +85,6 @@ class GeomagneticAttitudeProcessorTest {
 
     @Test
     fun constructor_whenListener_returnsExpectedValues() {
-        val listener =
-            mockk<BaseGeomagneticAttitudeProcessor.OnProcessedListener<GravitySensorMeasurement,
-                    GravityAndMagnetometerSyncedSensorMeasurement>>()
         val processor = GeomagneticAttitudeProcessor(listener)
 
         assertSame(listener, processor.processorListener)
@@ -101,9 +112,6 @@ class GeomagneticAttitudeProcessorTest {
         // check default value
         assertNull(processor.processorListener)
 
-        val listener =
-            mockk<BaseGeomagneticAttitudeProcessor.OnProcessedListener<GravitySensorMeasurement,
-                    GravityAndMagnetometerSyncedSensorMeasurement>>()
         processor.processorListener = listener
 
         // check
@@ -760,9 +768,6 @@ class GeomagneticAttitudeProcessorTest {
 
     @Test
     fun process_whenProcessorListener_returnsTrueAndNotifies() {
-        val listener =
-            mockk<BaseGeomagneticAttitudeProcessor.OnProcessedListener<GravitySensorMeasurement,
-                    GravityAndMagnetometerSyncedSensorMeasurement>>(relaxUnitFun = true)
         val processor = GeomagneticAttitudeProcessor(listener)
         val location = getLocation()
         processor.location = location
@@ -914,6 +919,20 @@ class GeomagneticAttitudeProcessorTest {
         assertEquals(Quaternion(), processor.fusedAttitude)
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
@@ -926,21 +945,6 @@ class GeomagneticAttitudeProcessorTest {
 
         const val MIN_ANGLE_DEGREES = -45.0
         const val MAX_ANGLE_DEGREES = 45.0
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

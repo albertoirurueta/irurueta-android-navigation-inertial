@@ -21,12 +21,25 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -34,11 +47,22 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class GravitySensorCollector2Test {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            SensorCollector2.OnAccuracyChangedListener<GravitySensorMeasurement, GravitySensorCollector2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener:
+            SensorCollector2.OnMeasurementListener<GravitySensorMeasurement, GravitySensorCollector2>
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var event: SensorEvent
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {
@@ -63,10 +87,6 @@ class GravitySensorCollector2Test {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<GravitySensorMeasurement, GravitySensorCollector2>>()
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<GravitySensorMeasurement, GravitySensorCollector2>>()
         val collector = GravitySensorCollector2(
             context,
             SensorDelay.NORMAL,
@@ -99,8 +119,6 @@ class GravitySensorCollector2Test {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<GravitySensorMeasurement, GravitySensorCollector2>>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -116,8 +134,6 @@ class GravitySensorCollector2Test {
         assertNull(collector.measurementListener)
 
         // set new value
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<GravitySensorMeasurement, GravitySensorCollector2>>()
         collector.measurementListener = measurementListener
 
         // check
@@ -131,14 +147,13 @@ class GravitySensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(sensor)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = GravitySensorCollector2(contextSpy)
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
     }
@@ -213,9 +228,8 @@ class GravitySensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(false)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -229,7 +243,7 @@ class GravitySensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -252,9 +266,8 @@ class GravitySensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -268,7 +281,7 @@ class GravitySensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -291,9 +304,8 @@ class GravitySensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -308,7 +320,7 @@ class GravitySensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -367,9 +379,8 @@ class GravitySensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-            .returns(sensorMock)
+            .returns(sensor)
         justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -406,7 +417,7 @@ class GravitySensorCollector2Test {
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         val slot = slot<SensorEventListener>()
-        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensorMock) }
+        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
 
         val eventListener = slot.captured
 
@@ -419,8 +430,6 @@ class GravitySensorCollector2Test {
     @Test
     fun onSensorChanged_whenNoEvent_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<GravitySensorMeasurement, GravitySensorCollector2>>()
         val collector =
             GravitySensorCollector2(context, measurementListener = measurementListener)
 
@@ -445,16 +454,13 @@ class GravitySensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GYROSCOPE)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<GravitySensorMeasurement, GravitySensorCollector2>>()
         val collector = GravitySensorCollector2(
             contextSpy,
             startOffsetEnabled = false,
@@ -465,8 +471,7 @@ class GravitySensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         sensorEventListener.onSensorChanged(event)
 
         // check
@@ -484,18 +489,13 @@ class GravitySensorCollector2Test {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GRAVITY)
+        every { sensor.type }.returns(Sensor.TYPE_GRAVITY)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_GRAVITY) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<GravitySensorMeasurement, GravitySensorCollector2>>(
-                relaxUnitFun = true
-            )
         val collector = GravitySensorCollector2(
             contextSpy,
             startOffsetEnabled = true,
@@ -517,8 +517,7 @@ class GravitySensorCollector2Test {
 
         assertNull(collector.startOffset)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         event.accuracy = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
@@ -547,8 +546,6 @@ class GravitySensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenNoSensor_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<GravitySensorMeasurement, GravitySensorCollector2>>()
         val collector = GravitySensorCollector2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -566,8 +563,6 @@ class GravitySensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenUnsupportedSensorType_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<GravitySensorMeasurement, GravitySensorCollector2>>()
         val collector = GravitySensorCollector2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -577,7 +572,6 @@ class GravitySensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
@@ -593,7 +587,6 @@ class GravitySensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(Sensor.TYPE_GRAVITY)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
     }
@@ -601,10 +594,6 @@ class GravitySensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<GravitySensorMeasurement, GravitySensorCollector2>>(
-                relaxUnitFun = true
-            )
         val collector = GravitySensorCollector2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -614,7 +603,6 @@ class GravitySensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(Sensor.TYPE_GRAVITY)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 

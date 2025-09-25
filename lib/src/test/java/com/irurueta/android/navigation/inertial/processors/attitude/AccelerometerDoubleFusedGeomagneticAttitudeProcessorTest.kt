@@ -17,31 +17,52 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.mockkObject
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.util.*
+import java.util.Date
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var listener:
+            BaseDoubleFusedGeomagneticAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun constructor_whenNoParameters_returnsExpectedValues() {
@@ -94,8 +115,6 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
 
     @Test
     fun constructor_whenListener_returnsExpectedValues() {
-        val listener =
-            mockk<BaseDoubleFusedGeomagneticAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>>()
         val processor = AccelerometerDoubleFusedGeomagneticAttitudeProcessor(listener)
 
         assertSame(listener, processor.processorListener)
@@ -150,8 +169,6 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         // check default value
         assertNull(processor.processorListener)
 
-        val listener =
-            mockk<BaseDoubleFusedGeomagneticAttitudeProcessor.OnProcessedListener<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>>()
         processor.processorListener = listener
 
         // check
@@ -1062,66 +1079,71 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         )
         val internalFusedAttitudeCopy = Quaternion(internalFusedAttitude)
 
-        mockkObject(QuaternionHelper)
-        every { QuaternionHelper.dotProduct(any(), any()) }.returns(processor.outlierPanicThreshold)
+        mockkObject(QuaternionHelper) {
+            every {
+                QuaternionHelper.dotProduct(
+                    any(),
+                    any()
+                )
+            }.returns(processor.outlierPanicThreshold)
 
+            // process
+            val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+                AccelerometerSensorMeasurement(),
+                GyroscopeSensorMeasurement(),
+                MagnetometerSensorMeasurement(),
+                System.nanoTime()
+            )
 
-        // process
-        val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
-            AccelerometerSensorMeasurement(),
-            GyroscopeSensorMeasurement(),
-            MagnetometerSensorMeasurement(),
-            System.nanoTime()
-        )
+            // check
+            assertTrue(processor.process(syncedMeasurement))
 
-        // check
-        assertTrue(processor.process(syncedMeasurement))
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude1)
+            assertEquals(relativeAttitude, relativeAttitude1)
 
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(relativeAttitude, relativeAttitude1)
+            val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "deltaRelativeAttitude"
+            )
+            val deltaRelativeAttitude2 =
+                relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
+            assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
 
-        val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "deltaRelativeAttitude"
-        )
-        val deltaRelativeAttitude2 =
-            relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
-        assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
+            val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "hasDeltaRelativeAttitude"
+            )
+            requireNotNull(hasDeltaRelativeAttitude)
+            assertTrue(hasDeltaRelativeAttitude)
 
-        val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "hasDeltaRelativeAttitude"
-        )
-        requireNotNull(hasDeltaRelativeAttitude)
-        assertTrue(hasDeltaRelativeAttitude)
+            val internalFusedAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "internalFusedAttitude"
+            )
+            requireNotNull(internalFusedAttitude1)
+            val internalFusedAttitude2 =
+                deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy)
+            assertEquals(internalFusedAttitude2, internalFusedAttitude1)
+            assertEquals(internalFusedAttitude2, processor.fusedAttitude)
 
-        val internalFusedAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "internalFusedAttitude"
-        )
-        requireNotNull(internalFusedAttitude1)
-        val internalFusedAttitude2 =
-            deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy)
-        assertEquals(internalFusedAttitude2, internalFusedAttitude1)
-        assertEquals(internalFusedAttitude2, processor.fusedAttitude)
+            assertEquals(relativeAttitude, previousRelativeAttitude)
 
-        assertEquals(relativeAttitude, previousRelativeAttitude)
-
-        val panicCounter: Int? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter)
-        assertEquals(0, panicCounter)
+            val panicCounter: Int? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "panicCounter"
+            )
+            requireNotNull(panicCounter)
+            assertEquals(0, panicCounter)
+        }
     }
 
     @Test
@@ -1172,65 +1194,66 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         )
         val internalFusedAttitudeCopy = Quaternion(internalFusedAttitude)
 
-        mockkObject(QuaternionHelper)
-        every { QuaternionHelper.dotProduct(any(), any()) }.returns(0.0)
+        mockkObject(QuaternionHelper) {
+            every { QuaternionHelper.dotProduct(any(), any()) }.returns(0.0)
 
-        // process
-        val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
-            AccelerometerSensorMeasurement(),
-            GyroscopeSensorMeasurement(),
-            MagnetometerSensorMeasurement(),
-            System.nanoTime()
-        )
+            // process
+            val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+                AccelerometerSensorMeasurement(),
+                GyroscopeSensorMeasurement(),
+                MagnetometerSensorMeasurement(),
+                System.nanoTime()
+            )
 
-        // check
-        assertTrue(processor.process(syncedMeasurement))
+            // check
+            assertTrue(processor.process(syncedMeasurement))
 
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(relativeAttitude, relativeAttitude1)
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude1)
+            assertEquals(relativeAttitude, relativeAttitude1)
 
-        val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "deltaRelativeAttitude"
-        )
-        val deltaRelativeAttitude2 =
-            relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
-        assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
+            val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "deltaRelativeAttitude"
+            )
+            val deltaRelativeAttitude2 =
+                relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
+            assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
 
-        val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "hasDeltaRelativeAttitude"
-        )
-        requireNotNull(hasDeltaRelativeAttitude)
-        assertTrue(hasDeltaRelativeAttitude)
+            val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "hasDeltaRelativeAttitude"
+            )
+            requireNotNull(hasDeltaRelativeAttitude)
+            assertTrue(hasDeltaRelativeAttitude)
 
-        val internalFusedAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "internalFusedAttitude"
-        )
-        requireNotNull(internalFusedAttitude1)
-        val internalFusedAttitude2 =
-            deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy)
-        assertEquals(internalFusedAttitude2, internalFusedAttitude1)
-        assertEquals(internalFusedAttitude2, processor.fusedAttitude)
+            val internalFusedAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "internalFusedAttitude"
+            )
+            requireNotNull(internalFusedAttitude1)
+            val internalFusedAttitude2 =
+                deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy)
+            assertEquals(internalFusedAttitude2, internalFusedAttitude1)
+            assertEquals(internalFusedAttitude2, processor.fusedAttitude)
 
-        assertEquals(relativeAttitude, previousRelativeAttitude)
+            assertEquals(relativeAttitude, previousRelativeAttitude)
 
-        val panicCounter: Int? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter)
-        assertEquals(1, panicCounter)
+            val panicCounter: Int? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "panicCounter"
+            )
+            requireNotNull(panicCounter)
+            assertEquals(1, panicCounter)
+        }
     }
 
     @Test
@@ -1282,69 +1305,69 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         )
         val internalFusedAttitudeCopy = Quaternion(internalFusedAttitude)
 
-        mockkObject(QuaternionHelper)
-        every { QuaternionHelper.dotProduct(any(), any()) }.returns(processor.outlierThreshold)
+        mockkObject(QuaternionHelper) {
+            every { QuaternionHelper.dotProduct(any(), any()) }.returns(processor.outlierThreshold)
 
+            // process
+            val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+                AccelerometerSensorMeasurement(),
+                GyroscopeSensorMeasurement(),
+                MagnetometerSensorMeasurement(),
+                System.nanoTime()
+            )
 
-        // process
-        val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
-            AccelerometerSensorMeasurement(),
-            GyroscopeSensorMeasurement(),
-            MagnetometerSensorMeasurement(),
-            System.nanoTime()
-        )
+            // check
+            assertTrue(processor.process(syncedMeasurement))
 
-        // check
-        assertTrue(processor.process(syncedMeasurement))
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude1)
+            assertEquals(relativeAttitude, relativeAttitude1)
 
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(relativeAttitude, relativeAttitude1)
+            val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "deltaRelativeAttitude"
+            )
+            val deltaRelativeAttitude2 =
+                relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
+            assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
 
-        val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "deltaRelativeAttitude"
-        )
-        val deltaRelativeAttitude2 =
-            relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
-        assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
+            val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "hasDeltaRelativeAttitude"
+            )
+            requireNotNull(hasDeltaRelativeAttitude)
+            assertTrue(hasDeltaRelativeAttitude)
 
-        val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "hasDeltaRelativeAttitude"
-        )
-        requireNotNull(hasDeltaRelativeAttitude)
-        assertTrue(hasDeltaRelativeAttitude)
+            val internalFusedAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "internalFusedAttitude"
+            )
+            requireNotNull(internalFusedAttitude1)
+            val internalFusedAttitude2 = Quaternion.slerpAndReturnNew(
+                deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy),
+                geomagneticAttitude,
+                processor.interpolationValue
+            )
+            assertEquals(internalFusedAttitude2, internalFusedAttitude1)
+            assertEquals(internalFusedAttitude2, processor.fusedAttitude)
 
-        val internalFusedAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "internalFusedAttitude"
-        )
-        requireNotNull(internalFusedAttitude1)
-        val internalFusedAttitude2 = Quaternion.slerpAndReturnNew(
-            deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy),
-            geomagneticAttitude,
-            processor.interpolationValue
-        )
-        assertEquals(internalFusedAttitude2, internalFusedAttitude1)
-        assertEquals(internalFusedAttitude2, processor.fusedAttitude)
+            assertEquals(relativeAttitude, previousRelativeAttitude)
 
-        assertEquals(relativeAttitude, previousRelativeAttitude)
-
-        val panicCounter: Int? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter)
-        assertEquals(0, panicCounter)
+            val panicCounter: Int? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "panicCounter"
+            )
+            requireNotNull(panicCounter)
+            assertEquals(0, panicCounter)
+        }
     }
 
     @Test
@@ -1397,72 +1420,91 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         )
         val internalFusedAttitudeCopy = Quaternion(internalFusedAttitude)
 
-        mockkObject(QuaternionHelper)
-        every { QuaternionHelper.dotProduct(any(), any()) }.returns(processor.outlierThreshold)
+        mockkObject(QuaternionHelper) {
+            every { QuaternionHelper.dotProduct(any(), any()) }.returns(processor.outlierThreshold)
 
+            // process
+            val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
+                AccelerometerSensorMeasurement(),
+                GyroscopeSensorMeasurement(),
+                MagnetometerSensorMeasurement(),
+                System.nanoTime()
+            )
 
-        // process
-        val syncedMeasurement = AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement(
-            AccelerometerSensorMeasurement(),
-            GyroscopeSensorMeasurement(),
-            MagnetometerSensorMeasurement(),
-            System.nanoTime()
-        )
+            // check
+            assertTrue(processor.process(syncedMeasurement))
 
-        // check
-        assertTrue(processor.process(syncedMeasurement))
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude1)
+            assertEquals(relativeAttitude, relativeAttitude1)
 
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(relativeAttitude, relativeAttitude1)
+            val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "deltaRelativeAttitude"
+            )
+            val deltaRelativeAttitude2 =
+                relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
+            assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
 
-        val deltaRelativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "deltaRelativeAttitude"
-        )
-        val deltaRelativeAttitude2 =
-            relativeAttitude.multiplyAndReturnNew(previousRelativeAttitudeCopy.inverseAndReturnNew())
-        assertEquals(deltaRelativeAttitude2, deltaRelativeAttitude1)
+            val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "hasDeltaRelativeAttitude"
+            )
+            requireNotNull(hasDeltaRelativeAttitude)
+            assertTrue(hasDeltaRelativeAttitude)
 
-        val hasDeltaRelativeAttitude: Boolean? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "hasDeltaRelativeAttitude"
-        )
-        requireNotNull(hasDeltaRelativeAttitude)
-        assertTrue(hasDeltaRelativeAttitude)
+            val internalFusedAttitude1: Quaternion? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "internalFusedAttitude"
+            )
+            requireNotNull(internalFusedAttitude1)
+            val t = min(
+                max(
+                    0.0,
+                    processor.interpolationValue + processor.indirectInterpolationWeight * abs(
+                        deltaRelativeAttitude2.rotationAngle / TIME_INTERVAL
+                    )
+                ), 1.0
+            )
+            val internalFusedAttitude2 = Quaternion.slerpAndReturnNew(
+                deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy),
+                geomagneticAttitude,
+                t
+            )
+            assertEquals(internalFusedAttitude2, internalFusedAttitude1)
+            assertEquals(internalFusedAttitude2, processor.fusedAttitude)
 
-        val internalFusedAttitude1: Quaternion? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "internalFusedAttitude"
-        )
-        requireNotNull(internalFusedAttitude1)
-        val t = processor.interpolationValue + processor.indirectInterpolationWeight * abs(
-            deltaRelativeAttitude2.rotationAngle / TIME_INTERVAL
-        )
-        val internalFusedAttitude2 = Quaternion.slerpAndReturnNew(
-            deltaRelativeAttitude2.multiplyAndReturnNew(internalFusedAttitudeCopy),
-            geomagneticAttitude,
-            t
-        )
-        assertEquals(internalFusedAttitude2, internalFusedAttitude1)
-        assertEquals(internalFusedAttitude2, processor.fusedAttitude)
+            assertEquals(relativeAttitude, previousRelativeAttitude)
 
-        assertEquals(relativeAttitude, previousRelativeAttitude)
+            val panicCounter: Int? = getPrivateProperty(
+                BaseDoubleFusedGeomagneticAttitudeProcessor::class,
+                processor,
+                "panicCounter"
+            )
+            requireNotNull(panicCounter)
+            assertEquals(0, panicCounter)
+        }
+    }
 
-        val panicCounter: Int? = getPrivateProperty(
-            BaseDoubleFusedGeomagneticAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter)
-        assertEquals(0, panicCounter)
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees =
+            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
     }
 
     private companion object {
@@ -1479,21 +1521,6 @@ class AccelerometerDoubleFusedGeomagneticAttitudeProcessorTest {
         const val MAX_ANGLE_DEGREES = 45.0
 
         const val TIME_INTERVAL = 0.02
-
-        fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-            val longitudeDegrees =
-                randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
 
         fun getAttitude(): Quaternion {
             val randomizer = UniformRandomizer()

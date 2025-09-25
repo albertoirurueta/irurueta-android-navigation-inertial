@@ -22,26 +22,55 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import java.util.*
+import java.util.ArrayDeque
 
 @RunWith(RobolectricTestRunner::class)
 class BufferedAccelerometerSensorCollectorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            BufferedSensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var bufferFilledListener:
+            BufferedSensorCollector.OnBufferFilledListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener:
+            BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var event: SensorEvent
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {
@@ -55,6 +84,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, collector.capacity)
         assertTrue(collector.startOffsetEnabled)
         assertTrue(collector.stopWhenFilledBuffer)
+        assertTrue(collector.skipWhenProcessing)
         assertNull(collector.accuracyChangedListener)
         assertNull(collector.bufferFilledListener)
         assertNull(collector.measurementListener)
@@ -65,6 +95,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertTrue(collector.bufferedMeasurements.isEmpty())
         assertEquals(0.0f, collector.usage, 0.0f)
         assertFalse(collector.running)
+        assertFalse(collector.processing)
         assertEquals(0, collector.numberOfProcessedMeasurements)
         assertEquals(0L, collector.mostRecentTimestamp)
         assertNull(collector.oldestTimestampInBuffer)
@@ -126,12 +157,6 @@ class BufferedAccelerometerSensorCollectorTest {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         val collector = BufferedAccelerometerSensorCollector(
             context,
             AccelerometerSensorType.ACCELEROMETER,
@@ -139,6 +164,7 @@ class BufferedAccelerometerSensorCollectorTest {
             CAPACITY,
             startOffsetEnabled = false,
             stopWhenFilledBuffer = false,
+            skipWhenProcessing = false,
             accuracyChangedListener,
             bufferFilledListener,
             measurementListener
@@ -151,6 +177,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(CAPACITY, collector.capacity)
         assertFalse(collector.startOffsetEnabled)
         assertFalse(collector.stopWhenFilledBuffer)
+        assertFalse(collector.skipWhenProcessing)
         assertSame(accuracyChangedListener, collector.accuracyChangedListener)
         assertSame(bufferFilledListener, collector.bufferFilledListener)
         assertSame(measurementListener, collector.measurementListener)
@@ -161,6 +188,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertTrue(collector.bufferedMeasurements.isEmpty())
         assertEquals(0.0f, collector.usage, 0.0f)
         assertFalse(collector.running)
+        assertFalse(collector.processing)
         assertEquals(0, collector.numberOfProcessedMeasurements)
         assertEquals(0L, collector.mostRecentTimestamp)
         assertNull(collector.oldestTimestampInBuffer)
@@ -228,8 +256,6 @@ class BufferedAccelerometerSensorCollectorTest {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -245,8 +271,6 @@ class BufferedAccelerometerSensorCollectorTest {
         assertNull(collector.bufferFilledListener)
 
         // set new value
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         collector.bufferFilledListener = bufferFilledListener
 
         // check
@@ -262,8 +286,6 @@ class BufferedAccelerometerSensorCollectorTest {
         assertNull(collector.measurementListener)
 
         // set new value
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         collector.measurementListener = measurementListener
 
         // check
@@ -277,15 +299,14 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }.returns(sensorMock)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }.returns(sensor)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
             BufferedAccelerometerSensorCollector(contextSpy, AccelerometerSensorType.ACCELEROMETER)
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
     }
@@ -297,9 +318,8 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }.returns(
-            sensorMock
+            sensor
         )
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -309,7 +329,7 @@ class BufferedAccelerometerSensorCollectorTest {
             AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
     }
@@ -340,9 +360,8 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
@@ -364,9 +383,8 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
@@ -433,9 +451,8 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(false)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -449,7 +466,7 @@ class BufferedAccelerometerSensorCollectorTest {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -472,9 +489,8 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -488,7 +504,7 @@ class BufferedAccelerometerSensorCollectorTest {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -511,9 +527,8 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -528,7 +543,7 @@ class BufferedAccelerometerSensorCollectorTest {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -602,6 +617,7 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(0L, mostRecentTimestamp2)
 
         assertFalse(collector.running)
+        assertFalse(collector.processing)
     }
 
     @Test
@@ -611,9 +627,8 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
@@ -670,10 +685,11 @@ class BufferedAccelerometerSensorCollectorTest {
         assertEquals(0L, mostRecentTimestamp2)
 
         assertFalse(collector.running)
+        assertFalse(collector.processing)
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         val slot = slot<SensorEventListener>()
-        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensorMock) }
+        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
 
         val eventListener = slot.captured
 
@@ -755,22 +771,92 @@ class BufferedAccelerometerSensorCollectorTest {
     }
 
     @Test
+    fun onSensorChanged_whenSkipProcessingAndProcessing_makesNoAction() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val collector = BufferedAccelerometerSensorCollector(context, skipWhenProcessing = true)
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        setPrivateProperty(BufferedSensorCollector::class, collector, "processing", true)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        assertEquals(0.0f, collector.usage, 0.0f)
+        assertTrue(collector.bufferedMeasurements.isEmpty())
+        assertNull(collector.startOffset)
+        assertEquals(0, collector.numberOfProcessedMeasurements)
+
+        // check internal fields
+        val buffer: ArrayDeque<AccelerometerSensorMeasurement>? =
+            getPrivateProperty(BufferedSensorCollector::class, collector, "buffer")
+        requireNotNull(buffer)
+        assertTrue(buffer.isEmpty())
+
+        val availableMeasurements: ArrayDeque<AccelerometerSensorMeasurement>? =
+            getPrivateProperty(BufferedSensorCollector::class, collector, "availableMeasurements")
+        requireNotNull(availableMeasurements)
+        assertEquals(BufferedSensorCollector.DEFAULT_CAPACITY, availableMeasurements.size)
+
+        val measurementsBeforeTimestamp: ArrayDeque<AccelerometerSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "measurementsBeforeTimestamp"
+            )
+        requireNotNull(measurementsBeforeTimestamp)
+        assertTrue(measurementsBeforeTimestamp.isEmpty())
+
+        val measurementsBeforePosition: ArrayDeque<AccelerometerSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "measurementsBeforePosition"
+            )
+        requireNotNull(measurementsBeforePosition)
+        assertTrue(measurementsBeforePosition.isEmpty())
+
+        val availableMeasurementsBeforeTimestamp: ArrayList<AccelerometerSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "availableMeasurementsBeforeTimestamp"
+            )
+        requireNotNull(availableMeasurementsBeforeTimestamp)
+        assertEquals(
+            BufferedSensorCollector.DEFAULT_CAPACITY,
+            availableMeasurementsBeforeTimestamp.size
+        )
+
+        val availableMeasurementsBeforePosition: ArrayList<AccelerometerSensorMeasurement>? =
+            getPrivateProperty(
+                BufferedSensorCollector::class,
+                collector,
+                "availableMeasurementsBeforePosition"
+            )
+        requireNotNull(availableMeasurementsBeforePosition)
+        assertEquals(
+            BufferedSensorCollector.DEFAULT_CAPACITY,
+            availableMeasurementsBeforePosition.size
+        )
+    }
+
+    @Test
     fun onSensorChanged_whenNoSensorType_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val sensorManager: SensorManager? =
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GYROSCOPE)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
             startOffsetEnabled = false,
@@ -781,8 +867,7 @@ class BufferedAccelerometerSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         sensorEventListener.onSensorChanged(event)
 
         // check
@@ -854,18 +939,13 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>(
-                relaxUnitFun = true
-            )
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
             startOffsetEnabled = true,
@@ -887,8 +967,7 @@ class BufferedAccelerometerSensorCollectorTest {
 
         assertNull(collector.startOffset)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
         valuesField.isAccessible = true
@@ -972,20 +1051,13 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>(
-                relaxUnitFun = true
-            )
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
             stopWhenFilledBuffer = true,
@@ -1016,8 +1088,7 @@ class BufferedAccelerometerSensorCollectorTest {
         setPrivateProperty(BufferedSensorCollector::class, collector, "running", true)
         assertTrue(collector.running)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
         valuesField.isAccessible = true
@@ -1043,22 +1114,13 @@ class BufferedAccelerometerSensorCollectorTest {
             context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
         requireNotNull(sensorManager)
         val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
         val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val bufferFilledListener =
-            mockk<BufferedSensorCollector.OnBufferFilledListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>(
-                relaxUnitFun = true
-            )
-        val measurementListener =
-            mockk<BufferedSensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>(
-                relaxUnitFun = true
-            )
         val collector = BufferedAccelerometerSensorCollector(
             contextSpy,
             stopWhenFilledBuffer = false,
@@ -1090,8 +1152,7 @@ class BufferedAccelerometerSensorCollectorTest {
         setPrivateProperty(BufferedSensorCollector::class, collector, "running", true)
         assertTrue(collector.running)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         event.accuracy = SensorAccuracy.HIGH.value
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
@@ -1126,8 +1187,6 @@ class BufferedAccelerometerSensorCollectorTest {
     @Test
     fun onAccuracyChanged_whenNoSensor_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         val collector = BufferedAccelerometerSensorCollector(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1145,8 +1204,6 @@ class BufferedAccelerometerSensorCollectorTest {
     @Test
     fun onAccuracyChanged_whenUnsupportedSensorType_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>()
         val collector = BufferedAccelerometerSensorCollector(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1156,7 +1213,6 @@ class BufferedAccelerometerSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
@@ -1172,7 +1228,6 @@ class BufferedAccelerometerSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
     }
@@ -1180,10 +1235,6 @@ class BufferedAccelerometerSensorCollectorTest {
     @Test
     fun onAccuracyChanged_whenListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<BufferedSensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, BufferedAccelerometerSensorCollector>>(
-                relaxUnitFun = true
-            )
         val collector = BufferedAccelerometerSensorCollector(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -1193,7 +1244,6 @@ class BufferedAccelerometerSensorCollectorTest {
             getPrivateProperty(BufferedSensorCollector::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 

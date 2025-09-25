@@ -16,19 +16,10 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class StatusTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun mapStatus_returnsExpectedValue() {

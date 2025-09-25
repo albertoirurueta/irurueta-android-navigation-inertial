@@ -124,7 +124,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
      * @property solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
      * enough measurements are available, false otherwise.
      * @param isGyroscopeGroundTruthInitialBias true if estimated gyroscope bias is assumed to be
-     * the true value, flase if estimated bias is assumed to be only an initial guess. When
+     * the true value, false if estimated bias is assumed to be only an initial guess. When
      * [gyroscopeSensorType] is [GyroscopeSensorType.GYROSCOPE], bias guess is zero,
      * otherwise when it is [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED], bias guess
      * is the device calibrated values.

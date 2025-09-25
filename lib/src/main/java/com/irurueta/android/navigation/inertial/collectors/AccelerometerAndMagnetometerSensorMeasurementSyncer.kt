@@ -47,6 +47,7 @@ import java.util.*
  * consider the measurement as stale so that it is skipped from synced measurement processing and
  * returned back from buffer to cache of measurements.
  * @property staleDetectionEnabled true to enable stale measurement detection, false otherwise.
+ * @property skipWhenProcessing true to skip new measurements when processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that some buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -71,6 +72,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
     stopWhenFilledBuffer: Boolean = true,
     staleOffsetNanos: Long = DEFAULT_STALE_OFFSET_NANOS,
     staleDetectionEnabled: Boolean = true,
+    skipWhenProcessing: Boolean = true,
     accuracyChangedListener: OnAccuracyChangedListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSensorMeasurementSyncer>? = null,
     bufferFilledListener: OnBufferFilledListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSensorMeasurementSyncer>? = null,
     syncedMeasurementListener: OnSyncedMeasurementsListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSensorMeasurementSyncer>? = null,
@@ -82,6 +84,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
     stopWhenFilledBuffer,
     staleOffsetNanos,
     staleDetectionEnabled,
+    skipWhenProcessing,
     accuracyChangedListener,
     bufferFilledListener,
     syncedMeasurementListener,
@@ -193,7 +196,13 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, bufferPosition ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedAccelerometerSensorCollector
+            }
+
             synchronized(this@AccelerometerAndMagnetometerSensorMeasurementSyncer) {
+                processing = true
+
                 val measurementsBeforePosition =
                     collector.getMeasurementsBeforePosition(bufferPosition)
                 val lastTimestamp = measurementsBeforePosition.lastOrNull()?.timestamp
@@ -204,6 +213,8 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
                     copyToAccelerometerMeasurements(measurementsBeforePosition)
                     processMeasurements()
                 }
+
+                processing = false
             }
         }
     )
@@ -236,7 +247,13 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
             }
         },
         measurementListener = { collector, _, _ ->
+            if (this.skipWhenProcessing && processing) {
+                return@BufferedMagnetometerSensorCollector
+            }
+
             synchronized(this@AccelerometerAndMagnetometerSensorMeasurementSyncer) {
+                processing = true
+
                 val mostRecentTimestamp =
                     this@AccelerometerAndMagnetometerSensorMeasurementSyncer.mostRecentTimestamp
                 if (mostRecentTimestamp != null) {
@@ -247,6 +264,8 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
                         copyToMagnetometerMeasurements(measurementsBeforeTimestamp)
                     }
                 }
+
+                processing = false
             }
         }
     )
@@ -370,6 +389,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
     @Synchronized
     override fun stop() {
         stopping = true
+        processing = false
         accelerometerSensorCollector.stop()
         magnetometerSensorCollector.stop()
 
@@ -505,7 +525,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
             hasPreviousAccelerometerMeasurement = true
         }
 
-        if (alreadyProcessedAccelerometerMeasurements.size > 0) {
+        if (alreadyProcessedAccelerometerMeasurements.isNotEmpty()) {
             // remove processed accelerometer measurements
             accelerometerMeasurements.removeAll(alreadyProcessedAccelerometerMeasurements)
         }
@@ -518,6 +538,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
             // collections are reset at this point to prevent concurrent modifications
             clearCollectionsAndReset()
             stopping = false
+            processing = false
         }
     }
 
@@ -529,6 +550,7 @@ class AccelerometerAndMagnetometerSensorMeasurementSyncer(
         mostRecentTimestamp = null
         oldestTimestamp = null
         running = false
+        processing = false
 
         hasPreviousAccelerometerMeasurement = false
         hasPreviousMagnetometerMeasurement = false

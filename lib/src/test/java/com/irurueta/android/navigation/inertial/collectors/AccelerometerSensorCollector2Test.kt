@@ -22,12 +22,25 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -36,11 +49,33 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerSensorCollector2Test {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            SensorCollector2.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener:
+            SensorCollector2.OnMeasurementListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var event: SensorEvent
+
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    private val sensorManager: SensorManager? =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+
+    @SpyK
+    private var sensorManagerSpy = sensorManager!!
+
+    @SpyK
+    private var contextSpy = context
 
     @Test
     fun constructor_whenRequiredParameters_setsDefaultValues() {
@@ -66,10 +101,6 @@ class AccelerometerSensorCollector2Test {
     @Test
     fun constructor_whenAllParameters_setsExpectedValues() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
         val collector = AccelerometerSensorCollector2(
             context,
             AccelerometerSensorType.ACCELEROMETER,
@@ -104,8 +135,6 @@ class AccelerometerSensorCollector2Test {
         assertNull(collector.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
         collector.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -121,8 +150,6 @@ class AccelerometerSensorCollector2Test {
         assertNull(collector.measurementListener)
 
         // set new value
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
         collector.measurementListener = measurementListener
 
         // check
@@ -131,36 +158,23 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun sensor_whenSensorTypeAccelerometer_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }.returns(sensorMock)
-        val contextSpy = spyk(context)
+        every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }.returns(sensor)
+
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
             AccelerometerSensorCollector2(contextSpy, AccelerometerSensorType.ACCELEROMETER)
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
     }
 
     @Test
     fun sensor_whenSensorTypeAccelerometerUncalibrated_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }.returns(
-            sensorMock
+            sensor
         )
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(
@@ -168,19 +182,13 @@ class AccelerometerSensorCollector2Test {
             AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED
         )
 
-        assertSame(sensorMock, collector.sensor)
+        assertSame(sensor, collector.sensor)
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
     }
 
     @Test
     fun sensorAvailable_whenSensorTypeAccelerometer_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector =
@@ -194,15 +202,8 @@ class AccelerometerSensorCollector2Test {
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test
     fun sensorAvailable_whenSensorTypeAccelerometerUncalibratedSdkO_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
-        val contextSpy = spyk(context)
+            .returns(sensor)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(
@@ -218,15 +219,8 @@ class AccelerometerSensorCollector2Test {
     @Config(sdk = [Build.VERSION_CODES.N])
     @Test
     fun sensorAvailable_whenSensorTypeAccelerometerUncalibratedSdkN_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Constants.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
-        val contextSpy = spyk(context)
+            .returns(sensor)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(
@@ -241,8 +235,6 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun start_whenNoSensorManager_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
         val collector = AccelerometerSensorCollector2(contextSpy)
@@ -257,15 +249,9 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun start_whenNoSensor_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
             .returns(null)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(contextSpy)
@@ -287,16 +273,9 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun start_whenRegisterListenerFails_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(false)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(contextSpy)
@@ -308,7 +287,7 @@ class AccelerometerSensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -326,16 +305,9 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun start_whenRegisterListenerSucceeds_registersListener() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(contextSpy)
@@ -347,7 +319,7 @@ class AccelerometerSensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -365,16 +337,9 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun start_whenStartTimestampProvided_registersListenerAndSetsStartTimestamp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(contextSpy)
@@ -387,7 +352,7 @@ class AccelerometerSensorCollector2Test {
         verify(exactly = 1) {
             sensorManagerSpy.registerListener(
                 capture(slot),
-                sensorMock,
+                sensor,
                 collector.sensorDelay.value
             )
         }
@@ -405,8 +370,6 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun stop_whenNoSensorManager_resetsParameters() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
 
         val collector = AccelerometerSensorCollector2(contextSpy)
@@ -441,16 +404,9 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun stop_whenSensorManager_unregistersListenerAndResetsParameters() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         justRun { sensorManagerSpy.unregisterListener(any(), any<Sensor>()) }
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val collector = AccelerometerSensorCollector2(contextSpy)
@@ -485,7 +441,7 @@ class AccelerometerSensorCollector2Test {
 
         verify(exactly = 1) { contextSpy.getSystemService(Context.SENSOR_SERVICE) }
         val slot = slot<SensorEventListener>()
-        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensorMock) }
+        verify(exactly = 1) { sensorManagerSpy.unregisterListener(capture(slot), sensor) }
 
         val eventListener = slot.captured
 
@@ -498,8 +454,6 @@ class AccelerometerSensorCollector2Test {
     @Test
     fun onSensorChanged_whenNoEvent_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
         val collector =
             AccelerometerSensorCollector2(context, measurementListener = measurementListener)
 
@@ -519,21 +473,12 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun onSensorChanged_whenNoSensorType_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_GYROSCOPE)
+        every { sensor.type }.returns(Sensor.TYPE_GYROSCOPE)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
         val collector = AccelerometerSensorCollector2(
             contextSpy,
             startOffsetEnabled = false,
@@ -544,8 +489,7 @@ class AccelerometerSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         sensorEventListener.onSensorChanged(event)
 
         // check
@@ -558,23 +502,12 @@ class AccelerometerSensorCollector2Test {
 
     @Test
     fun onSensorChanged_whenStartOffsetEnabled_setsStartOffset() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val sensorMock = mockk<Sensor>()
-        every { sensorMock.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
+        every { sensor.type }.returns(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED)
         every { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_ACCELEROMETER_UNCALIBRATED) }
-            .returns(sensorMock)
+            .returns(sensor)
         every { sensorManagerSpy.registerListener(any(), any<Sensor>(), any()) }.returns(true)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
-        val measurementListener =
-            mockk<SensorCollector2.OnMeasurementListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>(
-                relaxUnitFun = true
-            )
         val collector = AccelerometerSensorCollector2(
             contextSpy,
             startOffsetEnabled = true,
@@ -596,8 +529,7 @@ class AccelerometerSensorCollector2Test {
 
         assertNull(collector.startOffset)
 
-        val event = mockk<SensorEvent>()
-        event.sensor = sensorMock
+        event.sensor = sensor
         event.timestamp = System.nanoTime()
         event.accuracy = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
         val valuesField = SensorEvent::class.java.getDeclaredField("values")
@@ -630,8 +562,6 @@ class AccelerometerSensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenNoSensor_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
         val collector = AccelerometerSensorCollector2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -649,8 +579,6 @@ class AccelerometerSensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenUnsupportedSensorType_makesNoAction() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>()
         val collector = AccelerometerSensorCollector2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -660,7 +588,6 @@ class AccelerometerSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 
@@ -676,7 +603,6 @@ class AccelerometerSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
     }
@@ -684,10 +610,6 @@ class AccelerometerSensorCollector2Test {
     @Test
     fun onAccuracyChanged_whenListener_notifies() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val accuracyChangedListener =
-            mockk<SensorCollector2.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector2>>(
-                relaxUnitFun = true
-            )
         val collector = AccelerometerSensorCollector2(
             context,
             accuracyChangedListener = accuracyChangedListener
@@ -697,7 +619,6 @@ class AccelerometerSensorCollector2Test {
             getPrivateProperty(SensorCollector2::class, collector, "sensorEventListener")
         requireNotNull(sensorEventListener)
 
-        val sensor = mockk<Sensor>()
         every { sensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         sensorEventListener.onAccuracyChanged(sensor, SensorAccuracy.HIGH.value)
 

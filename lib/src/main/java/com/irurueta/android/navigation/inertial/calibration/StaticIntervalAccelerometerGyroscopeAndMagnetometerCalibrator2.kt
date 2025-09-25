@@ -935,7 +935,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2 private con
      * only available once initialization is completed.
      *
      * @param result instance where result will be stored.
-     * @return true if result is available, false othewise.
+     * @return true if result is available, false otherwise.
      */
     fun getMagnetometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
         return magnetometerCalibrator.getTimeIntervalStandardDeviationAsTime(result)
@@ -2572,7 +2572,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator2 private con
      * an outlier when using robust calibration methods.
      * By default this is 3.0 times [magnetometerBaseNoiseLevel], which considering the noise level
      * as the standard deviation of a Gaussian distribution, should account for 99% of the cases.
-     * Any measurement hqving an error greater than tat in the estimated solution, will be
+     * Any measurement having an error greater than tat in the estimated solution, will be
      * considered an outlier and be discarded.
      *
      * @throws IllegalArgumentException if provided value is zero or negative.

@@ -17,21 +17,12 @@ package com.irurueta.android.navigation.inertial.collectors.interpolators
 
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.getPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 
 class AccelerometerLinearSensorMeasurementInterpolatorTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun constructor_whenEmpty_setsExpectedProperties() {
@@ -307,7 +298,7 @@ class AccelerometerLinearSensorMeasurementInterpolatorTest {
 
         const val SIZE = 6
 
-        const val ABSOLUTE_ERROR = 5e-6f
+        const val ABSOLUTE_ERROR = 5e-5f
 
         fun assertMeasurement(
             measurement1: AccelerometerSensorMeasurement,

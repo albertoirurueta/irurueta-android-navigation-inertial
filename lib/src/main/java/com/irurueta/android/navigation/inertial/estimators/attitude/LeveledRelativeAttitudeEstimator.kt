@@ -608,18 +608,18 @@ class LeveledRelativeAttitudeEstimator private constructor(
                     null
                 }
 
-            val displayRoll: Double?
-            val displayPitch: Double?
-            val displayYaw: Double?
+            val roll: Double?
+            val pitch: Double?
+            val yaw2: Double?
             if (estimateEulerAngles) {
                 internalFusedAttitude.toEulerAngles(eulerAngles)
-                displayRoll = eulerAngles[0]
-                displayPitch = eulerAngles[1]
-                displayYaw = eulerAngles[2]
+                roll = eulerAngles[0]
+                pitch = eulerAngles[1]
+                yaw2 = eulerAngles[2]
             } else {
-                displayRoll = null
-                displayPitch = null
-                displayYaw = null
+                roll = null
+                pitch = null
+                yaw2 = null
             }
 
             internalFusedAttitude.copyTo(fusedAttitude)
@@ -627,9 +627,9 @@ class LeveledRelativeAttitudeEstimator private constructor(
                 this,
                 fusedAttitude,
                 timestamp,
-                displayRoll,
-                displayPitch,
-                displayYaw,
+                roll,
+                pitch,
+                yaw2,
                 c
             )
         }

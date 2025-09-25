@@ -23,13 +23,12 @@ import com.irurueta.navigation.frames.NEDVelocity
 import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
 import com.irurueta.navigation.inertial.estimators.ECEFGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockk
-import io.mockk.unmockkAll
-import org.junit.After
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -37,11 +36,11 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class GravityHelperTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK
+    private lateinit var location: Location
 
     @Test
     fun getGravityForLocation_returnsExpectedValue() {
@@ -101,25 +100,24 @@ class GravityHelperTest {
         assertEquals(expectedNorm, result, 0.0)
     }
 
+    private fun getLocation(): Location {
+        val randomizer = UniformRandomizer()
+        val latitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
+        val longitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        every { location.latitude }.returns(latitudeDegrees)
+        every { location.longitude }.returns(longitudeDegrees)
+        every { location.altitude }.returns(height)
+
+        return location
+    }
+
     private companion object {
         const val MIN_ANGLE_DEGREES = -90.0
         const val MAX_ANGLE_DEGREES = 90.0
 
         const val MIN_HEIGHT = -100.0
         const val MAX_HEIGHT = 3000.0
-
-        private fun getLocation(): Location {
-            val randomizer = UniformRandomizer()
-            val latitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
-            val longitudeDegrees = randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES)
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-
-            val location = mockk<Location>()
-            every { location.latitude }.returns(latitudeDegrees)
-            every { location.longitude }.returns(longitudeDegrees)
-            every { location.altitude }.returns(height)
-
-            return location
-        }
     }
 }

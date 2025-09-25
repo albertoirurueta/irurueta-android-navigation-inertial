@@ -156,8 +156,7 @@ class MagnetometerInternalCalibratorBuilder private constructor(
         robustStopThresholdFactor: Double =
             StaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
         isGroundTruthInitialHardIron: Boolean = false,
-        isCommonAxisUsed: Boolean =
-            StaticIntervalMagnetometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS,
+        isCommonAxisUsed: Boolean = false,
         initialHardIronX: Double? = null,
         initialHardIronY: Double? = null,
         initialHardIronZ: Double? = null,

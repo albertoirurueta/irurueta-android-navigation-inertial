@@ -1617,8 +1617,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var isAccelerometerCommonAxisUsed: Boolean =
-        StaticIntervalAccelerometerCalibrator.DEFAULT_USE_COMMON_Z_AXIS
+    var isAccelerometerCommonAxisUsed: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -1631,8 +1630,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var isGyroscopeCommonAxisUsed: Boolean =
-        StaticIntervalGyroscopeCalibrator.DEFAULT_USE_COMMON_Z_AXIS
+    var isGyroscopeCommonAxisUsed: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -1645,8 +1643,7 @@ class StaticIntervalAccelerometerAndGyroscopeCalibrator private constructor(
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
-    var isGDependentCrossBiasesEstimated: Boolean =
-        StaticIntervalGyroscopeCalibrator.DEFAULT_ESTIMATE_G_DEPENDENT_CROSS_BIASES
+    var isGDependentCrossBiasesEstimated: Boolean = false
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)

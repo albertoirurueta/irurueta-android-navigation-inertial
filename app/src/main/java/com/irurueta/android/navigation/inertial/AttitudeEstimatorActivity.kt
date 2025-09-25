@@ -25,7 +25,11 @@ import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.estimators.attitude.AttitudeEstimator2
-import com.irurueta.geometry.*
+import com.irurueta.geometry.PinholeCamera
+import com.irurueta.geometry.PinholeCameraIntrinsicParameters
+import com.irurueta.geometry.Point3D
+import com.irurueta.geometry.Quaternion
+import com.irurueta.geometry.Rotation3D
 
 class AttitudeEstimatorActivity : AppCompatActivity() {
 
@@ -59,12 +63,13 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
             (extras?.getSerializable(ATTITUDE_SENSOR_TYPE) as AttitudeSensorType?)
                 ?: AttitudeSensorType.ABSOLUTE_ATTITUDE
         }
-        setContentView(R.layout.activity_attitude_estimator)
-        cubeView = findViewById(R.id.cube)
-        rollView = findViewById(R.id.roll)
-        pitchView = findViewById(R.id.pitch)
-        yawView = findViewById(R.id.yaw)
-        headingAccuracyView = findViewById(R.id.heading_accuracy)
+        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_attitude_estimator)
+        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
+        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
+        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
+        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
+        headingAccuracyView =
+            findViewById(com.irurueta.android.navigation.inertial.app.R.id.heading_accuracy)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -85,12 +90,21 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
             attitudeAvailableListener = { _, attitude, _, headingAccuracy, roll, pitch, yaw, _ ->
                 attitude.toQuaternion(rotation)
 
-                rollView?.text = getString(R.string.roll_degrees, Math.toDegrees(roll ?: 0.0))
-                pitchView?.text = getString(R.string.pitch_degrees, Math.toDegrees(pitch ?: 0.0))
-                yawView?.text = getString(R.string.yaw_degrees, Math.toDegrees(yaw ?: 0.0))
+                rollView?.text = getString(
+                    com.irurueta.android.navigation.inertial.app.R.string.roll_degrees,
+                    Math.toDegrees(roll ?: 0.0)
+                )
+                pitchView?.text = getString(
+                    com.irurueta.android.navigation.inertial.app.R.string.pitch_degrees,
+                    Math.toDegrees(pitch ?: 0.0)
+                )
+                yawView?.text = getString(
+                    com.irurueta.android.navigation.inertial.app.R.string.yaw_degrees,
+                    Math.toDegrees(yaw ?: 0.0)
+                )
                 if (headingAccuracy != null) {
                     headingAccuracyView?.text = getString(
-                        R.string.heading_accuracy_degrees,
+                        com.irurueta.android.navigation.inertial.app.R.string.heading_accuracy_degrees,
                         Math.toDegrees(headingAccuracy.toDouble())
                     )
                     headingAccuracyView?.visibility = View.VISIBLE

@@ -21,9 +21,13 @@ import android.hardware.SensorManager
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.SensorType
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import io.mockk.every
+import io.mockk.impl.annotations.SpyK
+import io.mockk.junit4.MockKRule
+import io.mockk.verify
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -32,11 +36,19 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 class SensorAvailabilityServiceTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    private val sensorManager: SensorManager? =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
+
+    @SpyK
+    private var sensorManagerSpy = sensorManager!!
+
+    @SpyK
+    private var contextSpy = context
 
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test
@@ -79,12 +91,6 @@ class SensorAvailabilityServiceTest {
     @Config(sdk = [Build.VERSION_CODES.O])
     @Test
     fun hasSensor_whenSdkO_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val service = SensorAvailabilityService(contextSpy)
@@ -96,7 +102,8 @@ class SensorAvailabilityServiceTest {
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION) }
 
         assertFalse(
-            service.hasSensor(SensorType.ACCELEROMETER_UNCALIBRATED
+            service.hasSensor(
+                SensorType.ACCELEROMETER_UNCALIBRATED
             )
         )
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(TYPE_ACCELEROMETER_UNCALIBRATED) }
@@ -113,7 +120,8 @@ class SensorAvailabilityServiceTest {
         verify(exactly = 1) { sensorManagerSpy.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
 
         assertFalse(
-            service.hasSensor(SensorType.MAGNETOMETER_UNCALIBRATED
+            service.hasSensor(
+                SensorType.MAGNETOMETER_UNCALIBRATED
             )
         )
         verify(exactly = 1) {
@@ -135,12 +143,6 @@ class SensorAvailabilityServiceTest {
     @Config(sdk = [Build.VERSION_CODES.N])
     @Test
     fun hasSensor_whenSdkN_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val sensorManager: SensorManager? =
-            context.getSystemService(Context.SENSOR_SERVICE) as SensorManager?
-        requireNotNull(sensorManager)
-        val sensorManagerSpy = spyk(sensorManager)
-        val contextSpy = spyk(context)
         every { contextSpy.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManagerSpy)
 
         val service = SensorAvailabilityService(contextSpy)

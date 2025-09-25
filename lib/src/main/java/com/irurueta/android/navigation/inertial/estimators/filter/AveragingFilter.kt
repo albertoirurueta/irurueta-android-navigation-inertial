@@ -95,7 +95,7 @@ abstract class AveragingFilter private constructor() {
     }
 
     /**
-     * Makes a deep copy to provided filtr from this instance.
+     * Makes a deep copy to provided filter from this instance.
      *
      * @param output filter instance to copy to.
      */

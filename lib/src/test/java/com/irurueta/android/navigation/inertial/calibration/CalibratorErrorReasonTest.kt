@@ -16,19 +16,10 @@
 package com.irurueta.android.navigation.inertial.calibration
 
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class CalibratorErrorReasonTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun mapErrorReason_returnsExpectedValue() {

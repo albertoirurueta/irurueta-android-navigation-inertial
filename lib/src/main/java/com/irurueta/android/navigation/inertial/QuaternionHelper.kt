@@ -16,6 +16,7 @@
 package com.irurueta.android.navigation.inertial
 
 import com.irurueta.geometry.Quaternion
+import kotlin.math.sqrt
 
 /**
  * Helper related to quaternion operations.
@@ -36,5 +37,29 @@ object QuaternionHelper {
                 q1.b * q2.b +
                 q1.c * q2.c +
                 q1.d * q2.d
+    }
+
+    /**
+     * Computes squared norm of quaternion.
+     *
+     * @param q quaternion.
+     * @return squared norm.
+     */
+    fun sqrNorm(q: Quaternion): Double {
+        val a2 = q.a * q.a
+        val b2 = q.b * q.b
+        val c2 = q.c * q.c
+        val d2 = q.d * q.d
+        return a2 + b2 + c2 + d2
+    }
+
+    /**
+     * Computes norm of quaternion.
+     *
+     * @param q quaternion.
+     * @return norm.
+     */
+    fun norm(q: Quaternion): Double {
+        return sqrt(sqrNorm(q))
     }
 }

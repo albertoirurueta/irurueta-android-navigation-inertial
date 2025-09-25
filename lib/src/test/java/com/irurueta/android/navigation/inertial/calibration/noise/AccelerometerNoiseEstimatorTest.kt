@@ -21,8 +21,8 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.navigation.inertial.ECEFGravity
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
@@ -34,8 +34,10 @@ import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
 import io.mockk.*
-import org.junit.After
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
 import org.junit.Assert.*
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -43,11 +45,22 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerNoiseEstimatorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var completedListener:
+            AccumulatedTriadEstimator.OnEstimationCompletedListener<AccelerometerNoiseEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var unreliableListener:
+            AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener: AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK
+    private lateinit var sensor: Sensor
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -603,8 +616,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun constructor_whenCompletedListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNoiseEstimator(
             context,
@@ -695,10 +706,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun constructor_whenUnreliableListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>()
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNoiseEstimator(
             context,
@@ -790,11 +797,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun constructor_whenMeasurementListener_setsExpectedValues() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>()
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>()
-        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNoiseEstimator(
             context,
@@ -894,8 +896,6 @@ class AccelerometerNoiseEstimatorTest {
         assertNull(estimator.completedListener)
 
         // set new value
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>()
         estimator.completedListener = completedListener
 
         // check
@@ -911,8 +911,6 @@ class AccelerometerNoiseEstimatorTest {
         assertNull(estimator.unreliableListener)
 
         // set new value
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>()
         estimator.unreliableListener = unreliableListener
 
         // check
@@ -928,7 +926,6 @@ class AccelerometerNoiseEstimatorTest {
         assertNull(estimator.measurementListener)
 
         // set new value
-        val measurementListener = mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         estimator.measurementListener = measurementListener
 
         // check
@@ -945,7 +942,6 @@ class AccelerometerNoiseEstimatorTest {
             estimator.getPrivateProperty("collector")
         requireNotNull(collector)
         val collectorSpy = spyk(collector)
-        val sensor = mockk<Sensor>()
         every { collectorSpy.sensor }.returns(sensor)
         estimator.setPrivateProperty("collector", collectorSpy)
 
@@ -1190,8 +1186,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenMeasurementListener_notifies() {
-        val measurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             AccelerometerNoiseEstimator(context, measurementListener = measurementListener)
@@ -1447,9 +1441,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndListener() {
-        val completedListener =
-            mockk<AccumulatedTriadEstimator
-            .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNoiseEstimator(
             context,
@@ -1560,8 +1551,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxDurationOnlyAndListener() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNoiseEstimator(
             context,
@@ -1676,8 +1665,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndListener() {
-        val completedListener = mockk<AccumulatedTriadEstimator
-        .OnEstimationCompletedListener<AccelerometerNoiseEstimator>>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = AccelerometerNoiseEstimator(
             context,
@@ -1761,10 +1748,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliable() {
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             AccelerometerNoiseEstimator(context, unreliableListener = unreliableListener)
@@ -1790,10 +1773,6 @@ class AccelerometerNoiseEstimatorTest {
 
     @Test
     fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val unreliableListener =
-            mockk<AccumulatedTriadEstimator.OnUnreliableListener<AccelerometerNoiseEstimator>>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator =
             AccelerometerNoiseEstimator(context, unreliableListener = unreliableListener)

@@ -49,7 +49,7 @@ import com.irurueta.navigation.frames.FrameType
  * available.
  */
 abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
-        L : BaseLevelingEstimator.OnLevelingAvailableListener<T, L>> constructor(
+        L : BaseLevelingEstimator.OnLevelingAvailableListener<T, L>>(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.GAME,
     val useAccelerometer: Boolean = false,
@@ -136,15 +136,15 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
                 null
             }
 
-        val displayRoll: Double?
-        val displayPitch: Double?
+        val roll: Double?
+        val pitch: Double?
         if (estimateEulerAngles) {
             attitude.toEulerAngles(eulerAngles)
-            displayRoll = eulerAngles[0]
-            displayPitch = eulerAngles[1]
+            roll = eulerAngles[0]
+            pitch = eulerAngles[1]
         } else {
-            displayRoll = null
-            displayPitch = null
+            roll = null
+            pitch = null
         }
 
         // notify
@@ -153,8 +153,8 @@ abstract class BaseLevelingEstimator<T : BaseLevelingEstimator<T, L>,
             this as T,
             attitude,
             timestamp,
-            displayRoll,
-            displayPitch,
+            roll,
+            pitch,
             c
         )
     }

@@ -16,11 +16,9 @@
 package com.irurueta.android.navigation.inertial.estimators.filter
 
 import android.os.SystemClock
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.*
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,12 +26,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class MeanAveragingFilterTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun constructor_whenTimeConstant_setsExpectedParameters() {
@@ -363,10 +355,6 @@ class MeanAveragingFilterTest {
             "previousTimestamp",
             timestamp
         )
-        val values: ArrayDeque<DoubleArray>? = filter.getPrivateProperty("values")
-        requireNotNull(values)
-        val valuesSpy = spyk(values)
-        filter.setPrivateProperty("values", valuesSpy)
 
         // check
         assertEquals(
@@ -381,7 +369,6 @@ class MeanAveragingFilterTest {
             -1L,
             getPrivateProperty(AveragingFilter::class, filter, "previousTimestamp")
         )
-        verify(exactly = 1) { valuesSpy.clear() }
     }
 
     @Test

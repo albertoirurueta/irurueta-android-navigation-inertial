@@ -21,14 +21,27 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.callPrivateFunc
-import com.irurueta.android.navigation.inertial.callPrivateFuncWithResult
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.android.navigation.inertial.getPrivateProperty
-import com.irurueta.android.navigation.inertial.setPrivateProperty
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.testutils.callPrivateFunc
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
-import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
+import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
+import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
+import com.irurueta.navigation.inertial.calibration.TimedBodyKinematicsAndMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener
 import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
@@ -36,10 +49,30 @@ import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticInterva
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
 import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
 import com.irurueta.statistics.UniformRandomizer
-import com.irurueta.units.*
-import io.mockk.*
-import org.junit.After
-import org.junit.Assert.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
+import com.irurueta.units.MagneticFluxDensity
+import com.irurueta.units.MagneticFluxDensityConverter
+import com.irurueta.units.MagneticFluxDensityUnit
+import com.irurueta.units.Time
+import com.irurueta.units.TimeConverter
+import com.irurueta.units.TimeUnit
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.slot
+import io.mockk.spyk
+import io.mockk.verify
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -47,11 +80,73 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationStartedListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var initializationCompletedListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var errorListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalDetectedListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalDetectedListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var staticIntervalSkippedListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var dynamicIntervalSkippedListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedAccelerometerMeasurementListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedGyroscopeMeasurementListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var generatedMagnetometerMeasurementListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var resetListener:
+            AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accelerometerMeasurementListener:
+            AccelerometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gyroscopeMeasurementListener:
+            GyroscopeSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var magnetometerMeasurementListener:
+            MagnetometerSensorCollector.OnMeasurementListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+
+    @MockK
+    private lateinit var sensor: Sensor
+
+    @MockK
+    private lateinit var internalGenerator: AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator
 
     @Test
     fun constructor_whenContext_setsDefaultValues() {
@@ -949,8 +1044,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenInitializationStartedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -1083,10 +1176,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenInitializationCompletedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -1220,12 +1309,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenErrorListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -1360,14 +1443,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenStaticIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -1503,16 +1578,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalDetectedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -1649,18 +1714,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenStaticIntervalSkippedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -1798,20 +1851,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenDynamicIntervalSkippedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -1950,22 +1989,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenGeneratedAccelerometerMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -2108,24 +2131,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenGeneratedGyroscopeMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -2272,26 +2277,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenGeneratedMagnetometerMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
-        val generatedMagnetometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -2442,28 +2427,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenResetListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
-        val generatedMagnetometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>()
-        val resetListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -2615,30 +2578,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenAccelerometerMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
-        val generatedMagnetometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>()
-        val resetListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -2791,31 +2730,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenGyroscopeMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
-        val generatedMagnetometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>()
-        val resetListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -2969,33 +2883,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenMagnetometerMeasurementListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
-        val generatedMagnetometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>()
-        val resetListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -3150,34 +3037,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun constructor_whenAccuracyChangedListener_setsExpectedValues() {
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
-        val generatedMagnetometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>()
-        val resetListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener>()
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -3340,8 +3199,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.initializationStartedListener)
 
         // set new value
-        val initializationStartedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>()
         generator.initializationStartedListener = initializationStartedListener
 
         // check
@@ -3357,8 +3214,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.initializationCompletedListener)
 
         // set new value
-        val initializationCompletedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>()
         generator.initializationCompletedListener = initializationCompletedListener
 
         // check
@@ -3374,8 +3229,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.errorListener)
 
         // set new value
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>()
         generator.errorListener = errorListener
 
         // check
@@ -3391,8 +3244,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.staticIntervalDetectedListener)
 
         // set new value
-        val staticIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>()
         generator.staticIntervalDetectedListener = staticIntervalDetectedListener
 
         // check
@@ -3408,8 +3259,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.dynamicIntervalDetectedListener)
 
         // set new value
-        val dynamicIntervalDetectedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>()
         generator.dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
 
         // check
@@ -3425,8 +3274,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.staticIntervalSkippedListener)
 
         // set new value
-        val staticIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>()
         generator.staticIntervalSkippedListener = staticIntervalSkippedListener
 
         // check
@@ -3442,8 +3289,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.dynamicIntervalSkippedListener)
 
         // set new value
-        val dynamicIntervalSkippedListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>()
         generator.dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
 
         // check
@@ -3459,8 +3304,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.generatedAccelerometerMeasurementListener)
 
         // set new value
-        val generatedAccelerometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>()
         generator.generatedAccelerometerMeasurementListener =
             generatedAccelerometerMeasurementListener
 
@@ -3480,8 +3323,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.generatedGyroscopeMeasurementListener)
 
         // set new value
-        val generatedGyroscopeMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>()
         generator.generatedGyroscopeMeasurementListener = generatedGyroscopeMeasurementListener
 
         // check
@@ -3500,8 +3341,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.generatedMagnetometerMeasurementListener)
 
         // set new value
-        val generatedMagnetometerMeasurementListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>()
         generator.generatedMagnetometerMeasurementListener =
             generatedMagnetometerMeasurementListener
 
@@ -3521,8 +3360,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.resetListener)
 
         // set new value
-        val resetListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener>()
         generator.resetListener = resetListener
 
         // check
@@ -3538,8 +3375,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accelerometerMeasurementListener)
 
         // set new value
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>()
         generator.accelerometerMeasurementListener = accelerometerMeasurementListener
 
         // check
@@ -3555,7 +3390,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.gyroscopeMeasurementListener)
 
         // set new value
-        val gyroscopeMeasurementListener = mockk<GyroscopeSensorCollector.OnMeasurementListener>()
         generator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
 
         // check
@@ -3571,8 +3405,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.magnetometerMeasurementListener)
 
         // set new value
-        val magnetometerMeasurementListener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>()
         generator.magnetometerMeasurementListener = magnetometerMeasurementListener
 
         // check
@@ -3588,7 +3420,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertNull(generator.accuracyChangedListener)
 
         // set new value
-        val accuracyChangedListener = mockk<SensorCollector.OnAccuracyChangedListener>()
         generator.accuracyChangedListener = accuracyChangedListener
 
         // check
@@ -3611,7 +3442,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         )
         requireNotNull(accelerometerCollector)
         val accelerometerCollectorSpy = spyk(accelerometerCollector)
-        val sensor = mockk<Sensor>()
         every { accelerometerCollectorSpy.sensor }.returns(sensor)
         setPrivateProperty(
             CalibrationMeasurementGenerator::class,
@@ -3637,7 +3467,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("gyroscopeCollector")
         requireNotNull(gyroscopeCollector)
         val gyroscopeCollectorSpy = spyk(gyroscopeCollector)
-        val sensor = mockk<Sensor>()
         every { gyroscopeCollectorSpy.sensor }.returns(sensor)
         generator.setPrivateProperty("gyroscopeCollector", gyroscopeCollectorSpy)
 
@@ -3658,7 +3487,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("magnetometerCollector")
         requireNotNull(magnetometerCollector)
         val magnetometerCollectorSpy = spyk(magnetometerCollector)
-        val sensor = mockk<Sensor>()
         every { magnetometerCollectorSpy.sensor }.returns(sensor)
         generator.setPrivateProperty("magnetometerCollector", magnetometerCollectorSpy)
 
@@ -5251,8 +5079,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onAccelerometerMeasurementListener_whenListenerAvailable_notifies() {
-        val accelerometerMeasurementListener =
-            mockk<AccelerometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -5417,12 +5243,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun collectorAccuracyChangedListener_whenUnreliableAndListenersAvailable_setsStopsAndSetsUnreliable() {
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>(
-                relaxUnitFun = true
-            )
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -5476,12 +5296,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun collectorAccuracyChangedListener_whenNotUnreliableAndListenersAvailable_makesNoAction() {
-        val errorListener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>(
-                relaxUnitFun = true
-            )
-        val accuracyChangedListener =
-            mockk<SensorCollector.OnAccuracyChangedListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -6095,31 +5909,25 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
     }
 
     @Test
     fun onInitializationStarted_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationStartedListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                initializationStartedListener = listener
+                initializationStartedListener = initializationStartedListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onInitializationStarted(internalGenerator)
 
-        verify(exactly = 1) { listener.onInitializationStarted(generator) }
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(generator) }
     }
 
     @Test
@@ -6131,7 +5939,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
@@ -6139,27 +5946,27 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onInitializationCompleted_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnInitializationCompletedListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                initializationCompletedListener = listener
+                initializationCompletedListener = initializationCompletedListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         measurementsGeneratorListener.onInitializationCompleted(internalGenerator, baseNoiseLevel)
 
-        verify(exactly = 1) { listener.onInitializationCompleted(generator, baseNoiseLevel) }
+        verify(exactly = 1) {
+            initializationCompletedListener.onInitializationCompleted(
+                generator,
+                baseNoiseLevel
+            )
+        }
     }
 
     @Test
@@ -6171,7 +5978,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
@@ -6180,29 +5986,24 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onError_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                errorListener = listener
+                errorListener = errorListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onError(
             internalGenerator,
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
         verify(exactly = 1) {
-            listener.onError(
+            errorListener.onError(
                 generator,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
@@ -6218,31 +6019,25 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalDetected_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalDetectedListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                staticIntervalDetectedListener = listener
+                staticIntervalDetectedListener = staticIntervalDetectedListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { listener.onStaticIntervalDetected(generator) }
+        verify(exactly = 1) { staticIntervalDetectedListener.onStaticIntervalDetected(generator) }
     }
 
     @Test
@@ -6254,31 +6049,25 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalDetected_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalDetectedListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                dynamicIntervalDetectedListener = listener
+                dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalDetected(internalGenerator)
 
-        verify(exactly = 1) { listener.onDynamicIntervalDetected(generator) }
+        verify(exactly = 1) { dynamicIntervalDetectedListener.onDynamicIntervalDetected(generator) }
     }
 
     @Test
@@ -6290,31 +6079,25 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onStaticIntervalSkipped_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnStaticIntervalSkippedListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                staticIntervalSkippedListener = listener
+                staticIntervalSkippedListener = staticIntervalSkippedListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onStaticIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { listener.onStaticIntervalSkipped(generator) }
+        verify(exactly = 1) { staticIntervalSkippedListener.onStaticIntervalSkipped(generator) }
     }
 
     @Test
@@ -6326,31 +6109,25 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
     }
 
     @Test
     fun onDynamicIntervalSkipped_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnDynamicIntervalSkippedListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                dynamicIntervalSkippedListener = listener
+                dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onDynamicIntervalSkipped(internalGenerator)
 
-        verify(exactly = 1) { listener.onDynamicIntervalSkipped(generator) }
+        verify(exactly = 1) { dynamicIntervalSkippedListener.onDynamicIntervalSkipped(generator) }
     }
 
     @Test
@@ -6362,7 +6139,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyKinematics()
         measurementsGeneratorListener.onGeneratedAccelerometerMeasurement(
             internalGenerator,
@@ -6372,29 +6148,29 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedAccelerometerMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                generatedAccelerometerMeasurementListener = listener
+                generatedAccelerometerMeasurementListener = generatedAccelerometerMeasurementListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyKinematics()
         measurementsGeneratorListener.onGeneratedAccelerometerMeasurement(
             internalGenerator,
             measurement
         )
 
-        verify(exactly = 1) { listener.onGeneratedAccelerometerMeasurement(generator, measurement) }
+        verify(exactly = 1) {
+            generatedAccelerometerMeasurementListener.onGeneratedAccelerometerMeasurement(
+                generator,
+                measurement
+            )
+        }
     }
 
     @Test
@@ -6406,7 +6182,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         measurementsGeneratorListener.onGeneratedGyroscopeMeasurement(
             internalGenerator,
@@ -6416,29 +6191,29 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onGeneratedGyroscopeMeasurement_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedGyroscopeMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                generatedGyroscopeMeasurementListener = listener
+                generatedGyroscopeMeasurementListener = generatedGyroscopeMeasurementListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val measurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
         measurementsGeneratorListener.onGeneratedGyroscopeMeasurement(
             internalGenerator,
             measurement
         )
 
-        verify(exactly = 1) { listener.onGeneratedGyroscopeMeasurement(generator, measurement) }
+        verify(exactly = 1) {
+            generatedGyroscopeMeasurementListener.onGeneratedGyroscopeMeasurement(
+                generator,
+                measurement
+            )
+        }
     }
 
     @Test
@@ -6450,7 +6225,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         measurementsGeneratorListener.onGeneratedMagnetometerMeasurement(
             internalGenerator,
@@ -6460,28 +6234,28 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenListener_makesNoAction() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnGeneratedMagnetometerMeasurementListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            generatedMagnetometerMeasurementListener = listener
+            generatedMagnetometerMeasurementListener = generatedMagnetometerMeasurementListener
         )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         val measurement = StandardDeviationBodyMagneticFluxDensity()
         measurementsGeneratorListener.onGeneratedMagnetometerMeasurement(
             internalGenerator,
             measurement
         )
 
-        verify(exactly = 1) { listener.onGeneratedMagnetometerMeasurement(generator, measurement) }
+        verify(exactly = 1) {
+            generatedMagnetometerMeasurementListener.onGeneratedMagnetometerMeasurement(
+                generator,
+                measurement
+            )
+        }
     }
 
     @Test
@@ -6493,31 +6267,25 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
     }
 
     @Test
     fun onReset_whenListener_notifies() {
-        val listener =
-            mockk<AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnResetListener>(
-                relaxUnitFun = true
-            )
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator =
             AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
                 context,
-                resetListener = listener
+                resetListener = resetListener
             )
 
         val measurementsGeneratorListener: AccelerometerGyroscopeAndMagnetometerMeasurementsGeneratorListener? =
             generator.getPrivateProperty("measurementsGeneratorListener")
         requireNotNull(measurementsGeneratorListener)
 
-        val internalGenerator = mockk<AccelerometerGyroscopeAndMagnetometerMeasurementsGenerator>()
         measurementsGeneratorListener.onReset(internalGenerator)
 
-        verify(exactly = 1) { listener.onReset(generator) }
+        verify(exactly = 1) { resetListener.onReset(generator) }
     }
 
     @Test
@@ -6567,8 +6335,6 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onGyroscopeMeasurementListener_whenListener_setsAngularRates() {
-        val gyroscopeMeasurementListener =
-            mockk<GyroscopeSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
@@ -6825,15 +6591,13 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     @Test
     fun onMagnetometerMeasurementListener_whenListener_setsMagneticFluxDensity() {
-        val magnetometerMeasurementlistener =
-            mockk<MagnetometerSensorCollector.OnMeasurementListener>(relaxUnitFun = true)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
             context,
-            magnetometerMeasurementListener = magnetometerMeasurementlistener
+            magnetometerMeasurementListener = magnetometerMeasurementListener
         )
 
-        assertSame(magnetometerMeasurementlistener, generator.magnetometerMeasurementListener)
+        assertSame(magnetometerMeasurementListener, generator.magnetometerMeasurementListener)
         assertEquals(0, generator.numberOfProcessedMagnetometerMeasurements)
 
         val magnetometerCollectorMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
@@ -6877,7 +6641,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         assertEquals(1, generator.numberOfProcessedMagnetometerMeasurements)
 
         verify(exactly = 1) {
-            magnetometerMeasurementlistener.onMeasurement(
+            magnetometerMeasurementListener.onMeasurement(
                 bx,
                 by,
                 bz,
@@ -6963,7 +6727,7 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
     }
 
     @Test
-    fun onMagnetometerMeasurementListener_whenInitializationCompleted_setsMagnetometerBaseNoiseLevelAndInitialMagneticFlluxDensityNorm() {
+    fun onMagnetometerMeasurementListener_whenInitializationCompleted_setsMagnetometerBaseNoiseLevelAndInitialMagneticFluxDensityNorm() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context)
 

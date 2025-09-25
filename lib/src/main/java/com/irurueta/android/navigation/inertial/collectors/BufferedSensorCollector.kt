@@ -39,6 +39,7 @@ import kotlin.math.min
  * @property stopWhenFilledBuffer true to stop collector when buffer completely fills, false to
  * continue collection at the expense of loosing old data. This will be notified using
  * [bufferFilledListener].
+ * @property skipWhenProcessing true to skip new measurements when processing a measurement.
  * @property accuracyChangedListener listener to notify changes in accuracy.
  * @property bufferFilledListener listener to notify that buffer has been filled. This usually
  * happens when consumer of measurements cannot keep up with the rate at which measurements are
@@ -55,6 +56,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
     val capacity: Int,
     val startOffsetEnabled: Boolean,
     val stopWhenFilledBuffer: Boolean,
+    val skipWhenProcessing: Boolean,
     var accuracyChangedListener: OnAccuracyChangedListener<M, C>?,
     var bufferFilledListener: OnBufferFilledListener<M, C>?,
     var measurementListener: OnMeasurementListener<M, C>?
@@ -73,6 +75,10 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
                 return
             }
 
+            if (skipWhenProcessing && processing) {
+                return
+            }
+
             // when first measurement arrives, compute offset (if enabled). This can be used to
             // synchronize multiple sensors.
             val eventTimestamp = event.timestamp
@@ -84,6 +90,8 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
             val measurement: M
             val bufferPosition: Int
             synchronized(this@BufferedSensorCollector) {
+                processing = true
+
                 // pick available measurement and add it into buffer
                 measurement = if (availableMeasurements.isEmpty()) {
                     // notify buffer is full and no more measurements are available
@@ -92,6 +100,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
 
                     if (stopWhenFilledBuffer) {
                         // stop collector
+                        processing = false
                         stop()
                         return
                     }
@@ -105,6 +114,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
                 if (!updateMeasurementWithSensorEvent(measurement, event)) {
                     // if measurement conversion fails, return it to available measurements collection
                     availableMeasurements.addFirst(measurement)
+                    processing = false
                     return
                 }
                 buffer.add(measurement)
@@ -121,6 +131,8 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
                     measurement,
                     bufferPosition
                 )
+
+                processing = false
             }
         }
 
@@ -237,6 +249,12 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
         private set
 
     /**
+     * Indicates whether collector is processing a measurement.
+     */
+    var processing = false
+        private set
+
+    /**
      * Gets number of processed measurements since this collector started.
      */
     var numberOfProcessedMeasurements: Int = 0
@@ -306,7 +324,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
     fun getMeasurementsBeforePosition(position: Int): Deque<M> {
         measurementsBeforePosition.clear()
         val size = buffer.size
-        for (i in 0 until min(size, position + 1)) {
+        (0 until min(size, position + 1)).forEach { _ ->
             // remove from buffer and add to available measurements to be reused
             val measurement = buffer.removeFirst()
             availableMeasurements.add(measurement)
@@ -355,6 +373,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
         numberOfProcessedMeasurements = 0
         mostRecentTimestamp = 0L
         running = false
+        processing = false
     }
 
     /**
@@ -393,7 +412,7 @@ abstract class BufferedSensorCollector<M : SensorMeasurement<M>, C : BufferedSen
         availableMeasurements.clear()
         availableMeasurementsBeforeTimestamp.clear()
         availableMeasurementsBeforePosition.clear()
-        for (i in 1..capacity) {
+        (1..capacity).forEach { _ ->
             availableMeasurements.add(createEmptyMeasurement())
             availableMeasurementsBeforeTimestamp.add(createEmptyMeasurement())
             availableMeasurementsBeforePosition.add(createEmptyMeasurement())

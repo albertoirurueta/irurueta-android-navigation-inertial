@@ -1,20 +1,27 @@
+/*
+ * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.irurueta.android.navigation.inertial
 
 import com.irurueta.geometry.Quaternion
 import com.irurueta.statistics.UniformRandomizer
-import io.mockk.clearAllMocks
-import io.mockk.unmockkAll
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
+import kotlin.math.sqrt
 
 class QuaternionHelperTest {
-
-    @After
-    fun tearDown() {
-        unmockkAll()
-        clearAllMocks()
-    }
 
     @Test
     fun dotProduct_normalizesAndComputesDotProduct() {
@@ -47,5 +54,31 @@ class QuaternionHelperTest {
         val dot = QuaternionHelper.dotProduct(q1, q2)
 
         assertEquals(expected, dot, 0.0)
+    }
+
+    @Test
+    fun sqrNorm_returnsExpectedValue() {
+        val randomizer = UniformRandomizer()
+        val a = randomizer.nextDouble()
+        val b = randomizer.nextDouble()
+        val c = randomizer.nextDouble()
+        val d = randomizer.nextDouble()
+
+        val q = Quaternion(a, b, c, d)
+
+        assertEquals(a * a + b * b + c * c + d * d, QuaternionHelper.sqrNorm(q), 0.0)
+    }
+
+    @Test
+    fun norm_returnsExpectedValue() {
+        val randomizer = UniformRandomizer()
+        val a = randomizer.nextDouble()
+        val b = randomizer.nextDouble()
+        val c = randomizer.nextDouble()
+        val d = randomizer.nextDouble()
+
+        val q = Quaternion(a, b, c, d)
+
+        assertEquals(sqrt(QuaternionHelper.sqrNorm(q)), QuaternionHelper.norm(q), 0.0)
     }
 }

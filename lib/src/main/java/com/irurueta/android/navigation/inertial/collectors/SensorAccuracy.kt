@@ -53,7 +53,7 @@ enum class SensorAccuracy(val value: Int) {
          * @return sensor accuracy as an enum or null if value has no match.
          */
         fun from(value: Int): SensorAccuracy? {
-            return values().find { it.value == value }
+            return entries.find { it.value == value }
         }
     }
 }

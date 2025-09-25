@@ -875,23 +875,6 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
         measurements.clear()
     }
 
-    /**
-     * Builds required quality scores for PROSAC and PROMedS robust methods.
-     * Quality scores are build for each measurement. By default the standard deviation
-     * of each measurement is taken into account, so that the larger the standard deviation
-     * the poorer the measurement is considered (lower score).
-     *
-     * @return build quality score array.
-     */
-    protected fun buildQualityScores(): DoubleArray {
-        val size = measurements.size
-        val qualityScores = DoubleArray(size)
-        measurements.forEachIndexed { index, measurement ->
-            qualityScores[index] = qualityScoreMapper.map(measurement)
-        }
-        return qualityScores
-    }
-
     companion object {
         /**
          * Indicates when first sensor measurement is obtained.
