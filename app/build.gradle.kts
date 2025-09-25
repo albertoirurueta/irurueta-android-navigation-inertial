@@ -79,8 +79,8 @@ sonar {
         property("sonar.libraries", libraries)
         property("sonar.java.libraries", libraries)
         property("sonar.java.test.libraries", libraries)
-        property("sonar.binaries", "build/intermediates/javac/debug/classes,build/tmp/kotlin-classes/debug")
-        property("sonar.java.binaries", "build/intermediates/javac/debug/classes,build/tmp/kotlin-classes/debug")
+        property("sonar.binaries", "build/intermediates/javac/debug/compileDebugJavaWithJavac/classes,build/tmp/kotlin-classes/debug")
+        property("sonar.java.binaries", "build/intermediates/javac/compileDebugJavaWithJavac/debug/classes,build/tmp/kotlin-classes/debug")
 
         property("sonar.coverage.jacoco.xmlReportPaths",
             listOf("build/reports/coverage/androidTest/debug/connected/report.xml",
