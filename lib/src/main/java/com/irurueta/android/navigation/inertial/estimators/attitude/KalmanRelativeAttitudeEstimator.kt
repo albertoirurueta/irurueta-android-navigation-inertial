@@ -18,7 +18,12 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import android.os.SystemClock
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndGyroscopeSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.old.collectors.SensorType
 import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor2
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation

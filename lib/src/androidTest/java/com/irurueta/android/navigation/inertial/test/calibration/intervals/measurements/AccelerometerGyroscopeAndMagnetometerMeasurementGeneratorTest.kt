@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 package com.irurueta.android.navigation.inertial.test.calibration.intervals.measurements
 
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
+import com.irurueta.android.testutils.RequiresRealDevice
 import org.junit.Before
 import org.junit.Test
 
-@RequiresDevice
 class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -36,10 +35,12 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
         completed = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_generatesMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(context,
+        val generator = AccelerometerGyroscopeAndMagnetometerMeasurementGenerator(
+            context,
             initializationStartedListener = {
                 Log.i(
                     "AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest",
@@ -105,6 +106,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
             }
         )
 
+        generator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        generator.thresholdFactor = THRESHOLD_FACTOR
+
         generator.start()
 
         syncHelper.waitOnCondition({ completed < 1 }, timeout = TIMEOUT)
@@ -114,5 +118,9 @@ class AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorTest {
 
     private companion object {
         const val TIMEOUT = 1000L
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val THRESHOLD_FACTOR = 3.0
     }
 }

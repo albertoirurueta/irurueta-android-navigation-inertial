@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,32 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.builder.InternalAccelerometerCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.intervals.IntervalDetector
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AccelerometerBiasUncertaintySource
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
-import com.irurueta.navigation.inertial.calibration.accelerometer.*
+import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.UnknownBiasAccelerometerCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationConverter
 import com.irurueta.units.AccelerationUnit
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -50,6 +52,9 @@ import kotlin.math.sqrt
  * coordinates. Thus, all values referring to a given x-y-z coordinates refers to local plane
  * NED system of coordinates.
  *
+ * NOTE: This implementation usually doesn't yield good results.
+ * StaticIntervalAccelerometerCalibrator should be used instead for better results.
+ *
  * @property context Android context.
  * @property sensorType One of the supported accelerometer sensor types.
  * @property sensorDelay Delay of sensor between samples.
@@ -60,8 +65,6 @@ import kotlin.math.sqrt
  * @property errorListener listener to notify errors.
  * @property unreliableGravityNormEstimationListener listener to notify when gravity norm estimation
  * becomes unreliable. This is only used if no location is provided.
- * @property initialBiasAvailableListener listener to notify when a guess of bias values is
- * obtained.
  * @property newCalibrationMeasurementAvailableListener listener to notify when a new calibration
  * measurement is obtained.
  * @property readyToSolveCalibrationListener listener to notify when calibrator is ready to be
@@ -73,6 +76,7 @@ import kotlin.math.sqrt
  * @property qualityScoreMapper mapper to convert collected measurements into quality scores,
  * based on the amount of standard deviation (the larger the variability, the worse the score
  * will be).
+ * @see StaticIntervalAccelerometerCalibrator
  */
 class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     context: Context,
@@ -83,18 +87,20 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     initializationCompletedListener: OnInitializationCompletedListener<SingleSensorStaticIntervalAccelerometerCalibrator>?,
     errorListener: OnErrorListener<SingleSensorStaticIntervalAccelerometerCalibrator>?,
     var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
-    var initialBiasAvailableListener: OnInitialBiasAvailableListener?,
     newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalAccelerometerCalibrator, StandardDeviationBodyKinematics>?,
     readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalAccelerometerCalibrator>?,
     calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalAccelerometerCalibrator>?,
     calibrationCompletedListener: OnCalibrationCompletedListener<SingleSensorStaticIntervalAccelerometerCalibrator>?,
     stoppedListener: OnStoppedListener<SingleSensorStaticIntervalAccelerometerCalibrator>?,
     qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>
-) : SingleSensorStaticIntervalCalibrator<SingleSensorStaticIntervalAccelerometerCalibrator,
-        StandardDeviationBodyKinematics, AccelerometerIntervalDetector, AccelerationUnit,
-        Acceleration, AccelerationTriad>(
-    context,
-    sensorDelay, solveCalibrationWhenEnoughMeasurements, initializationStartedListener,
+) : SingleSensorStaticIntervalCalibrator<
+        SingleSensorStaticIntervalAccelerometerCalibrator,
+        StandardDeviationBodyKinematics,
+        AccelerometerIntervalDetector,
+        AccelerationUnit,
+        Acceleration,
+        AccelerationTriad>(
+    context, sensorDelay, solveCalibrationWhenEnoughMeasurements, initializationStartedListener,
     initializationCompletedListener, errorListener, newCalibrationMeasurementAvailableListener,
     readyToSolveCalibrationListener, calibrationSolvingStartedListener,
     calibrationCompletedListener, stoppedListener, qualityScoreMapper
@@ -121,8 +127,6 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      * @param errorListener listener to notify errors.
      * @param unreliableGravityNormEstimationListener listener to notify when gravity norm
      * estimation becomes unreliable. This is only used if no location is provided.
-     * @param initialBiasAvailableListener listener to notify when a guess of bias values is
-     * obtained.
      * @param newCalibrationMeasurementAvailableListener listener to notify when a new calibration
      * measurement is obtained.
      * @param readyToSolveCalibrationListener listener to notify when calibrator is ready to be
@@ -137,8 +141,7 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      */
     constructor(
         context: Context,
-        sensorType: AccelerometerSensorType =
-            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+        sensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
         sensorDelay: SensorDelay = SensorDelay.FASTEST,
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isGroundTruthInitialBias: Boolean = false,
@@ -147,7 +150,6 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         initializationCompletedListener: OnInitializationCompletedListener<SingleSensorStaticIntervalAccelerometerCalibrator>? = null,
         errorListener: OnErrorListener<SingleSensorStaticIntervalAccelerometerCalibrator>? = null,
         unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
-        initialBiasAvailableListener: OnInitialBiasAvailableListener? = null,
         newCalibrationMeasurementAvailableListener: OnNewCalibrationMeasurementAvailableListener<SingleSensorStaticIntervalAccelerometerCalibrator, StandardDeviationBodyKinematics>? = null,
         readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<SingleSensorStaticIntervalAccelerometerCalibrator>? = null,
         calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<SingleSensorStaticIntervalAccelerometerCalibrator>? = null,
@@ -163,7 +165,6 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         initializationCompletedListener,
         errorListener,
         unreliableGravityNormEstimationListener,
-        initialBiasAvailableListener,
         newCalibrationMeasurementAvailableListener,
         readyToSolveCalibrationListener,
         calibrationSolvingStartedListener,
@@ -177,7 +178,6 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         robustPreliminarySubsetSize = minimumRequiredMeasurements
     }
 
-
     /**
      * Listener used by internal interval detector to handle events when initialization is
      * completed.
@@ -189,13 +189,6 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 this@SingleSensorStaticIntervalAccelerometerCalibrator
             )
         }
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val biasTriad = AccelerationTriad()
 
     /**
      * Listener used by the internal interval detector when a static period ends and a dynamic
@@ -244,20 +237,6 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         }
 
     /**
-     * Listener for accelerometer sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for accelerometer bias (only available if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val intervalDetectorMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstMeasurement) {
-                updateInitialBiases(bx, by, bz)
-            }
-        }
-
-    /**
      * Listener for gravity norm estimator.
      * This is used to approximately estimate gravity when no location is provided, by using the
      * gravity sensor provided by the device.
@@ -283,17 +262,15 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
     /**
      * Internal interval detector to detect periods when device remains static.
      */
-    override val intervalDetector: AccelerometerIntervalDetector =
-        AccelerometerIntervalDetector(
-            context,
-            sensorType,
-            sensorDelay,
-            intervalDetectorInitializationStartedListener,
-            intervalDetectorInitializationCompletedListener,
-            intervalDetectorErrorListener,
-            dynamicIntervalDetectedListener = intervalDetectorDynamicIntervalDetectedListener,
-            measurementListener = intervalDetectorMeasurementListener
-        )
+    override val intervalDetector = AccelerometerIntervalDetector(
+        context,
+        sensorType,
+        sensorDelay,
+        intervalDetectorInitializationStartedListener,
+        intervalDetectorInitializationCompletedListener,
+        intervalDetectorErrorListener,
+        dynamicIntervalDetectedListener = intervalDetectorDynamicIntervalDetectedListener
+    )
 
     /**
      * Gravity norm estimator. It is used to estimate gravity norm when no location is provided.
@@ -330,249 +307,212 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         private set
 
     /**
-     * Gets X-coordinate of bias used as an initial guess and expressed in meters per squared second
-     * (m/s^2).
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
-     * equal to this value, otherwise [estimatedBiasX] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasX].
+     * Gets or sets X-coordinate of bias used as an initial guess and expressed in meters per
+     * squared second (m/s^2).
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasX] will be equal to this value, otherwise [estimatedBiasX] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasX].
+     *
+     * @throws IllegalStateException if calibrator is currently running.
      */
-    var initialBiasX: Double? = null
-        private set
+    var initialBiasX: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
 
     /**
-     * Gets Y-coordinate of bias used as an initial guess and expressed in meters per squared second
-     * (m/s^2).
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
-     * equal to this value, otherwise [estimatedBiasY] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasY].
+     * Gets or sets Y-coordinate of bias used as an initial guess and expressed in meters per
+     * squared second (m/s^2).
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasY] will be equal to this value, otherwise [estimatedBiasY] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasY].
+     *
+     * @throws IllegalStateException if calibrator is currently running.
      */
-    var initialBiasY: Double? = null
-        private set
+    var initialBiasY: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
 
     /**
      * Gets Z-coordinate of bias used as an initial guess and expressed in meters per squared second
      * (m/s^2).
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
-     * equal to this value, otherwise [estimatedBiasZ] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasZ].
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasZ] will be equal to this value, otherwise [estimatedBiasZ] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasZ].
+     *
+     * @throws IllegalStateException if calibrator is currently running.
      */
-    var initialBiasZ: Double? = null
-        private set
+    var initialBiasZ: Double = 0.0
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            field = value
+        }
 
     /**
-     * Gets X-coordinate of bias used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
-     * equal to this value, otherwise [estimatedBiasX] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasX].
+     * Gets or sets X-coordinate of bias used as an initial guess.
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasX] will be equal to this value, otherwise [estimatedBiasX] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasX].
+     *
+     * @throws IllegalStateException if calibrator is currently running.
      */
-    val initialBiasXAsMeasurement: Acceleration?
+    var initialBiasXAsMeasurement: Acceleration
         get() {
-            val initialBiasX = this.initialBiasX ?: return null
             return Acceleration(initialBiasX, AccelerationUnit.METERS_PER_SQUARED_SECOND)
         }
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            initialBiasX = AccelerationConverter.convert(
+                value.value.toDouble(),
+                value.unit,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+        }
 
     /**
      * Gets X-coordinate of bias used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasX] will be
-     * equal to this value, otherwise [estimatedBiasX] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasX].
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasX] will be equal to this value, otherwise [estimatedBiasX] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasX].
      *
      * @param result instance where result will be stored.
-     * @return true if initial bias is available, false otherwise.
      */
-    fun getInitialBiasXAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasX = this.initialBiasX
-        return if (initialBiasX != null) {
-            result.value = initialBiasX
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            true
-        } else {
-            false
-        }
+    fun getInitialBiasXAsMeasurement(result: Acceleration) {
+        result.value = initialBiasX
+        result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
     }
 
     /**
-     * Gets Y-coordinate of bias used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
-     * equal to this value, otherwise [estimatedBiasY] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasY].
-     */
-    val initialBiasYAsMeasurement: Acceleration?
-        get() {
-            val initialBiasY = this.initialBiasY ?: return null
-            return Acceleration(initialBiasY, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        }
-
-    /**
-     * Gets Y-coordinate of bias used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasY] will be
-     * equal to this value, otherwise [estimatedBiasY] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasY].
-     */
-    fun getInitialBiasYAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasY = this.initialBiasY
-        return if (initialBiasY != null) {
-            result.value = initialBiasY
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            true
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets Z-coordinate of bias used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
-     * equal to this value, otherwise [estimatedBiasZ] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasZ].
-     */
-    val initialBiasZAsMeasurement: Acceleration?
-        get() {
-            val initialBiasZ = this.initialBiasZ ?: return null
-            return Acceleration(initialBiasZ, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        }
-
-    /**
-     * Gets Z-coordinate of bias used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the value used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasZ] will be
-     * equal to this value, otherwise [estimatedBiasZ] will be the estimated bias after solving
-     * calibration, which will differ from [estimatedBiasZ].
-     */
-    fun getInitialBiasZAsMeasurement(result: Acceleration): Boolean {
-        val initialBiasZ = this.initialBiasZ
-        return if (initialBiasZ != null) {
-            result.value = initialBiasZ
-            result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
-            true
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets initial bias coordinates used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the values used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasAsTriad]
-     * will be equal to this value, otherwise [estimatedBiasAsTriad] will be the estimated bias
-     * after solving calibration, which will differ from [estimatedBiasAsTriad].
-     */
-    val initialBiasAsTriad: AccelerationTriad?
-        get() {
-            val initialBiasX = this.initialBiasX
-            val initialBiasY = this.initialBiasY
-            val initialBiasZ = this.initialBiasZ
-            return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
-                AccelerationTriad(
-                    AccelerationUnit.METERS_PER_SQUARED_SECOND,
-                    initialBiasX,
-                    initialBiasY,
-                    initialBiasZ
-                )
-            } else {
-                null
-            }
-        }
-
-    /**
-     * Gets initial bias coordinates used as an initial guess.
-     * This value is determined once the calibrator starts.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED], this
-     * will be equal to the values used internally by the device as part of the accelerometer
-     * hardware calibration.
-     * If [sensorType] is [AccelerometerSensorType.ACCELEROMETER], then
-     * accelerometer sensor measurements are assumed to be already bias compensated, and the initial
-     * bias is assumed to be zero.
-     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and [estimatedBiasAsTriad]
-     * will be equal to this value, otherwise [estimatedBiasAsTriad] will be the estimated bias
-     * after solving calibration, which will differ from [estimatedBiasAsTriad].
+     * Gets or sets Y-coordinate of bias used as an initial guess.
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasY] will be equal to this value, otherwise [estimatedBiasY] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasY].
      *
-     * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
+     * @throws IllegalStateException if calibrator is currently running.
      */
-    fun getInitialBiasAsTriad(result: AccelerationTriad): Boolean {
-        val initialBiasX = this.initialBiasX
-        val initialBiasY = this.initialBiasY
-        val initialBiasZ = this.initialBiasZ
-        return if (initialBiasX != null && initialBiasY != null && initialBiasZ != null) {
-            result.setValueCoordinatesAndUnit(
-                initialBiasX,
+    var initialBiasYAsMeasurement: Acceleration
+        get() {
+            return Acceleration(
                 initialBiasY,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+        }
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            initialBiasY = AccelerationConverter.convert(
+                value.value.toDouble(),
+                value.unit,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+        }
+
+    /**
+     * Gets Y-coordinate of bias used as an initial guess.
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasY] will be equal to this value, otherwise [estimatedBiasY] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasY].
+     */
+    fun getInitialBiasYAsMeasurement(result: Acceleration) {
+        result.value = initialBiasY
+        result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+    }
+
+    /**
+     * Gets or sets Z-coordinate of bias used as an initial guess.
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasZ] will be equal to this value, otherwise [estimatedBiasZ] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasZ].
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var initialBiasZAsMeasurement: Acceleration
+        get() {
+            return Acceleration(
                 initialBiasZ,
                 AccelerationUnit.METERS_PER_SQUARED_SECOND
             )
-            true
-        } else {
-            false
         }
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            initialBiasZ = AccelerationConverter.convert(
+                value.value.toDouble(),
+                value.unit,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+        }
+
+    /**
+     * Gets Z-coordinate of bias used as an initial guess.
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasZ] will be equal to this value, otherwise [estimatedBiasZ] will be the
+     * estimated bias after solving calibration, which will differ from [estimatedBiasZ].
+     */
+    fun getInitialBiasZAsMeasurement(result: Acceleration) {
+        result.value = initialBiasZ
+        result.unit = AccelerationUnit.METERS_PER_SQUARED_SECOND
+    }
+
+    /**
+     * Gets or sets initial bias coordinates used as an initial guess.
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasAsTriad] will be equal to this value, otherwise [estimatedBiasAsTriad] will be
+     * the estimated bias after solving calibration, which will differ from [estimatedBiasAsTriad].
+     *
+     * @throws IllegalStateException if calibrator is currently running.
+     */
+    var initialBiasAsTriad: AccelerationTriad
+        get() {
+            return AccelerationTriad(
+                AccelerationUnit.METERS_PER_SQUARED_SECOND,
+                initialBiasX,
+                initialBiasY,
+                initialBiasZ
+            )
+        }
+        @Throws(IllegalStateException::class)
+        set(value) {
+            check(!running)
+            initialBiasX = AccelerationConverter.convert(
+                value.valueX,
+                value.unit,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+            initialBiasY = AccelerationConverter.convert(
+                value.valueY,
+                value.unit,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+            initialBiasZ = AccelerationConverter.convert(
+                value.valueZ,
+                value.unit,
+                AccelerationUnit.METERS_PER_SQUARED_SECOND
+            )
+        }
+
+    /**
+     * Gets initial bias coordinates used as an initial guess.
+     * If [isGroundTruthInitialBias] is true, this is assumed to be the true bias, and
+     * [estimatedBiasAsTriad] will be equal to this value, otherwise [estimatedBiasAsTriad] will be
+     * the estimated bias after solving calibration, which will differ from [estimatedBiasAsTriad].
+     *
+     * @param result instance where result will be stored.
+     */
+    fun getInitialBiasAsTriad(result: AccelerationTriad) {
+        result.setValueCoordinatesAndUnit(
+            initialBiasX,
+            initialBiasY,
+            initialBiasZ,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
     }
 
     /**
@@ -925,6 +865,39 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         get() = internalCalibrator?.estimatedChiSq
 
     /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    override val estimatedChiSqDegreesOfFreedom
+        get() = internalCalibrator?.estimatedChiSqDegreesOfFreedom
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    override val estimatedReducedChiSq
+        get() = internalCalibrator?.estimatedReducedChiSq
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    override val estimatedP
+        get() = internalCalibrator?.estimatedP
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    override val estimatedQ
+        get() = internalCalibrator?.estimatedQ
+
+    /**
      * Gets estimated mean square error respect to provided measurements or null if not available.
      */
     override val estimatedMse
@@ -943,9 +916,11 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFx
                 }
+
                 is KnownBiasAccelerometerCalibrator -> {
                     internalCalibrator.biasX
                 }
+
                 else -> {
                     null
                 }
@@ -965,9 +940,11 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFy
                 }
+
                 is KnownBiasAccelerometerCalibrator -> {
                     internalCalibrator.biasY
                 }
+
                 else -> {
                     null
                 }
@@ -987,9 +964,11 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFz
                 }
+
                 is KnownBiasAccelerometerCalibrator -> {
                     internalCalibrator.biasZ
                 }
+
                 else -> {
                     null
                 }
@@ -1008,9 +987,11 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFxAsAcceleration
                 }
+
                 is KnownBiasAccelerometerCalibrator -> {
                     internalCalibrator.biasXAsAcceleration
                 }
+
                 else -> {
                     null
                 }
@@ -1031,10 +1012,12 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFxAsAcceleration(result)
             }
+
             is KnownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getBiasXAsAcceleration(result)
                 true
             }
+
             else -> {
                 false
             }
@@ -1053,9 +1036,11 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFyAsAcceleration
                 }
+
                 is KnownBiasAccelerometerCalibrator -> {
                     internalCalibrator.biasYAsAcceleration
                 }
+
                 else -> {
                     null
                 }
@@ -1076,10 +1061,12 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFyAsAcceleration(result)
             }
+
             is KnownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getBiasYAsAcceleration(result)
                 true
             }
+
             else -> {
                 false
             }
@@ -1098,9 +1085,11 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasFzAsAcceleration
                 }
+
                 is KnownBiasAccelerometerCalibrator -> {
                     internalCalibrator.biasZAsAcceleration
                 }
+
                 else -> {
                     null
                 }
@@ -1121,10 +1110,12 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasFzAsAcceleration(result)
             }
+
             is KnownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getBiasZAsAcceleration(result)
                 true
             }
+
             else -> {
                 false
             }
@@ -1143,9 +1134,11 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
                 is UnknownBiasAccelerometerCalibrator -> {
                     internalCalibrator.estimatedBiasAsTriad
                 }
+
                 is KnownBiasAccelerometerCalibrator -> {
                     internalCalibrator.biasAsTriad
                 }
+
                 else -> {
                     null
                 }
@@ -1166,10 +1159,12 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
             is UnknownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getEstimatedBiasAsTriad(result)
             }
+
             is KnownBiasAccelerometerCalibrator -> {
                 internalCalibrator.getBiasAsTriad(result)
                 true
             }
+
             else -> {
                 false
             }
@@ -1264,52 +1259,7 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
         super.reset()
         gravityNorm = null
         resultUnreliable = false
-        initialBiasX = null
-        initialBiasY = null
-        initialBiasZ = null
-
         internalCalibrator = null
-    }
-
-    /**
-     * Updates initial biases values when first accelerometer measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used.
-     *
-     * @param bx x-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param by y-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param bz z-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     */
-    private fun updateInitialBiases(bx: Float?, by: Float?, bz: Float?) {
-        val initialBiasX: Double
-        val initialBiasY: Double
-        val initialBiasZ: Double
-        if (bx != null && by != null && bz != null) {
-            initialBiasX = bx.toDouble()
-            initialBiasY = by.toDouble()
-            initialBiasZ = bz.toDouble()
-        } else {
-            initialBiasX = 0.0
-            initialBiasY = 0.0
-            initialBiasZ = 0.0
-        }
-
-        // convert from device ENU coordinate to local plane NED coordinates
-        ENUtoNEDConverter.convert(initialBiasX, initialBiasY, initialBiasZ, biasTriad)
-
-        this.initialBiasX = biasTriad.valueX
-        this.initialBiasY = biasTriad.valueY
-        this.initialBiasZ = biasTriad.valueZ
-
-        initialBiasAvailableListener?.onInitialBiasAvailable(
-            this,
-            biasTriad.valueX,
-            biasTriad.valueY,
-            biasTriad.valueZ
-        )
     }
 
     /**
@@ -1320,7 +1270,7 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildInternalCalibrator(): AccelerometerNonLinearCalibrator {
-        return AccelerometerInternalCalibratorBuilder(
+        return InternalAccelerometerCalibratorBuilder(
             measurements,
             robustPreliminarySubsetSize,
             minimumRequiredMeasurements,
@@ -1436,29 +1386,5 @@ class SingleSensorStaticIntervalAccelerometerCalibrator private constructor(
          * @param calibrator calibrator that raised the event.
          */
         fun onUnreliableGravityEstimation(calibrator: SingleSensorStaticIntervalAccelerometerCalibrator)
-    }
-
-    /**
-     * Interface to notify when initial bias guess is available.
-     * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value after
-     * solving calibration, otherwise, initial bias is considered only an initial guess.
-     */
-    fun interface OnInitialBiasAvailableListener {
-        /**
-         * Called when initial bias is available.
-         * If [isGroundTruthInitialBias] is true, then initial bias is considered the true value
-         * after solving calibration, otherwise, initial bias is considered only an initial guess.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param biasX x-coordinate of bias expressed in meters per squared second (m/s^2).
-         * @param biasY y-coordinate of bias expressed in meters per squared second (m/s^2).
-         * @param biasZ z-coordinate of bias expressed in meters per squared second (m/s^2).
-         */
-        fun onInitialBiasAvailable(
-            calibrator: SingleSensorStaticIntervalAccelerometerCalibrator,
-            biasX: Double,
-            biasY: Double,
-            biasZ: Double
-        )
     }
 }

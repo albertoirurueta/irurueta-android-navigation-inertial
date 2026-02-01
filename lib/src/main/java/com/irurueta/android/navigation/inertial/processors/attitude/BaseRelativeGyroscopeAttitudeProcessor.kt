@@ -16,8 +16,8 @@
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.units.TimeConverter

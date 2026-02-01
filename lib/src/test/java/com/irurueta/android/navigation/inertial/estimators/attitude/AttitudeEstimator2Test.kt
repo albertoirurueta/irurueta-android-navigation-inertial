@@ -18,12 +18,12 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorCollector2
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.old.collectors.AttitudeSensorCollector2
+import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.collectors.SensorType
+import com.irurueta.android.navigation.inertial.old.collectors.SensorType
 import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty

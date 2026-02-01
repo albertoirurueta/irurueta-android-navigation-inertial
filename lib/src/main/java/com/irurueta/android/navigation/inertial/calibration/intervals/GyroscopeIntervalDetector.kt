@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.intervals.AngularSpeedTriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.AngularSpeedTriadStaticIntervalDetectorListener
@@ -42,6 +44,21 @@ import com.irurueta.units.TimeConverter
  * This interval detector converts sensor measurements from device ENU coordinates to local plane
  * NED coordinates. Thus, all values referring to a given x-y-z coordinate refers to local plane
  * NED system of coordinates.
+ *
+ * @property context Android context.
+ * @property sensorType One of the supported gyroscope sensor types.
+ * @property sensorDelay Delay of sensor between samples.
+ * @property initializationStartedListener listener to notify when this detector starts
+ * initialization after being started.
+ * @property initializationCompletedListener listener to notify when this detector completes
+ * initialization after being started.
+ * @property errorListener listener to notify errors such as sudden motion during initialization or
+ * sensor unreliability.
+ * @property staticIntervalDetectedListener listener to notify when a new static interval is
+ * detected.
+ * @property dynamicIntervalDetectedListener listener to notify when a new dynamic interval is
+ * detected.
+ * @property resetListener listener to notify when a reset occurs.
  */
 class GyroscopeIntervalDetector(
     context: Context,
@@ -53,8 +70,6 @@ class GyroscopeIntervalDetector(
     staticIntervalDetectedListener: OnStaticIntervalDetectedListener<GyroscopeIntervalDetector>? = null,
     dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<GyroscopeIntervalDetector>? = null,
     resetListener: OnResetListener<GyroscopeIntervalDetector>? = null,
-    var measurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) : IntervalDetector<GyroscopeIntervalDetector, GyroscopeSensorCollector, AngularSpeedUnit,
         AngularSpeed, AngularSpeedTriad, AngularSpeedTriadStaticIntervalDetector,
         AngularSpeedTriadStaticIntervalDetectorListener>(
@@ -65,16 +80,20 @@ class GyroscopeIntervalDetector(
     errorListener,
     staticIntervalDetectedListener,
     dynamicIntervalDetectedListener,
-    resetListener,
-    accuracyChangedListener
+    resetListener
 ) {
     /**
-     * Listener for interval detector.
+     * Listener for internal interval detector.
      */
     override val internalDetectorListener =
         object : AngularSpeedTriadStaticIntervalDetectorListener {
-            override fun onInitializationStarted(detector: AngularSpeedTriadStaticIntervalDetector?) {
-                initializationStartedListener?.onInitializationStarted(this@GyroscopeIntervalDetector)
+            override fun onInitializationStarted(
+                detector: AngularSpeedTriadStaticIntervalDetector?
+            ) {
+                initializationStartedListener?.onInitializationStarted(
+                    this@GyroscopeIntervalDetector
+                )
+
             }
 
             override fun onInitializationCompleted(
@@ -94,7 +113,8 @@ class GyroscopeIntervalDetector(
                 reason: TriadStaticIntervalDetector.ErrorReason
             ) {
                 stop()
-                errorListener?.onError(this@GyroscopeIntervalDetector, mapErrorReason(reason))
+                errorListener?.onError(this@GyroscopeIntervalDetector,
+                    mapErrorReason(reason))
             }
 
             override fun onStaticIntervalDetected(
@@ -169,43 +189,57 @@ class GyroscopeIntervalDetector(
     private val angularSpeed = AngularSpeedTriad()
 
     /**
-     * Internal listener for gyroscope sensor collector.
+     * Gyroscope sensor measurement expressed in NED coordinates.
+     */
+    private val nedMeasurement = GyroscopeSensorMeasurement()
+
+    /**
+     * Internal listener for accelerometer sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
      */
-    private val internalMeasurementListener =
-        GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
-            val status = status
-            if (status == Status.INITIALIZING) {
-                // during initialization phase, also estimate time interval duration.
-                if (numberOfProcessedMeasurements > 0) {
-                    val diff = timestamp - initialTimestamp
-                    val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-                    timeIntervalEstimator.addTimestamp(diffSeconds)
-                } else {
-                    initialTimestamp = timestamp
-                }
+    private val measurementListener = SensorCollector.OnMeasurementListener<
+            GyroscopeSensorMeasurement, GyroscopeSensorCollector> { _, measurement ->
+        val status = status
+        if (status == Status.INITIALIZING) {
+            // during initialization phase, also estimate time interval duration.
+            if (numberOfProcessedMeasurements > 0) {
+                val diff = measurement.timestamp - initialTimestamp
+                val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+                timeIntervalEstimator.addTimestamp(diffSeconds)
+            } else {
+                initialTimestamp = measurement.timestamp
             }
-
-            // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDConverter.convert(
-                wx.toDouble(),
-                wy.toDouble(),
-                wz.toDouble(),
-                angularSpeed
-            )
-
-            internalDetector.process(angularSpeed.valueX, angularSpeed.valueY, angularSpeed.valueZ)
-            numberOfProcessedMeasurements++
-
-            if (status == Status.INITIALIZATION_COMPLETED) {
-                // once initialized, set time interval into internal detector
-                internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
-                initialized = true
-            }
-
-            measurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
         }
+
+        // convert from device ENU coordinates to local plane NED coordinates
+        measurement.toNed(nedMeasurement)
+        nedMeasurement.toTriad(angularSpeed)
+
+        internalDetector.process(angularSpeed)
+        numberOfProcessedMeasurements++
+
+        if (status == Status.INITIALIZATION_COMPLETED) {
+            // once initialized, set time interval into internal detector
+            internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
+            initialized = true
+        }
+    }
+
+    /**
+     * Listener to detect when accuracy of accelerometer sensor changes.
+     * When sensor becomes unreliable, an error is notified.
+     */
+    private val accuracyChangedListener = SensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, GyroscopeSensorCollector> { _, accuracy ->
+        if (accuracy == SensorAccuracy.UNRELIABLE) {
+            stop()
+            unreliable = true
+            errorListener?.onError(
+                this,
+                ErrorReason.UNRELIABLE_SENSOR
+            )
+        }
+    }
 
     /**
      * Gyroscope sensor collector.
@@ -215,7 +249,7 @@ class GyroscopeIntervalDetector(
         context,
         sensorType,
         sensorDelay,
-        internalMeasurementListener,
-        internalAccuracyChangedListener
+        accuracyChangedListener,
+        measurementListener
     )
 }

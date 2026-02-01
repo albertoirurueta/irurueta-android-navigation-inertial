@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,88 +13,69 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedMeasurementNoiseEstimator
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.units.AngularSpeed
-import com.irurueta.units.AngularSpeedUnit
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
- * Estimates gyroscope measurement norm.
- * This estimator takes a given number of gyroscope measurements during a given duration of time
+ * Estimates gyroscope norm.
+ * This estimator takes a given number of measurements during a given duration of time
  * to estimate gyroscope norm average, standard deviation and variance, as well as average time
  * interval between measurements.
  * For best accuracy of estimated results, device should remain static while data is being
- * collected. In such case, average gyroscope norm should match expected Earth rotation rate.
+ * collected. In such case, average gyroscope norm should be close to zero or Earth rotation rate
+ * (depending on the accuracy of the sensor).
  *
  * @param context Android context.
- * @property sensorType One of the supported gyroscope sensor types.
  * @param sensorDelay Delay of sensor between samples.
  * @param maxSamples Maximum number of samples to take into account before completion. This is
  * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
  * [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
- * before completion. This is only taken into account if using either
- * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
+ * before completion. This is only taken into account if using either [StopMode.MAX_DURATION_ONLY]
+ * or [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param stopMode Determines when this estimator will consider its estimation completed.
- * @param completedListener Listener to notify when estimation is complete.
- * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
- * estimation must be discarded.
- * @property measurementListener Listener to notify collected sensor measurements.
- * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
+ * @param completedListener listener to notify when estimation completes.
+ * @param unreliableListener listener to notify when measurements become unreliable.
  */
 class GyroscopeNormEstimator(
     context: Context,
     val sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    maxSamples: Int = DEFAULT_MAX_SAMPLES,
-    maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
+    maxSamples: Int = BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+    maxDurationMillis: Long = BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<GyroscopeNormEstimator>? = null,
-    unreliableListener: OnUnreliableListener<GyroscopeNormEstimator>? = null,
-    var measurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
-) : AccumulatedMeasurementEstimator<GyroscopeNormEstimator,
-        AccumulatedAngularSpeedMeasurementNoiseEstimator, GyroscopeSensorCollector,
-        AngularSpeedUnit, AngularSpeed>(
+    unreliableListener: OnUnreliableListener<GyroscopeNormEstimator>? = null
+) : AccumulatedMeasurementEstimator<GyroscopeNormEstimator, GyroscopeNormProcessor,
+        GyroscopeSensorCollector, AngularSpeed, GyroscopeSensorMeasurement>(
     context,
     sensorDelay,
-    maxSamples,
-    maxDurationMillis,
-    stopMode,
     completedListener,
-    unreliableListener
+    unreliableListener,
 ) {
     /**
-     * Listener to handle gyroscope measurements.
+     * Internal processor that processes measurements.
      */
-    private val gyroscopeMeasurementListener =
-        GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
-            val norm =
-                sqrt(wx.toDouble().pow(2.0) + wy.toDouble().pow(2.0) + wz.toDouble().pow(2.0))
-            handleMeasurement(norm, timestamp, accuracy)
-            measurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
-        }
+    override val processor = GyroscopeNormProcessor(
+        maxSamples,
+        maxDurationMillis,
+        stopMode)
 
     /**
-     * Internal noise estimator of gyroscope magnitude measurements.
-     * This can be used to estimate statistics about a given measurement magnitude.
-     */
-    override val noiseEstimator = AccumulatedAngularSpeedMeasurementNoiseEstimator()
-
-    /**
-     * Collector for gyroscope measurements.
+     * Internal collector that collects measurements.
      */
     override val collector = GyroscopeSensorCollector(
         context,
         sensorType,
         sensorDelay,
-        gyroscopeMeasurementListener,
-        accuracyChangedListener
+        accuracyChangedListener,
+        measurementListener,
     )
 }

@@ -15,8 +15,12 @@
  */
 package com.irurueta.android.navigation.inertial.processors.pose
 
-import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.LeveledRelativeAttitudeProcessor
 
 /**

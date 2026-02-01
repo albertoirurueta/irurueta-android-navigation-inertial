@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.builder.InternalMagnetometerCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.MagnetometerMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.MagnetometerMeasurementGeneratorProcessor
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematicsAndMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
@@ -36,9 +39,8 @@ import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIron
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import com.irurueta.units.MagneticFluxDensity
-import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
-import java.util.*
+import java.util.Date
 
 /**
  * Collects accelerometer and magnetometer measurements by detecting periods when device remains
@@ -71,9 +73,6 @@ import java.util.*
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
  * @property calibrationCompletedListener listener to notify when calibration solving completes.
  * @property stoppedListener listener to notify when calibrator is stopped.
- * @property initialMagnetometerHardIronAvailableListener listener to notify when a guess of hard
- * iron values is obtained.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @property magnetometerQualityScoreMapper mapper to convert collected magnetometer measurements
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
  * worse the score will be).
@@ -97,10 +96,11 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>?,
     calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>?,
     stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalMagnetometerCalibrator>?,
-    var initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener?,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
-) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalMagnetometerCalibrator, BodyKinematicsAndMagneticFluxDensity>(
+) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<
+        StaticIntervalMagnetometerCalibrator,
+        BodyKinematicsAndMagneticFluxDensity,
+        MagnetometerMeasurementGeneratorProcessor>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -115,8 +115,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     readyToSolveCalibrationListener,
     calibrationSolvingStartedListener,
     calibrationCompletedListener,
-    stoppedListener,
-    accuracyChangedListener
+    stoppedListener
 ) {
     /**
      * Constructor.
@@ -155,9 +154,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      * @param calibrationSolvingStartedListener listener to notify when calibration solving starts.
      * @param calibrationCompletedListener listener to notify when calibration solving completes.
      * @param stoppedListener listener to notify when calibrator is stopped.
-     * @param initialMagnetometerHardIronAvailableListener listener to notify when a guess of hard
-     * iron values is obtained.
-     * @param accuracyChangedListener listener to notify when sensor accuracy changes.
      * @param magnetometerQualityScoreMapper mapper to convert collected magnetometer measurements
      * into quality scores, based on the amount of standard deviation (the larger the variability, the
      * worse the score will be).
@@ -187,8 +183,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalMagnetometerCalibrator>? = null,
         calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalMagnetometerCalibrator>? = null,
         stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalMagnetometerCalibrator>? = null,
-        initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener? = null,
-        accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
         magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity> = DefaultMagnetometerQualityScoreMapper()
     ) : this(
         context,
@@ -209,8 +203,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         calibrationSolvingStartedListener,
         calibrationCompletedListener,
         stoppedListener,
-        initialMagnetometerHardIronAvailableListener,
-        accuracyChangedListener,
         magnetometerQualityScoreMapper
     ) {
         this.location = location
@@ -220,14 +212,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         requiredMeasurements = minimumRequiredMeasurements
         magnetometerRobustPreliminarySubsetSize = minimumRequiredMeasurements
     }
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val biasTriad = MagneticFluxDensityTriad()
-
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -332,32 +316,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         }
 
     /**
-     * Listener for magnetometer sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for magnetometer hard iron values (only available if
-     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
-     * hard iron is assumed as an initial guess).
-     */
-    private val generatorMagnetometerMeasurementListener =
-        MagnetometerSensorCollector.OnMeasurementListener { _, _, _, hardIronX, hardIronY, hardIronZ, _, _ ->
-            if (isFirstMagnetometerMeasurement) {
-                val hardIronXTesla = if (hardIronX != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble())
-                else
-                    null
-                val hardIronYTesla = if (hardIronY != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble())
-                else
-                    null
-                val hardIronZTesla = if (hardIronZ != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble())
-                else
-                    null
-                updateMagnetometerInitialHardIrons(hardIronXTesla, hardIronYTesla, hardIronZTesla)
-            }
-        }
-
-    /**
      * Internal generator to generate measurements for calibration.
      */
     override val generator = MagnetometerMeasurementGenerator(
@@ -373,9 +331,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         generatorDynamicIntervalDetectedListener,
         generatorStaticIntervalSkippedListener,
         generatorDynamicIntervalSkippedListener,
-        generatorGeneratedMeasurementListener,
-        magnetometerMeasurementListener = generatorMagnetometerMeasurementListener,
-        accuracyChangedListener = accuracyChangedListener
+        generatorGeneratedMeasurementListener
     )
 
     /**
@@ -1273,6 +1229,39 @@ class StaticIntervalMagnetometerCalibrator private constructor(
         get() = magnetometerInternalCalibrator?.estimatedChiSq
 
     /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    val estimatedMagnetometerChiSqDegreesOfFreedom: Int?
+        get() = magnetometerInternalCalibrator?.estimatedChiSqDegreesOfFreedom
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    val estimatedMagnetometerReducedChiSq: Double?
+        get() = magnetometerInternalCalibrator?.estimatedReducedChiSq
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    val estimatedMagnetometerP: Double?
+        get() = magnetometerInternalCalibrator?.estimatedP
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    val estimatedMagnetometerQ: Double?
+        get() = magnetometerInternalCalibrator?.estimatedQ
+
+    /**
      * Gets estimated mean square error respect to provided magnetometer measurements or null if
      * not available.
      */
@@ -1622,65 +1611,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
     }
 
     /**
-     * Updates initial hard iron values when first magnetometer measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used.
-     *
-     * @param hardIronX hard iron on device x-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param hardIronY hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param hardIronZ hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     */
-    private fun updateMagnetometerInitialHardIrons(
-        hardIronX: Double?,
-        hardIronY: Double?,
-        hardIronZ: Double?
-    ) {
-        val initialHardIronX: Double
-        val initialHardIronY: Double
-        val initialHardIronZ: Double
-        if (hardIronX != null && hardIronY != null && hardIronZ != null) {
-            initialHardIronX = hardIronX
-            initialHardIronY = hardIronY
-            initialHardIronZ = hardIronZ
-        } else {
-            initialHardIronX = 0.0
-            initialHardIronY = 0.0
-            initialHardIronZ = 0.0
-        }
-
-        // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDConverter.convert(
-            initialHardIronX,
-            initialHardIronY,
-            initialHardIronZ,
-            biasTriad
-        )
-
-        magnetometerInitialHardIronX = biasTriad.valueX
-        magnetometerInitialHardIronY = biasTriad.valueY
-        magnetometerInitialHardIronZ = biasTriad.valueZ
-
-        initialMagnetometerHardIronAvailableListener?.onInitialHardIronAvailable(
-            this,
-            biasTriad.valueX,
-            biasTriad.valueY,
-            biasTriad.valueZ
-        )
-    }
-
-    /**
-     * Indicates whether the generator has picked the first accelerometer measurement.
-     */
-    private val isFirstMagnetometerMeasurement: Boolean
-        get() = generator.numberOfProcessedMagnetometerMeasurements <= FIRST_MEASUREMENT
-
-    /**
      * Builds an internal magnetometer calibrator based on all provided parameters.
      *
      * @return an internal magnetometer calibrator.
@@ -1688,7 +1618,7 @@ class StaticIntervalMagnetometerCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildMagnetometerInternalCalibrator(): MagnetometerNonLinearCalibrator {
-        return MagnetometerInternalCalibratorBuilder(
+        return InternalMagnetometerCalibratorBuilder(
             magnetometerMeasurements,
             magnetometerRobustPreliminarySubsetSize,
             minimumRequiredMagnetometerMeasurements,
@@ -1802,11 +1732,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
          */
         const val MAGNETOMETER_KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL =
             MAGNETOMETER_KNOWN_HARD_IRON_GENERAL_UNKNOWNS + 1
-
-        /**
-         * Indicates when first sensor measurement is obtained.
-         */
-        private const val FIRST_MEASUREMENT = 1
     }
 
     /**
@@ -1827,33 +1752,6 @@ class StaticIntervalMagnetometerCalibrator private constructor(
             measurement: StandardDeviationBodyMagneticFluxDensity,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
-        )
-    }
-
-    /**
-     * Interface to notify when initial hard iron guess is available.
-     * If [isMagnetometerGroundTruthInitialHardIron] is true, then initial hard iron is considered
-     * the true value after solving calibration, otherwise, initial hard iron is considered only an
-     * initial guess.
-     */
-    fun interface OnInitialMagnetometerHardIronAvailableListener {
-
-        /**
-         * Called when initial hard iron is available.
-         * If [isMagnetometerGroundTruthInitialHardIron] is true, then initial hard iron is considered
-         * the true value after solving calibration, otherwise, initial hard iron is considered only an
-         * initial guess.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param hardIronX x-coordinate of hard iron expressed in micro-Teslas (µT).
-         * @param hardIronY y-coordinate of hard iron expressed in micro-Teslas (µT).
-         * @param hardIronZ z-coordinate of hard iron expressed in micro-Teslas (µT).
-         */
-        fun onInitialHardIronAvailable(
-            calibrator: StaticIntervalMagnetometerCalibrator,
-            hardIronX: Double,
-            hardIronY: Double,
-            hardIronZ: Double
         )
     }
 }

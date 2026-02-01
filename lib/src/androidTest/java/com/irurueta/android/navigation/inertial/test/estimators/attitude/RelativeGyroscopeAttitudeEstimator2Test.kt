@@ -19,7 +19,7 @@ import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.RelativeGyroscopeAttitudeEstimator2
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import org.junit.Assert.assertNotNull

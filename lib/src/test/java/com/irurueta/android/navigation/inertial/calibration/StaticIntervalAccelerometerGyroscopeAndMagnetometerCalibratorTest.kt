@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.SystemClock
-import androidx.test.core.app.ApplicationProvider
+import android.util.Log
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.WrongSizeException
 import com.irurueta.android.navigation.inertial.GravityHelper
@@ -26,15 +30,10 @@ import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReaso
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
@@ -118,7 +117,6 @@ import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.AngularSpeed
 import com.irurueta.units.AngularSpeedUnit
 import com.irurueta.units.MagneticFluxDensity
-import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
@@ -127,19 +125,12 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.justRun
+import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.InvocationTargetException
 import java.util.Date
 import java.util.GregorianCalendar
@@ -147,7 +138,6 @@ import java.util.Random
 import kotlin.math.max
 import kotlin.math.sqrt
 
-@RunWith(RobolectricTestRunner::class)
 class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @get:Rule
@@ -213,21 +203,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     private lateinit var unreliableGravityNormEstimationListener:
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnUnreliableGravityEstimationListener
 
-    @MockK(relaxUnitFun = true)
-    private lateinit var initialAccelerometerBiasAvailableListener:
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialAccelerometerBiasAvailableListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var initialGyroscopeBiasAvailableListener:
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialGyroscopeBiasAvailableListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var initialMagnetometerHardIronAvailableListener:
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator.OnInitialMagnetometerHardIronAvailableListener
-
-    @MockK
-    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
-
     @MockK
     private lateinit var generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
 
@@ -255,9 +230,53 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @MockK
     private lateinit var measurement: StandardDeviationBodyKinematics
 
+    @MockK
+    private lateinit var context: Context
+
+    @MockK
+    private lateinit var sensorManager: SensorManager
+
+    @MockK
+    private lateinit var accelerometerSensor: Sensor
+
+    @MockK
+    private lateinit var gyroscopeSensor: Sensor
+
+    @MockK
+    private lateinit var magnetometerSensor: Sensor
+
+    @MockK
+    private lateinit var gravitySensor: Sensor
+
     @Test
     fun constructor_whenContext_returnsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         // check default values
@@ -301,10 +320,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.calibrationCompletedListener)
         assertNull(calibrator.stoppedListener)
         assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.initialGyroscopeBiasAvailableListener)
-        assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.accelerometerQualityScoreMapper)
         assertNotNull(calibrator.gyroscopeQualityScoreMapper)
         assertNotNull(calibrator.magnetometerQualityScoreMapper)
@@ -350,10 +365,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerInitialHardIronAsTriad)
         val triad = MagneticFluxDensityTriad()
         assertFalse(calibrator.getMagnetometerInitialHardIronAsTriad(triad))
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gyroscopeSensor)
-        assertNull(calibrator.magnetometerSensor)
-        assertNull(calibrator.gravitySensor)
+        assertSame(accelerometerSensor, calibrator.accelerometerSensor)
+        assertSame(gyroscopeSensor, calibrator.gyroscopeSensor)
+        assertSame(magnetometerSensor, calibrator.magnetometerSensor)
+        assertSame(gravitySensor, calibrator.gravitySensor)
         val accelerometerInitialMa1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
         val accelerometerInitialMa2 = calibrator.accelerometerInitialMa
         assertEquals(accelerometerInitialMa1, accelerometerInitialMa2)
@@ -661,13 +676,39 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val location = getLocation()
         val timestamp = Date()
         val worldMagneticModel = WorldMagneticModel()
         val accelerometerQualityScoreMapper = DefaultAccelerometerQualityScoreMapper()
         val gyroscopeQualityScoreMapper = DefaultGyroscopeQualityScoreMapper()
         val magnetometerQualityScoreMapper = DefaultMagnetometerQualityScoreMapper()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location,
@@ -698,10 +739,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrationCompletedListener,
             stoppedListener,
             unreliableGravityNormEstimationListener,
-            initialAccelerometerBiasAvailableListener,
-            initialGyroscopeBiasAvailableListener,
-            initialMagnetometerHardIronAvailableListener,
-            accuracyChangedListener,
             accelerometerQualityScoreMapper,
             gyroscopeQualityScoreMapper,
             magnetometerQualityScoreMapper
@@ -760,19 +797,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             unreliableGravityNormEstimationListener,
             calibrator.unreliableGravityNormEstimationListener
         )
-        assertSame(
-            initialAccelerometerBiasAvailableListener,
-            calibrator.initialAccelerometerBiasAvailableListener
-        )
-        assertSame(
-            initialGyroscopeBiasAvailableListener,
-            calibrator.initialGyroscopeBiasAvailableListener
-        )
-        assertSame(
-            initialMagnetometerHardIronAvailableListener,
-            calibrator.initialMagnetometerHardIronAvailableListener
-        )
-        assertSame(accuracyChangedListener, calibrator.accuracyChangedListener)
         assertSame(accelerometerQualityScoreMapper, calibrator.accelerometerQualityScoreMapper)
         assertSame(gyroscopeQualityScoreMapper, calibrator.gyroscopeQualityScoreMapper)
         assertSame(magnetometerQualityScoreMapper, calibrator.magnetometerQualityScoreMapper)
@@ -818,10 +842,10 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerInitialHardIronAsTriad)
         val triad = MagneticFluxDensityTriad()
         assertFalse(calibrator.getMagnetometerInitialHardIronAsTriad(triad))
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gyroscopeSensor)
-        assertNull(calibrator.magnetometerSensor)
-        assertNull(calibrator.gravitySensor)
+        assertSame(accelerometerSensor, calibrator.accelerometerSensor)
+        assertSame(gyroscopeSensor, calibrator.gyroscopeSensor)
+        assertSame(magnetometerSensor, calibrator.magnetometerSensor)
+        assertSame(gravitySensor, calibrator.gravitySensor)
         val accelerometerInitialMa1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
         val accelerometerInitialMa2 = calibrator.accelerometerInitialMa
         assertEquals(accelerometerInitialMa1, accelerometerInitialMa2)
@@ -876,15 +900,15 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertFalse(calibrator.isMagnetometerCommonAxisUsed)
         assertFalse(calibrator.isGDependentCrossBiasesEstimated)
         assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
             calibrator.minimumRequiredAccelerometerMeasurements
         )
         assertEquals(
-            StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
             calibrator.minimumRequiredGyroscopeMeasurements
         )
         assertEquals(
-            StaticIntervalMagnetometerCalibrator.MAGNETOMETER_KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalMagnetometerCalibrator.MAGNETOMETER_KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
             calibrator.minimumRequiredMagnetometerMeasurements
         )
         assertEquals(
@@ -906,12 +930,12 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.gravityRootPsd)
         assertNull(calibrator.accelerometerRobustMethod)
         assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
             calibrator.accelerometerRobustConfidence,
             0.0
         )
         assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
             calibrator.accelerometerRobustMaxIterations
         )
         assertEquals(
@@ -920,23 +944,23 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         assertNull(calibrator.accelerometerRobustThreshold)
         assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
             calibrator.accelerometerRobustThresholdFactor,
             0.0
         )
         assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
             calibrator.accelerometerRobustStopThresholdFactor,
             0.0
         )
         assertNull(calibrator.gyroscopeRobustMethod)
         assertEquals(
-            StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_CONFIDENCE,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_CONFIDENCE,
             calibrator.gyroscopeRobustConfidence,
             0.0
         )
         assertEquals(
-            StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalGyroscopeCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
             calibrator.gyroscopeRobustMaxIterations
         )
         assertEquals(
@@ -945,37 +969,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         assertNull(calibrator.gyroscopeRobustThreshold)
         assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalGyroscopeCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
             calibrator.gyroscopeRobustThresholdFactor,
             0.0
         )
         assertEquals(
-            StaticIntervalGyroscopeCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalGyroscopeCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
             calibrator.gyroscopeRobustStopThresholdFactor,
             0.0
         )
         assertNull(calibrator.magnetometerRobustMethod)
         assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
+            com.irurueta.android.navigation.inertial.old.calibration.SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
             calibrator.magnetometerRobustConfidence,
             0.0
         )
         assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
+            com.irurueta.android.navigation.inertial.old.calibration.SingleSensorStaticIntervalMagnetometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
             calibrator.magnetometerRobustMaxIterations
         )
         assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
+            com.irurueta.android.navigation.inertial.old.calibration.SingleSensorStaticIntervalMagnetometerCalibrator.KNOWN_HARD_IRON_MINIMUM_MEASUREMENTS_GENERAL,
             calibrator.magnetometerRobustPreliminarySubsetSize
         )
         assertNull(calibrator.magnetometerRobustThreshold)
         assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
+            com.irurueta.android.navigation.inertial.old.calibration.SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
             calibrator.magnetometerRobustThresholdFactor,
             0.0
         )
         assertEquals(
-            SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
+            com.irurueta.android.navigation.inertial.old.calibration.SingleSensorStaticIntervalMagnetometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
             calibrator.magnetometerRobustStopThresholdFactor,
             0.0
         )
@@ -1121,7 +1145,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
         assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
         assertEquals(
-            StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
+            com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalGyroscopeCalibrator.GYROSCOPE_KNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL,
             calibrator.requiredMeasurements
         )
         assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
@@ -1129,7 +1153,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun location_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1147,9 +1170,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertFalse(calibrator.isGravityNormEstimated)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun location_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1163,12 +1185,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         // set new value
         val location = getLocation()
-        calibrator.location = location
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.location = location
+        }
     }
 
     @Test
     fun timestamp_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1183,9 +1206,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertSame(timestamp, calibrator.timestamp)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun timestamp_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1197,12 +1219,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         assertTrue(calibrator.running)
 
-        calibrator.timestamp = Date()
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.timestamp = Date()
+        }
     }
 
     @Test
     fun worldMagneticModel_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1217,9 +1240,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertSame(worldMagneticModel, calibrator.worldMagneticModel)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun worldMagneticModel_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1231,12 +1253,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         assertTrue(calibrator.running)
 
-        calibrator.worldMagneticModel = WorldMagneticModel()
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.worldMagneticModel = WorldMagneticModel()
+        }
     }
 
     @Test
     fun isInitialMagneticFluxDensityNormMeasured_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1265,7 +1288,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun initializationStartedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1281,7 +1303,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun initializationCompletedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1297,7 +1318,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun errorListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1313,7 +1333,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun staticIntervalDetectedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1329,7 +1348,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun dynamicIntervalDetectedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1345,7 +1363,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun staticIntervalSkippedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1361,7 +1378,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun dynamicIntervalSkippedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1377,7 +1393,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun generatedAccelerometerMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1397,7 +1412,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun generatedGyroscopeMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1416,7 +1430,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun generatedMagnetometerMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1436,7 +1449,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun readyToSolveCalibrationListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1452,7 +1464,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun calibrationSolvingStartedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1468,7 +1479,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun calibrationCompletedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1484,7 +1494,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun stoppedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1500,7 +1509,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun unreliableGravityNormEstimationListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1518,83 +1526,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     }
 
     @Test
-    fun initialAccelerometerBiasAvailableListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        // check default value
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-
-        // set new value
-        calibrator.initialAccelerometerBiasAvailableListener =
-            initialAccelerometerBiasAvailableListener
-
-        // check
-        assertSame(
-            initialAccelerometerBiasAvailableListener,
-            calibrator.initialAccelerometerBiasAvailableListener
-        )
-    }
-
-    @Test
-    fun initialGyroscopeBiasAvailableListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        // check default value
-        assertNull(calibrator.initialGyroscopeBiasAvailableListener)
-
-        // set new value
-        calibrator.initialGyroscopeBiasAvailableListener = initialGyroscopeBiasAvailableListener
-
-        // check
-        assertSame(
-            initialGyroscopeBiasAvailableListener,
-            calibrator.initialGyroscopeBiasAvailableListener
-        )
-    }
-
-    @Test
-    fun initialMagnetometerHardIronAvailableListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        // check default value
-        assertNull(calibrator.initialMagnetometerHardIronAvailableListener)
-
-        // set new value
-        calibrator.initialMagnetometerHardIronAvailableListener =
-            initialMagnetometerHardIronAvailableListener
-
-        // check
-        assertSame(
-            initialMagnetometerHardIronAvailableListener,
-            calibrator.initialMagnetometerHardIronAvailableListener
-        )
-    }
-
-    @Test
-    fun accuracyChangedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        // check default value
-        assertNull(calibrator.accuracyChangedListener)
-
-        // set new value
-        calibrator.accuracyChangedListener = accuracyChangedListener
-
-        // check
-        assertSame(accuracyChangedListener, calibrator.accuracyChangedListener)
-    }
-
-    @Test
     fun isAccelerometerGroundTruthInitialBias_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1608,9 +1540,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isAccelerometerGroundTruthInitialBias_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1622,12 +1553,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         assertTrue(calibrator.running)
 
-        calibrator.isAccelerometerGroundTruthInitialBias = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isAccelerometerGroundTruthInitialBias = true
+        }
     }
 
     @Test
     fun isGyroscopeGroundTruthInitialBias_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1641,9 +1573,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeGroundTruthInitialBias)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isGyroscopeGroundTruthInitialBias_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1654,12 +1585,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.isGyroscopeGroundTruthInitialBias = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isGyroscopeGroundTruthInitialBias = true
+        }
     }
 
     @Test
     fun isMagnetometerGroundTruthInitialHardIron_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1673,9 +1605,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerGroundTruthInitialHardIron)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isMagnetometerGroundTruthInitialHardIron_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1686,17 +1617,20 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.isMagnetometerGroundTruthInitialHardIron = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isMagnetometerGroundTruthInitialHardIron = true
+        }
     }
 
     @Test
     fun accelerometerInitialMa_whenValid_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         // check default value
-        assertEquals(Matrix(MA_SIZE, MA_SIZE), calibrator.accelerometerInitialMa)
+        assertEquals(
+            Matrix(MA_SIZE, MA_SIZE),
+            calibrator.accelerometerInitialMa)
         assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
         assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
         assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
@@ -1747,29 +1681,30 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMzy, calibrator.accelerometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerInitialMa_whenInvalidRowsSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val ma = Matrix(1, MA_SIZE)
-        calibrator.accelerometerInitialMa = ma
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerInitialMa = ma
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerInitialMa_whenInvalidColumnsSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val ma = Matrix(MA_SIZE, 1)
-        calibrator.accelerometerInitialMa = ma
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerInitialMa = ma
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMa_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1780,12 +1715,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMa = Matrix(MA_SIZE, MA_SIZE)
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMa = Matrix(MA_SIZE, MA_SIZE)
+        }
     }
 
     @Test
     fun getAccelerometerInitialMa_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1830,29 +1766,30 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialSz, ma.getElementAtIndex(8), 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getAccelerometerInitialMa_whenInvalidRowSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val ma = Matrix(1, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma)
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getAccelerometerInitialMa(ma)
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getAccelerometerInitialMa_whenInvalidColumnSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val ma = Matrix(MA_SIZE, 1)
-        calibrator.getAccelerometerInitialMa(ma)
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getAccelerometerInitialMa(ma)
+        }
     }
 
     @Test
     fun accelerometerInitialSx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1868,9 +1805,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialSx, calibrator.accelerometerInitialSx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialSx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1881,12 +1817,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialSx = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialSx = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialSy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1902,9 +1839,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialSy, calibrator.accelerometerInitialSy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialSy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1915,12 +1851,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialSy = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialSy = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialSz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1936,9 +1873,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialSz, calibrator.accelerometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialSz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1949,12 +1885,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialSz = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialSz = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMxy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1970,9 +1907,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMxy, calibrator.accelerometerInitialMxy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMxy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -1983,12 +1919,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMxy = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMxy = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMxz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2004,9 +1941,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMxz, calibrator.accelerometerInitialMxz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMxz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2017,12 +1953,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMxz = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMxz = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMyx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2038,9 +1975,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMyx, calibrator.accelerometerInitialMyx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMyx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2051,12 +1987,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMyx = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMyx = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMyz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2072,9 +2009,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMyz, calibrator.accelerometerInitialMyz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMyz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2085,12 +2021,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMyz = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMyz = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMzx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2106,9 +2043,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMzx, calibrator.accelerometerInitialMzx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMzx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2119,12 +2055,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMzx = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMzx = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMzy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2140,9 +2077,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMzy, calibrator.accelerometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMzy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2153,12 +2089,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMzy = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMzy = 0.0
+        }
     }
 
     @Test
     fun setAccelerometerInitialScalingFactors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2180,9 +2117,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialSz, calibrator.accelerometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setAccelerometerInitialScalingFactors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2197,12 +2133,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val initialSx = randomizer.nextDouble()
         val initialSy = randomizer.nextDouble()
         val initialSz = randomizer.nextDouble()
-        calibrator.setAccelerometerInitialScalingFactors(initialSx, initialSy, initialSz)
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setAccelerometerInitialScalingFactors(initialSx, initialSy, initialSz)
+        }
     }
 
     @Test
     fun setAccelerometerInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2244,9 +2181,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setAccelerometerInitialCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2264,19 +2200,20 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val initialMyz = randomizer.nextDouble()
         val initialMzx = randomizer.nextDouble()
         val initialMzy = randomizer.nextDouble()
-        calibrator.setAccelerometerInitialCrossCouplingErrors(
-            initialMxy,
-            initialMxz,
-            initialMyx,
-            initialMyz,
-            initialMzx,
-            initialMzy
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setAccelerometerInitialCrossCouplingErrors(
+                initialMxy,
+                initialMxz,
+                initialMyx,
+                initialMyz,
+                initialMzx,
+                initialMzy
+            )
+        }
     }
 
     @Test
     fun setAccelerometerInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2326,9 +2263,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMzy, calibrator.accelerometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setAccelerometerInitialScalingFactorsAndCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2349,22 +2285,23 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val initialMyz = randomizer.nextDouble()
         val initialMzx = randomizer.nextDouble()
         val initialMzy = randomizer.nextDouble()
-        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx,
-            initialSy,
-            initialSz,
-            initialMxy,
-            initialMxz,
-            initialMyx,
-            initialMyz,
-            initialMzx,
-            initialMzy
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+                initialSx,
+                initialSy,
+                initialSz,
+                initialMxy,
+                initialMxz,
+                initialMyx,
+                initialMyz,
+                initialMzx,
+                initialMzy
+            )
+        }
     }
 
     @Test
     fun gyroscopeInitialMg_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2392,9 +2329,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(mg3.getElementAt(2, 2), calibrator.gyroscopeInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialMg_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2406,32 +2342,35 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
 
         val mg1 = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
-        calibrator.gyroscopeInitialMg = mg1
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialMg = mg1
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeInitialMg_whenInvalidRows_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val mg1 = Matrix(1, BodyKinematics.COMPONENTS)
-        calibrator.gyroscopeInitialMg = mg1
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeInitialMg = mg1
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeInitialMg_whenInvalidColumns_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val mg1 = Matrix(BodyKinematics.COMPONENTS, 1)
-        calibrator.gyroscopeInitialMg = mg1
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeInitialMg = mg1
+        }
     }
 
     @Test
     fun getGyroscopeInitialMg_whenValid_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2451,9 +2390,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(mg3, mg4)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getGyroscopeInitialMg_whenInvalidRows_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2464,12 +2402,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         // get
         val mg2 = Matrix(1, BodyKinematics.COMPONENTS)
-        calibrator.getGyroscopeInitialMg(mg2)
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getGyroscopeInitialMg(mg2)
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getGyroscopeInitialMg_whenInvalidColumns_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2480,12 +2419,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
         // get
         val mg2 = Matrix(BodyKinematics.COMPONENTS, 1)
-        calibrator.getGyroscopeInitialMg(mg2)
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getGyroscopeInitialMg(mg2)
+        }
     }
 
     @Test
     fun gyroscopeInitialSx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2502,9 +2442,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialSx, calibrator.gyroscopeInitialSx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialSx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2518,12 +2457,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialSx = randomizer.nextDouble()
-        calibrator.gyroscopeInitialSx = gyroscopeInitialSx
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialSx = gyroscopeInitialSx
+        }
     }
 
     @Test
     fun gyroscopeInitialSy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2540,9 +2480,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialSy, calibrator.gyroscopeInitialSy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialSy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2556,12 +2495,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialSy = randomizer.nextDouble()
-        calibrator.gyroscopeInitialSy = gyroscopeInitialSy
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialSy = gyroscopeInitialSy
+        }
     }
 
     @Test
     fun gyroscopeInitialSz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2578,9 +2518,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialSz, calibrator.gyroscopeInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialSz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2594,12 +2533,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialSz = randomizer.nextDouble()
-        calibrator.gyroscopeInitialSz = gyroscopeInitialSz
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialSz = gyroscopeInitialSz
+        }
     }
 
     @Test
     fun gyroscopeInitialMxy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2616,9 +2556,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMxy, calibrator.gyroscopeInitialMxy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialMxy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2632,12 +2571,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialMxy = randomizer.nextDouble()
-        calibrator.gyroscopeInitialMxy = gyroscopeInitialMxy
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialMxy = gyroscopeInitialMxy
+        }
     }
 
     @Test
     fun gyroscopeInitialMxz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2654,9 +2594,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMxz, calibrator.gyroscopeInitialMxz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialMxz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2670,12 +2609,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialMxz = randomizer.nextDouble()
-        calibrator.gyroscopeInitialMxz = gyroscopeInitialMxz
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialMxz = gyroscopeInitialMxz
+        }
     }
 
     @Test
     fun gyroscopeInitialMyx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2692,9 +2632,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMyx, calibrator.gyroscopeInitialMyx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialMyx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2708,12 +2647,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialMyx = randomizer.nextDouble()
-        calibrator.gyroscopeInitialMyx = gyroscopeInitialMyx
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialMyx = gyroscopeInitialMyx
+        }
     }
 
     @Test
     fun gyroscopeInitialMyz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2730,9 +2670,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMyz, calibrator.gyroscopeInitialMyz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialMyz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2746,12 +2685,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialMyz = randomizer.nextDouble()
-        calibrator.gyroscopeInitialMyz = gyroscopeInitialMyz
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialMyz = gyroscopeInitialMyz
+        }
     }
 
     @Test
     fun gyroscopeInitialMzx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2768,9 +2708,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMzx, calibrator.gyroscopeInitialMzx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialMzx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2784,12 +2723,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialMzx = randomizer.nextDouble()
-        calibrator.gyroscopeInitialMzx = gyroscopeInitialMzx
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialMzx = gyroscopeInitialMzx
+        }
     }
 
     @Test
     fun gyroscopeInitialMzy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2806,9 +2746,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMzy, calibrator.gyroscopeInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialMzy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2822,12 +2761,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val gyroscopeInitialMzy = randomizer.nextDouble()
-        calibrator.gyroscopeInitialMzy = gyroscopeInitialMzy
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialMzy = gyroscopeInitialMzy
+        }
     }
 
     @Test
     fun setGyroscopeInitialScalingFactors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2854,9 +2794,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialSz, calibrator.gyroscopeInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setGyroscopeInitialScalingFactors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2872,16 +2811,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gyroscopeInitialSx = randomizer.nextDouble()
         val gyroscopeInitialSy = randomizer.nextDouble()
         val gyroscopeInitialSz = randomizer.nextDouble()
-        calibrator.setGyroscopeInitialScalingFactors(
-            gyroscopeInitialSx,
-            gyroscopeInitialSy,
-            gyroscopeInitialSz
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setGyroscopeInitialScalingFactors(
+                gyroscopeInitialSx,
+                gyroscopeInitialSy,
+                gyroscopeInitialSz
+            )
+        }
     }
 
     @Test
     fun setGyroscopeInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2920,9 +2860,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMzy, calibrator.gyroscopeInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setGyroscopeInitialCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -2941,19 +2880,20 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gyroscopeInitialMyz = randomizer.nextDouble()
         val gyroscopeInitialMzx = randomizer.nextDouble()
         val gyroscopeInitialMzy = randomizer.nextDouble()
-        calibrator.setGyroscopeInitialCrossCouplingErrors(
-            gyroscopeInitialMxy,
-            gyroscopeInitialMxz,
-            gyroscopeInitialMyx,
-            gyroscopeInitialMyz,
-            gyroscopeInitialMzx,
-            gyroscopeInitialMzy
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setGyroscopeInitialCrossCouplingErrors(
+                gyroscopeInitialMxy,
+                gyroscopeInitialMxz,
+                gyroscopeInitialMyx,
+                gyroscopeInitialMyz,
+                gyroscopeInitialMzx,
+                gyroscopeInitialMzy
+            )
+        }
     }
 
     @Test
     fun setGyroscopeInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3004,9 +2944,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gyroscopeInitialMzy, calibrator.gyroscopeInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setGyroscopeInitialScalingFactorsAndCrossCouplingErrors_whenRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3028,22 +2967,23 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val gyroscopeInitialMyz = randomizer.nextDouble()
         val gyroscopeInitialMzx = randomizer.nextDouble()
         val gyroscopeInitialMzy = randomizer.nextDouble()
-        calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
-            gyroscopeInitialSx,
-            gyroscopeInitialSy,
-            gyroscopeInitialSz,
-            gyroscopeInitialMxy,
-            gyroscopeInitialMxz,
-            gyroscopeInitialMyx,
-            gyroscopeInitialMyz,
-            gyroscopeInitialMzx,
-            gyroscopeInitialMzy
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setGyroscopeInitialScalingFactorsAndCrossCouplingErrors(
+                gyroscopeInitialSx,
+                gyroscopeInitialSy,
+                gyroscopeInitialSz,
+                gyroscopeInitialMxy,
+                gyroscopeInitialMxz,
+                gyroscopeInitialMyx,
+                gyroscopeInitialMyz,
+                gyroscopeInitialMzx,
+                gyroscopeInitialMzy
+            )
+        }
     }
 
     @Test
     fun gyroscopeInitialGg_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3062,9 +3002,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(gg3, gg4)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeInitialGg_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3078,41 +3017,47 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val gg = Matrix(BodyKinematics.COMPONENTS, BodyKinematics.COMPONENTS)
         Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
-        calibrator.gyroscopeInitialGg = gg
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeInitialGg = gg
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeInitialGg_whenInvalidRows_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         // set new value
         val gg = Matrix(1, BodyKinematics.COMPONENTS)
         Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
-        calibrator.gyroscopeInitialGg = gg
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeInitialGg = gg
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeInitialGg_whenInvalidColumns_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         // set new value
         val gg = Matrix(BodyKinematics.COMPONENTS, 1)
         Matrix.fillWithUniformRandomValues(0.0, 1.0, gg)
-        calibrator.gyroscopeInitialGg = gg
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeInitialGg = gg
+        }
     }
 
     @Test
     fun magnetometerInitialMm_whenValid_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         // check default value
-        assertEquals(Matrix(MM_SIZE, MM_SIZE), calibrator.magnetometerInitialMm)
+        assertEquals(
+            Matrix(MM_SIZE, MM_SIZE),
+            calibrator.magnetometerInitialMm
+        )
         assertEquals(0.0, calibrator.magnetometerInitialSx, 0.0)
         assertEquals(0.0, calibrator.magnetometerInitialSy, 0.0)
         assertEquals(0.0, calibrator.magnetometerInitialSz, 0.0)
@@ -3163,29 +3108,30 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialMzy, calibrator.magnetometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerInitialMm_whenInvalidRowSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val mm = Matrix(1, MM_SIZE)
-        calibrator.magnetometerInitialMm = mm
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerInitialMm = mm
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerInitialMm_whenInvalidColumnsSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val mm = Matrix(MM_SIZE, 1)
-        calibrator.magnetometerInitialMm = mm
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerInitialMm = mm
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialMm_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3196,12 +3142,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerInitialMm = Matrix(MM_SIZE, MM_SIZE)
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialMm = Matrix(MM_SIZE, MM_SIZE)
+        }
     }
 
     @Test
     fun getMagnetometerInitialMm_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3246,29 +3193,30 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(initialSz, mm.getElementAtIndex(8), 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getMagnetometerInitialMm_whenInvalidRowSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val mm = Matrix(1, MM_SIZE)
-        calibrator.getMagnetometerInitialMm(mm)
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getMagnetometerInitialMm(mm)
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getMagnetometerInitialMm_whenInvalidColumnSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val mm = Matrix(MM_SIZE, 1)
-        calibrator.getMagnetometerInitialMm(mm)
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getMagnetometerInitialMm(mm)
+        }
     }
 
     @Test
     fun magnetometerInitialSx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3285,9 +3233,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialSx, calibrator.magnetometerInitialSx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialSx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3301,12 +3248,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialSx = randomizer.nextDouble()
-        calibrator.magnetometerInitialSx = magnetometerInitialSx
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialSx = magnetometerInitialSx
+        }
     }
 
     @Test
     fun magnetometerInitialSy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3323,9 +3271,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialSy, calibrator.magnetometerInitialSy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialSy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3339,12 +3286,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialSy = randomizer.nextDouble()
-        calibrator.magnetometerInitialSy = magnetometerInitialSy
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialSy = magnetometerInitialSy
+        }
     }
 
     @Test
     fun magnetometerInitialSz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3361,9 +3309,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialSz, calibrator.magnetometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialSz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3377,12 +3324,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialSz = randomizer.nextDouble()
-        calibrator.magnetometerInitialSz = magnetometerInitialSz
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialSz = magnetometerInitialSz
+        }
     }
 
     @Test
     fun magnetometerInitialMxy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3399,9 +3347,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMxy, calibrator.magnetometerInitialMxy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialMxy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3415,12 +3362,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialMxy = randomizer.nextDouble()
-        calibrator.magnetometerInitialMxy = magnetometerInitialMxy
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialMxy = magnetometerInitialMxy
+        }
     }
 
     @Test
     fun magnetometerInitialMxz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3437,9 +3385,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMxz, calibrator.magnetometerInitialMxz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialMxz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3453,12 +3400,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialMxz = randomizer.nextDouble()
-        calibrator.magnetometerInitialMxz = magnetometerInitialMxz
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialMxz = magnetometerInitialMxz
+        }
     }
 
     @Test
     fun magnetometerInitialMyx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3475,9 +3423,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMyx, calibrator.magnetometerInitialMyx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialMyx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3491,12 +3438,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialMyx = randomizer.nextDouble()
-        calibrator.magnetometerInitialMyx = magnetometerInitialMyx
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialMyx = magnetometerInitialMyx
+        }
     }
 
     @Test
     fun magnetometerInitialMyz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3513,9 +3461,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMyz, calibrator.magnetometerInitialMyz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialMyz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3529,12 +3476,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialMyz = randomizer.nextDouble()
-        calibrator.magnetometerInitialMyz = magnetometerInitialMyz
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialMyz = magnetometerInitialMyz
+        }
     }
 
     @Test
     fun magnetometerInitialMzx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3551,9 +3499,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMzx, calibrator.magnetometerInitialMzx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialMzx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3567,12 +3514,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialMzx = randomizer.nextDouble()
-        calibrator.magnetometerInitialMzx = magnetometerInitialMzx
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialMzx = magnetometerInitialMzx
+        }
     }
 
     @Test
     fun magnetometerInitialMzy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3589,9 +3537,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMzy, calibrator.magnetometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerInitialMzy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3605,12 +3552,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // set new value
         val randomizer = UniformRandomizer()
         val magnetometerInitialMzy = randomizer.nextDouble()
-        calibrator.magnetometerInitialMzy = magnetometerInitialMzy
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerInitialMzy = magnetometerInitialMzy
+        }
     }
 
     @Test
     fun setMagnetometerInitialScalingFactors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3637,9 +3585,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialSz, calibrator.magnetometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setMagnetometerInitialScalingFactors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3655,16 +3602,17 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val magnetometerInitialSx = randomizer.nextDouble()
         val magnetometerInitialSy = randomizer.nextDouble()
         val magnetometerInitialSz = randomizer.nextDouble()
-        calibrator.setMagnetometerInitialScalingFactors(
-            magnetometerInitialSx,
-            magnetometerInitialSy,
-            magnetometerInitialSz
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setMagnetometerInitialScalingFactors(
+                magnetometerInitialSx,
+                magnetometerInitialSy,
+                magnetometerInitialSz
+            )
+        }
     }
 
     @Test
     fun setMagnetometerInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3703,9 +3651,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMzy, calibrator.magnetometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setMagnetometerInitialCrossCouplingErrors_whenRunning_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3724,19 +3671,20 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val magnetometerInitialMyz = randomizer.nextDouble()
         val magnetometerInitialMzx = randomizer.nextDouble()
         val magnetometerInitialMzy = randomizer.nextDouble()
-        calibrator.setMagnetometerInitialCrossCouplingErrors(
-            magnetometerInitialMxy,
-            magnetometerInitialMxz,
-            magnetometerInitialMyx,
-            magnetometerInitialMyz,
-            magnetometerInitialMzx,
-            magnetometerInitialMzy
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setMagnetometerInitialCrossCouplingErrors(
+                magnetometerInitialMxy,
+                magnetometerInitialMxz,
+                magnetometerInitialMyx,
+                magnetometerInitialMyz,
+                magnetometerInitialMzx,
+                magnetometerInitialMzy
+            )
+        }
     }
 
     @Test
     fun setMagnetometerInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3787,9 +3735,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(magnetometerInitialMzy, calibrator.magnetometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setMagnetometerInitialScalingFactorsAndCrossCouplingErrors_whenRunning_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3811,22 +3758,23 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val magnetometerInitialMyz = randomizer.nextDouble()
         val magnetometerInitialMzx = randomizer.nextDouble()
         val magnetometerInitialMzy = randomizer.nextDouble()
-        calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
-            magnetometerInitialSx,
-            magnetometerInitialSy,
-            magnetometerInitialSz,
-            magnetometerInitialMxy,
-            magnetometerInitialMxz,
-            magnetometerInitialMyx,
-            magnetometerInitialMyz,
-            magnetometerInitialMzx,
-            magnetometerInitialMzy
-        )
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setMagnetometerInitialScalingFactorsAndCrossCouplingErrors(
+                magnetometerInitialSx,
+                magnetometerInitialSy,
+                magnetometerInitialSz,
+                magnetometerInitialMxy,
+                magnetometerInitialMxz,
+                magnetometerInitialMyx,
+                magnetometerInitialMyz,
+                magnetometerInitialMzx,
+                magnetometerInitialMzy
+            )
+        }
     }
 
     @Test
     fun isAccelerometerCommonAxisUsed_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3839,9 +3787,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isAccelerometerCommonAxisUsed)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isAccelerometerCommonAxisUsed_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3852,12 +3799,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.isAccelerometerCommonAxisUsed = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isAccelerometerCommonAxisUsed = true
+        }
     }
 
     @Test
     fun isGyroscopeCommonAxisUsed_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3872,9 +3820,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGyroscopeCommonAxisUsed)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isGyroscopeCommonAxisUsed_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3886,12 +3833,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
 
         // set new value
-        calibrator.isGyroscopeCommonAxisUsed = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isGyroscopeCommonAxisUsed = true
+        }
     }
 
     @Test
     fun isMagnetometerCommonAxisUsed_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3906,9 +3854,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isMagnetometerCommonAxisUsed)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isMagnetometerCommonAxisUsed_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3920,12 +3867,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
 
         // set new value
-        calibrator.isMagnetometerCommonAxisUsed = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isMagnetometerCommonAxisUsed = true
+        }
     }
 
     @Test
     fun isGDependentCrossBiasesEstimated_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3940,9 +3888,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertTrue(calibrator.isGDependentCrossBiasesEstimated)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isGDependentCrossBiasesEstimated_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3954,12 +3901,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
 
         // set new value
-        calibrator.isGDependentCrossBiasesEstimated = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isGDependentCrossBiasesEstimated = true
+        }
     }
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenCommonAxisAndKnownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3974,7 +3922,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenCommonAxisAndUnknownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -3989,7 +3936,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenNotCommonAxisAndKnownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4004,7 +3950,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenNotCommonAxisAndUnknownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4019,7 +3964,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4036,7 +3980,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4053,7 +3996,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4070,7 +4012,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4087,7 +4028,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4104,7 +4044,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasCommonAxisAndNoCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4121,7 +4060,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4138,7 +4076,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredGyroscopeMeasurements_whenNoGroundTruthInitialBiasNoCommonAxisAndNoCrossBiases_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4155,7 +4092,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenCommonAxisAndKnownHardIron_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4170,7 +4106,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenCommonAxisAndUnknownHardIron_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4185,7 +4120,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenNotCommonAxisAndKnownHardIron_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4200,7 +4134,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun minimumRequiredMagnetometerMeasurements_whenNotCommonAxisAndUnknownHardIron_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4216,7 +4149,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun averageGravityNorm_whenGravityNormEstimated_getsEstimatorAverageNorm() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4237,7 +4169,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun averageGravityNorm_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4251,7 +4182,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun averageGravityNormAsMeasurement_whenGravityNormEstimated_getsEstimatorAverageNorm() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4273,7 +4203,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun averageGravityNormAsMeasurement_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4287,7 +4216,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun getAverageGravityNormAsMeasurement_whenGravityNormEstimated_getsEstimatorAverageNorm() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4316,7 +4244,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun getAverageGravityNormAsMeasurement_whenGravityNormNotEstimated_returnsFalse() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4332,7 +4259,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gravityNormVariance_whenGravityNormEstimated_getsEstimatorVariance() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4356,7 +4282,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun gravityNormVariance_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4368,7 +4293,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gravityNormStandardDeviation_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4392,7 +4316,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun gravityNormStandardDeviation_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4404,7 +4327,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gravityNormStandardDeviationAsMeasurement_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4429,7 +4351,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun gravityNormStandardDeviationMeasurement_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4441,7 +4362,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getGravityNormStandardDeviationAsMeasurement_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4475,7 +4395,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun getGravityNormStandardDeviationAsMeasurement_whenGravityNormNotEstimated_returnsFalse() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4489,7 +4408,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gravityPsd_whenGravityNormEstimated_getsEstimatorPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4511,7 +4429,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun gravityPsd_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4524,7 +4441,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gravityRootPsd_whenGravityNormEstimated_getsEstimatorRootPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4546,7 +4462,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun gravityRootPsd_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -4558,7 +4473,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerRobustMethod_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4572,9 +4486,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustMethod_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4585,12 +4498,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        }
     }
 
     @Test
     fun accelerometerRobustConfidence_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4608,27 +4522,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.accelerometerRobustConfidence = -1.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustConfidence = -1.0
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun accelerometerRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        calibrator.accelerometerRobustConfidence = 2.0
-    }
-
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustConfidence_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4639,12 +4544,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        }
     }
 
     @Test
     fun accelerometerRobustMaxIterations_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4661,18 +4567,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.accelerometerRobustMaxIterations = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustMaxIterations = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4683,12 +4589,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        }
     }
 
     @Test
     fun accelerometerRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4708,18 +4615,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.accelerometerRobustPreliminarySubsetSize = 12
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustPreliminarySubsetSize = 12
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4730,12 +4637,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        }
     }
 
     @Test
     fun accelerometerRobustThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4757,18 +4665,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.accelerometerRobustThreshold)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.accelerometerRobustThreshold = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustThreshold = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4779,12 +4687,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+        }
     }
 
     @Test
     fun accelerometerRobustThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4802,18 +4711,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.accelerometerRobustThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4824,12 +4733,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun accelerometerRobustStopThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4850,18 +4760,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.accelerometerRobustStopThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustStopThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4872,12 +4782,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun gyroscopeRobustMethod_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4891,9 +4802,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.gyroscopeRobustMethod)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeRobustMethod_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4904,12 +4814,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.RANSAC
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.RANSAC
+        }
     }
 
     @Test
     fun gyroscopeRobustConfidence_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4927,27 +4838,28 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_CONFIDENCE, calibrator.gyroscopeRobustConfidence, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.gyroscopeRobustConfidence = -1.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeRobustConfidence = -1.0
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.gyroscopeRobustConfidence = 2.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeRobustConfidence = 2.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeRobustConfidence_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4958,12 +4870,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeRobustConfidence = ROBUST_CONFIDENCE
+        }
     }
 
     @Test
     fun gyroscopeRobustMaxIterations_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -4980,18 +4893,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.gyroscopeRobustMaxIterations)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.gyroscopeRobustMaxIterations = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeRobustMaxIterations = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5002,12 +4915,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        }
     }
 
     @Test
     fun gyroscopeRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5027,18 +4941,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.gyroscopeRobustPreliminarySubsetSize = 12
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeRobustPreliminarySubsetSize = 12
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5049,12 +4963,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        }
     }
 
     @Test
     fun gyroscopeRobustThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5076,18 +4991,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.gyroscopeRobustThreshold)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.gyroscopeRobustThreshold = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeRobustThreshold = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeRobustThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5098,12 +5013,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeRobustThreshold = ROBUST_THRESHOLD
+        }
     }
 
     @Test
     fun gyroscopeRobustThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5121,18 +5037,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.gyroscopeRobustThresholdFactor, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.gyroscopeRobustThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeRobustThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5143,12 +5059,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun gyroscopeRobustStopThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5169,18 +5086,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun gyroscopeRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.gyroscopeRobustStopThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.gyroscopeRobustStopThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun gyroscopeRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5191,12 +5108,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.gyroscopeRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.gyroscopeRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun magnetometerRobustMethod_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5210,9 +5128,8 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.magnetometerRobustMethod)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerRobustMethod_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5223,12 +5140,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerRobustMethod = RobustEstimatorMethod.RANSAC
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerRobustMethod = RobustEstimatorMethod.RANSAC
+        }
     }
 
     @Test
     fun magnetometerRobustConfidence_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5246,27 +5164,28 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_CONFIDENCE, calibrator.magnetometerRobustConfidence, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.magnetometerRobustConfidence = -1.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerRobustConfidence = -1.0
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.magnetometerRobustConfidence = 2.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerRobustConfidence = 2.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerRobustConfidence_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5277,12 +5196,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerRobustConfidence = ROBUST_CONFIDENCE
+        }
     }
 
     @Test
     fun magnetometerRobustMaxIterations_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5299,18 +5219,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.magnetometerRobustMaxIterations)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.magnetometerRobustMaxIterations = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerRobustMaxIterations = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5321,12 +5241,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        }
     }
 
     @Test
     fun magnetometerRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5346,18 +5267,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.magnetometerRobustPreliminarySubsetSize = 12
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerRobustPreliminarySubsetSize = 12
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5368,12 +5289,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        }
     }
 
     @Test
     fun magnetometerRobustThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5395,18 +5317,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertNull(calibrator.magnetometerRobustThreshold)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.magnetometerRobustThreshold = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerRobustThreshold = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerRobustThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5417,12 +5339,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerRobustThreshold = ROBUST_THRESHOLD
+        }
     }
 
     @Test
     fun magnetometerRobustThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5440,18 +5363,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.magnetometerRobustThresholdFactor, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.magnetometerRobustThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerRobustThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5462,12 +5385,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun magnetometerRobustStopThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5488,18 +5412,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun magnetometerRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.magnetometerRobustStopThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.magnetometerRobustStopThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun magnetometerRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5510,12 +5434,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.magnetometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.magnetometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun windowSize_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5528,18 +5453,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(WINDOW_SIZE, calibrator.windowSize)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun windowSize_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.windowSize = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.windowSize = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun windowSize_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5550,12 +5475,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.windowSize = WINDOW_SIZE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.windowSize = WINDOW_SIZE
+        }
     }
 
     @Test
     fun initialStaticSamples_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5572,18 +5498,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(INITIAL_STATIC_SAMPLES, calibrator.initialStaticSamples)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.initialStaticSamples = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.initialStaticSamples = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5594,12 +5520,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+        }
     }
 
     @Test
     fun thresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5617,18 +5544,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(THRESHOLD_FACTOR, calibrator.thresholdFactor, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.thresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.thresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun thresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5639,12 +5566,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.thresholdFactor = THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.thresholdFactor = THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5666,18 +5594,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.instantaneousNoiseLevelFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.instantaneousNoiseLevelFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5688,12 +5616,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        }
     }
 
     @Test
     fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5715,18 +5644,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.baseNoiseLevelAbsoluteThreshold = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThreshold = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5737,12 +5666,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+        }
     }
 
     @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5767,19 +5697,19 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(value2, value3)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5794,12 +5724,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
             AccelerationUnit.METERS_PER_SQUARED_SECOND
         )
-        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        }
     }
 
     @Test
     fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5829,7 +5760,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun requiredMeasurements_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5846,18 +5776,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         assertEquals(REQUIRED_MEASUREMENTS, calibrator.requiredMeasurements)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun requiredMeasurements_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.requiredMeasurements = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.requiredMeasurements = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun requiredMeasurements_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5868,12 +5798,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.requiredMeasurements = REQUIRED_MEASUREMENTS
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.requiredMeasurements = REQUIRED_MEASUREMENTS
+        }
     }
 
     @Test
     fun onInitializationStarted_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5886,7 +5817,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onInitializationStarted_whenListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -5904,7 +5834,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5922,7 +5851,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -5945,7 +5873,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onError_whenNoListeners_stopsGenerator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -5961,6 +5915,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorErrorListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener? =
@@ -5976,7 +5931,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onError_whenListenersAvailable_stopsGeneratorAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -5996,6 +5977,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val generatorErrorListener: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator.OnErrorListener? =
@@ -6018,7 +6000,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onStaticIntervalDetected_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -6031,7 +6012,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onStaticIntervalDetected_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -6049,7 +6029,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -6062,7 +6041,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -6080,7 +6058,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onStaticIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -6093,7 +6070,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onStaticIntervalSkipped_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -6111,7 +6087,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -6124,7 +6099,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalSkipped_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -6142,7 +6116,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_addsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -6164,7 +6137,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -6198,7 +6170,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_whenReadyToCalibrate_stopsAndBuildsCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = false
@@ -6225,6 +6223,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6274,7 +6273,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             readyToSolveCalibrationListener = readyToSolveCalibrationListener,
@@ -6302,6 +6327,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6352,11 +6378,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_whenSolveCalibrationEnabled_solvesCalibration() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
 
         val location = getLocation()
         val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = true
@@ -6476,7 +6528,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
 
             val magnetometerMeasurement =
-                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic,
+                    MAGNETOMETER_NOISE_STD
+                )
             calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
 
             for (j in 0 until reqMeasurements) {
@@ -6594,6 +6648,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6729,11 +6784,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedAccelerometerMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
 
         val location = getLocation()
         val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = true,
@@ -6858,7 +6939,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
 
             val magnetometerMeasurement =
-                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic,
+                    MAGNETOMETER_NOISE_STD
+                )
             calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
 
             for (j in 0 until reqMeasurements) {
@@ -6976,6 +7059,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7121,7 +7205,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedGyroscopeMeasurement_addsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -7143,7 +7226,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedGyroscopeMeasurement_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -7177,7 +7259,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedGyroscopeMeasurement_whenReadyToCalibrate_stopsAndBuildsCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = false
@@ -7204,6 +7312,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7253,8 +7362,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedGyroscopeMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
 
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = false,
@@ -7282,6 +7416,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7332,11 +7467,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedGyroscopeMeasurement_whenSolveCalibrationEnabled_solvesCalibration() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
 
         val location = getLocation()
         val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = true
@@ -7456,7 +7617,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
 
             val magnetometerMeasurement =
-                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic,
+                    MAGNETOMETER_NOISE_STD
+                )
             calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
 
             for (j in 0 until reqMeasurements) {
@@ -7574,6 +7737,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7709,11 +7873,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedGyroscopeMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
 
         val location = getLocation()
         val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = true,
@@ -7838,7 +8028,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
 
             val magnetometerMeasurement =
-                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic,
+                    MAGNETOMETER_NOISE_STD
+                )
             calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
 
             for (j in 0 until reqMeasurements) {
@@ -7956,6 +8148,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8101,7 +8294,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_addsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -8133,7 +8325,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenInitialMagneticFluxDensityNorm_keepsInitialMagneticFluxDensityNorm() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -8175,7 +8366,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -8217,7 +8407,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenReadyToCalibrate_stopsAndBuildsCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = false
@@ -8252,6 +8468,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generatorSpy = spyk(generator)
         val norm = truthMagnetic.norm
         every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8293,7 +8510,33 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             readyToSolveCalibrationListener = readyToSolveCalibrationListener,
@@ -8329,6 +8572,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val generatorSpy = spyk(generator)
         val norm = truthMagnetic.norm
         every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8371,11 +8615,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenSolveCalibrationEnabled_solvesCalibration() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
 
         val location = getLocation()
         val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = true
@@ -8495,7 +8765,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
 
             val magnetometerMeasurement =
-                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic,
+                    MAGNETOMETER_NOISE_STD
+                )
             calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
 
             for (j in 0 until reqMeasurements) {
@@ -8617,6 +8889,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, 0.0, 0.0, 0.0)
         val norm = truthMagnetic.norm
         every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -8744,11 +9017,37 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onGeneratedMagnetometerMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            gyroscopeSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+            )
+        }.returns(magnetometerSensor)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
 
         val location = getLocation()
         val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = true,
@@ -8873,7 +9172,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
 
             val magnetometerMeasurement =
-                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic,
+                    MAGNETOMETER_NOISE_STD
+                )
             calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
 
             for (j in 0 until reqMeasurements) {
@@ -8995,6 +9296,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val truthMagnetic = BodyMagneticFluxDensityEstimator.estimate(earthB, 0.0, 0.0, 0.0)
         val norm = truthMagnetic.norm
         every { generatorSpy.initialMagneticFluxDensityNorm }.returns(norm)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -9131,989 +9433,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     }
 
     @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurement_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(by.toDouble(), initialBiasX, 0.0)
-        assertEquals(bx.toDouble(), initialBiasY, 0.0)
-        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasX_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            null,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasY_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            null,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasZ_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            null,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndListener_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-                context,
-                initialAccelerometerBiasAvailableListener = initialAccelerometerBiasAvailableListener
-            )
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(by.toDouble(), initialBiasX, 0.0)
-        assertEquals(bx.toDouble(), initialBiasY, 0.0)
-        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
-
-        verify(exactly = 1) {
-            initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
-                calibrator,
-                by.toDouble(),
-                bx.toDouble(),
-                -bz.toDouble()
-            )
-        }
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenNotFirstMeasurement_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-            context,
-            initialAccelerometerBiasAvailableListener = initialAccelerometerBiasAvailableListener
-        )
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        verify { initialAccelerometerBiasAvailableListener wasNot Called }
-    }
-
-    @Test
-    fun onGyroscopeMeasurement_whenFirstMeasurement_updatesInitialBias() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.gyroscopeInitialBiasX)
-        assertNull(calibrator.gyroscopeInitialBiasY)
-        assertNull(calibrator.gyroscopeInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorGyroscopeMeasurementListener")
-        requireNotNull(generatorGyroscopeMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorGyroscopeMeasurementListener.onMeasurement(
-            wx,
-            wy,
-            wz,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.gyroscopeInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.gyroscopeInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.gyroscopeInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(by.toDouble(), initialBiasX, 0.0)
-        assertEquals(bx.toDouble(), initialBiasY, 0.0)
-        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onGyroscopeMeasurement_whenFirstMeasurementAndNoBiasX_updatesInitialBias() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.gyroscopeInitialBiasX)
-        assertNull(calibrator.gyroscopeInitialBiasY)
-        assertNull(calibrator.gyroscopeInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorGyroscopeMeasurementListener")
-        requireNotNull(generatorGyroscopeMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorGyroscopeMeasurementListener.onMeasurement(
-            wx,
-            wy,
-            wz,
-            null,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.gyroscopeInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.gyroscopeInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.gyroscopeInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onGyroscopeMeasurement_whenFirstMeasurementAndNoBiasY_updatesInitialBias() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.gyroscopeInitialBiasX)
-        assertNull(calibrator.gyroscopeInitialBiasY)
-        assertNull(calibrator.gyroscopeInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorGyroscopeMeasurementListener")
-        requireNotNull(generatorGyroscopeMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorGyroscopeMeasurementListener.onMeasurement(
-            wx,
-            wy,
-            wz,
-            bx,
-            null,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.gyroscopeInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.gyroscopeInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.gyroscopeInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onGyroscopeMeasurement_whenFirstMeasurementAndNoBiasZ_updatesInitialBias() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.gyroscopeInitialBiasX)
-        assertNull(calibrator.gyroscopeInitialBiasY)
-        assertNull(calibrator.gyroscopeInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorGyroscopeMeasurementListener")
-        requireNotNull(generatorGyroscopeMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorGyroscopeMeasurementListener.onMeasurement(
-            wx,
-            wy,
-            wz,
-            bx,
-            by,
-            null,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.gyroscopeInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.gyroscopeInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.gyroscopeInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onGyroscopeMeasurement_whenFirstMeasurementAndListener_updatesInitialBias() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-            context,
-            initialGyroscopeBiasAvailableListener = initialGyroscopeBiasAvailableListener
-        )
-
-        assertNull(calibrator.gyroscopeInitialBiasX)
-        assertNull(calibrator.gyroscopeInitialBiasY)
-        assertNull(calibrator.gyroscopeInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorGyroscopeMeasurementListener")
-        requireNotNull(generatorGyroscopeMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorGyroscopeMeasurementListener.onMeasurement(
-            wx,
-            wy,
-            wz,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.gyroscopeInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.gyroscopeInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.gyroscopeInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(by.toDouble(), initialBiasX, 0.0)
-        assertEquals(bx.toDouble(), initialBiasY, 0.0)
-        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
-
-        verify(exactly = 1) {
-            initialGyroscopeBiasAvailableListener.onInitialBiasAvailable(
-                calibrator,
-                initialBiasX,
-                initialBiasY,
-                initialBiasZ
-            )
-        }
-    }
-
-    @Test
-    fun onGyroscopeMeasurement_whenNotFirstMeasurement_updatesInitialBias() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-            context,
-            initialGyroscopeBiasAvailableListener = initialGyroscopeBiasAvailableListener
-        )
-
-        assertNull(calibrator.gyroscopeInitialBiasX)
-        assertNull(calibrator.gyroscopeInitialBiasY)
-        assertNull(calibrator.gyroscopeInitialBiasZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedGyroscopeMeasurements }.returns(2)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorGyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorGyroscopeMeasurementListener")
-        requireNotNull(generatorGyroscopeMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val wx = randomizer.nextFloat()
-        val wy = randomizer.nextFloat()
-        val wz = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorGyroscopeMeasurementListener.onMeasurement(
-            wx,
-            wy,
-            wz,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        assertNull(calibrator.gyroscopeInitialBiasX)
-        assertNull(calibrator.gyroscopeInitialBiasY)
-        assertNull(calibrator.gyroscopeInitialBiasZ)
-
-        verify { initialGyroscopeBiasAvailableListener wasNot Called }
-    }
-
-    @Test
-    fun onMagnetometerMeasurement_whenFirstMeasurement_updatesInitialHardIrons() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
-        requireNotNull(generatorMagnetometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val hardIronX = randomizer.nextFloat()
-        val hardIronY = randomizer.nextFloat()
-        val hardIronZ = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorMagnetometerMeasurementListener.onMeasurement(
-            bx,
-            by,
-            bz,
-            hardIronX,
-            hardIronY,
-            hardIronZ,
-            timestamp,
-            accuracy
-        )
-
-        val initialHardIronX = calibrator.magnetometerInitialHardIronX
-        requireNotNull(initialHardIronX)
-        val initialHardIronY = calibrator.magnetometerInitialHardIronY
-        requireNotNull(initialHardIronY)
-        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
-        requireNotNull(initialHardIronZ)
-        assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
-            initialHardIronX,
-            0.0
-        )
-        assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
-            initialHardIronY,
-            0.0
-        )
-        assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(-hardIronZ.toDouble()),
-            initialHardIronZ,
-            0.0
-        )
-    }
-
-    @Test
-    fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronX_updatesInitialHardIrons() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
-        requireNotNull(generatorMagnetometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val hardIronY = randomizer.nextFloat()
-        val hardIronZ = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorMagnetometerMeasurementListener.onMeasurement(
-            bx,
-            by,
-            bz,
-            null,
-            hardIronY,
-            hardIronZ,
-            timestamp,
-            accuracy
-        )
-
-        val initialHardIronX = calibrator.magnetometerInitialHardIronX
-        requireNotNull(initialHardIronX)
-        val initialHardIronY = calibrator.magnetometerInitialHardIronY
-        requireNotNull(initialHardIronY)
-        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
-        requireNotNull(initialHardIronZ)
-        assertEquals(0.0, initialHardIronX, 0.0)
-        assertEquals(0.0, initialHardIronY, 0.0)
-        assertEquals(0.0, initialHardIronZ, 0.0)
-    }
-
-    @Test
-    fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronY_updatesInitialHardIrons() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
-        requireNotNull(generatorMagnetometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val hardIronX = randomizer.nextFloat()
-        val hardIronZ = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorMagnetometerMeasurementListener.onMeasurement(
-            bx,
-            by,
-            bz,
-            hardIronX,
-            null,
-            hardIronZ,
-            timestamp,
-            accuracy
-        )
-
-        val initialHardIronX = calibrator.magnetometerInitialHardIronX
-        requireNotNull(initialHardIronX)
-        val initialHardIronY = calibrator.magnetometerInitialHardIronY
-        requireNotNull(initialHardIronY)
-        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
-        requireNotNull(initialHardIronZ)
-        assertEquals(0.0, initialHardIronX, 0.0)
-        assertEquals(0.0, initialHardIronY, 0.0)
-        assertEquals(0.0, initialHardIronZ, 0.0)
-    }
-
-    @Test
-    fun onMagnetometerMeasurement_whenFirstMeasurementAndNoHardIronZ_updatesInitialHardIrons() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
-        requireNotNull(generatorMagnetometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val hardIronX = randomizer.nextFloat()
-        val hardIronY = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorMagnetometerMeasurementListener.onMeasurement(
-            bx,
-            by,
-            bz,
-            hardIronX,
-            hardIronY,
-            null,
-            timestamp,
-            accuracy
-        )
-
-        val initialHardIronX = calibrator.magnetometerInitialHardIronX
-        requireNotNull(initialHardIronX)
-        val initialHardIronY = calibrator.magnetometerInitialHardIronY
-        requireNotNull(initialHardIronY)
-        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
-        requireNotNull(initialHardIronZ)
-        assertEquals(0.0, initialHardIronX, 0.0)
-        assertEquals(0.0, initialHardIronY, 0.0)
-        assertEquals(0.0, initialHardIronZ, 0.0)
-    }
-
-    @Test
-    fun onMagnetometerMeasurement_whenFirstMeasurementAndListener_updatesInitialHardIrons() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-                context,
-                initialMagnetometerHardIronAvailableListener = initialMagnetometerHardIronAvailableListener
-            )
-
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
-        requireNotNull(generatorMagnetometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val hardIronX = randomizer.nextFloat()
-        val hardIronY = randomizer.nextFloat()
-        val hardIronZ = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorMagnetometerMeasurementListener.onMeasurement(
-            bx,
-            by,
-            bz,
-            hardIronX,
-            hardIronY,
-            hardIronZ,
-            timestamp,
-            accuracy
-        )
-
-        val initialHardIronX = calibrator.magnetometerInitialHardIronX
-        requireNotNull(initialHardIronX)
-        val initialHardIronY = calibrator.magnetometerInitialHardIronY
-        requireNotNull(initialHardIronY)
-        val initialHardIronZ = calibrator.magnetometerInitialHardIronZ
-        requireNotNull(initialHardIronZ)
-        assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble()),
-            initialHardIronX,
-            0.0
-        )
-        assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble()),
-            initialHardIronY,
-            0.0
-        )
-        assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(-hardIronZ.toDouble()),
-            initialHardIronZ,
-            0.0
-        )
-
-        verify(exactly = 1) {
-            initialMagnetometerHardIronAvailableListener.onInitialHardIronAvailable(
-                calibrator,
-                initialHardIronX,
-                initialHardIronY,
-                initialHardIronZ
-            )
-        }
-    }
-
-    @Test
-    fun onMagnetometerMeasurement_whenNoFirstMeasurement_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-                context,
-                initialMagnetometerHardIronAvailableListener = initialMagnetometerHardIronAvailableListener
-            )
-
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-
-        val generator: AccelerometerGyroscopeAndMagnetometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedMagnetometerMeasurements }.returns(2)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorMagnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorMagnetometerMeasurementListener")
-        requireNotNull(generatorMagnetometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val hardIronX = randomizer.nextFloat()
-        val hardIronY = randomizer.nextFloat()
-        val hardIronZ = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorMagnetometerMeasurementListener.onMeasurement(
-            bx,
-            by,
-            bz,
-            hardIronX,
-            hardIronY,
-            hardIronZ,
-            timestamp,
-            accuracy
-        )
-
-        assertNull(calibrator.magnetometerInitialHardIronX)
-        assertNull(calibrator.magnetometerInitialHardIronY)
-        assertNull(calibrator.magnetometerInitialHardIronZ)
-
-        verify { initialMagnetometerHardIronAvailableListener wasNot Called }
-    }
-
-    @Test
     fun onEstimationCompleted_setsGravityNorm() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10134,7 +9454,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onUnreliable_whenNoListenerAvailable_setsResultAsUnreliable() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10152,7 +9471,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun onUnreliable_whenListenerAvailable_setsResultAsUnreliable() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -10178,7 +9496,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerBaseNoiseLevel_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10198,7 +9515,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10220,7 +9536,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10252,7 +9567,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeBaseNoiseLevel_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10272,7 +9586,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10294,7 +9607,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getGyroscopeBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10325,7 +9637,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevel_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10345,7 +9656,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10367,7 +9677,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10399,7 +9708,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelPsd_getsGeneratorBaseNoiseLevelPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10418,7 +9726,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelRootPsd_getsGeneratorBaseNoiseLevelRootPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10437,7 +9744,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun threshold_getsGeneratorThreshold() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10459,7 +9765,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun thresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10482,7 +9787,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getThresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10512,7 +9816,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun processedStaticSamples_getsGeneratorProcessedStaticSamples() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10531,7 +9834,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun processedDynamicSamples_getsGeneratorProcessedDynamicSamples() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10550,7 +9852,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun isStaticIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10567,7 +9868,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun isDynamicIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10584,7 +9884,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerAverageTimeInterval_getsGeneratorAccelerometerAverageTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10603,7 +9902,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerAverageTimeIntervalAsTime_getsGeneratorAccelerometerAverageTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10623,7 +9921,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerAverageTimeIntervalAsTime_getsGeneratorAccelerometerAverageTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10653,7 +9950,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalVariance_getsGeneratorAccelerometerTimeIntervalVariance() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10675,7 +9971,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalStandardDeviation_getsGeneratorAccelerometerTimeIntervalStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10702,7 +9997,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10722,7 +10016,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10752,7 +10045,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun numberOfProcessedGyroscopeMeasurements_getsGeneratorNumberOfProcessedMagnetometerMeasurements() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10777,7 +10069,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun numberOfProcessedMagnetometerMeasurements_getsGeneratorNumberOfProcessedMagnetometerMeasurements() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10802,7 +10093,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun numberOfProcessedAccelerometerMeasurements_getsGeneratorNumberOfProcessedAccelerometerMeasurements() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10828,7 +10118,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeInitialBiasX_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10845,7 +10134,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeInitialBiasY_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10862,7 +10150,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeInitialBiasZ_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10879,7 +10166,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeInitialBiasXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10899,7 +10185,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getGyroscopeInitialBiasXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10919,7 +10204,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeInitialBiasYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10939,7 +10223,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getGyroscopeInitialBiasYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10959,7 +10242,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeInitialBiasZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10979,7 +10261,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getGyroscopeInitialBiasZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -10999,7 +10280,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun gyroscopeInitialBiasAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11030,41 +10310,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     }
 
     @Test
-    fun getGyroscopeInitialBiasAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
-
-        // check default value
-        val triad = AngularSpeedTriad()
-        assertFalse(calibrator.getGyroscopeInitialBiasAsTriad(triad))
-
-        // set new value
-        val randomizer = UniformRandomizer()
-        val initialBiasX = randomizer.nextDouble()
-        calibrator.setPrivateProperty("gyroscopeInitialBiasX", initialBiasX)
-
-        assertFalse(calibrator.getGyroscopeInitialBiasAsTriad(triad))
-
-        val initialBiasY = randomizer.nextDouble()
-        calibrator.setPrivateProperty("gyroscopeInitialBiasY", initialBiasY)
-
-        assertFalse(calibrator.getGyroscopeInitialBiasAsTriad(triad))
-
-        val initialBiasZ = randomizer.nextDouble()
-        calibrator.setPrivateProperty("gyroscopeInitialBiasZ", initialBiasZ)
-
-        // check
-        assertTrue(calibrator.getGyroscopeInitialBiasAsTriad(triad))
-        assertEquals(initialBiasX, triad.valueX, 0.0)
-        assertEquals(initialBiasY, triad.valueY, 0.0)
-        assertEquals(initialBiasZ, triad.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, triad.unit)
-    }
-
-    @Test
     fun magnetometerInitialHardIronX_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11081,7 +10327,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronY_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11098,7 +10343,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronZ_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11115,7 +10359,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11135,7 +10378,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11155,7 +10397,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11175,7 +10416,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11195,7 +10435,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11215,7 +10454,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11235,7 +10473,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun magnetometerInitialHardIronAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11261,7 +10498,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getMagnetometerInitialHardIronAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11294,7 +10530,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasX_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11311,7 +10546,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasY_getExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11328,7 +10562,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasZ_getExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11345,7 +10578,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11365,7 +10597,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11386,7 +10617,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11406,7 +10636,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11427,7 +10656,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11447,7 +10675,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11468,7 +10695,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11501,7 +10727,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11535,7 +10760,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun start_whenNotRunningAndGravityNormNotEstimated_resetsAndStartsGenerator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location
@@ -11614,7 +10838,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun start_whenNotRunningAndGravityNormEstimated_resetsAndStartsGenerator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11690,24 +10913,61 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         verify(exactly = 1) { generatorSpy.start() }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun start_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator =
-            StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
 
-        assertFalse(calibrator.running)
+            every { context.getSystemService(Context.SENSOR_SERVICE) }
+                .returns(sensorManager)
+            every {
+                sensorManager.getDefaultSensor(
+                    AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+                )
+            }.returns(
+                accelerometerSensor
+            )
+            every {
+                sensorManager.getDefaultSensor(
+                    GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+                )
+            }.returns(
+                gyroscopeSensor
+            )
+            every {
+                sensorManager.getDefaultSensor(
+                    MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value
+                )
+            }.returns(magnetometerSensor)
+            every {
+                sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            }.returns(
+                gravitySensor
+            )
+            every {
+                sensorManager.registerListener(
+                    any<SensorEventListener>(), any<Sensor>(), any()
+                )
+            }.returns(true)
 
-        calibrator.start()
+            val calibrator =
+                StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        assertTrue(calibrator.running)
+            assertFalse(calibrator.running)
 
-        calibrator.start()
+            calibrator.start()
+
+            assertTrue(calibrator.running)
+
+            assertThrows(IllegalStateException::class.java) {
+                calibrator.start()
+            }
+        }
     }
 
     @Test
     fun stop_whenGravityNormEstimatorNotRunning_stopsGenerator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11743,7 +11003,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun stop_whenGravityNormEstimatorRunning_stopsGenerator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11759,6 +11018,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         requireNotNull(gravityNormEstimator)
         val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         every { gravityNormEstimatorSpy.running }.returns(true)
+        justRun { gravityNormEstimatorSpy.stop() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
@@ -11780,7 +11040,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun stop_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -11809,18 +11068,18 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         verify(exactly = 1) { stoppedListener.onStopped(calibrator) }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun calibrate_whenNotReadyToSolveCalibration_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
-        calibrator.calibrate()
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.calibrate()
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun calibrate_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -11831,7 +11090,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             true
         )
 
-        calibrator.calibrate()
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.calibrate()
+        }
     }
 
     @Test
@@ -11839,7 +11100,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val wmmEstimator = WMMEarthMagneticFluxDensityEstimator()
         val location = getLocation()
         val timestamp = Date()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             calibrationSolvingStartedListener = calibrationSolvingStartedListener,
@@ -11954,7 +11214,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
                 BodyMagneticFluxDensityGenerator.generate(truthMagnetic, hardIron, mm)
 
             val magnetometerMeasurement =
-                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic, MAGNETOMETER_NOISE_STD)
+                StandardDeviationBodyMagneticFluxDensity(measuredMagnetic,
+                    MAGNETOMETER_NOISE_STD
+                )
             calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
 
             for (j in 0 until reqMeasurements) {
@@ -12154,74 +11416,85 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun calibrate_whenInternalAccelerometerFailure_setsAsNotRunning() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-            context
-        )
+        mockkStatic(Log::class) {
+            every { Log.e(any(), any(), any()) }.returns(1)
 
-        val accelerometerMeasurement = StandardDeviationBodyKinematics()
-        val gyroscopeMeasurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        val magnetometerMeasurement = StandardDeviationBodyMagneticFluxDensity()
-        (1..calibrator.requiredMeasurements).forEach { _ ->
-            calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
-            calibrator.gyroscopeMeasurements.add(gyroscopeMeasurement)
-            calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
+            val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context
+            )
+
+            val accelerometerMeasurement = StandardDeviationBodyKinematics()
+            val gyroscopeMeasurement =
+                BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+            val magnetometerMeasurement = StandardDeviationBodyMagneticFluxDensity()
+            (1..calibrator.requiredMeasurements).forEach { _ ->
+                calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
+                calibrator.gyroscopeMeasurements.add(gyroscopeMeasurement)
+                calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
+            }
+
+            assertTrue(calibrator.isReadyToSolveCalibration)
+            assertFalse(calibrator.running)
+
+            every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(
+                CalibrationException()
+            )
+            calibrator.setPrivateProperty(
+                "accelerometerInternalCalibrator",
+                accelerometerNonLinearInternalCalibrator
+            )
+
+            assertFalse(calibrator.calibrate())
+
+            assertFalse(calibrator.running)
         }
-
-        assertTrue(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-
-        every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(CalibrationException())
-        calibrator.setPrivateProperty(
-            "accelerometerInternalCalibrator",
-            accelerometerNonLinearInternalCalibrator
-        )
-
-        assertFalse(calibrator.calibrate())
-
-        assertFalse(calibrator.running)
     }
 
     @Test
     fun calibrate_whenFailureAndErrorListener_setsAsNotRunning() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
-            context,
-            errorListener = errorListener
-        )
+        mockkStatic(Log::class) {
+            every { Log.e(any(), any(), any()) }.returns(1)
 
-        val accelerometerMeasurement = StandardDeviationBodyKinematics()
-        val gyroscopeMeasurement = BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
-        val magnetometerMeasurement = StandardDeviationBodyMagneticFluxDensity()
-        (1..calibrator.requiredMeasurements).forEach { _ ->
-            calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
-            calibrator.gyroscopeMeasurements.add(gyroscopeMeasurement)
-            calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
-        }
-
-        assertTrue(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-
-        every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(CalibrationException())
-        calibrator.setPrivateProperty(
-            "accelerometerInternalCalibrator",
-            accelerometerNonLinearInternalCalibrator
-        )
-
-        assertFalse(calibrator.calibrate())
-
-        assertFalse(calibrator.running)
-        verify(exactly = 1) {
-            errorListener.onError(
-                calibrator,
-                CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+            val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
+                context,
+                errorListener = errorListener
             )
+
+            val accelerometerMeasurement = StandardDeviationBodyKinematics()
+            val gyroscopeMeasurement =
+                BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>()
+            val magnetometerMeasurement = StandardDeviationBodyMagneticFluxDensity()
+            (1..calibrator.requiredMeasurements).forEach { _ ->
+                calibrator.accelerometerMeasurements.add(accelerometerMeasurement)
+                calibrator.gyroscopeMeasurements.add(gyroscopeMeasurement)
+                calibrator.magnetometerMeasurements.add(magnetometerMeasurement)
+            }
+
+            assertTrue(calibrator.isReadyToSolveCalibration)
+            assertFalse(calibrator.running)
+
+            every { accelerometerNonLinearInternalCalibrator.calibrate() }.throws(
+                CalibrationException()
+            )
+            calibrator.setPrivateProperty(
+                "accelerometerInternalCalibrator",
+                accelerometerNonLinearInternalCalibrator
+            )
+
+            assertFalse(calibrator.calibrate())
+
+            assertFalse(calibrator.running)
+            verify(exactly = 1) {
+                errorListener.onError(
+                    calibrator,
+                    CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+                )
+            }
         }
     }
 
     @Test
     fun estimatedAccelerometerBiasX_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12231,7 +11504,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasX_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12246,7 +11518,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasX_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12261,7 +11532,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasY_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12271,7 +11541,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasY_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12286,7 +11555,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasY_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12301,7 +11569,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZ_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12311,7 +11578,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZ_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12326,7 +11592,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZ_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12341,7 +11606,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasXAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12351,7 +11615,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasXAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12367,7 +11630,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasXAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12383,7 +11645,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasXAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12394,7 +11655,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasXAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12418,7 +11678,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasXAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12441,7 +11700,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasYAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12451,7 +11709,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasYAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12467,7 +11724,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasYAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12483,7 +11739,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasYAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12494,7 +11749,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasYAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12518,7 +11772,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasYAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12541,7 +11794,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12551,7 +11803,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12567,7 +11818,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12583,7 +11833,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasZAsMeasurement_whenNoAccelerometerInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12594,7 +11843,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasZAsMeasurement_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12618,7 +11866,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasZAsMeasurement_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12641,7 +11888,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasAsTriad_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12651,7 +11897,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasAsTriad_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12674,7 +11919,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasAsTriad_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12697,7 +11941,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasAsTriad_whenNoAccelerometerInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12709,7 +11952,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasAsTriad_whenUnknownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12741,7 +11983,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasAsTriad_whenKnownBiasAccelerometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12772,7 +12013,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasStandardDeviationNorm_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12783,7 +12023,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasStandardDeviationNorm_whenBiasUncertaintySourceAccelerometerInternalCalibrator_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12803,7 +12042,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasStandardDeviationNorm_whenOtherAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12815,7 +12053,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasX_whenNoGyroscopeInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12825,7 +12062,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasX_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12840,7 +12076,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasX_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12855,7 +12090,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasY_whenNoGyroscopeInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12865,7 +12099,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasY_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12880,7 +12113,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasY_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12895,7 +12127,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasZ_whenNoGyroscopeInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12905,7 +12136,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasZ_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12920,7 +12150,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasZ_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12935,7 +12164,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasXAsMeasurement_whenNoGyroscopeInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12945,7 +12173,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasXAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12961,7 +12188,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasXAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12977,7 +12203,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasXAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -12988,7 +12213,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasXAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13012,7 +12236,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasXAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13035,7 +12258,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13045,7 +12267,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasYAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13061,7 +12282,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasYAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13077,7 +12297,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13088,7 +12307,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasYAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13112,7 +12330,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasYAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13135,7 +12352,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13145,7 +12361,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasZAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13161,7 +12376,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasZAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13177,7 +12391,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13188,7 +12401,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasZAsMeasurement_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13212,7 +12424,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasZAsMeasurement_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13235,7 +12446,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasAsTriad_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13245,7 +12455,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasAsTriad_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13268,7 +12477,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasAsTriad_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13293,7 +12501,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasAsTriad_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13304,7 +12511,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasAsTriad_whenUnknownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13341,7 +12547,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedGyroscopeBiasAsTriad_whenKnownBiasGyroscopeInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13371,7 +12576,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasStandardDeviationNorm_whenNoAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13382,7 +12586,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasStandardDeviationNorm_whenBiasUncertaintySourceAccelerometerInternalCalibrator_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13402,7 +12605,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedGyroscopeBiasStandardDeviationNorm_whenOtherAccelerometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13414,7 +12616,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronX_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13424,7 +12625,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronX_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13439,7 +12639,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronX_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13454,7 +12653,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronY_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13464,7 +12662,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronY_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13479,7 +12676,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronY_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13494,7 +12690,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZ_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13504,7 +12699,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZ_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13519,7 +12713,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZ_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13534,7 +12727,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronXAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13544,7 +12736,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronXAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13560,7 +12751,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronXAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13576,7 +12766,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronXAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13587,7 +12776,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronXAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13611,7 +12799,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronXAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13634,7 +12821,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronYAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13644,7 +12830,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronYAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13660,7 +12845,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronYAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13676,7 +12860,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronYAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13687,7 +12870,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronYAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13711,7 +12893,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronYAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13734,7 +12915,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13744,7 +12924,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13760,7 +12939,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronZAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13776,7 +12954,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronZAsMeasurement_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13787,7 +12964,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronZAsMeasurement_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13811,7 +12987,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronZAsMeasurement_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13834,7 +13009,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronAsTriad_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13844,7 +13018,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronAsTriad_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13867,7 +13040,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun estimatedMagnetometerHardIronAsTriad_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13890,7 +13062,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronAsTriad_whenNoMagnetometerInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13901,7 +13072,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronAsTriad_whenUnknownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13933,7 +13103,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun getEstimatedMagnetometerHardIronAsTriad_whenKnownHardIronMagnetometerInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(context)
 
@@ -13965,7 +13134,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLocation_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true,
@@ -14014,7 +13182,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as KnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertEquals(gravityNorm, internalCalibrator2.groundTruthGravityNorm, 0.0)
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
@@ -14035,7 +13205,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14103,7 +13272,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasBiasSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14184,7 +13352,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14259,7 +13426,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -14333,7 +13499,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasBiasNotAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -14413,7 +13578,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndPositionBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -14487,7 +13651,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14580,7 +13743,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14679,7 +13841,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14782,7 +13943,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14849,7 +14009,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasBiasNotSetAndRobustThreshold() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14942,7 +14101,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15041,7 +14199,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15144,7 +14301,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15210,7 +14366,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15310,7 +14465,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15416,7 +14570,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15526,7 +14679,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15595,7 +14747,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15688,7 +14839,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15787,7 +14937,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15899,7 +15048,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -15966,7 +15114,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -16066,7 +15213,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -16172,7 +15318,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -16291,7 +15436,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -16361,7 +15505,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16454,7 +15597,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16553,7 +15695,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16656,7 +15797,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             location = location,
@@ -16723,7 +15863,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16816,7 +15955,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16915,7 +16053,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17018,7 +16155,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17052,15 +16188,11 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             initialMzy
         )
         calibrator.accelerometerRobustMethod = RobustEstimatorMethod.MSAC
-        calibrator.accelerometerRobustConfidence =
-            ROBUST_CONFIDENCE
-        calibrator.accelerometerRobustMaxIterations =
-            ROBUST_MAX_ITERATIONS
-        calibrator.accelerometerRobustPreliminarySubsetSize =
-            ROBUST_PRELIMINARY_SUBSET_SIZE
+        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
         calibrator.accelerometerRobustThreshold = null
-        calibrator.accelerometerRobustThresholdFactor =
-            ROBUST_THRESHOLD_FACTOR
+        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
         assertEquals(RobustEstimatorMethod.MSAC, calibrator.accelerometerRobustMethod)
         assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
@@ -17088,7 +16220,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17188,7 +16319,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17294,7 +16424,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17404,7 +16533,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17473,7 +16601,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17566,7 +16693,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17665,7 +16791,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context
         )
@@ -17772,7 +16897,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17838,7 +16962,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17938,7 +17061,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -18044,7 +17166,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -18159,7 +17280,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -18227,7 +17347,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenNonRobustGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -18375,7 +17494,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerSx_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -18488,7 +17606,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerSy_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -18601,7 +17718,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerSz_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -18714,7 +17830,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMxy_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -18827,7 +17942,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMxz_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -18940,7 +18054,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMyx_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19053,7 +18166,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMyz_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19166,7 +18278,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMzx_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19279,7 +18390,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMissingAccelerometerMzy_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19392,7 +18502,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenNonRobustGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19500,7 +18609,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenNonRobustNoGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19608,7 +18716,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenNonRobustNoGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19715,7 +18822,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenRANSACGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19843,7 +18949,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenRANSACGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -19969,7 +19074,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenRANSACNoGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20095,7 +19199,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenRANSACNoGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20221,7 +19324,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenRANSACGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20347,7 +19449,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenRANSACNoGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20473,7 +19574,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenRANSACNoGroundTruthBiasNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20540,7 +19640,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMSACGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20666,7 +19765,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMSACGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20792,7 +19890,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMSACNoGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -20918,7 +20015,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMSACNoGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21044,7 +20140,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMSACGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21170,7 +20265,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMSACNoGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21296,7 +20390,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenMSACNoGroundTruthBiasNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21363,7 +20456,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROSACGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21490,7 +20582,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROSACGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21617,7 +20708,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROSACNoGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21744,7 +20834,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROSACNoGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21871,7 +20960,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROSACGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -21998,7 +21086,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROSACNoGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22125,7 +21212,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROSACNoGroundTruthBiasNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22213,7 +21299,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenLMedSGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22339,7 +21424,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenLMedSGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22465,7 +21549,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenLMedSNoGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22591,7 +21674,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenLMedSNoGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22717,7 +21799,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenLMedSGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22848,7 +21929,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenLMedSNoGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -22979,7 +22059,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenLMedSNoGroundTruthBiasNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23046,7 +22125,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROMedSGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23173,7 +22251,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROMedSGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23300,7 +22377,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROMedSNoGroundTruthBiasAndNoInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23427,7 +22503,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROMedSNoGroundTruthBiasAndInitialBias_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23554,7 +22629,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROMedSGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23686,7 +22760,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROMedSNoGroundTruthBiasAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23818,7 +22891,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildGyroscopeInternalCalibrator_whenPROMedSNoGroundTruthBiasNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23906,7 +22978,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNoInitialMagneticFluxDensityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23925,7 +22996,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
     fun buildMagnetometerInternalCalibrator_whenLocation_buildsExpectedCalibrator() {
         val location = getLocation()
         val worldMagneticModel = WorldMagneticModel()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -23982,7 +23052,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         val internalCalibrator2 =
             internalCalibrator as KnownHardIronPositionAndInstantMagnetometerCalibrator
         assertNull(internalCalibrator2.groundTruthMagneticFluxDensityNorm)
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         val calendar = GregorianCalendar()
         val timestamp = calibrator.timestamp
         requireNotNull(timestamp)
@@ -24015,7 +23087,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24093,7 +23164,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustGroundTruthHardIronSetAndCommonAxisUsed_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24171,7 +23241,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24255,7 +23324,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenNonRobustAndGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24339,7 +23407,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24434,7 +23501,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24529,7 +23595,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24630,7 +23695,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24731,7 +23795,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24836,7 +23899,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -24941,7 +24003,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25009,7 +24070,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenRANSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25077,7 +24137,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25172,7 +24231,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25267,7 +24325,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25368,7 +24425,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25469,7 +24525,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25574,7 +24629,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25679,7 +24733,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25747,7 +24800,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenMSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25815,7 +24867,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -25918,7 +24969,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26021,7 +25071,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26130,7 +25179,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26239,7 +25287,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26352,7 +25399,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26465,7 +25511,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26537,7 +25582,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROSACGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26609,7 +25653,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26704,7 +25747,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26799,7 +25841,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -26900,7 +25941,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27001,7 +26041,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27111,7 +26150,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27221,7 +26259,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27289,7 +26326,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenLMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27357,7 +26393,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27460,7 +26495,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27563,7 +26597,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndNoCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27668,7 +26701,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndCommonAxis_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27777,7 +26809,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -27895,7 +26926,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -28018,7 +27048,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronNotSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -28090,7 +27119,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @Test
     fun buildMagnetometerInternalCalibrator_whenPROMedSGroundTruthHardIronSetNoRobustThresholdAndMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator =
             StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator(
                 context,
@@ -28307,5 +27335,4 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
             }
         }
     }
-
 }

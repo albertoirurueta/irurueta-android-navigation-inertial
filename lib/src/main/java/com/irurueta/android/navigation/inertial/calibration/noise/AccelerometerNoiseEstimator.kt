@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationTriadNoiseEstimator
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
+import java.lang.IllegalArgumentException
 
 /**
  * Estimates accelerometer noise.
@@ -43,61 +45,48 @@ import com.irurueta.units.AccelerationUnit
  * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
  * [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
- * before completion. This is only taken into account if using either
- * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
+ * before completion. This is only taken into account if using either [StopMode.MAX_DURATION_ONLY] or
+ * [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param stopMode Determines when this estimator will consider its estimation completed.
  * @param completedListener Listener to notify when estimation is complete.
  * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
  * estimation must be discarded.
- * @property measurementListener Listener to notify collected sensor measurements.
- * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
+ * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is
  */
 class AccelerometerNoiseEstimator(
     context: Context,
     val sensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    maxSamples: Int = DEFAULT_MAX_SAMPLES,
-    maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
+    maxSamples: Int = BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+    maxDurationMillis: Long = BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<AccelerometerNoiseEstimator>? = null,
-    unreliableListener: OnUnreliableListener<AccelerometerNoiseEstimator>? = null,
-    var measurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null
-) : AccumulatedTriadEstimator<AccelerometerNoiseEstimator,
-        AccumulatedAccelerationTriadNoiseEstimator, AccelerometerSensorCollector, AccelerationUnit,
-        Acceleration, AccelerationTriad>(
-    context, sensorDelay, maxSamples, maxDurationMillis,
-    stopMode, completedListener, unreliableListener
+    unreliableListener: OnUnreliableListener<AccelerometerNoiseEstimator>? = null
+) : AccumulatedTriadEstimator<AccelerometerNoiseEstimator, AccelerometerNoiseProcessor,
+        AccelerometerSensorCollector, AccelerationUnit, Acceleration, AccelerationTriad,
+        AccelerometerSensorMeasurement>(
+    context,
+    sensorDelay,
+    completedListener,
+    unreliableListener
 ) {
     /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
+     * Internal processor that processes measurements.
      */
-    override val triad = AccelerationTriad()
+    override val processor = AccelerometerNoiseProcessor(
+        maxSamples,
+        maxDurationMillis,
+        stopMode
+    )
 
     /**
-     * Internal noise estimator of accelerometer measurements.
-     * This can be used to estimate statistics about accelerometer noise measurements.
-     */
-    override val noiseEstimator = AccumulatedAccelerationTriadNoiseEstimator()
-
-    /**
-     * Listener to handle accelerometer measurements.
-     */
-    private val accelerometerMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
-            handleMeasurement(ax.toDouble(), ay.toDouble(), az.toDouble(), timestamp, accuracy)
-            measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
-        }
-
-    /**
-     * Collector for accelerometer measurements.
+     * Internal collector that collects measurements.
      */
     override val collector = AccelerometerSensorCollector(
         context,
         sensorType,
         sensorDelay,
-        accelerometerMeasurementListener,
-        accuracyChangedListener
+        accuracyChangedListener,
+        measurementListener,
     )
 }

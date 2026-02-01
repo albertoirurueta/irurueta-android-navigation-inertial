@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
-import com.irurueta.navigation.inertial.calibration.TimedBodyKinematics
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.units.Acceleration
 import com.irurueta.units.Time
-import com.irurueta.units.TimeConverter
 
 /**
  * Base class to generate calibration measurements.
@@ -39,39 +40,19 @@ import com.irurueta.units.TimeConverter
  * @property context Android context.
  * @property accelerometerSensorType One of the supported accelerometer sensor types.
  * @property accelerometerSensorDelay Delay of sensor between samples.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @param I type of input data to be processed.
+ * @param P type of internal processor.
  */
-abstract class CalibrationMeasurementGenerator<I>(
+abstract class CalibrationMeasurementGenerator<I, P : CalibrationMeasurementGeneratorProcessor<I>>(
     val context: Context,
     val accelerometerSensorType: AccelerometerSensorType =
         AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
-    val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
-    var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
+    val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST
 ) {
-
     /**
-     * Internal time estimator for accelerometer samples used for static/dynamic interval detection.
-     * This is used to estimate statistics about time intervals of accelerometer measurements.
+     * Internal processor to process sensor measurements.
      */
-    protected val accelerometerTimeIntervalEstimator = TimeIntervalEstimator()
-
-    /**
-     * Indicates whether generator successfully completed initialization.
-     */
-    protected var initialized: Boolean = false
-
-    /**
-     * Timestamp when accelerometer started.
-     */
-    protected var initialAccelerometerTimestamp: Long = 0L
-
-    /**
-     * Indicates whether a sensor has become unreliable, and thus
-     * the interval detector is considered to be in [Status.FAILED].
-     */
-    protected var unreliable = false
-
+    protected abstract val processor: P
 
     /**
      * Gets or sets minimum number of samples required in a static interval to be taken into
@@ -80,7 +61,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @throws IllegalArgumentException if provided value is less than 2.
      * @throws IllegalStateException if generator is currently running.
      */
-    abstract var minStaticSamples: Int
+    var minStaticSamples: Int
+        get() = processor.minStaticSamples
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.minStaticSamples = value
+        }
 
     /**
      * Gets or sets maximum number of samples allowed in dynamic intervals.
@@ -89,7 +76,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @throws IllegalArgumentException if provided value is less than 2.
      * @throws IllegalStateException if generator is currently running.
      */
-    abstract var maxDynamicSamples: Int
+    var maxDynamicSamples: Int
+        get() = processor.maxDynamicSamples
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.maxDynamicSamples = value
+        }
 
     /**
      * Gets or sets length of number of samples to keep within the window being processed to
@@ -99,7 +92,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @throws IllegalArgumentException if provided value is not valid.
      * @throws IllegalStateException if generator is currently running.
      */
-    abstract var windowSize: Int
+    var windowSize: Int
+        get() = processor.windowSize
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.windowSize = value
+        }
 
     /**
      * Gets or sets number of samples to be processed initially while keeping the sensor static in
@@ -109,7 +108,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * [TriadStaticIntervalDetector.MINIMUM_INITIAL_STATIC_SAMPLES].
      * @throws IllegalStateException if generator is currently running.
      */
-    abstract var initialStaticSamples: Int
+    var initialStaticSamples: Int
+        get() = processor.initialStaticSamples
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.initialStaticSamples = value
+        }
 
     /**
      * Gets or sets factor to be applied to detected base noise level in order to determine
@@ -118,7 +123,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @throws IllegalArgumentException if provided value is zero or negative
      * @throws IllegalStateException if generator is currently running.
      */
-    abstract var thresholdFactor: Double
+    var thresholdFactor: Double
+        get() = processor.thresholdFactor
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.thresholdFactor = value
+        }
 
     /**
      * Gets or sets factor to determine that a sudden movement has occurred during initialization if
@@ -128,7 +139,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if generator is currently running
      */
-    abstract var instantaneousNoiseLevelFactor: Double
+    var instantaneousNoiseLevelFactor: Double
+        get() = processor.instantaneousNoiseLevelFactor
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.instantaneousNoiseLevelFactor = value
+        }
 
     /**
      * Gets or sets overall absolute threshold to determine whether there has been excessive motion
@@ -139,7 +156,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if detector is currently running.
      */
-    abstract var baseNoiseLevelAbsoluteThreshold: Double
+    var baseNoiseLevelAbsoluteThreshold: Double
+        get() = processor.baseNoiseLevelAbsoluteThreshold
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.baseNoiseLevelAbsoluteThreshold = value
+        }
 
     /**
      * Gets or sets overall absolute threshold to determine whether there has been excessive motion
@@ -149,7 +172,13 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @throws IllegalArgumentException if provided value is zero or negative.
      * @throws IllegalStateException if detector is currently running.
      */
-    abstract var baseNoiseLevelAbsoluteThresholdAsMeasurement: Acceleration
+    var baseNoiseLevelAbsoluteThresholdAsMeasurement: Acceleration
+        get() = processor.baseNoiseLevelAbsoluteThresholdAsMeasurement
+        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        set(value) {
+            check(!running)
+            processor.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        }
 
     /**
      * Gets overall absolute threshold to determine whether there has been excessive motion during
@@ -158,20 +187,24 @@ abstract class CalibrationMeasurementGenerator<I>(
      *
      * @param result instance where result will be stored.
      */
-    abstract fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result: Acceleration)
+    fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result: Acceleration) {
+        processor.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result)
+    }
 
     /**
      * Gets accelerometer measurement base noise level that has been detected during initialization
      * expressed in meters per squared second (m/s^2).
      * This is only available once detector completes initialization.
      */
-    abstract val accelerometerBaseNoiseLevel: Double?
+    val accelerometerBaseNoiseLevel: Double?
+        get() = processor.accelerometerBaseNoiseLevel
 
     /**
      * Gets sensor measurement base noise level that has been detected during initialization.
      * This is only available once detector completes initialization.
      */
-    abstract val accelerometerBaseNoiseLevelAsMeasurement: Acceleration?
+    val accelerometerBaseNoiseLevelAsMeasurement: Acceleration?
+        get() = processor.accelerometerBaseNoiseLevelAsMeasurement
 
     /**
      * Gets sensor measurement base noise level that has been detected during initialization.
@@ -180,33 +213,39 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    abstract fun getAccelerometerBaseNoiseLevelAsMeasurement(result: Acceleration): Boolean
+    fun getAccelerometerBaseNoiseLevelAsMeasurement(result: Acceleration): Boolean {
+        return processor.getAccelerometerBaseNoiseLevelAsMeasurement(result)
+    }
 
     /**
      * Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3).
      * This is only available once detector completes initialization.
      */
-    abstract val accelerometerBaseNoiseLevelPsd: Double?
+    val accelerometerBaseNoiseLevelPsd: Double?
+        get() = processor.accelerometerBaseNoiseLevelPsd
 
     /**
      * Gets measurement base noise level root PSD (Power Spectral Density) expressed
      * in (m * s^-1.5).
      * This is only available once detector completes initialization.
      */
-    abstract val accelerometerBaseNoiseLevelRootPsd: Double?
+    val accelerometerBaseNoiseLevelRootPsd: Double?
+        get() = processor.accelerometerBaseNoiseLevelRootPsd
 
     /**
      * Gets estimated threshold to determine static/dynamic period changes expressed in meters per
      * squared second (m/s^2).
      * This is only available once detector completes initialization.
      */
-    abstract val threshold: Double?
+    val threshold: Double?
+        get() = processor.threshold
 
     /**
      * Gets estimated threshold to determine static/dynamic period changes.
      * This is only available once detector completes initialization.
      */
-    abstract val thresholdAsMeasurement: Acceleration?
+    val thresholdAsMeasurement: Acceleration?
+        get() = processor.thresholdAsMeasurement
 
     /**
      * Gets estimated threshold to determine static/dynamic period changes.
@@ -215,49 +254,47 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @param result instance where result will be stored.
      * @return true if result is available, false otherwise.
      */
-    abstract fun getThresholdAsMeasurement(result: Acceleration): Boolean
+    fun getThresholdAsMeasurement(result: Acceleration): Boolean {
+        return processor.getThresholdAsMeasurement(result)
+    }
 
     /**
      * Gets number of samples that have been processed in a static period so far.
      */
-    abstract val processedStaticSamples: Int
+    val processedStaticSamples: Int
+        get() = processor.processedStaticSamples
 
     /**
      * Gets number of samples that have been processed in a dynamic period so far.
      */
-    abstract val processedDynamicSamples: Int
+    val processedDynamicSamples: Int
+        get() = processor.processedDynamicSamples
 
     /**
      * Indicates whether last static interval must be skipped.
      */
-    abstract val isStaticIntervalSkipped: Boolean
+    val isStaticIntervalSkipped: Boolean
+        get() = processor.isStaticIntervalSkipped
 
     /**
      * Indicates whether last dynamic interval must be skipped.
      */
-    abstract val isDynamicIntervalSkipped: Boolean
+    val isDynamicIntervalSkipped: Boolean
+        get() = processor.isDynamicIntervalSkipped
 
     /**
      * Gets average time interval between accelerometer samples expressed in seconds (s).
      * This is only available once this generator completes initialization.
      */
-    val accelerometerAverageTimeInterval
-        get() = if (initialized) {
-            accelerometerTimeIntervalEstimator.averageTimeInterval
-        } else {
-            null
-        }
+    val accelerometerAverageTimeInterval: Double?
+        get() = processor.accelerometerAverageTimeInterval
 
     /**
      * Gets average time interval between accelerometer samples.
      * This is only available once this generator completes initialization.
      */
-    val accelerometerAverageTimeIntervalAsTime
-        get() = if (initialized) {
-            accelerometerTimeIntervalEstimator.averageTimeIntervalAsTime
-        } else {
-            null
-        }
+    val accelerometerAverageTimeIntervalAsTime: Time?
+        get() = processor.accelerometerAverageTimeIntervalAsTime
 
     /**
      * Gets average time interval between accelerometer measurements.
@@ -267,12 +304,7 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @return true if result is available, false otherwise.
      */
     fun getAccelerometerAverageTimeIntervalAsTime(result: Time): Boolean {
-        return if (initialized) {
-            accelerometerTimeIntervalEstimator.getAverageTimeIntervalAsTime(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAccelerometerAverageTimeIntervalAsTime(result)
     }
 
     /**
@@ -280,35 +312,23 @@ abstract class CalibrationMeasurementGenerator<I>(
      * squared seconds (s^2).
      * This is only available once detector completes initialization.
      */
-    val accelerometerTimeIntervalVariance
-        get() = if (initialized) {
-            accelerometerTimeIntervalEstimator.timeIntervalVariance
-        } else {
-            null
-        }
+    val accelerometerTimeIntervalVariance: Double?
+        get() = processor.accelerometerTimeIntervalVariance
 
     /**
      * Gets estimated standard deviation of time interval between accelerometer measurements
      * expressed in seconds (s).
      * This is only available once detector completes initialization.
      */
-    val accelerometerTimeIntervalStandardDeviation
-        get() = if (initialized) {
-            accelerometerTimeIntervalEstimator.timeIntervalStandardDeviation
-        } else {
-            null
-        }
+    val accelerometerTimeIntervalStandardDeviation: Double?
+        get() = processor.accelerometerTimeIntervalStandardDeviation
 
     /**
      * Gets estimated standard deviation of time interval between accelerometer measurements.
      * This is only available once detector completes initialization.
      */
-    val accelerometerTimeIntervalStandardDeviationAsTime
-        get() = if (initialized) {
-            accelerometerTimeIntervalEstimator.timeIntervalStandardDeviationAsTime
-        } else {
-            null
-        }
+    val accelerometerTimeIntervalStandardDeviationAsTime: Time?
+        get() = processor.accelerometerTimeIntervalStandardDeviationAsTime
 
     /**
      * Gets estimated standard deviation of time interval between accelerometer measurements.
@@ -318,19 +338,14 @@ abstract class CalibrationMeasurementGenerator<I>(
      * @return true if result is available, false otherwise.
      */
     fun getAccelerometerTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
-        return if (initialized) {
-            accelerometerTimeIntervalEstimator.getTimeIntervalStandardDeviationAsTime(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAccelerometerTimeIntervalStandardDeviationAsTime(result)
     }
 
     /**
      * Number of accelerometer measurements that have been processed.
      */
-    var numberOfProcessedAccelerometerMeasurements: Int = 0
-        protected set
+    val numberOfProcessedAccelerometerMeasurements: Int
+        get() = processor.numberOfProcessedAccelerometerMeasurements
 
     /**
      * Indicates whether this generator is already running.
@@ -345,7 +360,8 @@ abstract class CalibrationMeasurementGenerator<I>(
      * initialization is complete, it will switch between static or dynamic interval
      * until generator is stopped or an error occurs.
      */
-    abstract val status: Status
+    val status: Status
+        get() = processor.status
 
     /**
      * Starts collection of sensor measurements.
@@ -361,30 +377,17 @@ abstract class CalibrationMeasurementGenerator<I>(
     abstract fun stop()
 
     /**
-     * Maps error reason to an [ErrorReason]
+     * Processes sensor accuracy changes.
      *
-     * @param reason reason to map from.
-     * @return mapped reason.
+     * @param accuracy New sensor accuracy.
      */
-    protected fun mapErrorReason(reason: TriadStaticIntervalDetector.ErrorReason): ErrorReason {
-        return ErrorReason.mapErrorReason(reason, unreliable)
-    }
-
-    /**
-     * Listener to detect when accuracy of sensor changes.
-     * When sensor becomes unreliable, an error is notified.
-     */
-    @Suppress("UNCHECKED_CAST")
-    protected val collectorAccuracyChangedListener =
-        SensorCollector.OnAccuracyChangedListener { accuracy ->
-            if (accuracy == SensorAccuracy.UNRELIABLE) {
-                stop()
-                unreliable = true
-                notifyUnreliableSensor()
-            }
-
-            accuracyChangedListener?.onAccuracyChanged(accuracy)
+    protected fun processAccuracyChange(accuracy: SensorAccuracy?) {
+        if (accuracy == SensorAccuracy.UNRELIABLE) {
+            stop()
+            processor.unreliable = true
+            notifyUnreliableSensor()
         }
+    }
 
     /**
      * Notifies that sensor has become unreliable.
@@ -392,85 +395,23 @@ abstract class CalibrationMeasurementGenerator<I>(
     protected abstract fun notifyUnreliableSensor()
 
     /**
-     * Sample used by internal measurement generator which combines information from accelerometer
-     * and possibly other sensors.
-     */
-    protected abstract val sample: I
-
-    /**
      * Internal listener for accelerometer sensor collector.
      * Handles measurements collected by the accelerometer sensor so that they are processed by
      * the internal measurement generator.
      */
     private val accelerometerCollectorMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
-            val status = status
-            val diff = timestamp - initialAccelerometerTimestamp
-            var diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-
-            if (status == Status.INITIALIZING) {
-                // during initialization phase, also estimate time interval duration.
-                if (numberOfProcessedAccelerometerMeasurements > 0) {
-                    accelerometerTimeIntervalEstimator.addTimestamp(diffSeconds)
-                } else {
-                    diffSeconds = 0.0
-                    initialAccelerometerTimestamp = timestamp
-                }
-            }
-
-            processSample(ax, ay, az, diffSeconds, sample)
-            processSampleInInternalGenerator()
-            numberOfProcessedAccelerometerMeasurements++
-
-            if (!initialized && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
-                // once initialized, set time interval into internal detector
-                updateTimeIntervalOfInternalGenerator()
-                initialized = true
-            }
-
-            notifyAccelerometerMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
+        SensorCollector.OnMeasurementListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector> { _, measurement ->
+            processor.processAccelerometerMeasurement(measurement)
         }
 
     /**
-     * Processes sample in internal measurements generator.
+     * Listener to detect when accuracy of accelerometer sensor changes.
+     * When sensor becomes unreliable, an error is notified.
      */
-    protected abstract fun processSampleInInternalGenerator()
-
-    /**
-     * Updates time interval of internal generator once the interval detector has been initialized.
-     */
-    protected abstract fun updateTimeIntervalOfInternalGenerator()
-
-    /**
-     * Notifies that an accelerometer measurement has been received.
-     *
-     * @param ax acceleration on device x-axis expressed in meters per squared second (m/s^2).
-     * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
-     * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
-     * @param bx bias on device x-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param by bias on device y-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param bz bias on device z-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
-     * will be monotonically increasing using the same time base as
-     * [android.os.SystemClock.elapsedRealtimeNanos].
-     * @param accuracy accelerometer sensor accuracy.
-     */
-    protected abstract fun notifyAccelerometerMeasurement(
-        ax: Float,
-        ay: Float,
-        az: Float,
-        bx: Float?,
-        by: Float?,
-        bz: Float?,
-        timestamp: Long,
-        accuracy: SensorAccuracy?
-    )
+    private val accelerometerAccuracyChangedListener =
+        SensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector> { _, accuracy ->
+            processAccuracyChange(accuracy)
+        }
 
     /**
      * Accelerometer sensor collector.
@@ -480,8 +421,8 @@ abstract class CalibrationMeasurementGenerator<I>(
         context,
         accelerometerSensorType,
         accelerometerSensorDelay,
-        accelerometerCollectorMeasurementListener,
-        collectorAccuracyChangedListener
+        accelerometerAccuracyChangedListener,
+        accelerometerCollectorMeasurementListener
     )
 
     /**
@@ -491,22 +432,4 @@ abstract class CalibrationMeasurementGenerator<I>(
      */
     val accelerometerSensor
         get() = accelerometerCollector.sensor
-
-    /**
-     * Processes an accelerometer measurement to generate an instance of type [TimedBodyKinematics]
-     * to be used by the internal measurement generator.
-     *
-     * @param ax acceleration on device x-axis expressed in meters per squared second (m/s^2).
-     * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
-     * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
-     * @param diffSeconds elapsed seconds since accelerometer started.
-     * @param result instance where processed sample result will be stored.
-     */
-    protected abstract fun processSample(
-        ax: Float,
-        ay: Float,
-        az: Float,
-        diffSeconds: Double,
-        result: I
-    )
 }

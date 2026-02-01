@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@ package com.irurueta.android.navigation.inertial.calibration.intervals.measureme
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
-import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.MeasurementsGeneratorListener
-import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import com.irurueta.units.Acceleration
 
 /**
  * Base class to generate measurements for a single sensor that can later be used by calibrators
@@ -50,16 +48,19 @@ import com.irurueta.units.Acceleration
  * @property generatedMeasurementListener listener to notify when a new calibration measurement is
  * generated.
  * @property resetListener listener to notify when generator is restarted.
- * @property accelerometerMeasurementListener listener to notify when a new accelerometer
- * measurement is received.
  * @param C type of [SingleSensorCalibrationMeasurementGenerator]
+ * @param P type of internal [SingleSensorCalibrationMeasurementGeneratorProcessor]
  * @param T type of measurement to be generated.
  * @param G type of internal generator.
  * @param L type of listener.
  * @param I type of input data to be processed.
  */
-abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalibrationMeasurementGenerator<C, T, G, L, I>,
-        T, G : MeasurementsGenerator<T, G, L, I>, L : MeasurementsGeneratorListener<T, G, L, I>,
+abstract class SingleSensorCalibrationMeasurementGenerator<
+        C : SingleSensorCalibrationMeasurementGenerator<C, P, T, G, L, I>,
+        P : SingleSensorCalibrationMeasurementGeneratorProcessor<P, T, G, L, I>,
+        T,
+        G : MeasurementsGenerator<T, G, L, I>,
+        L : MeasurementsGeneratorListener<T, G, L, I>,
         I>(
     context: Context,
     accelerometerSensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
@@ -72,81 +73,12 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
     var staticIntervalSkippedListener: OnStaticIntervalSkippedListener<C>? = null,
     var dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<C>? = null,
     var generatedMeasurementListener: OnGeneratedMeasurementListener<C, T>? = null,
-    var resetListener: OnResetListener<C>? = null,
-    var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : CalibrationMeasurementGenerator<I>(
+    var resetListener: OnResetListener<C>? = null
+) : CalibrationMeasurementGenerator<I, P>(
     context,
     accelerometerSensorType,
-    accelerometerSensorDelay,
-    accuracyChangedListener
+    accelerometerSensorDelay
 ) {
-    /**
-     * Listener for internal measurement generator.
-     */
-    protected abstract val measurementsGeneratorListener: L
-
-    /**
-     * Internal measurements generator for calibration.
-     */
-    protected abstract val measurementsGenerator: G
-
-    /**
-     * Processes sample in internal measurements generator.
-     */
-    override fun processSampleInInternalGenerator() {
-        measurementsGenerator.process(sample)
-    }
-
-    /**
-     * Updates time interval of internal generator once the interval detector has been initialized.
-     */
-    override fun updateTimeIntervalOfInternalGenerator() {
-        measurementsGenerator.timeInterval =
-            accelerometerTimeIntervalEstimator.averageTimeInterval
-    }
-
-    /**
-     * Notifies that an accelerometer measurement has been received.
-     *
-     * @param ax acceleration on device x-axis expressed in meters per squared second (m/s^2).
-     * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
-     * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
-     * @param bx bias on device x-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param by bias on device y-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param bz bias on device z-axis expressed in meters per squared second (m/s^2). Only
-     * available when using [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
-     * will be monotonically increasing using the same time base as
-     * [android.os.SystemClock.elapsedRealtimeNanos].
-     * @param accuracy accelerometer sensor accuracy.
-     */
-    override fun notifyAccelerometerMeasurement(
-        ax: Float,
-        ay: Float,
-        az: Float,
-        bx: Float?,
-        by: Float?,
-        bz: Float?,
-        timestamp: Long,
-        accuracy: SensorAccuracy?
-    ) {
-        accelerometerMeasurementListener?.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-    }
 
     /**
      * Notifies that sensor has become unreliable.
@@ -158,277 +90,6 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
             ErrorReason.UNRELIABLE_SENSOR
         )
     }
-
-    /**
-     * Gets or sets minimum number of samples required in a static interval to be taken into
-     * account. Smaller static intervals will be discarded.
-     *
-     * @throws IllegalArgumentException if provided value is less than 2.
-     * @throws IllegalStateException if generator is currently running.
-     */
-    override var minStaticSamples
-        get() = measurementsGenerator.minStaticSamples
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.minStaticSamples = value
-        }
-
-    /**
-     * Gets or sets maximum number of samples allowed in dynamic intervals.
-     * Dynamic intervals exceeding this value are discarded.
-     *
-     * @throws IllegalArgumentException if provided value is less than 2.
-     * @throws IllegalStateException if generator is currently running.
-     */
-    override var maxDynamicSamples
-        get() = measurementsGenerator.maxDynamicSamples
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.maxDynamicSamples = value
-        }
-
-    /**
-     * Gets or sets length of number of samples to keep within the window being processed to
-     * determine instantaneous sensor noise level. Window size must always be larger than
-     * allowed minimum value, which is 2 and must have an odd value.
-     *
-     * @throws IllegalArgumentException if provided value is not valid.
-     * @throws IllegalStateException if generator is currently running.
-     */
-    override var windowSize
-        get() = measurementsGenerator.windowSize
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.windowSize = value
-        }
-
-    /**
-     * Gets or sets number of samples to be processed initially while keeping the sensor static in
-     * order to find the base noise level when device is static.
-     *
-     * @throws IllegalArgumentException if provided value is less than
-     * [TriadStaticIntervalDetector.MINIMUM_INITIAL_STATIC_SAMPLES].
-     * @throws IllegalStateException if generator is currently running.
-     */
-    override var initialStaticSamples
-        get() = measurementsGenerator.initialStaticSamples
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.initialStaticSamples = value
-        }
-
-    /**
-     * Gets or sets factor to be applied to detected base noise level in order to determine
-     * threshold for static/dynamic period changes. This factor is unit-less.
-     *
-     * @throws IllegalArgumentException if provided value is zero or negative
-     * @throws IllegalStateException if generator is currently running.
-     */
-    override var thresholdFactor
-        get() = measurementsGenerator.thresholdFactor
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.thresholdFactor = value
-        }
-
-    /**
-     * Gets or sets factor to determine that a sudden movement has occurred during initialization if
-     * instantaneous noise level exceeds accumulated noise level by this factor amount. This factor
-     * is unit-less.
-     *
-     * @throws IllegalArgumentException if provided value is zero or negative.
-     * @throws IllegalStateException if generator is currently running
-     */
-    override var instantaneousNoiseLevelFactor
-        get() = measurementsGenerator.instantaneousNoiseLevelFactor
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.instantaneousNoiseLevelFactor = value
-        }
-
-    /**
-     * Gets or sets overall absolute threshold to determine whether there has been excessive motion
-     * during the whole initialization phase. Failure will be detected if estimated base noise level
-     * exceeds this threshold when initialization completes. This threshold is expressed in meters
-     * per squared second (m/s^2).
-     *
-     * @throws IllegalArgumentException if provided value is zero or negative.
-     * @throws IllegalStateException if detector is currently running.
-     */
-    override var baseNoiseLevelAbsoluteThreshold
-        get() = measurementsGenerator.baseNoiseLevelAbsoluteThreshold
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.baseNoiseLevelAbsoluteThreshold = value
-        }
-
-    /**
-     * Gets or sets overall absolute threshold to determine whether there has been excessive motion
-     * during the whole initialization phase. Failure will be detected if estimated base noise level
-     * exceeds this threshold when initialization completes.
-     *
-     * @throws IllegalArgumentException if provided value is zero or negative.
-     * @throws IllegalStateException if detector is currently running.
-     */
-    override var baseNoiseLevelAbsoluteThresholdAsMeasurement: Acceleration
-        get() = measurementsGenerator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
-        set(value) {
-            check(!running)
-            measurementsGenerator.setBaseNoiseLevelAbsoluteThreshold(value)
-        }
-
-    /**
-     * Gets overall absolute threshold to determine whether there has been excessive motion during
-     * the whole initialization phase. Failure will be detected if estimated base noise level
-     * exceeds this threshold when initialization completes.
-     *
-     * @param result instance where result will be stored.
-     */
-    override fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result: Acceleration) {
-        measurementsGenerator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(result)
-    }
-
-    /**
-     * Gets accelerometer measurement base noise level that has been detected during initialization
-     * expressed in meters per squared second (m/s^2).
-     * This is only available once detector completes initialization.
-     */
-    override val accelerometerBaseNoiseLevel
-        get() = if (initialized) {
-            measurementsGenerator.accelerometerBaseNoiseLevel
-        } else {
-            null
-        }
-
-    /**
-     * Gets accelerometer measurement base noise level that has been detected during initialization.
-     * This is only available once detector completes initialization.
-     */
-    override val accelerometerBaseNoiseLevelAsMeasurement
-        get() = if (initialized) {
-            measurementsGenerator.accelerometerBaseNoiseLevelAsMeasurement
-        } else {
-            null
-        }
-
-    /**
-     * Gets sensor measurement base noise level that has been detected during initialization.
-     * This is only available once detector completes initialization.
-     *
-     * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
-     */
-    override fun getAccelerometerBaseNoiseLevelAsMeasurement(result: Acceleration): Boolean {
-        return if (initialized) {
-            measurementsGenerator.getAccelerometerBaseNoiseLevelAsMeasurement(result)
-            true
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets measurement base noise level PSD (Power Spectral Density) expressed in (m^2 * s^-3).
-     */
-    override val accelerometerBaseNoiseLevelPsd
-        get() = if (initialized) {
-            measurementsGenerator.accelerometerBaseNoiseLevelPsd
-        } else {
-            null
-        }
-
-    /**
-     * Gets measurement base noise level root PSD (Power Spectral Density) expressed
-     * in (m * s^-1.5).
-     * This is only available once detector completes initialization.
-     */
-    override val accelerometerBaseNoiseLevelRootPsd
-        get() = if (initialized) {
-            measurementsGenerator.accelerometerBaseNoiseLevelRootPsd
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated threshold to determine static/dynamic period changes expressed in meters per
-     * squared second (m/s^2).
-     * This is only available once detector completes initialization.
-     */
-    override val threshold
-        get() = if (initialized) {
-            measurementsGenerator.threshold
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated threshold to determine static/dynamic period changes.
-     * This is only available once detector completes initialization.
-     */
-    override val thresholdAsMeasurement
-        get() = if (initialized) {
-            measurementsGenerator.thresholdAsMeasurement
-        } else {
-            null
-        }
-
-    /**
-     * Gets estimated threshold to determine static/dynamic period changes.
-     * This is only available once detector completes initialization.
-     *
-     * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
-     */
-    override fun getThresholdAsMeasurement(result: Acceleration): Boolean {
-        return if (initialized) {
-            measurementsGenerator.getThresholdAsMeasurement(result)
-            true
-        } else {
-            false
-        }
-    }
-
-    /**
-     * Gets number of samples that have been processed in a static period so far.
-     */
-    override val processedStaticSamples
-        get() = measurementsGenerator.processedStaticSamples
-
-    /**
-     * Gets number of samples that have been processed in a dynamic period so far.
-     */
-    override val processedDynamicSamples
-        get() = measurementsGenerator.processedDynamicSamples
-
-    /**
-     * Indicates whether last static interval must be skipped.
-     */
-    override val isStaticIntervalSkipped
-        get() = measurementsGenerator.isStaticIntervalSkipped
-
-    /**
-     * Indicates whether last dynamic interval must be skipped.
-     */
-    override val isDynamicIntervalSkipped
-        get() = measurementsGenerator.isDynamicIntervalSkipped
-
-    /**
-     * Gets status of measurement generator.
-     * Initially the generator will be idle.
-     * Once it starts, it will start the initialization phase, and once
-     * initialization is complete, it will switch between static or dynamic interval
-     * until generator is stopped or an error occurs.
-     */
-    override val status: Status
-        get() = Status.mapStatus(measurementsGenerator.status, unreliable)
 
     /**
      * Starts collection of sensor measurements.
@@ -459,14 +120,8 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
     /**
      * Resets generator to its initial state.
      */
-    private fun reset() {
-        accelerometerTimeIntervalEstimator.totalSamples = Integer.MAX_VALUE
-        accelerometerTimeIntervalEstimator.reset()
-        measurementsGenerator.reset()
-        unreliable = false
-        initialAccelerometerTimestamp = 0L
-        numberOfProcessedAccelerometerMeasurements = 0
-        initialized = false
+    protected fun reset() {
+       processor.reset()
     }
 
     /**
@@ -474,7 +129,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator].
      */
-    fun interface OnInitializationStartedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnInitializationStartedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
 
         /**
          * Called when initial static period starts so that base noise level starts being estimated.
@@ -489,7 +144,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      */
-    fun interface OnInitializationCompletedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnInitializationCompletedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
         /**
          * Called when initial static period successfully completes and accelerometer base noise
          * level is estimated so that static and dynamic periods can be detected.
@@ -506,7 +161,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      */
-    fun interface OnErrorListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnErrorListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
         /**
          * Called when an error is detected, either at initialization because excessive changes in
          * sensor measurements are found, or because sensor becomes unreliable.
@@ -523,7 +178,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      */
-    fun interface OnStaticIntervalDetectedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnStaticIntervalDetectedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
         /**
          * Called when a static interval has been detected after initialization.
          *
@@ -537,7 +192,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      */
-    fun interface OnDynamicIntervalDetectedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnDynamicIntervalDetectedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
         /**
          * Called when a dynamic interval has been detected after initialization.
          *
@@ -552,7 +207,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      */
-    fun interface OnStaticIntervalSkippedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnStaticIntervalSkippedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
         /**
          * Called when a detected static interval is skipped because there are not enough samples to
          * be processed.
@@ -568,7 +223,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      */
-    fun interface OnDynamicIntervalSkippedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnDynamicIntervalSkippedListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
         /**
          * Called when a detected dynamic interval is skipped because it has too many samples in it.
          *
@@ -583,7 +238,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      * @param T type of measurement to be generated.
      */
-    fun interface OnGeneratedMeasurementListener<C : SingleSensorCalibrationMeasurementGenerator<C, T, *, *, *>, T> {
+    fun interface OnGeneratedMeasurementListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, T, *, *, *>, T> {
         /**
          * Called when a new calibration measurement is generated.
          *
@@ -599,7 +254,7 @@ abstract class SingleSensorCalibrationMeasurementGenerator<C : SingleSensorCalib
      *
      * @param C an implementation of [SingleSensorCalibrationMeasurementGenerator]
      */
-    fun interface OnResetListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *>> {
+    fun interface OnResetListener<C : SingleSensorCalibrationMeasurementGenerator<C, *, *, *, *, *>> {
         /**
          * Called when generator is reset.
          *

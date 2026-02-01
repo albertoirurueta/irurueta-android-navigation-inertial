@@ -18,9 +18,17 @@ package com.irurueta.android.navigation.inertial.estimators.pose
 import android.content.Context
 import android.location.Location
 import android.os.SystemClock
-import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndGyroscopeSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.old.collectors.AttitudeAndAccelerometerSensorMeasurementSyncer
+import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.old.collectors.SensorType
 import com.irurueta.android.navigation.inertial.processors.pose.*
 import com.irurueta.geometry.EuclideanTransformation3D
 

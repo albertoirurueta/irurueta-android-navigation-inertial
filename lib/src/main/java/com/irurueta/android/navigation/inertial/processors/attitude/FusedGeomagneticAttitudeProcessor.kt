@@ -15,8 +15,8 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.collectors.GravityGyroscopeAndMagnetometerSyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.old.collectors.GravityGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 
 /**
  * Estimates absolute attitude by fusing absolute leveled attitude and relative attitude.

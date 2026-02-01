@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,18 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
+import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
+import com.irurueta.navigation.inertial.calibration.TimedBodyKinematics
 import com.irurueta.navigation.inertial.calibration.generators.GyroscopeMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.GyroscopeMeasurementsGeneratorListener
-import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAngularSpeedTriadNoiseEstimator
 import com.irurueta.units.AngularSpeed
-import com.irurueta.units.AngularSpeedUnit
 
 /**
  * Generates measurements that can later be used by gyroscope calibrators.
@@ -54,11 +55,6 @@ import com.irurueta.units.AngularSpeedUnit
  * @property generatedMeasurementListener listener to notify when a new calibration measurement is
  * generated.
  * @property resetListener listener to notify when generator is restarted.
- * @property accelerometerMeasurementListener listener to notify when a new accelerometer
- * measurement is received.
- * @property gyroscopeMeasurementListener listener to notify when a new gyroscope measurement is
- * received.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  */
 class GyroscopeMeasurementGenerator(
     context: Context,
@@ -75,13 +71,14 @@ class GyroscopeMeasurementGenerator(
     staticIntervalSkippedListener: OnStaticIntervalSkippedListener<GyroscopeMeasurementGenerator>? = null,
     dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<GyroscopeMeasurementGenerator>? = null,
     generatedMeasurementListener: OnGeneratedMeasurementListener<GyroscopeMeasurementGenerator, BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>? = null,
-    resetListener: OnResetListener<GyroscopeMeasurementGenerator>? = null,
-    accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-    var gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : SingleSensorCalibrationMeasurementGenerator<GyroscopeMeasurementGenerator,
+    resetListener: OnResetListener<GyroscopeMeasurementGenerator>? = null
+) : SingleSensorCalibrationMeasurementGenerator<
+        GyroscopeMeasurementGenerator,
+        GyroscopeMeasurementGeneratorProcessor,
         BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>,
-        GyroscopeMeasurementsGenerator, GyroscopeMeasurementsGeneratorListener, TimedBodyKinematics>(
+        GyroscopeMeasurementsGenerator,
+        GyroscopeMeasurementsGeneratorListener,
+        TimedBodyKinematics>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -93,140 +90,84 @@ class GyroscopeMeasurementGenerator(
     staticIntervalSkippedListener,
     dynamicIntervalSkippedListener,
     generatedMeasurementListener,
-    resetListener,
-    accelerometerMeasurementListener,
-    accuracyChangedListener
+    resetListener
 ) {
     /**
-     * Triad containing acceleration samples converted from device ENU coordinates to local plane
-     * NED coordinates.
-     * This is reused for performance reasons.
+     * Number of gyroscope measurements that have been processed.
      */
-    private val acceleration = AccelerationTriad()
+    val numberOfProcessedGyroscopeMeasurements: Int
+        get() = processor.numberOfProcessedGyroscopeMeasurements
 
     /**
-     * Triad containing angular speed samples converted from device ENU coordinates to local plane
-     * NED coordinates.
-     * This is reused for performance reasons.
+     * Gets gyroscope measurement base noise level that has been detected during initialization
+     * expressed in radians per second (rad/s).
+     * This is only available once generator completes initialization.
      */
-    private val angularSpeed = AngularSpeedTriad()
+    val gyroscopeBaseNoiseLevel: Double?
+        get() = processor.gyroscopeBaseNoiseLevel
 
     /**
-     * Listener for internal measurement generator.
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
      */
-    override val measurementsGeneratorListener = object : GyroscopeMeasurementsGeneratorListener {
-        override fun onInitializationStarted(generator: GyroscopeMeasurementsGenerator?) {
+    val gyroscopeBaseNoiseLevelAsMeasurement: AngularSpeed?
+        get() = processor.gyroscopeBaseNoiseLevelAsMeasurement
+
+    /**
+     * Gets gyroscope measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
+     */
+    fun getGyroscopeBaseNoiseLevelAsMeasurement(result: AngularSpeed): Boolean {
+        return processor.getGyroscopeBaseNoiseLevelAsMeasurement(result)
+    }
+
+    /**
+     * Internal processor to process accelerometer and gyroscope sensor measurements.
+     */
+    override val processor = GyroscopeMeasurementGeneratorProcessor(
+        initializationStartedListener = { _ ->
             initializationStartedListener?.onInitializationStarted(
-                this@GyroscopeMeasurementGenerator
+                this
             )
-        }
-
-        override fun onInitializationCompleted(
-            generator: GyroscopeMeasurementsGenerator?,
-            baseNoiseLevel: Double
-        ) {
+        },
+        initializationCompletedListener = { _, baseNoiseLevel ->
             initializationCompletedListener?.onInitializationCompleted(
-                this@GyroscopeMeasurementGenerator,
+                this,
                 baseNoiseLevel
             )
-        }
-
-        override fun onError(
-            generator: GyroscopeMeasurementsGenerator?,
-            reason: TriadStaticIntervalDetector.ErrorReason
-        ) {
-            errorListener?.onError(this@GyroscopeMeasurementGenerator, mapErrorReason(reason))
-        }
-
-        override fun onStaticIntervalDetected(generator: GyroscopeMeasurementsGenerator?) {
+        },
+        errorListener = { _, reason -> errorListener?.onError(this, reason) },
+        staticIntervalDetectedListener = { _ ->
             staticIntervalDetectedListener?.onStaticIntervalDetected(
-                this@GyroscopeMeasurementGenerator
+                this
             )
-        }
-
-        override fun onDynamicIntervalDetected(generator: GyroscopeMeasurementsGenerator?) {
+        },
+        dynamicIntervalDetectedListener = { _ ->
             dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
-                this@GyroscopeMeasurementGenerator
+                this
             )
-        }
-
-        override fun onStaticIntervalSkipped(generator: GyroscopeMeasurementsGenerator?) {
+        },
+        staticIntervalSkippedListener = { _ ->
             staticIntervalSkippedListener?.onStaticIntervalSkipped(
-                this@GyroscopeMeasurementGenerator
+                this
             )
-        }
-
-        override fun onDynamicIntervalSkipped(generator: GyroscopeMeasurementsGenerator?) {
+        },
+        dynamicIntervalSkippedListener = { _ ->
             dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(
-                this@GyroscopeMeasurementGenerator
+                this
             )
-        }
-
-        override fun onGeneratedMeasurement(
-            generator: GyroscopeMeasurementsGenerator?,
-            measurement: BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>
-        ) {
+        },
+        generatedMeasurementListener = { _, measurement ->
             generatedMeasurementListener?.onGeneratedMeasurement(
-                this@GyroscopeMeasurementGenerator,
+                this,
                 measurement
             )
-        }
-
-        override fun onReset(generator: GyroscopeMeasurementsGenerator?) {
-            resetListener?.onReset(this@GyroscopeMeasurementGenerator)
-        }
-    }
-
-    /**
-     * Internal measurements generator for gyroscope calibration.
-     */
-    override val measurementsGenerator =
-        GyroscopeMeasurementsGenerator(measurementsGeneratorListener)
-
-    /**
-     * Processes an accelerometer measurement to generate an instance of type [TimedBodyKinematics]
-     * to be used by the internal measurement generator.
-     *
-     * @param ax acceleration on device x-axis expressed in meters per squared second (m/s^2).
-     * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
-     * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
-     * @param diffSeconds elapsed seconds since accelerometer started.
-     * @param result instance where processed sample result will be stored.
-     */
-    override fun processSample(
-        ax: Float,
-        ay: Float,
-        az: Float,
-        diffSeconds: Double,
-        result: TimedBodyKinematics
-    ) {
-        // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
-
-        // set accelerometer information (gyroscope information is filled on the corresponding
-        // gyroscope listener)
-        kinematics.fx = acceleration.valueX
-        kinematics.fy = acceleration.valueY
-        kinematics.fz = acceleration.valueZ
-        result.kinematics = kinematics
-        result.timestampSeconds = diffSeconds
-    }
-
-    /**
-     * Body kinematics being reused for efficiency purposes.
-     */
-    private val kinematics = BodyKinematics()
-
-    /**
-     * Estimates accumulated average and noise of gyroscope values during static periods.
-     */
-    private val gyroscopeAccumulatedNoiseEstimator =
-        AccumulatedAngularSpeedTriadNoiseEstimator()
-
-    /**
-     * Sample used by internal measurement generator.
-     */
-    override val sample = TimedBodyKinematics()
+        },
+        resetListener = { _ -> resetListener?.onReset(this) }
+    )
 
     /**
      * Internal listener for gyroscope sensor collector.
@@ -234,36 +175,17 @@ class GyroscopeMeasurementGenerator(
      * by the internal measurement generator.
      */
     private val gyroscopeCollectorMeasurementListener =
-        GyroscopeSensorCollector.OnMeasurementListener { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
-            // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDConverter.convert(
-                wx.toDouble(),
-                wy.toDouble(),
-                wz.toDouble(),
-                angularSpeed
-            )
+        SensorCollector.OnMeasurementListener<GyroscopeSensorMeasurement, GyroscopeSensorCollector> { _, measurement ->
+            processor.processGyroscopeMeasurement(measurement)
+        }
 
-            // set gyroscope information
-            kinematics.angularRateX = angularSpeed.valueX
-            kinematics.angularRateY = angularSpeed.valueY
-            kinematics.angularRateZ = angularSpeed.valueZ
-
-            if (status == Status.INITIALIZING) {
-                gyroscopeAccumulatedNoiseEstimator.addTriad(
-                    kinematics.angularRateX,
-                    kinematics.angularRateY,
-                    kinematics.angularRateZ
-                )
-            }
-
-            numberOfProcessedGyroscopeMeasurements++
-
-            if (gyroscopeBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
-                gyroscopeBaseNoiseLevel =
-                    gyroscopeAccumulatedNoiseEstimator.standardDeviationNorm
-            }
-
-            gyroscopeMeasurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
+    /**
+     * Listener to detect when accuracy of gyroscope sensor changes.
+     * When sensor becomes unreliable, an error is notified.
+     */
+    private val gyroscopeAccuracyChangedListener =
+        SensorCollector.OnAccuracyChangedListener<GyroscopeSensorMeasurement, GyroscopeSensorCollector> { _, accuracy ->
+            processAccuracyChange(accuracy)
         }
 
     /**
@@ -274,8 +196,8 @@ class GyroscopeMeasurementGenerator(
         context,
         gyroscopeSensorType,
         gyroscopeSensorDelay,
-        gyroscopeCollectorMeasurementListener,
-        collectorAccuracyChangedListener
+        gyroscopeAccuracyChangedListener,
+        gyroscopeCollectorMeasurementListener
     )
 
     /**
@@ -286,44 +208,6 @@ class GyroscopeMeasurementGenerator(
         get() = gyroscopeCollector.sensor
 
     /**
-     * Number of gyroscope measurements that have been processed.
-     */
-    var numberOfProcessedGyroscopeMeasurements: Int = 0
-        private set
-
-    /**
-     * Gets gyroscope measurement base noise level that has been detected during initialization
-     * expressed in radians per second (rad/s).
-     * This is only available once generator completes initialization.
-     */
-    var gyroscopeBaseNoiseLevel: Double? = null
-        private set
-
-    /**
-     * Gets gyroscope measurement base noise level that has been detected during initialization.
-     * This is only available once generator completes initialization.
-     */
-    val gyroscopeBaseNoiseLevelAsMeasurement: AngularSpeed?
-        get() {
-            val value = gyroscopeBaseNoiseLevel ?: return null
-            return AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        }
-
-    /**
-     * Gets gyroscope measurement base noise level that has been detected during initialization.
-     * This is only available once generator completes initialization.
-     *
-     * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
-     */
-    fun getGyroscopeBaseNoiseLevelAsMeasurement(result: AngularSpeed): Boolean {
-        val value = gyroscopeBaseNoiseLevel ?: return false
-        result.value = value
-        result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        return true
-    }
-
-    /**
      * Starts collection of sensor measurements.
      *
      * @throws IllegalStateException if detector is already running or sensor is not available.
@@ -331,8 +215,6 @@ class GyroscopeMeasurementGenerator(
     @Throws(IllegalStateException::class)
     override fun start() {
         super.start()
-
-        reset()
 
         if (!gyroscopeCollector.start()) {
             stop()
@@ -346,14 +228,5 @@ class GyroscopeMeasurementGenerator(
     override fun stop() {
         gyroscopeCollector.stop()
         super.stop()
-    }
-
-    /**
-     * Resets generator to its initial state.
-     */
-    private fun reset() {
-        numberOfProcessedGyroscopeMeasurements = 0
-        gyroscopeBaseNoiseLevel = null
-        gyroscopeAccumulatedNoiseEstimator.reset()
     }
 }

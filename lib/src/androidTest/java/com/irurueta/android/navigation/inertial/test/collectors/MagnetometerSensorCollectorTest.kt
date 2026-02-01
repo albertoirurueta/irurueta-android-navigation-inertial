@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.collectors
 
 import android.hardware.Sensor
 import android.hardware.SensorDirectChannel
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import org.junit.Assert.*
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
+import com.irurueta.android.testutils.RequiresRealDevice
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@RequiresDevice
 class MagnetometerSensorCollectorTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -41,6 +45,7 @@ class MagnetometerSensorCollectorTest {
         measured = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun sensor_whenMagnetometerSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -55,6 +60,7 @@ class MagnetometerSensorCollectorTest {
         logSensor(sensor)
     }
 
+    @RequiresRealDevice
     @Test
     fun sensor_whenMagnetometerUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -69,6 +75,7 @@ class MagnetometerSensorCollectorTest {
         logSensor(sensor)
     }
 
+    @RequiresRealDevice
     @Test
     fun sensorAvailable_whenMagnetometerSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -80,6 +87,7 @@ class MagnetometerSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
+    @RequiresRealDevice
     @Test
     fun sensorAvailable_whenMagnetometerUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -91,6 +99,7 @@ class MagnetometerSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -98,26 +107,44 @@ class MagnetometerSensorCollectorTest {
             context,
             MagnetometerSensorType.MAGNETOMETER,
             SensorDelay.FASTEST,
-            measurementListener = { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
+            accuracyChangedListener = { _, accuracy ->
+                Log.d(
+                    "MagnetometerSensorCollectorTest",
+                    "onAccuracyChanged - accuracy: $accuracy"
+                )
+            },
+            measurementListener = { _, measurement ->
+                val bx = measurement.bx
+                val by = measurement.by
+                val bz = measurement.bz
+                val hardIronX = measurement.hardIronX
+                val hardIronY = measurement.hardIronY
+                val hardIronZ = measurement.hardIronZ
+                val timestamp = measurement.timestamp
+                val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                val coordinateSystem = measurement.sensorCoordinateSystem
+
                 assertNull(hardIronX)
                 assertNull(hardIronY)
                 assertNull(hardIronZ)
+                assertEquals(MagnetometerSensorType.MAGNETOMETER, measurement.sensorType)
+                assertEquals(SensorCoordinateSystem.ENU, coordinateSystem)
 
                 Log.d(
                     "MagnetometerSensorCollectorTest",
-                    "onMeasurement - bx: $bx, by: $by, bz: $bz, hardIronX: $hardIronX, "
-                            + "hardIronY: $hardIronY, hardIronZ: $hardIronZ, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                    """onMeasurement - bx: $bx µT, by: $by µT, bz: $bz µT, 
+                        |hardIronX: $hardIronX µT, hardIronY: $hardIronY µT, hardIronZ: $hardIronZ µT, 
+                        |timestamp: $timestamp, 
+                        |accuracy: $accuracy, 
+                        |sensorType: $sensorType,
+                        |coordinateSystem: $coordinateSystem
+                    """.trimMargin()
                 )
 
                 syncHelper.notifyAll { measured++ }
             }
-        ) { accuracy ->
-            Log.d(
-                "MagnetometerSensorCollectorTest",
-                "onAccuracyChanged - accuracy: $accuracy"
-            )
-        }
+        )
 
         collector.start()
 
@@ -128,6 +155,7 @@ class MagnetometerSensorCollectorTest {
         assertTrue(measured > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerUncalibratedSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -135,26 +163,44 @@ class MagnetometerSensorCollectorTest {
             context,
             MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             SensorDelay.FASTEST,
-            measurementListener = { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
+            accuracyChangedListener = { _, accuracy ->
+                Log.d(
+                    "MagnetometerSensorCollectorTest",
+                    "onAccuracyChanged - accuracy: $accuracy"
+                )
+            },
+            measurementListener = { _, measurement ->
+                val bx = measurement.bx
+                val by = measurement.by
+                val bz = measurement.bz
+                val hardIronX = measurement.hardIronX
+                val hardIronY = measurement.hardIronY
+                val hardIronZ = measurement.hardIronZ
+                val timestamp = measurement.timestamp
+                val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                val coordinateSystem = measurement.sensorCoordinateSystem
+
                 assertNotNull(hardIronX)
                 assertNotNull(hardIronY)
                 assertNotNull(hardIronZ)
+                assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED, measurement.sensorType)
+                assertEquals(SensorCoordinateSystem.ENU, coordinateSystem)
 
                 Log.d(
                     "MagnetometerSensorCollectorTest",
-                    "onMeasurement - bx: $bx, by: $by, bz: $bz, hardIronX: $hardIronX, "
-                            + "hardIronY: $hardIronY, hardIronZ: $hardIronZ, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                    """onMeasurement - bx: $bx µT, by: $by µT, bz: $bz µT, 
+                        |hardIronX: $hardIronX µT, hardIronY: $hardIronY µT, hardIronZ: $hardIronZ µT, 
+                        |timestamp: $timestamp, 
+                        |accuracy: $accuracy, 
+                        |sensorType: $sensorType,
+                        |coordinateSystem: $coordinateSystem
+                    """.trimMargin()
                 )
 
                 syncHelper.notifyAll { measured++ }
             }
-        ) { accuracy ->
-            Log.d(
-                "MagnetometerSensorCollectorTest",
-                "onAccuracyChanged - accuracy: $accuracy"
-            )
-        }
+        )
 
         collector.start()
 
@@ -200,7 +246,7 @@ class MagnetometerSensorCollectorTest {
         val wakeUpSensor = sensor.isWakeUpSensor
 
         Log.d(
-            "MagnetometerSensorCollectorTest", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
+            "MagnetometerSensorCollector2Test", "Sensor - fifoMaxEventCount: $fifoMaxEventCount, "
                     + "fifoReservedEventCount: $fifoReservedEventCount, "
                     + "highestDirectReportRateLevel: $highestDirectReportRateLevel, "
                     + "highestDirectReportRateLevelName: $highestDirectReportRateLevelName, "

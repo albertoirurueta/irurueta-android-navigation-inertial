@@ -6,10 +6,10 @@ import com.irurueta.algebra.ArrayUtils
 import com.irurueta.algebra.Matrix
 import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.KalmanFilter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.old.KalmanFilter
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.processors.attitude.KalmanRelativeAttitudeProcessor2.Companion.DEFAULT_ACCELEROMETER_NOISE_STANDARD_DEVIATION

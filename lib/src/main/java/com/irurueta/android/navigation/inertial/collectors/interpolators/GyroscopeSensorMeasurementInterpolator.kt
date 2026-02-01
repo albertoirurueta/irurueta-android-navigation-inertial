@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,39 +13,76 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.collectors.interpolators
 
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 
 /**
- * Gyroscope interpolator.
+ * Interpolates gyroscope measurements.
  */
-interface GyroscopeSensorMeasurementInterpolator {
+class GyroscopeSensorMeasurementInterpolator() :
+    SensorMeasurementInterpolator<GyroscopeSensorMeasurement>() {
 
     /**
-     * Pushes previous measurement into collection of processed measurements.
+     * Interpolates between two gyroscope measurements.
      *
-     * @param previousMeasurement previous measurement to be pushed.
+     * @param measurement1 the first gyroscope measurement.
+     * @param measurement2 the second gyroscope measurement.
+     * @param alpha the interpolation factor (as a value between 0.0f and 1.0f).
+     * @param targetNanoSeconds the target timestamp of resulting measurement expressed in
+     * nanoseconds (using the same clock as the other measurements).
+     * @param result the resulting gyroscope measurement.
      */
-    fun push(previousMeasurement: GyroscopeSensorMeasurement)
-
-    /**
-     * Interpolates provided current measurement.
-     *
-     * @param currentMeasurement current measurement to be interpolated with previous ones.
-     * @param result instance where result of interpolation will be stored.
-     * @param timestamp timestamp to perform interpolation respect previous measurements.
-     * @return true if interpolation has been computed and result instance contains expected value,
-     * false if result of interpolation must be discarded.
-     */
-    fun interpolate(
-        currentMeasurement: GyroscopeSensorMeasurement,
-        timestamp: Long,
+    override fun interpolate(
+        measurement1: GyroscopeSensorMeasurement,
+        measurement2: GyroscopeSensorMeasurement,
+        alpha: Float,
+        targetNanoSeconds: Long,
         result: GyroscopeSensorMeasurement
-    ): Boolean
+    ) {
+        val wx1 = measurement1.wx
+        val wy1 = measurement1.wy
+        val wz1 = measurement1.wz
+        val bx1 = measurement1.bx
+        val by1 = measurement1.by
+        val bz1 = measurement1.bz
 
-    /**
-     * Resets this interpolator.
-     */
-    fun reset()
+        val wx2 = measurement2.wx
+        val wy2 = measurement2.wy
+        val wz2 = measurement2.wz
+        val bx2 = measurement2.bx
+        val by2 = measurement2.by
+        val bz2 = measurement2.bz
+
+        val wx = interpolate(wx1, wx2, alpha)
+        val wy = interpolate(wy1, wy2, alpha)
+        val wz = interpolate(wz1, wz2, alpha)
+        val bx = if (bx1 != null && bx2 != null) {
+            interpolate(bx1, bx2, alpha)
+        } else {
+            null
+        }
+        val by = if (by1 != null && by2 != null) {
+            interpolate(by1, by2, alpha)
+        } else {
+            null
+        }
+        val bz = if (bz1 != null && bz2 != null) {
+            interpolate(bz1, bz2, alpha)
+        } else {
+            null
+        }
+
+        result.wx = wx
+        result.wy = wy
+        result.wz = wz
+        result.bx = bx
+        result.by = by
+        result.bz = bz
+        result.timestamp = targetNanoSeconds
+        result.accuracy = measurement1.accuracy
+        result.sensorType = measurement1.sensorType
+        result.sensorCoordinateSystem = measurement1.sensorCoordinateSystem
+    }
 }

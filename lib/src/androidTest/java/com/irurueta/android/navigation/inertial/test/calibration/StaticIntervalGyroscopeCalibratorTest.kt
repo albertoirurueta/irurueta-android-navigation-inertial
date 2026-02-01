@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,16 @@
  */
 package com.irurueta.android.navigation.inertial.test.calibration
 
+import android.Manifest
 import android.content.Context
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalGyroscopeCalibrator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.testutils.RequiresRealDevice
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import org.junit.Before
 import org.junit.Rule
@@ -38,9 +39,9 @@ class StaticIntervalGyroscopeCalibratorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     @Before
@@ -48,7 +49,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         completed = 0
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeSensorAndAccelerometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -67,7 +68,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeSensorAndAccelerometerUncalibratedSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -86,7 +87,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeUncalibratedSensorAndAccelerometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -105,7 +106,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeUncalibratedSensorAndAccelerometerUncalibratedSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -152,12 +153,6 @@ class StaticIntervalGyroscopeCalibratorTest {
 
                 syncHelper.notifyAll { completed++ }
             },
-            initialGyroscopeBiasAvailableListener = { _, biasX, biasY, biasZ ->
-                Log.i(
-                    "StaticIntervalGyroscopeCalibratorTest",
-                    "Initial bias available. x: $biasX, y: $biasY, z: $biasZ rad/s"
-                )
-            },
             generatedGyroscopeMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "StaticIntervalGyroscopeCalibratorTest",
@@ -193,6 +188,9 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
         calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+
         return calibrator
     }
 
@@ -215,7 +213,7 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
         Log.i(
             "StaticIntervalGyroscopeCalibratorTest",
-            "initial Gg: ${calibrator.gyroscopeInitialGg.buffer}"
+            "initial Gg: ${calibrator.gyroscopeInitialGg.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalGyroscopeCalibratorTest",
@@ -388,11 +386,27 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
         Log.i(
             "StaticIntervalGyroscopeCalibratorTest",
-            "Estimated covariance: ${calibrator.estimatedGyroscopeCovariance?.buffer}"
+            "Estimated covariance: ${calibrator.estimatedGyroscopeCovariance?.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalGyroscopeCalibratorTest",
             "Estimated chi sq: ${calibrator.estimatedGyroscopeChiSq}"
+        )
+        Log.i(
+            "StaticIntervalGyroscopeCalibratorTest",
+            "Estimated chi sq degrees of freedom: ${calibrator.estimatedGyroscopeChiSqDegreesOfFreedom}"
+        )
+        Log.i(
+            "StaticIntervalGyroscopeCalibratorTest",
+            "Estimated reduced chi sq: ${calibrator.estimatedGyroscopeReducedChiSq}"
+        )
+        Log.i(
+            "StaticIntervalGyroscopeCalibratorTest",
+            "Estimated P: ${calibrator.estimatedGyroscopeP}"
+        )
+        Log.i(
+            "StaticIntervalGyroscopeCalibratorTest",
+            "Estimated Q: ${calibrator.estimatedGyroscopeQ}"
         )
         Log.i(
             "StaticIntervalGyroscopeCalibratorTest",
@@ -413,11 +427,15 @@ class StaticIntervalGyroscopeCalibratorTest {
         )
         Log.i(
             "StaticIntervalGyroscopeCalibratorTest",
-            "initial Gg: ${calibrator.estimatedGyroscopeGg?.buffer}"
+            "initial Gg: ${calibrator.estimatedGyroscopeGg?.buffer.contentToString()}"
         )
     }
 
     private companion object {
         const val TIMEOUT = 5000L
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val THRESHOLD_FACTOR = 3.0
     }
 }

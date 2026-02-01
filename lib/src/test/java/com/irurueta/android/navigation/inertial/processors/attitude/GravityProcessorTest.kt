@@ -17,8 +17,8 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.hardware.SensorManager
 import android.location.Location
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad

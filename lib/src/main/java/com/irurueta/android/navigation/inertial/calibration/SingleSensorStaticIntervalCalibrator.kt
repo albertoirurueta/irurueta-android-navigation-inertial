@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
@@ -27,7 +28,7 @@ import com.irurueta.units.Measurement
 import com.irurueta.units.Time
 
 /**
- * Base class for static interval calibrators, which detects static periods of sensor measurements
+ * Base class for static interval calibrators, which detect static periods of sensor measurements
  * to solve calibration.
  * Implementations of this class only use a single sensor (no combination of accelerometer and
  * another sensor is used).
@@ -58,8 +59,12 @@ import com.irurueta.units.Time
  * @param M a type of measurement.
  * @param T a triad type.
  */
-abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticIntervalCalibrator<C, R, I, U, M, T>, R,
-        I : IntervalDetector<I, *, U, M, T, *, *>, U : Enum<*>, M : Measurement<U>,
+abstract class SingleSensorStaticIntervalCalibrator<
+        C : SingleSensorStaticIntervalCalibrator<C, R, I, U, M, T>,
+        R,
+        I : IntervalDetector<I, *, U, M, T, *, *>,
+        U : Enum<*>,
+        M : Measurement<U>,
         T : Triad<U, M>>(
     val context: Context,
     val sensorDelay: SensorDelay,
@@ -74,31 +79,35 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
     var stoppedListener: OnStoppedListener<C>?,
     val qualityScoreMapper: QualityScoreMapper<R>
 ) {
+
     /**
-     * Listener used by internal detector to handle events when initialization starts.
+     * Listener used by interval detector to handle events when initialization starts.
      */
-    @Suppress("UNCHECKED_CAST")
     protected val intervalDetectorInitializationStartedListener =
         IntervalDetector.OnInitializationStartedListener<I> {
-            initializationStartedListener?.onInitializationStarted(this@SingleSensorStaticIntervalCalibrator as C)
+            @Suppress("UNCHECKED_CAST")
+            initializationStartedListener?.onInitializationStarted(this as C)
         }
 
     /**
      * Listener used by internal interval detector to handle events when initialization is
      * completed.
      */
-    @Suppress("UNCHECKED_CAST")
     protected open val intervalDetectorInitializationCompletedListener =
         IntervalDetector.OnInitializationCompletedListener<I> { _, _ ->
-            initializationCompletedListener?.onInitializationCompleted(this@SingleSensorStaticIntervalCalibrator as C)
+            @Suppress("UNCHECKED_CAST")
+            initializationCompletedListener?.onInitializationCompleted(this as C)
         }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * Listener used by internal interval detector to handle events when an error occurs.
+     */
     protected val intervalDetectorErrorListener =
         IntervalDetector.OnErrorListener<I> { _, reason ->
             stop()
+            @Suppress("UNCHECKED_CAST")
             errorListener?.onError(
-                this@SingleSensorStaticIntervalCalibrator as C,
+                this as C,
                 CalibratorErrorReason.mapErrorReason(reason)
             )
         }
@@ -109,18 +118,11 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
     protected abstract val intervalDetector: I
 
     /**
-     * Indicates whether the interval detector has picked the first magnetometer measurement.
-     */
-    protected val isFirstMeasurement
-        get() = intervalDetector.numberOfProcessedMeasurements <= FIRST_MEASUREMENT
-
-    /**
      * List of measurements that have been collected so far to be used for calibration.
      * Items in return list can be modified if needed, but beware that this might
      * have consequences on solved calibration result.
      */
-    var measurements = mutableListOf<R>()
-        protected set
+    val measurements = mutableListOf<R>()
 
     /**
      * Indicates whether enough measurements have been picked at static intervals so that the
@@ -314,7 +316,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
     }
 
     /**
-     * Gets average time interval between magnetometer samples expressed in seconds (s).
+     * Gets average time interval between sensor samples expressed in seconds (s).
      * Time interval is estimated only while initialization is running, consequently, this is
      * only available once initialization is completed.
      */
@@ -322,7 +324,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
         get() = intervalDetector.averageTimeInterval
 
     /**
-     * Gets average time interval between magnetometer samples.
+     * Gets average time interval between sensor samples.
      * Time interval is estimated only while initialization is running, consequently, this is
      * only available once initialization is completed.
      */
@@ -373,7 +375,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * only available once initialization is completed.
      *
      * @param result instance where result will be stored.
-     * @return true if result is available, false othewise.
+     * @return true if result is available, false otherwise.
      */
     fun getTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
         return intervalDetector.getTimeIntervalStandardDeviationAsTime(result)
@@ -570,8 +572,9 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
     }
 
     /**
-     * Indicates or specifies whether z-axis is assumed to be common for magnetometer and
-     * gyroscope. When enabled, this eliminates 3 variables from Ma matrix.
+     * Indicates or specifies whether z-axis is assumed to be common for multiple sensors.
+     * When enabled, this eliminates 3 variables from Ma matrix. For single sensor calibrators this
+     * should not be enabled.
      *
      * @throws IllegalStateException if calibrator is currently running.
      */
@@ -792,6 +795,35 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
     abstract val estimatedChiSq: Double?
 
     /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    abstract val estimatedChiSqDegreesOfFreedom: Int?
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    abstract val estimatedReducedChiSq: Double?
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    abstract val estimatedP: Double?
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    abstract val estimatedQ: Double?
+
+    /**
      * Gets estimated mean square error respect to provided measurements or null if not available.
      */
     abstract val estimatedMse: Double?
@@ -840,14 +872,14 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      */
     @Throws(IllegalStateException::class)
     fun calibrate(): Boolean {
-        check(isReadyToSolveCalibration)
         check(!running)
+        check(isReadyToSolveCalibration)
         return internalCalibrate()
     }
 
     /**
      * Stops calibrator.
-     * When this is called, no more magnetometer measurements are collected.
+     * When this is called, no more sensor measurements are collected.
      *
      * @param running specifies the running parameter to be set. This is true when stop occurs
      * internally during measurement collection to start solving calibration, otherwise is false
@@ -876,11 +908,6 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
     }
 
     companion object {
-        /**
-         * Indicates when first sensor measurement is obtained.
-         */
-        private const val FIRST_MEASUREMENT = 1
-
         /**
          * Indicates whether by default a common z-axis is assumed for both accelerometer,
          * gyroscope and magnetometer.
@@ -918,6 +945,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * Interface to notify when calibrator starts initialization.
      */
     fun interface OnInitializationStartedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
+
         /**
          * Called when calibrator starts initialization to determine base noise level when device
          * remains static.
@@ -931,6 +959,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * Interface to notify when calibrator successfully completes initialization.
      */
     fun interface OnInitializationCompletedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
+
         /**
          * Called when calibrator successfully completes initialization to determine base noise
          * level when device remains static.
@@ -944,6 +973,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * Interface to notify when an error occurs.
      */
     fun interface OnErrorListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
+
         /**
          * Called when an error is detected, either at initialization because excessive noise
          * is detected, because a sensor becomes unreliable or because obtained
@@ -962,6 +992,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * When enough of these measurements are obtained, calibration can actually be solved.
      */
     fun interface OnNewCalibrationMeasurementAvailableListener<C : SingleSensorStaticIntervalCalibrator<C, R, *, *, *, *>, R> {
+
         /**
          * Called when a new measurement for calibration is found.
          * A new measurement each time a static period finishes (when sensor measurements
@@ -988,6 +1019,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * Interface to notify when enough measurements are obtained to start solving calibration.
      */
     fun interface OnReadyToSolveCalibrationListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
+
         /**
          * Called when enough measurements are obtained to start solving calibration.
          *
@@ -1000,6 +1032,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * Interface to notify when calibration starts being solved.
      */
     fun interface OnCalibrationSolvingStartedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
+
         /**
          * Called when calibration starts being solved after enough measurements are found.
          * Calibration can automatically started when enough measurements are available if
@@ -1015,6 +1048,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * Interface to notify when calibration is solved and completed.
      */
     fun interface OnCalibrationCompletedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
+
         /**
          * Called when calibration successfully completes.
          *
@@ -1029,6 +1063,7 @@ abstract class SingleSensorStaticIntervalCalibrator<C : SingleSensorStaticInterv
      * device stops being static, or if an error occurs.
      */
     fun interface OnStoppedListener<C : SingleSensorStaticIntervalCalibrator<C, *, *, *, *, *>> {
+
         /**
          * Called when measurement collection stops.
          * This happens automatically when enough measurements are found after periods when

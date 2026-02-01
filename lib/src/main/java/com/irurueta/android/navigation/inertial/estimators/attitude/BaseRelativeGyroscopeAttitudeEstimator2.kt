@@ -17,9 +17,9 @@ package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import android.os.SystemClock
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector2
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import com.irurueta.android.navigation.inertial.old.collectors.GyroscopeSensorCollector2
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseRelativeGyroscopeAttitudeProcessor
 import com.irurueta.geometry.Quaternion

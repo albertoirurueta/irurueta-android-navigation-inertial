@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.collectors
 
 import android.hardware.Sensor
 import android.hardware.SensorDirectChannel
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import org.junit.Assert.*
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
+import com.irurueta.android.testutils.RequiresRealDevice
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -40,11 +45,11 @@ class GyroscopeSensorCollectorTest {
         measured = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun sensor_whenGyroscopeSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val collector =
-            GyroscopeSensorCollector(context, GyroscopeSensorType.GYROSCOPE)
+        val collector = GyroscopeSensorCollector(context, GyroscopeSensorType.GYROSCOPE)
 
         val sensor = collector.sensor
         requireNotNull(sensor)
@@ -52,7 +57,7 @@ class GyroscopeSensorCollectorTest {
         logSensor(sensor)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun sensor_whenGyroscopeUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -67,6 +72,7 @@ class GyroscopeSensorCollectorTest {
         logSensor(sensor)
     }
 
+    @RequiresRealDevice
     @Test
     fun sensorAvailable_whenGyroscopeSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -76,7 +82,7 @@ class GyroscopeSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun sensorAvailable_whenGyroscopeUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -88,6 +94,7 @@ class GyroscopeSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -95,25 +102,44 @@ class GyroscopeSensorCollectorTest {
             context,
             GyroscopeSensorType.GYROSCOPE,
             SensorDelay.FASTEST,
-            measurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+            accuracyChangedListener = { _, accuracy ->
+                Log.d(
+                    "GyroscopeSensorCollectorTest",
+                    "onAccuracyChanged - accuracy: $accuracy"
+                )
+            },
+            measurementListener = { _, measurement ->
+                val wx = measurement.wx
+                val wy = measurement.wy
+                val wz = measurement.wz
+                val bx = measurement.bx
+                val by = measurement.by
+                val bz = measurement.bz
+                val timestamp = measurement.timestamp
+                val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                val coordinateSystem = measurement.sensorCoordinateSystem
+
                 assertNull(bx)
                 assertNull(by)
                 assertNull(bz)
+                assertEquals(GyroscopeSensorType.GYROSCOPE, sensorType)
+                assertEquals(SensorCoordinateSystem.ENU, coordinateSystem)
 
                 Log.d(
                     "GyroscopeSensorCollectorTest",
-                    "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                    """onMeasurement - wx: $wx rad/s, wy: $wy rad/s, wz: $wz rad/s, 
+                        |bx: $bx rad/s, by: $by rad/s, bz: $bz rad/s, 
+                        |timestamp: $timestamp, 
+                        |accuracy: $accuracy, 
+                        |sensorType: $sensorType,
+                        |coordinateSystem: $coordinateSystem
+                    """.trimMargin()
                 )
 
                 syncHelper.notifyAll { measured++ }
             }
-        ) { accuracy ->
-            Log.d(
-                "GyroscopeSensorCollectorTest",
-                "onAccuracyChanged - accuracy: $accuracy"
-            )
-        }
+        )
 
         collector.start()
 
@@ -124,7 +150,7 @@ class GyroscopeSensorCollectorTest {
         assertTrue(measured > 0)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeUncalibratedSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -132,25 +158,44 @@ class GyroscopeSensorCollectorTest {
             context,
             GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             SensorDelay.FASTEST,
-            measurementListener = { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
+            accuracyChangedListener = { _, accuracy ->
+                Log.d(
+                    "GyroscopeSensorCollectorTest",
+                    "onAccuracyChanged - accuracy: $accuracy"
+                )
+            },
+            measurementListener = { _, measurement ->
+                val wx = measurement.wx
+                val wy = measurement.wy
+                val wz = measurement.wz
+                val bx = measurement.bx
+                val by = measurement.by
+                val bz = measurement.bz
+                val timestamp = measurement.timestamp
+                val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                val coordinateSystem = measurement.sensorCoordinateSystem
+
                 assertNotNull(bx)
                 assertNotNull(by)
                 assertNotNull(bz)
+                assertEquals(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED, sensorType)
+                assertEquals(SensorCoordinateSystem.ENU, coordinateSystem)
 
                 Log.d(
                     "GyroscopeSensorCollectorTest",
-                    "onMeasurement - wx: $wx, wy: $wy, wz: $wz, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                    """onMeasurement - wx: $wx rad/s, wy: $wy rad/s, wz: $wz rad/s, 
+                        |bx: $bx rad/s, by: $by rad/s, bz: $bz rad/s, 
+                        |timestamp: $timestamp, 
+                        |accuracy: $accuracy, 
+                        |sensorType: $sensorType,
+                        |coordinateSystem: $coordinateSystem
+                    """.trimMargin()
                 )
 
                 syncHelper.notifyAll { measured++ }
             }
-        ) { accuracy ->
-            Log.d(
-                "GyroscopeSensorCollectorTest",
-                "onAccuracyChanged - accuracy: $accuracy"
-            )
-        }
+        )
 
         collector.start()
 

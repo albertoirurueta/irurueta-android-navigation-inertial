@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.builder.InternalGyroscopeCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.GyroscopeMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.GyroscopeMeasurementGeneratorProcessor
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
+import com.irurueta.navigation.inertial.calibration.GyroscopeBiasUncertaintySource
+import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
+import com.irurueta.navigation.inertial.calibration.TimedBodyKinematics
 import com.irurueta.navigation.inertial.calibration.gyroscope.GyroscopeNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.KnownBiasGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.gyroscope.UnknownBiasGyroscopeCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultGyroscopeQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
-import com.irurueta.units.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationConverter
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
 
 /**
  * Collects accelerometer and gyroscope measurements by detecting periods when device remains
@@ -66,9 +78,6 @@ import com.irurueta.units.*
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
  * @property calibrationCompletedListener listener to notify when calibration solving completes.
  * @property stoppedListener listener to notify when calibrator is stopped.
- * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
- * is obtained.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @property gyroscopeQualityScoreMapper mapper to convert collected gyroscope measurements
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
  * worse the score will be).
@@ -92,10 +101,11 @@ class StaticIntervalGyroscopeCalibrator private constructor(
     calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>?,
     calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>?,
     stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>?,
-    var initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener?,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>
-) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalGyroscopeCalibrator, TimedBodyKinematics>(
+) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<
+        StaticIntervalGyroscopeCalibrator,
+        TimedBodyKinematics,
+        GyroscopeMeasurementGeneratorProcessor>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -110,8 +120,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
     readyToSolveCalibrationListener,
     calibrationSolvingStartedListener,
     calibrationCompletedListener,
-    stoppedListener,
-    accuracyChangedListener
+    stoppedListener
 ) {
     /**
      * Constructor.
@@ -144,9 +153,6 @@ class StaticIntervalGyroscopeCalibrator private constructor(
      * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
      * @property calibrationCompletedListener listener to notify when calibration solving completes.
      * @property stoppedListener listener to notify when calibrator is stopped.
-     * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
-     * is obtained.
-     * @property accuracyChangedListener listener to notify when sensor accuracy changes.
      * @property gyroscopeQualityScoreMapper mapper to convert collected gyroscope measurements
      * into quality scores, based on the amount of standard deviation (the larger the variability, the
      * worse the score will be).
@@ -172,8 +178,6 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalGyroscopeCalibrator>? = null,
         calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalGyroscopeCalibrator>? = null,
         stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalGyroscopeCalibrator>? = null,
-        initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener? = null,
-        accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
         gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>> = DefaultGyroscopeQualityScoreMapper()
     ) : this(
         context,
@@ -194,28 +198,12 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         calibrationSolvingStartedListener,
         calibrationCompletedListener,
         stoppedListener,
-        initialGyroscopeBiasAvailableListener,
-        accuracyChangedListener,
         gyroscopeQualityScoreMapper
     ) {
         this.isGyroscopeGroundTruthInitialBias = isGyroscopeGroundTruthInitialBias
         requiredMeasurements = minimumRequiredMeasurements
         gyroscopeRobustPreliminarySubsetSize = minimumRequiredMeasurements
     }
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val accelerometerBiasTriad = AccelerationTriad()
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val gyroscopeBiasTriad = AngularSpeedTriad()
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -315,34 +303,6 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         }
 
     /**
-     * Listener for accelerometer sensor collector.
-     * This is used to determine accelerometer calibration and obtain an initial guess
-     * for accelerometer bias (only available if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val generatorAccelerometerMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstAccelerometerMeasurement) {
-                updateAccelerometerBiases(bx, by, bz)
-            }
-        }
-
-    /**
-     * Listener for gyroscope sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for gyroscope bias (only available if
-     * [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val generatorGyroscopeMeasurementListener =
-        GyroscopeSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstGyroscopeMeasurement) {
-                updateGyroscopeInitialBiases(bx, by, bz)
-            }
-        }
-
-    /**
      * Internal generator to generate measurements for calibration.
      */
     override val generator = GyroscopeMeasurementGenerator(
@@ -358,10 +318,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         generatorDynamicIntervalDetectedListener,
         generatorStaticIntervalSkippedListener,
         generatorDynamicIntervalSkippedListener,
-        generatorGeneratedMeasurementListener,
-        accelerometerMeasurementListener = generatorAccelerometerMeasurementListener,
-        gyroscopeMeasurementListener = generatorGyroscopeMeasurementListener,
-        accuracyChangedListener = accuracyChangedListener
+        generatorGeneratedMeasurementListener
     )
 
     /**
@@ -1292,6 +1249,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
     override val minimumRequiredMeasurements: Int
         get() = minimumRequiredGyroscopeMeasurements
 
+
     /**
      * Indicates robust method used to solve gyroscope calibration.
      * If null, no robust method is used at all, and instead an LMSE solution is found.
@@ -2047,6 +2005,39 @@ class StaticIntervalGyroscopeCalibrator private constructor(
         get() = gyroscopeInternalCalibrator?.estimatedChiSq
 
     /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    val estimatedGyroscopeChiSqDegreesOfFreedom: Int?
+        get() = gyroscopeInternalCalibrator?.estimatedChiSqDegreesOfFreedom
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    val estimatedGyroscopeReducedChiSq: Double?
+        get() = gyroscopeInternalCalibrator?.estimatedReducedChiSq
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    val estimatedGyroscopeP: Double?
+        get() = gyroscopeInternalCalibrator?.estimatedP
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    val estimatedGyroscopeQ: Double?
+        get() = gyroscopeInternalCalibrator?.estimatedQ
+
+    /**
      * Gets estimated mean square error respect to provided gyroscope measurements or null if
      * not available.
      */
@@ -2386,7 +2377,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
             true
         } catch (e: NavigationException) {
             Log.e(
-                StaticIntervalGyroscopeCalibrator::class.qualifiedName,
+                com.irurueta.android.navigation.inertial.old.calibration.StaticIntervalGyroscopeCalibrator::class.qualifiedName,
                 "Calibration estimation failed",
                 e
             )
@@ -2413,90 +2404,6 @@ class StaticIntervalGyroscopeCalibrator private constructor(
     }
 
     /**
-     * Updates accelerometer biases values when first accelerometer measurement is received,
-     * so that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used and
-     * [isAccelerometerGroundTruthInitialBias] is false.
-     *
-     * @param bx x-coordinate of accelerometer bias expressed in meters per squared second (m/s^2).
-     * @param by y-coordinate of accelerometer bias expressed in meters per squared second (m/s^2).
-     * @param bz z-coordinate of accelerometer bias expressed in meters per squared second (m/s^2).
-     */
-    private fun updateAccelerometerBiases(bx: Float?, by: Float?, bz: Float?) {
-        if (isAccelerometerGroundTruthInitialBias) {
-            // no need to make conversion since provided initial value already uses local plane NED
-            // coordinates system
-            estimatedAccelerometerBiasX = accelerometerInitialBiasX
-            estimatedAccelerometerBiasY = accelerometerInitialBiasY
-            estimatedAccelerometerBiasZ = accelerometerInitialBiasZ
-        } else {
-            val biasX: Double
-            val biasY: Double
-            val biasZ: Double
-            if (bx != null && by != null && bz != null) {
-                biasX = bx.toDouble()
-                biasY = by.toDouble()
-                biasZ = bz.toDouble()
-            } else {
-                biasX = 0.0
-                biasY = 0.0
-                biasZ = 0.0
-            }
-
-            // convert from device ENU coordinate to local plane NED coordinates
-            ENUtoNEDConverter.convert(biasX, biasY, biasZ, accelerometerBiasTriad)
-
-            estimatedAccelerometerBiasX = accelerometerBiasTriad.valueX
-            estimatedAccelerometerBiasY = accelerometerBiasTriad.valueY
-            estimatedAccelerometerBiasZ = accelerometerBiasTriad.valueZ
-        }
-    }
-
-    /**
-     * Updates initial biases values when first gyroscope measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED] is used.
-     *
-     * @param bx x-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     * @param by y-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     * @param bz z-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     */
-    private fun updateGyroscopeInitialBiases(bx: Float?, by: Float?, bz: Float?) {
-        val initialBiasX: Double
-        val initialBiasY: Double
-        val initialBiasZ: Double
-        if (bx != null && by != null && bz != null) {
-            initialBiasX = bx.toDouble()
-            initialBiasY = by.toDouble()
-            initialBiasZ = bz.toDouble()
-        } else {
-            initialBiasX = 0.0
-            initialBiasY = 0.0
-            initialBiasZ = 0.0
-        }
-
-        // convert from device ENU coordinate to local plane NED coordinates
-        ENUtoNEDConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
-
-        gyroscopeInitialBiasX = gyroscopeBiasTriad.valueX
-        gyroscopeInitialBiasY = gyroscopeBiasTriad.valueY
-        gyroscopeInitialBiasZ = gyroscopeBiasTriad.valueZ
-
-        initialGyroscopeBiasAvailableListener?.onInitialBiasAvailable(
-            this,
-            gyroscopeBiasTriad.valueX,
-            gyroscopeBiasTriad.valueY,
-            gyroscopeBiasTriad.valueZ
-        )
-    }
-
-    /**
-     * Indicates whether the generator has picked the first gyroscope measurement.
-     */
-    private val isFirstGyroscopeMeasurement: Boolean
-        get() = generator.numberOfProcessedGyroscopeMeasurements <= FIRST_MEASUREMENT
-
-    /**
      * Builds an internal gyroscope calibrator based on all provided parameters.
      *
      * @return an internal gyroscope calibrator.
@@ -2504,7 +2411,7 @@ class StaticIntervalGyroscopeCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildGyroscopeInternalCalibrator(): GyroscopeNonLinearCalibrator {
-        return GyroscopeInternalCalibratorBuilder(
+        return InternalGyroscopeCalibratorBuilder(
             gyroscopeMeasurements,
             gyroscopeRobustPreliminarySubsetSize,
             minimumRequiredGyroscopeMeasurements,
@@ -2688,11 +2595,6 @@ class StaticIntervalGyroscopeCalibrator private constructor(
          */
         const val GYROSCOPE_UNKNOWN_BIAS_MINIMUM_SEQUENCES_GENERAL =
             GYROSCOPE_UNKNOWN_BIAS_GENERAL_UNKNOWNS + 1
-
-        /**
-         * Indicates when first sensor measurement is obtained.
-         */
-        private const val FIRST_MEASUREMENT = 1
     }
 
     /**
@@ -2712,31 +2614,6 @@ class StaticIntervalGyroscopeCalibrator private constructor(
             measurement: BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>,
             measurementsFoundSoFar: Int,
             requiredMeasurements: Int
-        )
-    }
-
-    /**
-     * Interface to notify when initial gyroscope bias guess is available.
-     * If [isGyroscopeGroundTruthInitialBias] is true, then initial bias is considered the true
-     * value after solving calibration, otherwise, initial bias is considered only an initial guess.
-     */
-    fun interface OnInitialGyroscopeBiasAvailableListener {
-        /**
-         * Called when initial gyroscope bias is available.
-         * If [isGyroscopeGroundTruthInitialBias] is true, then initial bias is considered the true
-         * value after solving calibration, otherwise, initial bias is considered only an initial
-         * guess.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param biasX x-coordinate of bias expressed in radians per second (rad/s).
-         * @param biasY y-coordinate of bias expressed in radians per second (rad/s).
-         * @param biasZ z-coordinate of bias expressed in radians per second (rad/s).
-         */
-        fun onInitialBiasAvailable(
-            calibrator: StaticIntervalGyroscopeCalibrator,
-            biasX: Double,
-            biasY: Double,
-            biasZ: Double
         )
     }
 }

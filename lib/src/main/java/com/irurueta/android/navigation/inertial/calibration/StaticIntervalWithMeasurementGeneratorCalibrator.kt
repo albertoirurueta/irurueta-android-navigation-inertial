@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,43 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.hardware.Sensor
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.units.Acceleration
 import com.irurueta.units.Time
 
 /**
- * Base class for static interval calibrators, which detects static period of accelerometer
+ * Interface for static interval calibrators that detect static periods of accelerometer
  * measurements along with other sensors (if needed) to solve calibration.
  *
- * @property context Android context.
- * @property accelerometerSensorType One of the supported accelerometer sensor types.
- * @property accelerometerSensorDelay Delay of sensor between samples.
- * @property solveCalibrationWhenEnoughMeasurements true to automatically solve calibration once
- * enough measurements are available, false otherwise.
- * @property initializationStartedListener listener to notify when initialization starts.
- * @property initializationCompletedListener listener to notify when initialization completes.
- * @property errorListener listener to notify errors.
- * @property staticIntervalDetectedListener listener to notify when a static interval is detected.
- * @property dynamicIntervalDetectedListener listener to notify when a dynamic interval is detected.
- * @property staticIntervalSkippedListener listener to notify when a static interval is skipped if
- * its duration is too short.
- * @property dynamicIntervalSkippedListener listener to notify when a dynamic interval is skipped if
- * its duration is too long.
- * @property readyToSolveCalibrationListener listener to notify when enough measurements have been
- * collected and calibrator is ready to solve calibration.
- * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
- * @property calibrationCompletedListener listener to notify when calibration solving completes.
- * @property stoppedListener listener to notify when calibrator is stopped.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
- * @param I type of input data to be processed by internal generator.
+ * @param I type of input data to be processed.
  */
 interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>, I> {
     /**
@@ -129,11 +109,6 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      * Listener to notify when calibrator is stopped.
      */
     var stoppedListener: OnStoppedListener<C>?
-
-    /**
-     * Listener to notify when sensor accuracy changes.
-     */
-    var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?
 
     /**
      * Indicates whether enough measurements have been picked at static intervals so that the
@@ -369,7 +344,6 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
      */
     var requiredMeasurements: Int
 
-
     /**
      * Number of accelerometer measurements that have been processed.
      */
@@ -539,7 +513,7 @@ interface StaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWit
     fun interface OnCalibrationSolvingStartedListener<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, *>> {
         /**
          * Called when calibration starts being solved after enough measurements are found.
-         * Calibration can automatically started when enough measurements are available if
+         * Calibration can automatically start when enough measurements are available if
          * [solveCalibrationWhenEnoughMeasurements] is true, otherwise [calibrate] must be called
          * after enough measurements are found, which raises this event.
          *

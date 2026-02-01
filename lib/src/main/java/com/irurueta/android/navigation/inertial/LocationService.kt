@@ -163,7 +163,8 @@ class LocationService(val context: Context) {
         val cancellationTokenSource = this.cancellationTokenSource
         if (fusedLocationClient != null && cancellationTokenSource != null) {
             val token = cancellationTokenSource.token
-            fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, token)
+            val locationRequest = CurrentLocationRequest.Builder().build()
+            fusedLocationClient.getCurrentLocation(locationRequest, token)
                 .addOnSuccessListener { location ->
                     listener.onCurrentLocation(location)
                 }
@@ -253,9 +254,11 @@ class LocationService(val context: Context) {
     fun requestLocationUpdates() {
         val fusedLocationClient = this.fusedLocationClient
         if (fusedLocationClient != null) {
+            val locationRequest = LocationRequest.Builder(
+                Priority.PRIORITY_HIGH_ACCURACY, updateInterval
+            ).build()
             fusedLocationClient.requestLocationUpdates(
-                LocationRequest.create().setSmallestDisplacement(smallestDisplacement)
-                    .setInterval(updateInterval),
+                locationRequest,
                 updatesCallback,
                 getLooper()
             )

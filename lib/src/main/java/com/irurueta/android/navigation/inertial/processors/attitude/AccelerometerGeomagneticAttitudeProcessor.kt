@@ -15,8 +15,8 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndMagnetometerSyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
 
 /**
  * Estimates leveled absolute attitude using accelerometer and magnetometer sensors.

@@ -25,6 +25,7 @@ import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationAvailability
 import com.google.android.gms.location.LocationCallback
@@ -292,9 +293,10 @@ class LocationServiceTest {
                 listener.onSuccess(location)
                 return@answers task
             }
+            val locationRequest = CurrentLocationRequest.Builder().build()
             every {
                 fusedLocationClientSpy.getCurrentLocation(
-                    LocationRequest.PRIORITY_HIGH_ACCURACY, any()
+                    locationRequest, any()
                 )
             }.returns(task)
 
@@ -303,7 +305,7 @@ class LocationServiceTest {
 
             verify(exactly = 1) {
                 fusedLocationClientSpy.getCurrentLocation(
-                    LocationRequest.PRIORITY_HIGH_ACCURACY,
+                    locationRequest,
                     any()
                 )
             }
@@ -737,7 +739,7 @@ class LocationServiceTest {
 
             every {
                 fusedLocationClientSpy.requestLocationUpdates(
-                    any(),
+                    any<LocationRequest>(),
                     any<LocationCallback>(),
                     any()
                 )
@@ -802,7 +804,7 @@ class LocationServiceTest {
 
             every {
                 fusedLocationClientSpy.requestLocationUpdates(
-                    any(),
+                    any<LocationRequest>(),
                     any<LocationCallback>(),
                     any()
                 )

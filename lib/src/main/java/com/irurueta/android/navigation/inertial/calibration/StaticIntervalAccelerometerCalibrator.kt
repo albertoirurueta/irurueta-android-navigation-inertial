@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener
+import com.irurueta.android.navigation.inertial.calibration.builder.InternalAccelerometerCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGeneratorProcessor
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.AccelerometerBiasUncertaintySource
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
-import com.irurueta.navigation.inertial.calibration.accelerometer.*
+import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.UnknownBiasAccelerometerCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.DefaultAccelerometerQualityScoreMapper
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.numerical.robust.RobustEstimatorMethod
@@ -60,12 +72,12 @@ import com.irurueta.units.AccelerationUnit
  * @property errorListener listener to notify errors.
  * @property staticIntervalDetectedListener listener to notify when a static interval is detected.
  * @property dynamicIntervalDetectedListener listener to notify when a dynamic interval is detected.
+ * @param generatedAccelerometerMeasurementListener listener to notify when a new accelerometer
+ * calibration measurement is generated.
  * @property staticIntervalSkippedListener listener to notify when a static interval is skipped if
  * its duration is too short.
  * @property dynamicIntervalSkippedListener listener to notify when a dynamic interval is skipped if
  * its duration is too long.
- * @property generatedAccelerometerMeasurementListener listener to notify when a new accelerometer
- * calibration measurement is generated.
  * @property readyToSolveCalibrationListener listener to notify when enough measurements have been
  * collected and calibrator is ready to solve calibration.
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
@@ -73,9 +85,6 @@ import com.irurueta.units.AccelerationUnit
  * @property stoppedListener listener to notify when calibrator is stopped.
  * @property unreliableGravityNormEstimationListener listener to notify when gravity norm
  * estimation becomes unreliable. This is only used if no location is provided.
- * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias values is
- * obtained.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @property accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
  * worse the score will be).
@@ -85,23 +94,24 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     accelerometerSensorType: AccelerometerSensorType,
     accelerometerSensorDelay: SensorDelay,
     solveCalibrationWhenEnoughMeasurements: Boolean,
-    initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>?,
-    initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>?,
-    errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>?,
-    staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>?,
-    dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>?,
-    staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>?,
-    dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>?,
+    initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>?,
+    initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>?,
+    errorListener: OnErrorListener<StaticIntervalAccelerometerCalibrator>?,
+    staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>?,
+    dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>?,
+    staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>?,
+    dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>?,
     var generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener?,
-    readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>?,
-    calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>?,
-    calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>?,
-    stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>?,
+    readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>?,
+    calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>?,
+    calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>?,
+    stoppedListener: OnStoppedListener<StaticIntervalAccelerometerCalibrator>?,
     var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
-    var initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener?,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>
-) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalAccelerometerCalibrator, BodyKinematics>(
+) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<
+        StaticIntervalAccelerometerCalibrator,
+        BodyKinematics,
+        AccelerometerMeasurementGeneratorProcessor>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -116,8 +126,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     readyToSolveCalibrationListener,
     calibrationSolvingStartedListener,
     calibrationCompletedListener,
-    stoppedListener,
-    accuracyChangedListener
+    stoppedListener
 ) {
     /**
      * Constructor.
@@ -154,10 +163,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      * @param calibrationCompletedListener listener to notify when calibration solving completes.
      * @param stoppedListener listener to notify when calibrator is stopped.
      * @param unreliableGravityNormEstimationListener listener to notify when gravity norm
-     * estimation becomes unreliable. This is only used if no location is provided.
-     * @param initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
-     * values is obtained.
-     * @param accuracyChangedListener listener to notify when sensor accuracy changes.
+     * estimation becomes unreliable. This is only used if no location is provided.*
      * @param accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
      * into quality scores, based on the amount of standard deviation (the larger the variability,
      * the worse the score will be).
@@ -170,21 +176,19 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         solveCalibrationWhenEnoughMeasurements: Boolean = true,
         isAccelerometerGroundTruthInitialBias: Boolean = false,
         location: Location? = null,
-        initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<StaticIntervalAccelerometerCalibrator>? = null,
-        staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        initializationStartedListener: OnInitializationStartedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        initializationCompletedListener: OnInitializationCompletedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        errorListener: OnErrorListener<StaticIntervalAccelerometerCalibrator>? = null,
+        staticIntervalDetectedListener: OnStaticIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        staticIntervalSkippedListener: OnStaticIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<StaticIntervalAccelerometerCalibrator>? = null,
         generatedAccelerometerMeasurementListener: OnGeneratedAccelerometerMeasurementListener? = null,
-        readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>? = null,
-        calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>? = null,
-        stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<StaticIntervalAccelerometerCalibrator>? = null,
+        calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        calibrationCompletedListener: OnCalibrationCompletedListener<StaticIntervalAccelerometerCalibrator>? = null,
+        stoppedListener: OnStoppedListener<StaticIntervalAccelerometerCalibrator>? = null,
         unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
-        initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener? = null,
-        accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
         accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics> =
             DefaultAccelerometerQualityScoreMapper()
     ) : this(
@@ -205,8 +209,6 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         calibrationCompletedListener,
         stoppedListener,
         unreliableGravityNormEstimationListener,
-        initialAccelerometerBiasAvailableListener,
-        accuracyChangedListener,
         accelerometerQualityScoreMapper
     ) {
         this.isAccelerometerGroundTruthInitialBias = isAccelerometerGroundTruthInitialBias
@@ -214,13 +216,6 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         requiredMeasurements = minimumRequiredMeasurements
         accelerometerRobustPreliminarySubsetSize = minimumRequiredMeasurements
     }
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val biasTriad = AccelerationTriad()
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -323,20 +318,6 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         }
 
     /**
-     * Listener for accelerometer sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for accelerometer bias (only available if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val generatorAccelerometerMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstAccelerometerMeasurement) {
-                updateAccelerometerInitialBiases(bx, by, bz)
-            }
-        }
-
-    /**
      * Listener for gravity norm estimator.
      * This is used to approximately estimate gravity when no location is provided, by using the
      * gravity sensor provided by the device.
@@ -371,9 +352,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         generatorDynamicIntervalDetectedListener,
         generatorStaticIntervalSkippedListener,
         generatorDynamicIntervalSkippedListener,
-        generatorGeneratedMeasurementListener,
-        accelerometerMeasurementListener = generatorAccelerometerMeasurementListener,
-        accuracyChangedListener = accuracyChangedListener
+        generatorGeneratedMeasurementListener
     )
 
     /**
@@ -1374,6 +1353,39 @@ class StaticIntervalAccelerometerCalibrator private constructor(
         get() = accelerometerInternalCalibrator?.estimatedChiSq
 
     /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    val estimatedAccelerometerChiSqDegreesOfFreedom: Int?
+        get() = accelerometerInternalCalibrator?.estimatedChiSqDegreesOfFreedom
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    val estimatedAccelerometerReducedChiSq: Double?
+        get() = accelerometerInternalCalibrator?.estimatedReducedChiSq
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    val estimatedAccelerometerP: Double?
+        get() = accelerometerInternalCalibrator?.estimatedP
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    val estimatedAccelerometerQ: Double?
+        get() = accelerometerInternalCalibrator?.estimatedQ
+
+    /**
      * Gets estimated mean square error respect to provided accelerometer measurements or null if
      * not available.
      */
@@ -1740,47 +1752,6 @@ class StaticIntervalAccelerometerCalibrator private constructor(
     }
 
     /**
-     * Updates initial biases values when first accelerometer measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used.
-     *
-     * @param bx x-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param by y-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param bz z-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     */
-    private fun updateAccelerometerInitialBiases(bx: Float?, by: Float?, bz: Float?) {
-        val initialBiasX: Double
-        val initialBiasY: Double
-        val initialBiasZ: Double
-        if (bx != null && by != null && bz != null) {
-            initialBiasX = bx.toDouble()
-            initialBiasY = by.toDouble()
-            initialBiasZ = bz.toDouble()
-        } else {
-            initialBiasX = 0.0
-            initialBiasY = 0.0
-            initialBiasZ = 0.0
-        }
-
-        // convert from device ENU coordinate to local plane NED coordinates
-        ENUtoNEDConverter.convert(initialBiasX, initialBiasY, initialBiasZ, biasTriad)
-
-        accelerometerInitialBiasX = biasTriad.valueX
-        accelerometerInitialBiasY = biasTriad.valueY
-        accelerometerInitialBiasZ = biasTriad.valueZ
-
-        initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
-            this,
-            biasTriad.valueX,
-            biasTriad.valueY,
-            biasTriad.valueZ
-        )
-    }
-
-    /**
      * Builds an internal accelerometer calibrator based on all provided parameters.
      *
      * @return an internal accelerometer calibrator.
@@ -1788,7 +1759,7 @@ class StaticIntervalAccelerometerCalibrator private constructor(
      */
     @Throws(IllegalStateException::class)
     private fun buildAccelerometerInternalCalibrator(): AccelerometerNonLinearCalibrator {
-        return AccelerometerInternalCalibratorBuilder(
+        return InternalAccelerometerCalibratorBuilder(
             accelerometerMeasurements,
             accelerometerRobustPreliminarySubsetSize,
             minimumRequiredAccelerometerMeasurements,
@@ -1933,30 +1904,5 @@ class StaticIntervalAccelerometerCalibrator private constructor(
          * @param calibrator calibrator that raised the event.
          */
         fun onUnreliableGravityEstimation(calibrator: StaticIntervalAccelerometerCalibrator)
-    }
-
-    /**
-     * Interface to notify when initial accelerometer bias guess is available.
-     * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered the true
-     * value after solving calibration, otherwise, initial bias is considered only an initial guess.
-     */
-    fun interface OnInitialAccelerometerBiasAvailableListener {
-        /**
-         * Called when initial accelerometer bias is available.
-         * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered the
-         * true value after solving calibration, otherwise, initial bias is considered only an
-         * initial guess.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param biasX x-coordinate of bias expressed in meters per squared second (m/s^2).
-         * @param biasY y-coordinate of bias expressed in meters per squared second (m/s^2).
-         * @param biasZ z-coordinate of bias expressed in meters per squared second (m/s^2).
-         */
-        fun onInitialBiasAvailable(
-            calibrator: StaticIntervalAccelerometerCalibrator,
-            biasX: Double,
-            biasY: Double,
-            biasZ: Double
-        )
     }
 }

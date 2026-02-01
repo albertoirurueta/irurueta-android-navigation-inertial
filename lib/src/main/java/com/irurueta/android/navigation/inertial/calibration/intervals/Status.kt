@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
@@ -60,7 +61,7 @@ enum class Status {
 
     companion object {
         /**
-         * Maps a [TriadStaticIntervalDetector.Status] into a [Status].
+         * Maps a [com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector.Status] into a [Status].
          *
          * @param status status to map from.
          * @param unreliable when true, mapping result is always [Status.FAILED].

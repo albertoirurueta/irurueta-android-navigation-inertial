@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.calibration.intervals
 
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.AccelerometerIntervalDetector
+import com.irurueta.android.testutils.RequiresRealDevice
 import org.junit.Before
 import org.junit.Test
 
@@ -35,16 +36,13 @@ class AccelerometerIntervalDetectorTest {
         completed = 0
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_detectsIntervals() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val detector = AccelerometerIntervalDetector(context,
             initializationStartedListener = {
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Initialization started"
-                )
+                Log.i("AccelerometerIntervalDetectorTest", "Initialization started")
             },
             initializationCompletedListener = { _, baseNoiseLevel ->
                 Log.i(
@@ -53,25 +51,21 @@ class AccelerometerIntervalDetectorTest {
                 )
             },
             errorListener = { _, reason ->
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Error: $reason"
-                )
+                Log.i("AccelerometerIntervalDetectorTest", "Error: $reason")
             },
             staticIntervalDetectedListener = { _, _, _, _, _, _, _ ->
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Static interval detected"
-                )
+                Log.i("AccelerometerIntervalDetectorTest", "Static interval detected")
             },
             dynamicIntervalDetectedListener = { _, _, _, _, _, _, _, _, _, _, _, _, _ ->
-                Log.i(
-                    "AccelerometerIntervalDetectorTest",
-                    "Dynamic interval detected"
-                )
+                Log.i("AccelerometerIntervalDetectorTest", "Dynamic interval detected")
             },
-            resetListener = { Log.i("AccelerometerIntervalDetectorTest", "Reset") }
+            resetListener = {
+                Log.i("AccelerometerIntervalDetectorTest", "Reset")
+            }
         )
+
+        detector.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        detector.thresholdFactor = THRESHOLD_FACTOR
 
         detector.start()
 
@@ -82,5 +76,9 @@ class AccelerometerIntervalDetectorTest {
 
     private companion object {
         const val TIMEOUT = 1000L
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val THRESHOLD_FACTOR = 3.0
     }
 }

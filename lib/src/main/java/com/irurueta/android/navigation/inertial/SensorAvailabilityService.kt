@@ -19,7 +19,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.Build
-import com.irurueta.android.navigation.inertial.collectors.SensorType
+import com.irurueta.android.navigation.inertial.old.collectors.SensorType
 
 /**
  * Indicates whether a given sensor is available or not.

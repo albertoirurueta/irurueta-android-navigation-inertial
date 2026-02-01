@@ -15,8 +15,8 @@
  */
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.collectors.GravityAndGyroscopeSyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.old.collectors.GravityAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 
 /**
  * Estimates leveled relative attitude by fusing leveling attitude obtained

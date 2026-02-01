@@ -19,7 +19,7 @@ import android.util.Log
 import androidx.test.core.app.ActivityScenario
 import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.AttitudeEstimator2
 import com.irurueta.android.navigation.inertial.test.LocationActivity
 import org.junit.Assert.*

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,38 +13,173 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.collectors.interpolators
 
-import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import kotlin.math.abs
 
 /**
  * Interpolates measurements.
- *
- * @param <T> Type of interpolator.
- * @param <M> Type of sensor measurement.
  */
-interface SensorMeasurementInterpolator<T : SensorMeasurementInterpolator<T, M>, M : SensorMeasurement<M>> {
+abstract class SensorMeasurementInterpolator<T : SensorMeasurement<T>> {
 
     /**
-     * Pushes previous measurement into collection of processed measurements.
+     * Finds the closest measurement to desired timestamp.
      *
-     * @param previousMeasurement previous measurement to be pushed.
+     * @param measurements a collection or buffer of measurements where the search is performed.
+     * @param targetNanoSeconds the target timestamp of resulting measurement expressed in
+     * nanoseconds (using the same clock as the measurements in the buffer).
+     * @return the closest measurement (if available)
      */
-    fun push(previousMeasurement: M)
+    fun findClosest(
+        measurements: Collection<T>,
+        targetNanoSeconds: Long
+    ): T? {
+        val (previousMeasurement, nextMeasurement) = findPreviousAndNextMeasurements(
+            measurements,
+            targetNanoSeconds
+        )
+
+        if (previousMeasurement != null && nextMeasurement != null) {
+            // pick closest
+            val prevTimestamp = previousMeasurement.timestamp
+            val nextTimestamp = nextMeasurement.timestamp
+            return if (abs(targetNanoSeconds - prevTimestamp) < abs(targetNanoSeconds - nextTimestamp)) {
+                previousMeasurement
+            } else {
+                nextMeasurement
+            }
+
+        } else if (previousMeasurement == null && nextMeasurement != null) {
+            return nextMeasurement
+        } else if (previousMeasurement != null) {
+            return previousMeasurement
+        } else {
+            return null
+        }
+    }
 
     /**
-     * Interpolates provided current measurement.
+     * Interpolates buffered sensor measurements according to desired timestamp.
+     * This method finds the closest measurements to desired timestamp and computes a linear
+     * interpolation between them.
      *
-     * @param currentMeasurement current measurement to be interpolated with previous ones.
-     * @param result instance where result of interpolation will be stored.
-     * @param timestamp timestamp to perform interpolation respect previous measurements.
-     * @return true if interpolation has been computed and result instance contains expected value,
-     * false if result of interpolation must be discarded.
+     * @param measurements a collection or buffer of measurements where the search is performed.
+     * @param targetNanoSeconds the target timestamp of resulting measurement expressed in
+     * nanoseconds (using the same clock as the measurements in the buffer).
+     * @param result the resulting sensor measurement.
+     * @return true if interpolation was performed, false otherwise.
      */
-    fun interpolate(currentMeasurement: M, timestamp: Long, result: M): Boolean
+    fun interpolate(
+        measurements: Collection<T>,
+        targetNanoSeconds: Long,
+        result: T
+    ): Boolean {
+        val (previousMeasurement, nextMeasurement) = findPreviousAndNextMeasurements(
+            measurements,
+            targetNanoSeconds
+        )
+
+        if (previousMeasurement != null && nextMeasurement != null) {
+            // Linear interpolation
+            val alpha = if (nextMeasurement.timestamp == previousMeasurement.timestamp) {
+                0.0f
+            } else {
+                (targetNanoSeconds - previousMeasurement.timestamp).toFloat() /
+                        (nextMeasurement.timestamp - previousMeasurement.timestamp).toFloat()
+            }
+
+            interpolate(
+                previousMeasurement,
+                nextMeasurement,
+                alpha,
+                targetNanoSeconds,
+                result
+            )
+            return true
+        } else if (previousMeasurement == null && nextMeasurement != null) {
+            nextMeasurement.copyTo(result)
+            result.timestamp = targetNanoSeconds
+            return true
+        } else if (previousMeasurement != null) {
+            previousMeasurement.copyTo(result)
+            result.timestamp = targetNanoSeconds
+            return true
+        } else {
+            return false
+        }
+    }
 
     /**
-     * Resets this interpolator.
+     * Interpolates 2 measurements.
+     *
+     * @param measurement1 the first measurement.
+     * @param measurement2 the second measurement.
+     * @param alpha the interpolation factor (as a value between 0.0f and 1.0f).
+     * @param targetNanoSeconds the target timestamp of resulting measurement expressed in
+     * nanoseconds (using the same clock as the other measurements).
+     * @param result the resulting measurement.
      */
-    fun reset()
+    protected abstract fun interpolate(
+        measurement1: T,
+        measurement2: T,
+        alpha: Float,
+        targetNanoSeconds: Long,
+        result: T
+    )
+
+    /**
+     * Interpolates between two values.
+     *
+     * @param value1 the first value.
+     * @param value2 the second value.
+     * @param alpha the interpolation factor (as a value between 0.0f and 1.0f).
+     * @return the interpolated value.
+     */
+    protected fun interpolate(value1: Float, value2: Float, alpha: Float): Float {
+        return value1 + alpha * (value2 - value1)
+    }
+
+    /**
+     * Finds within a buffer or collection of measurements, the measurements placed immediately
+     * before and after respect to desired timestamp.
+     *
+     * @param measurements a collection or buffer of measurements where the search is performed.
+     */
+    protected fun findPreviousAndNextMeasurements(
+        measurements: Collection<T>,
+        targetNanoSeconds: Long
+    ): Pair<T?, T?> {
+
+        var previousMeasurement: T? = null
+        var nextMeasurement: T? = null
+        var previousTimestamp = Long.MIN_VALUE
+        var nextTimestamp = Long.MAX_VALUE
+
+        for (s in measurements) {
+            if (s.timestamp in previousTimestamp..targetNanoSeconds) {
+                previousMeasurement = s
+                previousTimestamp = s.timestamp
+            }
+            if (s.timestamp in targetNanoSeconds..nextTimestamp) {
+                nextMeasurement = s
+                nextTimestamp = s.timestamp
+            }
+        }
+
+        return if (previousMeasurement == null) {
+            if (nextMeasurement == null) {
+                Pair(null, null)
+            } else {
+                Pair(null, nextMeasurement)
+            }
+        } else {
+            if (nextMeasurement == null) {
+                Pair(previousMeasurement, null)
+            } else {
+                Pair(previousMeasurement, nextMeasurement)
+            }
+        }
+    }
 }

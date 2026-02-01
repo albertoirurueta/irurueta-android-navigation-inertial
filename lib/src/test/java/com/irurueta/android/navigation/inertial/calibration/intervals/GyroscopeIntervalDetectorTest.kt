@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,57 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
 import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.SystemClock
-import androidx.test.core.app.ApplicationProvider
 import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
-import com.irurueta.navigation.frames.CoordinateTransformation
-import com.irurueta.navigation.frames.ECEFPosition
-import com.irurueta.navigation.frames.ECEFVelocity
-import com.irurueta.navigation.frames.FrameType
-import com.irurueta.navigation.frames.NEDPosition
-import com.irurueta.navigation.frames.NEDVelocity
-import com.irurueta.navigation.frames.converters.NEDtoECEFPositionVelocityConverter
-import com.irurueta.navigation.inertial.BodyKinematics
 import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
 import com.irurueta.navigation.inertial.calibration.intervals.AngularSpeedTriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.AngularSpeedTriadStaticIntervalDetectorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import com.irurueta.navigation.inertial.calibration.noise.WindowedTriadNoiseEstimator
-import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AngularSpeed
 import com.irurueta.units.AngularSpeedUnit
 import com.irurueta.units.Time
+import com.irurueta.units.TimeConverter
 import com.irurueta.units.TimeUnit
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import io.mockk.spyk
+import io.mockk.justRun
+import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class GyroscopeIntervalDetectorTest {
 
     @get:Rule
@@ -78,7 +65,8 @@ class GyroscopeIntervalDetectorTest {
             IntervalDetector.OnInitializationCompletedListener<GyroscopeIntervalDetector>
 
     @MockK(relaxUnitFun = true)
-    private lateinit var errorListener: IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>
+    private lateinit var errorListener:
+            IntervalDetector.OnErrorListener<GyroscopeIntervalDetector>
 
     @MockK(relaxUnitFun = true)
     private lateinit var staticIntervalDetectedListener:
@@ -92,18 +80,36 @@ class GyroscopeIntervalDetectorTest {
     private lateinit var resetListener:
             IntervalDetector.OnResetListener<GyroscopeIntervalDetector>
 
-    @MockK(relaxUnitFun = true)
-    private lateinit var measurementListener: GyroscopeSensorCollector.OnMeasurementListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
+    @MockK
+    private lateinit var context: Context
 
     @MockK
     private lateinit var sensor: Sensor
 
+    @MockK
+    private lateinit var sensorManager: SensorManager
+
+    @MockK
+    private lateinit var internalDetector: AngularSpeedTriadStaticIntervalDetector
+
+    @MockK
+    private lateinit var timeIntervalEstimator: TimeIntervalEstimator
+
+    @MockK
+    private lateinit var collector: GyroscopeSensorCollector
+
     @Test
-    fun constructor_whenContext_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun constructor_whenDefaultValues_setsExpectedValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            sensor
+        )
+
         val detector = GyroscopeIntervalDetector(context)
 
         // check default values
@@ -119,10 +125,11 @@ class GyroscopeIntervalDetectorTest {
         assertNull(detector.staticIntervalDetectedListener)
         assertNull(detector.dynamicIntervalDetectedListener)
         assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
+        assertSame(sensor, detector.sensor)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE,
+            detector.windowSize
+        )
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
             detector.initialStaticSamples
@@ -149,11 +156,19 @@ class GyroscopeIntervalDetectorTest {
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
             0.0
         )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
         val baseNoiseLevelAbsoluteThreshold2 =
             AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
+            baseNoiseLevelAbsoluteThreshold2
+        )
+        assertEquals(
+            baseNoiseLevelAbsoluteThreshold1,
+            baseNoiseLevelAbsoluteThreshold2
+        )
         assertNull(detector.baseNoiseLevel)
         assertNull(detector.baseNoiseLevelAsMeasurement)
         val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
@@ -167,116 +182,200 @@ class GyroscopeIntervalDetectorTest {
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
         val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgX1.unit
+        )
+        val accumulatedAvgX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
         val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgY1.unit
+        )
+        val accumulatedAvgY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
         val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgZ1.unit
+        )
+        val accumulatedAvgZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
         assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
         assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgTriad1.unit
+        )
         val accumulatedAvgTriad2 = AngularSpeedTriad()
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
         val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdX1.unit
+        )
+        val accumulatedStdX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
         val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdY1.unit
+        )
+        val accumulatedStdY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
         val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdZ1.unit
+        )
+        val accumulatedStdZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
         assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
         assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdTriad1.unit
+        )
         val accumulatedStdTriad2 = AngularSpeedTriad()
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
         val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgX1.unit
+        )
+        val instantaneousAvgX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
         val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgY1.unit
+        )
+        val instantaneousAvgY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
         val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgZ1.unit
+        )
+        val instantaneousAvgZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
         assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
         assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgTriad1.unit
+        )
         val instantaneousAvgTriad2 = AngularSpeedTriad()
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
         val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdX1.unit
+        )
+        val instantaneousStdX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
         val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdY1.unit
+        )
+        val instantaneousStdY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
         val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdZ1.unit
+        )
+        val instantaneousStdZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
         assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
         assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdTriad1.unit
+        )
         val instantaneousStdTriad2 = AngularSpeedTriad()
         detector.getInstantaneousStdTriad(instantaneousStdTriad2)
         assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
@@ -294,1394 +393,12 @@ class GyroscopeIntervalDetectorTest {
     }
 
     @Test
-    fun constructor_whenSensorType_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE
-        )
+    fun constructor_whenNonDefaultValues_setsExpectedValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE.value) }
+            .returns(sensor)
 
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.FASTEST, detector.sensorDelay)
-        assertNull(detector.initializationStartedListener)
-        assertNull(detector.initializationCompletedListener)
-        assertNull(detector.errorListener)
-        assertNull(detector.staticIntervalDetectedListener)
-        assertNull(detector.dynamicIntervalDetectedListener)
-        assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenSensorDelay_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL
-        )
-
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertNull(detector.initializationStartedListener)
-        assertNull(detector.initializationCompletedListener)
-        assertNull(detector.errorListener)
-        assertNull(detector.staticIntervalDetectedListener)
-        assertNull(detector.dynamicIntervalDetectedListener)
-        assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenInitializationStartedListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL,
-            initializationStartedListener
-        )
-
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertNull(detector.initializationCompletedListener)
-        assertNull(detector.errorListener)
-        assertNull(detector.staticIntervalDetectedListener)
-        assertNull(detector.dynamicIntervalDetectedListener)
-        assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenInitializationCompletedListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL,
-            initializationStartedListener,
-            initializationCompletedListener
-        )
-
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
-        assertNull(detector.errorListener)
-        assertNull(detector.staticIntervalDetectedListener)
-        assertNull(detector.dynamicIntervalDetectedListener)
-        assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenErrorListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener
-        )
-
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
-        assertSame(errorListener, detector.errorListener)
-        assertNull(detector.staticIntervalDetectedListener)
-        assertNull(detector.dynamicIntervalDetectedListener)
-        assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenStaticIntervalDetectedListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener
-        )
-
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
-        assertSame(errorListener, detector.errorListener)
-        assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
-        assertNull(detector.dynamicIntervalDetectedListener)
-        assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenDynamicIntervalDetectedListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener
-        )
-
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
-        assertSame(errorListener, detector.errorListener)
-        assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
-        assertNull(detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenResetListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(
             context,
             GyroscopeSensorType.GYROSCOPE,
@@ -1701,219 +418,29 @@ class GyroscopeIntervalDetectorTest {
             detector.sensorType
         )
         assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
-        assertSame(errorListener, detector.errorListener)
-        assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
-        assertSame(resetListener, detector.resetListener)
-        assertNull(detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenMeasurementListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL,
+        assertSame(
             initializationStartedListener,
+            detector.initializationStartedListener
+        )
+        assertSame(
             initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            resetListener,
-            measurementListener
+            detector.initializationCompletedListener
         )
-
-        // check default values
-        assertSame(context, detector.context)
-        assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
-        )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
         assertSame(errorListener, detector.errorListener)
-        assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
+        assertSame(
+            staticIntervalDetectedListener,
+            detector.staticIntervalDetectedListener
+        )
+        assertSame(
+            dynamicIntervalDetectedListener,
+            detector.dynamicIntervalDetectedListener
+        )
         assertSame(resetListener, detector.resetListener)
-        assertSame(measurementListener, detector.measurementListener)
-        assertNull(detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
+        assertSame(sensor, detector.sensor)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE,
+            detector.windowSize
+        )
         assertEquals(
             TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
             detector.initialStaticSamples
@@ -1940,14 +467,25 @@ class GyroscopeIntervalDetectorTest {
             baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
             0.0
         )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            baseNoiseLevelAbsoluteThreshold1.unit
+        )
         val baseNoiseLevelAbsoluteThreshold2 =
             AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
+        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(
+            baseNoiseLevelAbsoluteThreshold2
+        )
+        assertEquals(
+            baseNoiseLevelAbsoluteThreshold1,
+            baseNoiseLevelAbsoluteThreshold2
+        )
         assertNull(detector.baseNoiseLevel)
         assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        val baseNoiseLevel = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
         assertNull(detector.baseNoiseLevelPsd)
         assertNull(detector.baseNoiseLevelRootPsd)
@@ -1958,320 +496,200 @@ class GyroscopeIntervalDetectorTest {
         assertEquals(0.0, detector.accumulatedAvgX, 0.0)
         val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
         assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgX1.unit
+        )
+        val accumulatedAvgX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
         assertEquals(accumulatedAvgX1, accumulatedAvgX2)
         assertEquals(0.0, detector.accumulatedAvgY, 0.0)
         val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
         assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgY1.unit
+        )
+        val accumulatedAvgY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
         assertEquals(accumulatedAvgY1, accumulatedAvgY2)
         assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
         val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
         assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgZ1.unit
+        )
+        val accumulatedAvgZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
         assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
         val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
         assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
         assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
         assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedAvgTriad1.unit
+        )
         val accumulatedAvgTriad2 = AngularSpeedTriad()
         detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
         assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.accumulatedStdX, 0.0)
         val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
         assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdX1.unit
+        )
+        val accumulatedStdX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
         assertEquals(accumulatedStdX1, accumulatedStdX2)
         assertEquals(0.0, detector.accumulatedStdY, 0.0)
         val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
         assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdY1.unit
+        )
+        val accumulatedStdY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
         assertEquals(accumulatedStdY1, accumulatedStdY2)
         assertEquals(0.0, detector.accumulatedStdZ, 0.0)
         val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
         assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdZ1.unit
+        )
+        val accumulatedStdZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
         assertEquals(accumulatedStdZ1, accumulatedStdZ2)
         val accumulatedStdTriad1 = detector.accumulatedStdTriad
         assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
         assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
         assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            accumulatedStdTriad1.unit
+        )
         val accumulatedStdTriad2 = AngularSpeedTriad()
         detector.getAccumulatedStdTriad(accumulatedStdTriad2)
         assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
         assertEquals(0.0, detector.instantaneousAvgX, 0.0)
         val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
         assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgX1.unit
+        )
+        val instantaneousAvgX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
         assertEquals(instantaneousAvgX1, instantaneousAvgX2)
         assertEquals(0.0, detector.instantaneousAvgY, 0.0)
         val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
         assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgY1.unit
+        )
+        val instantaneousAvgY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
         assertEquals(instantaneousAvgY1, instantaneousAvgY2)
         assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
         val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
         assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgZ1.unit
+        )
+        val instantaneousAvgZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
         assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
         val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
         assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
         assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousAvgTriad1.unit
+        )
         val instantaneousAvgTriad2 = AngularSpeedTriad()
         detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
         assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
         assertEquals(0.0, detector.instantaneousStdX, 0.0)
         val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
         assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdX1.unit
+        )
+        val instantaneousStdX2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
         assertEquals(instantaneousStdX1, instantaneousStdX2)
         assertEquals(0.0, detector.instantaneousStdY, 0.0)
         val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
         assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdY1.unit
+        )
+        val instantaneousStdY2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
         assertEquals(instantaneousStdY1, instantaneousStdY2)
         assertEquals(0.0, detector.instantaneousStdZ, 0.0)
         val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
         assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertEquals(
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdZ1.unit
+        )
+        val instantaneousStdZ2 = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
         detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
         assertEquals(instantaneousStdZ1, instantaneousStdZ2)
         val instantaneousStdTriad1 = detector.instantaneousStdTriad
         assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
         assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
         assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
-        val instantaneousStdTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousStdTriad(instantaneousStdTriad2)
-        assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
-        assertNull(detector.averageTimeInterval)
-        assertNull(detector.averageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(time))
-        assertNull(detector.timeIntervalVariance)
-        assertNull(detector.timeIntervalStandardDeviation)
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-        assertFalse(detector.running)
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun constructor_whenAccuracyChangedListener_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            GyroscopeSensorType.GYROSCOPE,
-            SensorDelay.NORMAL,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            resetListener,
-            measurementListener,
-            accuracyChangedListener
-        )
-
-        // check default values
-        assertSame(context, detector.context)
         assertEquals(
-            GyroscopeSensorType.GYROSCOPE,
-            detector.sensorType
+            AngularSpeedUnit.RADIANS_PER_SECOND,
+            instantaneousStdTriad1.unit
         )
-        assertEquals(SensorDelay.NORMAL, detector.sensorDelay)
-        assertSame(initializationStartedListener, detector.initializationStartedListener)
-        assertSame(initializationCompletedListener, detector.initializationCompletedListener)
-        assertSame(errorListener, detector.errorListener)
-        assertSame(staticIntervalDetectedListener, detector.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, detector.dynamicIntervalDetectedListener)
-        assertSame(resetListener, detector.resetListener)
-        assertSame(measurementListener, detector.measurementListener)
-        assertSame(accuracyChangedListener, detector.accuracyChangedListener)
-        assertNull(detector.sensor)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            detector.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            detector.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            detector.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            detector.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevelAbsoluteThreshold1 =
-            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            detector.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevelAbsoluteThreshold1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, baseNoiseLevelAbsoluteThreshold1.unit)
-        val baseNoiseLevelAbsoluteThreshold2 =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevelAbsoluteThreshold2)
-        assertEquals(baseNoiseLevelAbsoluteThreshold1, baseNoiseLevelAbsoluteThreshold2)
-        assertNull(detector.baseNoiseLevel)
-        assertNull(detector.baseNoiseLevelAsMeasurement)
-        val baseNoiseLevel = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(baseNoiseLevel))
-        assertNull(detector.baseNoiseLevelPsd)
-        assertNull(detector.baseNoiseLevelRootPsd)
-        assertNull(detector.threshold)
-        assertNull(detector.thresholdAsMeasurement)
-        val threshold = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(threshold))
-        assertEquals(0.0, detector.accumulatedAvgX, 0.0)
-        val accumulatedAvgX1 = detector.accumulatedAvgXAsMeasurement
-        assertEquals(0.0, accumulatedAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgX1.unit)
-        val accumulatedAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgXAsMeasurement(accumulatedAvgX2)
-        assertEquals(accumulatedAvgX1, accumulatedAvgX2)
-        assertEquals(0.0, detector.accumulatedAvgY, 0.0)
-        val accumulatedAvgY1 = detector.accumulatedAvgYAsMeasurement
-        assertEquals(0.0, accumulatedAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgY1.unit)
-        val accumulatedAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgYAsMeasurement(accumulatedAvgY2)
-        assertEquals(accumulatedAvgY1, accumulatedAvgY2)
-        assertEquals(0.0, detector.accumulatedAvgZ, 0.0)
-        val accumulatedAvgZ1 = detector.accumulatedAvgZAsMeasurement
-        assertEquals(0.0, accumulatedAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgZ1.unit)
-        val accumulatedAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedAvgZAsMeasurement(accumulatedAvgZ2)
-        assertEquals(accumulatedAvgZ1, accumulatedAvgZ2)
-        val accumulatedAvgTriad1 = detector.accumulatedAvgTriad
-        assertEquals(0.0, accumulatedAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedAvgTriad1.unit)
-        val accumulatedAvgTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedAvgTriad(accumulatedAvgTriad2)
-        assertEquals(accumulatedAvgTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.accumulatedStdX, 0.0)
-        val accumulatedStdX1 = detector.accumulatedStdXAsMeasurement
-        assertEquals(0.0, accumulatedStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdX1.unit)
-        val accumulatedStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdXAsMeasurement(accumulatedStdX2)
-        assertEquals(accumulatedStdX1, accumulatedStdX2)
-        assertEquals(0.0, detector.accumulatedStdY, 0.0)
-        val accumulatedStdY1 = detector.accumulatedStdYAsMeasurement
-        assertEquals(0.0, accumulatedStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdY1.unit)
-        val accumulatedStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdYAsMeasurement(accumulatedStdY2)
-        assertEquals(accumulatedStdY1, accumulatedStdY2)
-        assertEquals(0.0, detector.accumulatedStdZ, 0.0)
-        val accumulatedStdZ1 = detector.accumulatedStdZAsMeasurement
-        assertEquals(0.0, accumulatedStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdZ1.unit)
-        val accumulatedStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getAccumulatedStdZAsMeasurement(accumulatedStdZ2)
-        assertEquals(accumulatedStdZ1, accumulatedStdZ2)
-        val accumulatedStdTriad1 = detector.accumulatedStdTriad
-        assertEquals(0.0, accumulatedStdTriad1.valueX, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueY, 0.0)
-        assertEquals(0.0, accumulatedStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, accumulatedStdTriad1.unit)
-        val accumulatedStdTriad2 = AngularSpeedTriad()
-        detector.getAccumulatedStdTriad(accumulatedStdTriad2)
-        assertEquals(accumulatedStdTriad1, accumulatedAvgTriad2)
-        assertEquals(0.0, detector.instantaneousAvgX, 0.0)
-        val instantaneousAvgX1 = detector.instantaneousAvgXAsMeasurement
-        assertEquals(0.0, instantaneousAvgX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgX1.unit)
-        val instantaneousAvgX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgXAsMeasurement(instantaneousAvgX2)
-        assertEquals(instantaneousAvgX1, instantaneousAvgX2)
-        assertEquals(0.0, detector.instantaneousAvgY, 0.0)
-        val instantaneousAvgY1 = detector.instantaneousAvgYAsMeasurement
-        assertEquals(0.0, instantaneousAvgY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgY1.unit)
-        val instantaneousAvgY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgYAsMeasurement(instantaneousAvgY2)
-        assertEquals(instantaneousAvgY1, instantaneousAvgY2)
-        assertEquals(0.0, detector.instantaneousAvgZ, 0.0)
-        val instantaneousAvgZ1 = detector.instantaneousAvgZAsMeasurement
-        assertEquals(0.0, instantaneousAvgZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgZ1.unit)
-        val instantaneousAvgZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousAvgZAsMeasurement(instantaneousAvgZ2)
-        assertEquals(instantaneousAvgZ1, instantaneousAvgZ2)
-        val instantaneousAvgTriad1 = detector.instantaneousAvgTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousAvgTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousAvgTriad1.unit)
-        val instantaneousAvgTriad2 = AngularSpeedTriad()
-        detector.getInstantaneousAvgTriad(instantaneousAvgTriad2)
-        assertEquals(instantaneousAvgTriad1, instantaneousAvgTriad2)
-        assertEquals(0.0, detector.instantaneousStdX, 0.0)
-        val instantaneousStdX1 = detector.instantaneousStdXAsMeasurement
-        assertEquals(0.0, instantaneousStdX1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdX1.unit)
-        val instantaneousStdX2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdXAsMeasurement(instantaneousStdX2)
-        assertEquals(instantaneousStdX1, instantaneousStdX2)
-        assertEquals(0.0, detector.instantaneousStdY, 0.0)
-        val instantaneousStdY1 = detector.instantaneousStdYAsMeasurement
-        assertEquals(0.0, instantaneousStdY1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdY1.unit)
-        val instantaneousStdY2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdYAsMeasurement(instantaneousStdY2)
-        assertEquals(instantaneousStdY1, instantaneousStdY2)
-        assertEquals(0.0, detector.instantaneousStdZ, 0.0)
-        val instantaneousStdZ1 = detector.instantaneousStdZAsMeasurement
-        assertEquals(0.0, instantaneousStdZ1.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdZ1.unit)
-        val instantaneousStdZ2 = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        detector.getInstantaneousStdZAsMeasurement(instantaneousStdZ2)
-        assertEquals(instantaneousStdZ1, instantaneousStdZ2)
-        val instantaneousStdTriad1 = detector.instantaneousStdTriad
-        assertEquals(0.0, instantaneousAvgTriad1.valueX, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueY, 0.0)
-        assertEquals(0.0, instantaneousStdTriad1.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, instantaneousStdTriad1.unit)
         val instantaneousStdTriad2 = AngularSpeedTriad()
         detector.getInstantaneousStdTriad(instantaneousStdTriad2)
         assertEquals(instantaneousStdTriad1, instantaneousStdTriad2)
@@ -2290,7 +708,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun initializationStartedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2305,7 +722,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun initializationCompletedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2320,7 +736,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun errorListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2335,7 +750,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun staticIntervalDetectedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2350,7 +764,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun dynamicIntervalDetectedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2365,7 +778,6 @@ class GyroscopeIntervalDetectorTest {
 
     @Test
     fun resetListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2379,58 +791,30 @@ class GyroscopeIntervalDetectorTest {
     }
 
     @Test
-    fun measurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        // check default value
-        assertNull(detector.measurementListener)
-
-        // set new value
-        detector.measurementListener = measurementListener
-
-        // check
-        assertSame(measurementListener, detector.measurementListener)
-    }
-
-    @Test
-    fun accuracyChangedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        // check default value
-        assertNull(detector.accuracyChangedListener)
-
-        // set new value
-        detector.accuracyChangedListener = accuracyChangedListener
-
-        // check
-        assertSame(accuracyChangedListener, detector.accuracyChangedListener)
-    }
-
-    @Test
     fun sensor_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value
+            )
+        }.returns(
+            sensor
+        )
+
         val detector = GyroscopeIntervalDetector(context)
-
-        val collector: GyroscopeSensorCollector? =
-            detector.getPrivateProperty("collector")
-        requireNotNull(collector)
-
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.sensor }.returns(sensor)
-        detector.setPrivateProperty("collector", collectorSpy)
-
         assertSame(sensor, detector.sensor)
     }
 
     @Test
     fun windowSize_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, detector.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE,
+            detector.windowSize
+        )
 
         // set new value
         detector.windowSize = WINDOW_SIZE
@@ -2439,27 +823,31 @@ class GyroscopeIntervalDetectorTest {
         assertEquals(WINDOW_SIZE, detector.windowSize)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun windowSize_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        detector.windowSize = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            detector.windowSize = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun windowSize_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        setPrivateProperty(IntervalDetector::class, detector, "running", true)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "running",
+            true
+        )
 
-        detector.windowSize = WINDOW_SIZE
+        assertThrows(IllegalStateException::class.java) {
+            detector.windowSize = WINDOW_SIZE
+        }
     }
 
     @Test
     fun initialStaticSamples_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2475,27 +863,32 @@ class GyroscopeIntervalDetectorTest {
         assertEquals(INITIAL_STATIC_SAMPLES, detector.initialStaticSamples)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        detector.initialStaticSamples = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            detector.initialStaticSamples = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        setPrivateProperty(IntervalDetector::class, detector, "running", true)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "running",
+            true
+        )
 
-        detector.initialStaticSamples = TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES
+        assertThrows(IllegalStateException::class.java) {
+            detector.initialStaticSamples =
+                TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES
+        }
     }
 
     @Test
     fun thresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2512,27 +905,31 @@ class GyroscopeIntervalDetectorTest {
         assertEquals(THRESHOLD_FACTOR, detector.thresholdFactor, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        detector.thresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            detector.thresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun thresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        setPrivateProperty(IntervalDetector::class, detector, "running", true)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "running",
+            true
+        )
 
-        detector.thresholdFactor = TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            detector.thresholdFactor = TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2546,31 +943,39 @@ class GyroscopeIntervalDetectorTest {
         detector.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
 
         // check
-        assertEquals(INSTANTANEOUS_NOISE_LEVEL_FACTOR, detector.instantaneousNoiseLevelFactor, 0.0)
+        assertEquals(
+            INSTANTANEOUS_NOISE_LEVEL_FACTOR,
+            detector.instantaneousNoiseLevelFactor,
+            0.0
+        )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        detector.instantaneousNoiseLevelFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            detector.instantaneousNoiseLevelFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        setPrivateProperty(IntervalDetector::class, detector, "running", true)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "running",
+            true
+        )
 
-        detector.instantaneousNoiseLevelFactor =
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            detector.instantaneousNoiseLevelFactor =
+                TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        }
     }
 
     @Test
     fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2591,28 +996,32 @@ class GyroscopeIntervalDetectorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun baseNoiseLevelAbsoluteThreshold_whenInvalid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    @Test
+    fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
         val detector = GyroscopeIntervalDetector(context)
 
-        detector.baseNoiseLevelAbsoluteThreshold = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            detector.baseNoiseLevelAbsoluteThreshold = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        setPrivateProperty(IntervalDetector::class, detector, "running", true)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "running",
+            true
+        )
 
-        detector.baseNoiseLevelAbsoluteThreshold =
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+        assertThrows(IllegalStateException::class.java) {
+            detector.baseNoiseLevelAbsoluteThreshold =
+                TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+        }
     }
 
     @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
         // check default value
@@ -2657,2551 +1066,1414 @@ class GyroscopeIntervalDetectorTest {
         assertEquals(baseNoiseLevelAbsoluteThreshold4, baseNoiseLevelAbsoluteThreshold5)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        detector.baseNoiseLevelAbsoluteThresholdAsMeasurement =
-            AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        assertThrows(IllegalArgumentException::class.java) {
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement =
+                AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        setPrivateProperty(IntervalDetector::class, detector, "running", true)
-
-        detector.baseNoiseLevelAbsoluteThresholdAsMeasurement = AngularSpeed(
-            BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            AngularSpeedUnit.RADIANS_PER_SECOND
-        )
-    }
-
-    @Test
-    fun start_whenSensorAvailable_startsCollector() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val collector: GyroscopeSensorCollector? =
-            detector.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorType, detector.sensorType)
-        assertEquals(collector.sensorDelay, detector.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
-
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        detector.setPrivateProperty("collector", collectorSpy)
-
-        assertFalse(detector.running)
-
-        detector.start()
-
-        assertTrue(detector.running)
-        verify(exactly = 1) { collectorSpy.start() }
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun start_whenSensorUnavailable_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val collector: GyroscopeSensorCollector? =
-            detector.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorType, detector.sensorType)
-        assertEquals(collector.sensorDelay, detector.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
-
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(false)
-        detector.setPrivateProperty("collector", collectorSpy)
-
-        assertFalse(detector.running)
-
-        detector.start()
-    }
-
-    @Test
-    fun start_resets() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val collector: GyroscopeSensorCollector? =
-            detector.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        detector.setPrivateProperty("collector", collectorSpy)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+            IntervalDetector::class, detector, "running",
+            true
         )
 
-        setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
-        setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "initialTimestamp",
-            SystemClock.elapsedRealtimeNanos()
-        )
-        setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
-
-        detector.start()
-
-        assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
-        verify(exactly = 1) { internalDetectorSpy.reset() }
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val initialTimestamp: Long? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
-        requireNotNull(initialTimestamp)
-        assertEquals(0L, initialTimestamp)
-
-        val numberOfProcessedMeasurements: Int? =
-            getPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements")
-        requireNotNull(numberOfProcessedMeasurements)
-        assertEquals(0, numberOfProcessedMeasurements)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun start_whenAlreadyRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        assertFalse(detector.running)
-
-        detector.start()
-
-        assertTrue(detector.running)
-
-        // start again
-        detector.start()
-    }
-
-    @Test
-    fun stop_whenAlreadyStarted_stopsSensorCollector() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val collector: GyroscopeSensorCollector? = detector.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorType, detector.sensorType)
-        assertEquals(collector.sensorDelay, detector.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
-
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        detector.setPrivateProperty("collector", collectorSpy)
-
-        assertFalse(detector.running)
-
-        detector.start()
-
-        assertTrue(detector.running)
-        verify(exactly = 1) { collectorSpy.start() }
-
-        // stop
-        detector.stop()
-
-        assertFalse(detector.running)
-        verify(exactly = 1) { collectorSpy.stop() }
-    }
-
-    @Test
-    fun stop_whenNotAlreadyStarted_stopsSensorCollector() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val collector: GyroscopeSensorCollector? = detector.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorType, detector.sensorType)
-        assertEquals(collector.sensorDelay, detector.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
-
-        val collectorSpy = spyk(collector)
-        detector.setPrivateProperty("collector", collectorSpy)
-
-        assertFalse(detector.running)
-
-        // stop
-        detector.stop()
-
-        assertFalse(detector.running)
-        verify(exactly = 1) { collectorSpy.stop() }
-    }
-
-    @Test
-    fun mapErrorReason_whenUnreliable_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
-
-        var errorReason: ErrorReason? =
-            callPrivateFuncWithResult(
-                IntervalDetector::class, detector, "mapErrorReason",
-                TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
-            )
-        assertEquals(ErrorReason.UNRELIABLE_SENSOR, errorReason)
-
-        errorReason = callPrivateFuncWithResult(
-            IntervalDetector::class, detector, "mapErrorReason",
-            TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
-        )
-        assertEquals(ErrorReason.UNRELIABLE_SENSOR, errorReason)
-    }
-
-    @Test
-    fun mapErrorReason_whenReliable_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        var errorReason: ErrorReason? =
-            callPrivateFuncWithResult(
-                IntervalDetector::class, detector, "mapErrorReason",
-                TriadStaticIntervalDetector.ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED
-            )
-        assertEquals(
-            ErrorReason.OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
-            errorReason
-        )
-
-        errorReason = callPrivateFuncWithResult(
-            IntervalDetector::class, detector, "mapErrorReason",
-            TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
-        )
-        assertEquals(
-            ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION,
-            errorReason
-        )
-    }
-
-    @Test
-    fun onMeasurement_whenIdle_processesMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        // check initial status
-        assertEquals(Status.IDLE, detector.status)
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-
-        // process measurement
-        val measurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("internalMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val kinematics = getBodyKinematics()
-        val wx = kinematics.angularRateX.toFloat()
-        val wy = kinematics.angularRateY.toFloat()
-        val wz = kinematics.angularRateZ.toFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-
-        measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp, accuracy)
-
-        // check
-        verify(exactly = 1) {
-            internalDetectorSpy.process(
-                wy.toDouble(),
-                wx.toDouble(),
-                -wz.toDouble()
+        assertThrows(IllegalStateException::class.java) {
+            detector.baseNoiseLevelAbsoluteThresholdAsMeasurement = AngularSpeed(
+                BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
+                AngularSpeedUnit.RADIANS_PER_SECOND
             )
         }
-        assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(Status.INITIALIZING, detector.status)
     }
 
     @Test
-    fun onMeasurement_whenInitializingStatusAndZeroProcessedMeasurement_setsInitialTimestamp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun baseNoiseLevel_whenInitialized_returnsExpectedValue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        // check initial values
-        val initialTimestamp1: Long? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
-        requireNotNull(initialTimestamp1)
-        assertEquals(0L, initialTimestamp1)
-
-        assertEquals(Status.INITIALIZING, detector.status)
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-
-        // process measurement
-        val measurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("internalMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val kinematics = getBodyKinematics()
-        val wx = kinematics.angularRateX.toFloat()
-        val wy = kinematics.angularRateY.toFloat()
-        val wz = kinematics.angularRateZ.toFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-
-        measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp, accuracy)
-
-        // check
-        verify(exactly = 1) {
-            internalDetectorSpy.process(
-                wy.toDouble(),
-                wx.toDouble(),
-                -wz.toDouble()
-            )
-        }
-        assertEquals(1, detector.numberOfProcessedMeasurements)
-        assertEquals(Status.INITIALIZING, detector.status)
-
-        val initialTimestamp2: Long? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
-        requireNotNull(initialTimestamp2)
-        assertEquals(timestamp, initialTimestamp2)
-    }
-
-    @Test
-    fun onMeasurement_whenInitializingStatusAndNonZeroProcessedMeasurement_addsTimestampToTimeIntervalEstimator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-        setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        setPrivateProperty(IntervalDetector::class, detector, "initialTimestamp", timestamp1)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
         setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+            IntervalDetector::class, detector, "initialized",
+            true
         )
-
-        // check initial values
-        val initialTimestamp1: Long? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
-        requireNotNull(initialTimestamp1)
-        assertEquals(timestamp1, initialTimestamp1)
-
-        assertEquals(Status.INITIALIZING, detector.status)
-        assertEquals(1, detector.numberOfProcessedMeasurements)
-
-        // process measurement
-        val measurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("internalMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val kinematics = getBodyKinematics()
-        val wx = kinematics.angularRateX.toFloat()
-        val wy = kinematics.angularRateY.toFloat()
-        val wz = kinematics.angularRateZ.toFloat()
-        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        val accuracy = SensorAccuracy.HIGH
-
-        measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp2, accuracy)
-
-        // check
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
-        verify(exactly = 1) {
-            internalDetectorSpy.process(
-                wy.toDouble(),
-                wx.toDouble(),
-                -wz.toDouble()
-            )
-        }
-        assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(Status.INITIALIZING, detector.status)
-
-        val initialTimestamp2: Long? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
-        requireNotNull(initialTimestamp2)
-        assertEquals(timestamp1, initialTimestamp2)
-    }
-
-    @Test
-    fun onMeasurement_whenInitializingAndListener_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector =
-            GyroscopeIntervalDetector(
-                context,
-                initializationStartedListener = initializationStartedListener
-            )
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZING)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-        setPrivateProperty(IntervalDetector::class, detector, "numberOfProcessedMeasurements", 1)
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        setPrivateProperty(IntervalDetector::class, detector, "initialTimestamp", timestamp1)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
-
-        // check initial values
-        val initialTimestamp1: Long? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
-        requireNotNull(initialTimestamp1)
-        assertEquals(timestamp1, initialTimestamp1)
-
-        assertEquals(Status.INITIALIZING, detector.status)
-        assertEquals(1, detector.numberOfProcessedMeasurements)
-
-        // process measurement
-        val measurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("internalMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val kinematics = getBodyKinematics()
-        val wx = kinematics.angularRateX.toFloat()
-        val wy = kinematics.angularRateY.toFloat()
-        val wz = kinematics.angularRateZ.toFloat()
-        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        val accuracy = SensorAccuracy.HIGH
-
-        measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp2, accuracy)
-
-        // check
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(TIME_INTERVAL_SECONDS) }
-        verify(exactly = 1) {
-            internalDetectorSpy.process(
-                wy.toDouble(),
-                wx.toDouble(),
-                -wz.toDouble()
-            )
-        }
-        assertEquals(2, detector.numberOfProcessedMeasurements)
-        assertEquals(Status.INITIALIZING, detector.status)
-
-        val initialTimestamp2: Long? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialTimestamp")
-        requireNotNull(initialTimestamp2)
-        assertEquals(timestamp1, initialTimestamp2)
-
-        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
-    }
-
-    @Test
-    fun onMeasurement_whenInitializationCompleted_setsTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(2.0 * TIME_INTERVAL_SECONDS)
-        setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
-
-        // check initial values
-        assertEquals(
-            WindowedTriadNoiseEstimator.DEFAULT_TIME_INTERVAL_SECONDS,
-            internalDetector.timeInterval,
-            0.0
-        )
-        val initialized1: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized1)
-        assertFalse(initialized1)
-        assertNull(detector.averageTimeInterval)
-
-        // process measurement
-        val measurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("internalMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val kinematics = getBodyKinematics()
-        val wx = kinematics.angularRateX.toFloat()
-        val wy = kinematics.angularRateY.toFloat()
-        val wz = kinematics.angularRateZ.toFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-
-        measurementListener.onMeasurement(wx, wy, wz, null, null, null, timestamp, accuracy)
-
-        // check
-        assertEquals(2.0 * TIME_INTERVAL_SECONDS, internalDetectorSpy.timeInterval, 0.0)
-        val initialized2: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized2)
-        assertTrue(initialized2)
-        assertEquals(2.0 * TIME_INTERVAL_SECONDS, detector.averageTimeInterval)
-    }
-
-    @Test
-    fun onMeasurement_whenMeasurementListener_notifiesMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector =
-            GyroscopeIntervalDetector(context, measurementListener = measurementListener)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        // check initial status
-        assertEquals(Status.IDLE, detector.status)
-        assertEquals(0, detector.numberOfProcessedMeasurements)
-
-        // process measurement
-        val internalMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? =
-            detector.getPrivateProperty("internalMeasurementListener")
-        requireNotNull(internalMeasurementListener)
-
-        val kinematics = getBodyKinematics()
-        val wx = kinematics.angularRateX.toFloat()
-        val wy = kinematics.angularRateY.toFloat()
-        val wz = kinematics.angularRateZ.toFloat()
+        detector.setPrivateProperty("internalDetector", internalDetector)
         val randomizer = UniformRandomizer()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
+        val baseNoiseLevel = randomizer.nextDouble()
+        every { internalDetector.baseNoiseLevel }.returns(baseNoiseLevel)
 
-        internalMeasurementListener.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
+        assertEquals(baseNoiseLevel, detector.baseNoiseLevel)
 
-        // check
-        verify(exactly = 1) {
-            measurementListener.onMeasurement(
-                wx,
-                wy,
-                wz,
-                bx,
-                by,
-                bz,
-                timestamp,
-                accuracy
-            )
-        }
-    }
-
-    @Test
-    fun onAccuracyChanged_whenUnreliableAndNoListener_setsResultAsUnreliable() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        // check default value
-        val unreliable1: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable1)
-        assertFalse(unreliable1)
-
-        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
-        requireNotNull(accuracyChangedListener)
-
-        accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
-
-        // check
-        val unreliable2: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable2)
-        assertTrue(unreliable2)
-    }
-
-    @Test
-    fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliableAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context, errorListener = errorListener)
-
-        // check default value
-        val unreliable1: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable1)
-        assertFalse(unreliable1)
-
-        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
-        requireNotNull(accuracyChangedListener)
-
-        accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
-
-        // check
-        val unreliable2: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable2)
-        assertTrue(unreliable2)
-        verify(exactly = 1) {
-            errorListener.onError(
-                detector,
-                ErrorReason.UNRELIABLE_SENSOR
-            )
-        }
-    }
-
-    @Test
-    fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context, errorListener = errorListener)
-
-        // check default value
-        val unreliable1: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable1)
-        assertFalse(unreliable1)
-
-        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
-        requireNotNull(accuracyChangedListener)
-
-        accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
-
-        // check
-        val unreliable2: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable2)
-        assertFalse(unreliable2)
-        verify(exactly = 0) {
-            errorListener.onError(any(), any())
-        }
-    }
-
-    @Test
-    fun onAccuracyChanged_whenUnreliableListener_notifiesAccuracyChange() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(
-            context,
-            errorListener = errorListener,
-            accuracyChangedListener = accuracyChangedListener
-        )
-
-        // check default value
-        val unreliable1: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable1)
-        assertFalse(unreliable1)
-
-        val internalAccuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            getPrivateProperty(IntervalDetector::class, detector, "internalAccuracyChangedListener")
-        requireNotNull(internalAccuracyChangedListener)
-
-        internalAccuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH)
-
-        // check
-        val unreliable2: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable2)
-        assertFalse(unreliable2)
-        verify(exactly = 0) {
-            errorListener.onError(any(), any())
-        }
-        verify(exactly = 1) { accuracyChangedListener.onAccuracyChanged(SensorAccuracy.HIGH) }
+        verify(exactly = 1) { internalDetector.baseNoiseLevel }
     }
 
     @Test
     fun baseNoiseLevel_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.baseNoiseLevel)
     }
 
     @Test
-    fun baseNoiseLevel_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun baseNoiseLevelAsMeasurement_whenInitialized_returnsExpectedValue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val baseNoiseLevel1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevel }.returns(baseNoiseLevel1)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.baseNoiseLevelAsMeasurement }.returns(angularSpeed)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        assertSame(angularSpeed, detector.baseNoiseLevelAsMeasurement)
 
-        val baseNoiseLevel2 = detector.baseNoiseLevel
-        requireNotNull(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2, 0.0)
+        verify(exactly = 1) { internalDetector.baseNoiseLevelAsMeasurement }
     }
 
     @Test
     fun baseNoiseLevelAsMeasurement_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.baseNoiseLevelAsMeasurement)
     }
 
     @Test
-    fun baseNoiseLevelAsMeasurement_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getBaseNoiseLevelAsMeasurement_whenInitialized_returnsTrue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("internalDetector", internalDetector)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getBaseNoiseLevelAsMeasurement(angularSpeed) }
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val baseNoiseLevel1 = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevelAsMeasurement }.returns(baseNoiseLevel1)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        assertTrue(detector.getBaseNoiseLevelAsMeasurement(angularSpeed))
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
-
-        val baseNoiseLevel2 = detector.baseNoiseLevelAsMeasurement
-        requireNotNull(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
+        verify(exactly = 1) { internalDetector.getBaseNoiseLevelAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun getBaseNoiseLevelAsMeasurement_whenNotInitialized_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getBaseNoiseLevelAsMeasurement(result))
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        assertFalse(detector.getBaseNoiseLevelAsMeasurement(angularSpeed))
+
+        verify { internalDetector wasNot Called }
     }
 
     @Test
-    fun getBaseNoiseLevelAsMeasurement_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun baseNoiseLevelPsd_whenInitialized_returnsExpectedValue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getBaseNoiseLevelAsMeasurement(any()) }.answers { answer ->
-            val result = answer.invocation.args[0] as AngularSpeed
-            result.value = value
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val baseNoiseLevelPsd = randomizer.nextDouble()
+        every { internalDetector.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        assertEquals(baseNoiseLevelPsd, detector.baseNoiseLevelPsd)
 
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertTrue(detector.getBaseNoiseLevelAsMeasurement(result))
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.baseNoiseLevelPsd }
     }
 
     @Test
     fun baseNoiseLevelPsd_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.baseNoiseLevelPsd)
     }
 
     @Test
-    fun baseNoiseLevelPsd_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun baseNoiseLevelRootPsd_whenInitialized_returnsExpectedValue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val baseNoiseLevelPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevelPsd }.returns(baseNoiseLevelPsd1)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val baseNoiseLevelRootPsd = randomizer.nextDouble()
+        every { internalDetector.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        assertEquals(baseNoiseLevelRootPsd, detector.baseNoiseLevelRootPsd)
 
-        val baseNoiseLevelPsd2 = detector.baseNoiseLevelPsd
-        requireNotNull(baseNoiseLevelPsd2)
-        assertEquals(baseNoiseLevelPsd1, baseNoiseLevelPsd2, 0.0)
+        verify(exactly = 1) { internalDetector.baseNoiseLevelRootPsd }
     }
 
     @Test
     fun baseNoiseLevelRootPsd_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.baseNoiseLevelRootPsd)
     }
 
     @Test
-    fun baseNoiseLevelRootPsd_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun threshold_whenInitialized_returnsExpectedValue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val baseNoiseLevelRootPsd1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.baseNoiseLevelRootPsd }.returns(baseNoiseLevelRootPsd1)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val threshold = randomizer.nextDouble()
+        every { internalDetector.threshold }.returns(threshold)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        assertEquals(threshold, detector.threshold)
 
-        val baseNoiseLevelRootPsd2 = detector.baseNoiseLevelRootPsd
-        requireNotNull(baseNoiseLevelRootPsd2)
-        assertEquals(baseNoiseLevelRootPsd1, baseNoiseLevelRootPsd2, 0.0)
+        verify(exactly = 1) { internalDetector.threshold }
     }
 
     @Test
     fun threshold_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.threshold)
     }
 
     @Test
-    fun threshold_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun thresholdAsMeasurement_whenInitialized_returnsExpectedValue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val threshold1 = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.threshold }.returns(threshold1)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.thresholdAsMeasurement }.returns(angularSpeed)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        assertSame(angularSpeed, detector.thresholdAsMeasurement)
 
-        val threshold2 = detector.threshold
-        requireNotNull(threshold2)
-        assertEquals(threshold1, threshold2, 0.0)
+        verify(exactly = 1) { internalDetector.thresholdAsMeasurement }
     }
 
     @Test
     fun thresholdAsMeasurement_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.thresholdAsMeasurement)
     }
 
     @Test
-    fun thresholdAsMeasurement_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getThresholdAsMeasurement_whenInitialized_returnsTrue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val threshold1 = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.thresholdAsMeasurement }.returns(threshold1)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getThresholdAsMeasurement(angularSpeed) }
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        assertTrue(detector.getThresholdAsMeasurement(angularSpeed))
 
-        val threshold2 = detector.thresholdAsMeasurement
-        requireNotNull(threshold2)
-        assertEquals(threshold1, threshold2)
+        verify(exactly = 1) { internalDetector.getThresholdAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun getThresholdAsMeasurement_whenNotInitialized_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertFalse(detector.getThresholdAsMeasurement(result))
-    }
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
 
-    @Test
-    fun getThresholdAsMeasurement_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
+        assertFalse(detector.getThresholdAsMeasurement(angularSpeed))
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getThresholdAsMeasurement(any()) }.answers { answer ->
-            val result = answer.invocation.args[0] as AngularSpeed
-            result.value = value
-            result.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
-
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        assertTrue(detector.getThresholdAsMeasurement(result))
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify { internalDetector wasNot Called }
     }
 
     @Test
     fun accumulatedAvgX_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgX }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val accumulatedAvgX = randomizer.nextDouble()
+        every { internalDetector.accumulatedAvgX }.returns(accumulatedAvgX)
 
-        assertEquals(value, detector.accumulatedAvgX, 0.0)
+        assertEquals(accumulatedAvgX, detector.accumulatedAvgX, 0.0)
+
+        verify(exactly = 1) { internalDetector.accumulatedAvgX }
     }
 
     @Test
     fun accumulatedAvgXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgXAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.accumulatedAvgXAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.accumulatedAvgXAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.accumulatedAvgXAsMeasurement }
     }
 
     @Test
-    fun getAccumulatedAvgXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedAvgXAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgXAsMeasurement(any()) }.answers { answer ->
-            val avgX = answer.invocation.args[0] as AngularSpeed
-            avgX.value = value
-            avgX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getAccumulatedAvgXAsMeasurement(angularSpeed) }
 
-        detector.getAccumulatedAvgXAsMeasurement(result)
+        detector.getAccumulatedAvgXAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedAvgXAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun accumulatedAvgY_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgY }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val accumulatedAvgY = randomizer.nextDouble()
+        every { internalDetector.accumulatedAvgY }.returns(accumulatedAvgY)
 
-        assertEquals(value, detector.accumulatedAvgY, 0.0)
+        assertEquals(accumulatedAvgY, detector.accumulatedAvgY, 0.0)
+
+        verify(exactly = 1) { internalDetector.accumulatedAvgY }
     }
 
     @Test
     fun accumulatedAvgYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgYAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.accumulatedAvgYAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.accumulatedAvgYAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.accumulatedAvgYAsMeasurement }
     }
 
     @Test
-    fun getAccumulatedAvgYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedAvgYAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgYAsMeasurement(any()) }.answers { answer ->
-            val avgY = answer.invocation.args[0] as AngularSpeed
-            avgY.value = value
-            avgY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getAccumulatedAvgYAsMeasurement(angularSpeed) }
 
-        detector.getAccumulatedAvgYAsMeasurement(result)
+        detector.getAccumulatedAvgYAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedAvgYAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun accumulatedAvgZ_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgZ }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val accumulatedAvgZ = randomizer.nextDouble()
+        every { internalDetector.accumulatedAvgZ }.returns(accumulatedAvgZ)
 
-        assertEquals(value, detector.accumulatedAvgZ, 0.0)
+        assertEquals(accumulatedAvgZ, detector.accumulatedAvgZ, 0.0)
+
+        verify(exactly = 1) { internalDetector.accumulatedAvgZ }
     }
 
     @Test
     fun accumulatedAvgZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgZAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.accumulatedAvgZAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.accumulatedAvgZAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.accumulatedAvgZAsMeasurement }
     }
 
     @Test
-    fun getAccumulatedAvgZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedAvgZAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgZAsMeasurement(any()) }.answers { answer ->
-            val avgZ = answer.invocation.args[0] as AngularSpeed
-            avgZ.value = value
-            avgZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getAccumulatedAvgZAsMeasurement(angularSpeed) }
 
-        detector.getAccumulatedAvgZAsMeasurement(result)
+        detector.getAccumulatedAvgZAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedAvgZAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun accumulatedAvgTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val triad =
-            AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedAvgTriad }.returns(triad)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val triad = AngularSpeedTriad()
+        every { internalDetector.accumulatedAvgTriad }.returns(triad)
 
         assertSame(triad, detector.accumulatedAvgTriad)
+
+        verify(exactly = 1) { internalDetector.accumulatedAvgTriad }
     }
 
     @Test
-    fun getAccumulatedAvgTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedAvgTriad_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val result =
-            AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedAvgTriad(any()) }.answers { answer ->
-            val triad = answer.invocation.args[0] as AngularSpeedTriad
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val triad = AngularSpeedTriad()
+        justRun { internalDetector.getAccumulatedAvgTriad(triad) }
 
-        detector.getAccumulatedAvgTriad(result)
+        detector.getAccumulatedAvgTriad(triad)
 
-        assertEquals(valueX, result.valueX, 0.0)
-        assertEquals(valueY, result.valueY, 0.0)
-        assertEquals(valueZ, result.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedAvgTriad(triad) }
     }
 
     @Test
     fun accumulatedStdX_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdX }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val accumulatedStdX = randomizer.nextDouble()
+        every { internalDetector.accumulatedStdX }.returns(accumulatedStdX)
 
-        assertEquals(value, detector.accumulatedStdX, 0.0)
+        assertEquals(accumulatedStdX, detector.accumulatedStdX, 0.0)
+
+        verify(exactly = 1) { internalDetector.accumulatedStdX }
     }
 
     @Test
     fun accumulatedStdXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdXAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.accumulatedStdXAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.accumulatedStdXAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.accumulatedStdXAsMeasurement }
     }
 
     @Test
-    fun getAccumulatedStdXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedStdXAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdXAsMeasurement(any()) }.answers { answer ->
-            val stdX = answer.invocation.args[0] as AngularSpeed
-            stdX.value = value
-            stdX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getAccumulatedStdXAsMeasurement(angularSpeed) }
 
-        detector.getAccumulatedStdXAsMeasurement(result)
+        detector.getAccumulatedStdXAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedStdXAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun accumulatedStdY_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdY }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val accumulatedStdY = randomizer.nextDouble()
+        every { internalDetector.accumulatedStdY }.returns(accumulatedStdY)
 
-        assertEquals(value, detector.accumulatedStdY, 0.0)
+        assertEquals(accumulatedStdY, detector.accumulatedStdY, 0.0)
+
+        verify(exactly = 1) { internalDetector.accumulatedStdY }
     }
 
     @Test
     fun accumulatedStdYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdYAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.accumulatedStdYAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.accumulatedStdYAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.accumulatedStdYAsMeasurement }
     }
 
     @Test
-    fun getAccumulatedStdYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedStdYAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdYAsMeasurement(any()) }.answers { answer ->
-            val stdY = answer.invocation.args[0] as AngularSpeed
-            stdY.value = value
-            stdY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getAccumulatedStdYAsMeasurement(angularSpeed) }
 
-        detector.getAccumulatedStdYAsMeasurement(result)
+        detector.getAccumulatedStdYAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedStdYAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun accumulatedStdZ_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdZ }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val accumulatedStdZ = randomizer.nextDouble()
+        every { internalDetector.accumulatedStdZ }.returns(accumulatedStdZ)
 
-        assertEquals(value, detector.accumulatedStdZ, 0.0)
+        assertEquals(accumulatedStdZ, detector.accumulatedStdZ, 0.0)
+
+        verify(exactly = 1) { internalDetector.accumulatedStdZ }
     }
 
     @Test
     fun accumulatedStdZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdZAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.accumulatedStdZAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.accumulatedStdZAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.accumulatedStdZAsMeasurement }
     }
 
     @Test
-    fun getAccumulatedStdZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedStdZAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdZAsMeasurement(any()) }.answers { answer ->
-            val stdZ = answer.invocation.args[0] as AngularSpeed
-            stdZ.value = value
-            stdZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getAccumulatedStdZAsMeasurement(angularSpeed) }
 
-        detector.getAccumulatedStdZAsMeasurement(result)
+        detector.getAccumulatedStdZAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedStdZAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun accumulatedStdTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val triad =
-            AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.accumulatedStdTriad }.returns(triad)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val triad = AngularSpeedTriad()
+        every { internalDetector.accumulatedStdTriad }.returns(triad)
 
         assertSame(triad, detector.accumulatedStdTriad)
+
+        verify(exactly = 1) { internalDetector.accumulatedStdTriad }
     }
 
     @Test
-    fun getAccumulatedStdTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAccumulatedStdTriad_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val result =
-            AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getAccumulatedStdTriad(any()) }.answers { answer ->
-            val triad = answer.invocation.args[0] as AngularSpeedTriad
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val triad = AngularSpeedTriad()
+        justRun { internalDetector.getAccumulatedStdTriad(triad) }
 
-        detector.getAccumulatedStdTriad(result)
+        detector.getAccumulatedStdTriad(triad)
 
-        assertEquals(valueX, result.valueX, 0.0)
-        assertEquals(valueY, result.valueY, 0.0)
-        assertEquals(valueZ, result.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getAccumulatedStdTriad(triad) }
     }
 
     @Test
     fun instantaneousAvgX_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgX }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val instantaneousAvgX = randomizer.nextDouble()
+        every { internalDetector.instantaneousAvgX }.returns(instantaneousAvgX)
 
-        assertEquals(value, detector.instantaneousAvgX, 0.0)
+        assertEquals(instantaneousAvgX, detector.instantaneousAvgX, 0.0)
+
+        verify(exactly = 1) { internalDetector.instantaneousAvgX }
     }
 
     @Test
     fun instantaneousAvgXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgXAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.instantaneousAvgXAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.instantaneousAvgXAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.instantaneousAvgXAsMeasurement }
     }
 
     @Test
-    fun getInstantaneousAvgXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousAvgXAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgXAsMeasurement(any()) }.answers { answer ->
-            val avgX = answer.invocation.args[0] as AngularSpeed
-            avgX.value = value
-            avgX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getInstantaneousAvgXAsMeasurement(angularSpeed) }
 
-        detector.getInstantaneousAvgXAsMeasurement(result)
+        detector.getInstantaneousAvgXAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getInstantaneousAvgXAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun instantaneousAvgY_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgY }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val instantaneousAvgY = randomizer.nextDouble()
+        every { internalDetector.instantaneousAvgY }.returns(instantaneousAvgY)
 
-        assertEquals(value, detector.instantaneousAvgY, 0.0)
+        assertEquals(instantaneousAvgY, detector.instantaneousAvgY, 0.0)
+
+        verify(exactly = 1) { internalDetector.instantaneousAvgY }
     }
 
     @Test
     fun instantaneousAvgYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgYAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.instantaneousAvgYAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.instantaneousAvgYAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.instantaneousAvgYAsMeasurement }
     }
 
     @Test
-    fun getInstantaneousAvgYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousAvgYAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgYAsMeasurement(any()) }.answers { answer ->
-            val avgY = answer.invocation.args[0] as AngularSpeed
-            avgY.value = value
-            avgY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getInstantaneousAvgYAsMeasurement(angularSpeed) }
 
-        detector.getInstantaneousAvgYAsMeasurement(result)
+        detector.getInstantaneousAvgYAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getInstantaneousAvgYAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun instantaneousAvgZ_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgZ }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val instantaneousAvgZ = randomizer.nextDouble()
+        every { internalDetector.instantaneousAvgZ }.returns(instantaneousAvgZ)
 
-        assertEquals(value, detector.instantaneousAvgZ, 0.0)
+        assertEquals(instantaneousAvgZ, detector.instantaneousAvgZ, 0.0)
+
+        verify(exactly = 1) { internalDetector.instantaneousAvgZ }
     }
 
     @Test
     fun instantaneousAvgZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousAvgZAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.instantaneousAvgZAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.instantaneousAvgZAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.instantaneousAvgZAsMeasurement }
     }
 
     @Test
-    fun getInstantaneousAvgZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousAvgZAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgZAsMeasurement(any()) }.answers { answer ->
-            val avgZ = answer.invocation.args[0] as AngularSpeed
-            avgZ.value = value
-            avgZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getInstantaneousAvgZAsMeasurement(angularSpeed) }
 
-        detector.getInstantaneousAvgZAsMeasurement(result)
+        detector.getInstantaneousAvgZAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getInstantaneousAvgZAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun instantaneousAvgTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        val triad =
-            AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        every { internalDetectorSpy.instantaneousAvgTriad }.returns(triad)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val triad = AngularSpeedTriad()
+        every { internalDetector.instantaneousAvgTriad }.returns(triad)
 
         assertSame(triad, detector.instantaneousAvgTriad)
+
+        verify(exactly = 1) { internalDetector.instantaneousAvgTriad }
     }
 
     @Test
-    fun getInstantaneousAvgTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousAvgTriad_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val result = AngularSpeedTriad()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousAvgTriad(any()) }.answers { answer ->
-            val triad = answer.invocation.args[0] as AngularSpeedTriad
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val triad = AngularSpeedTriad()
+        justRun { internalDetector.getInstantaneousAvgTriad(triad) }
 
-        detector.getInstantaneousAvgTriad(result)
+        detector.getInstantaneousAvgTriad(triad)
 
-        assertEquals(valueX, result.valueX, 0.0)
-        assertEquals(valueY, result.valueY, 0.0)
-        assertEquals(valueZ, result.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getInstantaneousAvgTriad(triad) }
     }
 
     @Test
     fun instantaneousStdX_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdX }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val instantaneousStdX = randomizer.nextDouble()
+        every { internalDetector.instantaneousStdX }.returns(instantaneousStdX)
 
-        assertEquals(value, detector.instantaneousStdX, 0.0)
+        assertEquals(instantaneousStdX, detector.instantaneousStdX, 0.0)
+
+        verify(exactly = 1) { internalDetector.instantaneousStdX }
     }
 
     @Test
     fun instantaneousStdXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdXAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.instantaneousStdXAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.instantaneousStdXAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.instantaneousStdXAsMeasurement }
     }
 
     @Test
-    fun getInstantaneousStdXAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousStdXAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdXAsMeasurement(any()) }.answers { answer ->
-            val stdX = answer.invocation.args[0] as AngularSpeed
-            stdX.value = value
-            stdX.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getInstantaneousStdXAsMeasurement(angularSpeed) }
 
-        detector.getInstantaneousStdXAsMeasurement(result)
+        detector.getInstantaneousStdXAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getInstantaneousStdXAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun instantaneousStdY_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdY }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val instantaneousStdY = randomizer.nextDouble()
+        every { internalDetector.instantaneousStdY }.returns(instantaneousStdY)
 
-        assertEquals(value, detector.instantaneousStdY, 0.0)
+        assertEquals(instantaneousStdY, detector.instantaneousStdY, 0.0)
+
+        verify(exactly = 1) { internalDetector.instantaneousStdY }
     }
 
     @Test
     fun instantaneousStdYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdYAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.instantaneousStdYAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.instantaneousStdYAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.instantaneousStdYAsMeasurement }
     }
 
     @Test
-    fun getInstantaneousStdYAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousStdYAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdYAsMeasurement(any()) }.answers { answer ->
-            val stdY = answer.invocation.args[0] as AngularSpeed
-            stdY.value = value
-            stdY.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getInstantaneousStdYAsMeasurement(angularSpeed) }
 
-        detector.getInstantaneousStdYAsMeasurement(result)
+        detector.getInstantaneousStdYAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getInstantaneousStdYAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun instantaneousStdZ_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
         val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdZ }.returns(value)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val instantaneousStdZ = randomizer.nextDouble()
+        every { internalDetector.instantaneousStdZ }.returns(instantaneousStdZ)
 
-        assertEquals(value, detector.instantaneousStdZ, 0.0)
+        assertEquals(instantaneousStdZ, detector.instantaneousStdZ, 0.0)
+
+        verify(exactly = 1) { internalDetector.instantaneousStdZ }
     }
 
     @Test
     fun instantaneousStdZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val angularSpeed = AngularSpeed(value, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.instantaneousStdZAsMeasurement }.returns(angularSpeed)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        every { internalDetector.instantaneousStdZAsMeasurement }.returns(angularSpeed)
 
         assertSame(angularSpeed, detector.instantaneousStdZAsMeasurement)
+
+        verify(exactly = 1) { internalDetector.instantaneousStdZAsMeasurement }
     }
 
     @Test
-    fun getInstantaneousStdZAsMeasurement_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousStdZAsMeasurement_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val result = AngularSpeed(0.0, AngularSpeedUnit.RADIANS_PER_SECOND)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdZAsMeasurement(any()) }.answers { answer ->
-            val stdZ = answer.invocation.args[0] as AngularSpeed
-            stdZ.value = value
-            stdZ.unit = AngularSpeedUnit.RADIANS_PER_SECOND
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val angularSpeed = AngularSpeed(
+            0.0,
+            AngularSpeedUnit.RADIANS_PER_SECOND
+        )
+        justRun { internalDetector.getInstantaneousStdZAsMeasurement(angularSpeed) }
 
-        detector.getInstantaneousStdZAsMeasurement(result)
+        detector.getInstantaneousStdZAsMeasurement(angularSpeed)
 
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { internalDetector.getInstantaneousStdZAsMeasurement(angularSpeed) }
     }
 
     @Test
     fun instantaneousStdTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
 
-        val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val internalDetectorSpy = spyk(internalDetector)
-        val triad =
-            AngularSpeedTriad(AngularSpeedUnit.RADIANS_PER_SECOND, valueX, valueY, valueZ)
-        every { internalDetectorSpy.instantaneousStdTriad }.returns(triad)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val triad = AngularSpeedTriad()
+        every { internalDetector.instantaneousStdTriad }.returns(triad)
 
         assertSame(triad, detector.instantaneousStdTriad)
+
+        verify(exactly = 1) { internalDetector.instantaneousStdTriad }
     }
 
     @Test
-    fun getInstantaneousStdTriad_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getInstantaneousStdTriad_callsInternalDetector() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
+        detector.setPrivateProperty("internalDetector", internalDetector)
+
+        val triad = AngularSpeedTriad()
+        justRun { internalDetector.getInstantaneousStdTriad(triad) }
+
+        detector.getInstantaneousStdTriad(triad)
+
+        verify(exactly = 1) { internalDetector.getInstantaneousStdTriad(triad) }
+    }
+
+    @Test
+    fun averageTimeInterval_whenInitialized_returnsExpectedValue() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
-        val valueX = randomizer.nextDouble()
-        val valueY = randomizer.nextDouble()
-        val valueZ = randomizer.nextDouble()
-        val result = AngularSpeedTriad()
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.getInstantaneousStdTriad(any()) }.answers { answer ->
-            val triad = answer.invocation.args[0] as AngularSpeedTriad
-            triad.setValueCoordinatesAndUnit(
-                valueX,
-                valueY,
-                valueZ,
-                AngularSpeedUnit.RADIANS_PER_SECOND
-            )
-        }
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
+        val averageTimeInterval = randomizer.nextDouble()
+        every { timeIntervalEstimator.averageTimeInterval }.returns(averageTimeInterval)
 
-        detector.getInstantaneousStdTriad(result)
+        assertEquals(averageTimeInterval, detector.averageTimeInterval)
 
-        assertEquals(valueX, result.valueX, 0.0)
-        assertEquals(valueY, result.valueY, 0.0)
-        assertEquals(valueZ, result.valueZ, 0.0)
-        assertEquals(AngularSpeedUnit.RADIANS_PER_SECOND, result.unit)
+        verify(exactly = 1) { timeIntervalEstimator.averageTimeInterval }
     }
 
     @Test
     fun averageTimeInterval_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.averageTimeInterval)
     }
 
     @Test
-    fun averageTimeInterval_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun averageTimeIntervalAsTime_whenInitialized_returnsExpectedValue() {
         val detector = GyroscopeIntervalDetector(context)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-
-        val randomizer = UniformRandomizer()
-        val averageTimeInterval1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeInterval }.returns(averageTimeInterval1)
         setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+            IntervalDetector::class, detector, "initialized",
+            true
         )
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        val time = Time(0.0, TimeUnit.SECOND)
+        every { timeIntervalEstimator.averageTimeIntervalAsTime }.returns(time)
 
-        val averageTimeInterval2 = detector.averageTimeInterval
-        requireNotNull(averageTimeInterval2)
-        assertEquals(averageTimeInterval1, averageTimeInterval2, 0.0)
+        assertSame(time, detector.averageTimeIntervalAsTime)
+
+        verify(exactly = 1) { timeIntervalEstimator.averageTimeIntervalAsTime }
     }
 
     @Test
     fun averageTimeIntervalAsTime_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? = detector.getPrivateProperty("initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
 
         assertNull(detector.averageTimeIntervalAsTime)
     }
 
     @Test
-    fun averageTimeIntervalAsTime_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun getAverageTimeIntervalAsTime_whenInitialized_returnsTrue() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val averageTimeInterval1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.averageTimeIntervalAsTime }.returns(averageTimeInterval1)
         setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+            IntervalDetector::class, detector, "initialized",
+            true
         )
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        val time = Time(0.0, TimeUnit.SECOND)
+        justRun { timeIntervalEstimator.getAverageTimeIntervalAsTime(time) }
 
-        val averageTimeInterval2 = detector.averageTimeIntervalAsTime
-        requireNotNull(averageTimeInterval2)
-        assertSame(averageTimeInterval1, averageTimeInterval2)
+        assertTrue(detector.getAverageTimeIntervalAsTime(time))
+
+        verify(exactly = 1) { timeIntervalEstimator.getAverageTimeIntervalAsTime(time) }
     }
 
     @Test
     fun getAverageTimeIntervalAsTime_whenNotInitialized_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
-        val result = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getAverageTimeIntervalAsTime(result))
-    }
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(detector.getAverageTimeIntervalAsTime(time))
 
-    @Test
-    fun getAverageTimeIntervalAsTime_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.getAverageTimeIntervalAsTime(any()) }.answers { answer ->
-            val result = answer.invocation.args[0] as Time
-            result.value = value
-            result.unit = TimeUnit.SECOND
-        }
-        setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
-
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
-
-        val result = Time(1.0, TimeUnit.NANOSECOND)
-        assertTrue(detector.getAverageTimeIntervalAsTime(result))
-
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(TimeUnit.SECOND, result.unit)
-    }
-
-    @Test
-    fun timeIntervalVariance_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
-
-        assertNull(detector.timeIntervalVariance)
+        verify { timeIntervalEstimator wasNot Called }
     }
 
     @Test
     fun timeIntervalVariance_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
-        val timeIntervalVariance1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalVariance }.returns(timeIntervalVariance1)
-        setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
+        val timeIntervalVariance = randomizer.nextDouble()
+        every { timeIntervalEstimator.timeIntervalVariance }
+            .returns(timeIntervalVariance)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        assertEquals(timeIntervalVariance, detector.timeIntervalVariance)
 
-        val timeIntervalVariance2 = detector.timeIntervalVariance
-        requireNotNull(timeIntervalVariance2)
-        assertEquals(timeIntervalVariance1, timeIntervalVariance2, 0.0)
+        verify(exactly = 1) { timeIntervalEstimator.timeIntervalVariance }
     }
 
     @Test
-    fun timeIntervalStandardDeviation_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun timeIntervalVariance_whenNotInitialized_returnsNull() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
-        assertNull(detector.timeIntervalStandardDeviation)
+        assertNull(detector.timeIntervalVariance)
+
+        verify { timeIntervalEstimator wasNot Called }
     }
 
     @Test
     fun timeIntervalStandardDeviation_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
         val randomizer = UniformRandomizer()
-        val timeIntervalStandardDeviation1 = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviation }.returns(
-            timeIntervalStandardDeviation1
-        )
-        setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+        val timeIntervalStandardDeviation = randomizer.nextDouble()
+        every { timeIntervalEstimator.timeIntervalStandardDeviation }
+            .returns(timeIntervalStandardDeviation)
+
+        assertEquals(
+            timeIntervalStandardDeviation,
+            detector.timeIntervalStandardDeviation
         )
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
-
-        val timeIntervalStandardDeviation2 = detector.timeIntervalStandardDeviation
-        requireNotNull(timeIntervalStandardDeviation2)
-        assertEquals(timeIntervalStandardDeviation1, timeIntervalStandardDeviation2, 0.0)
+        verify(exactly = 1) { timeIntervalEstimator.timeIntervalStandardDeviation }
     }
 
     @Test
-    fun timeIntervalStandardDeviationAsTime_whenNotInitialized_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun timeIntervalStandardDeviation_whenNotInitialized_returnsNull() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
-        assertNull(detector.timeIntervalStandardDeviationAsTime)
+        assertNull(detector.timeIntervalStandardDeviation)
+
+        verify { timeIntervalEstimator wasNot Called }
     }
 
     @Test
     fun timeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
-
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val timeIntervalStd1 = Time(value, TimeUnit.SECOND)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.timeIntervalStandardDeviationAsTime }.returns(
-            timeIntervalStd1
-        )
         setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+            IntervalDetector::class, detector, "initialized",
+            true
         )
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
+        val time = Time(0.0, TimeUnit.SECOND)
+        every { timeIntervalEstimator.timeIntervalStandardDeviationAsTime }
+            .returns(time)
 
-        val timeIntervalStd2 = detector.timeIntervalStandardDeviationAsTime
-        requireNotNull(timeIntervalStd2)
-        assertSame(timeIntervalStd1, timeIntervalStd2)
+        assertSame(time, detector.timeIntervalStandardDeviationAsTime)
+
+        verify(exactly = 1) { timeIntervalEstimator.timeIntervalStandardDeviationAsTime }
+    }
+
+    @Test
+    fun timeIntervalStandardDeviationAsTime_whenNotInitialized_returnsNull() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
+
+        assertNull(detector.timeIntervalStandardDeviationAsTime)
+
+        verify { timeIntervalEstimator wasNot Called }
+    }
+
+    @Test
+    fun getTimeIntervalStandardDeviationAsTime_whenInitialized_returnsTrue() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        setPrivateProperty(
+            IntervalDetector::class, detector, "initialized",
+            true
+        )
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
+
+        val time = Time(0.0, TimeUnit.SECOND)
+        justRun { timeIntervalEstimator.getTimeIntervalStandardDeviationAsTime(time) }
+
+        assertTrue(detector.getTimeIntervalStandardDeviationAsTime(time))
+
+        verify(exactly = 1) { timeIntervalEstimator.getTimeIntervalStandardDeviationAsTime(time) }
     }
 
     @Test
     fun getTimeIntervalStandardDeviationAsTime_whenNotInitialized_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val detector = GyroscopeIntervalDetector(context)
 
-        val initialized: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "initialized")
-        requireNotNull(initialized)
-        assertFalse(initialized)
+        detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
 
-        val result = Time(0.0, TimeUnit.SECOND)
-        assertFalse(detector.getTimeIntervalStandardDeviationAsTime((result)))
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(detector.getTimeIntervalStandardDeviationAsTime(time))
+
+        verify { timeIntervalEstimator wasNot Called }
     }
 
     @Test
-    fun getTimeIntervalStandardDeviationAsTime_whenInitialized_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun start_whenRunning_throwsIllegalStateException() {
         val detector = GyroscopeIntervalDetector(context)
 
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(IntervalDetector::class, detector, "timeIntervalEstimator")
-        requireNotNull(timeIntervalEstimator)
+        setPrivateProperty(IntervalDetector::class, detector, "running", true)
 
-        val randomizer = UniformRandomizer()
-        val value = randomizer.nextDouble()
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        every { timeIntervalEstimatorSpy.getTimeIntervalStandardDeviationAsTime(any()) }.answers { answer ->
-            val result = answer.invocation.args[0] as Time
-            result.value = value
-            result.unit = TimeUnit.SECOND
+        assertThrows(IllegalStateException::class.java) {
+            detector.start()
         }
-        setPrivateProperty(
-            IntervalDetector::class,
-            detector,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
-        )
-
-        setPrivateProperty(IntervalDetector::class, detector, "initialized", true)
-
-        val result = Time(1.0, TimeUnit.NANOSECOND)
-        assertTrue(detector.getTimeIntervalStandardDeviationAsTime(result))
-
-        assertEquals(value, result.value.toDouble(), 0.0)
-        assertEquals(TimeUnit.SECOND, result.unit)
     }
 
     @Test
-    fun status_whenUnreliable_returnsFailed() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
+    fun start_whenNotRunningAndCollectorFails_resetsAndThrowsIllegalStateException() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
 
-        setPrivateProperty(IntervalDetector::class, detector, "unreliable", true)
+            val detector = GyroscopeIntervalDetector(context)
 
-        assertEquals(Status.FAILED, detector.status)
-    }
-
-    @Test
-    fun status_whenReliableAndIdle_returnsIdle() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(TriadStaticIntervalDetector.Status.IDLE)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun status_whenReliableAndInitializing_returnsIdle() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.INITIALIZING)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        assertEquals(Status.INITIALIZING, detector.status)
-    }
-
-    @Test
-    fun status_whenReliableAndInitializationCompleted_returnsIdle() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        assertEquals(Status.INITIALIZATION_COMPLETED, detector.status)
-    }
-
-    @Test
-    fun status_whenReliableAndStaticInterval_returnsIdle() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.STATIC_INTERVAL)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        assertEquals(Status.STATIC_INTERVAL, detector.status)
-    }
-
-    @Test
-    fun status_whenReliableAndDynamicInterval_returnsIdle() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        assertEquals(Status.DYNAMIC_INTERVAL, detector.status)
-    }
-
-    @Test
-    fun status_whenReliableAndFailed_returnsIdle() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }
-            .returns(TriadStaticIntervalDetector.Status.FAILED)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        assertEquals(Status.FAILED, detector.status)
-    }
-
-    @Test
-    fun status_whenReliableAndNoStatus_returnsIdle() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val detector = GyroscopeIntervalDetector(context)
-
-        val unreliable: Boolean? =
-            getPrivateProperty(IntervalDetector::class, detector, "unreliable")
-        requireNotNull(unreliable)
-        assertFalse(unreliable)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            detector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        val internalDetectorSpy = spyk(internalDetector)
-        every { internalDetectorSpy.status }.returns(null)
-        detector.setPrivateProperty("internalDetector", internalDetectorSpy)
-
-        assertEquals(Status.IDLE, detector.status)
-    }
-
-    @Test
-    fun onInitializationStarted_whenNoListener_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context)
-
-        val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
-        requireNotNull(internalDetectorListener)
-
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        internalDetectorListener.onInitializationStarted(internalDetector)
-    }
-
-    @Test
-    fun onInitializationStarted_whenListener_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector =
-            GyroscopeIntervalDetector(
-                context,
-                initializationStartedListener = initializationStartedListener
+            detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
+            justRun { timeIntervalEstimator.totalSamples = Integer.MAX_VALUE }
+            every { timeIntervalEstimator.reset() }.returns(true)
+            detector.setPrivateProperty("internalDetector", internalDetector)
+            justRun { internalDetector.reset() }
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "unreliable", true
+            )
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "initialTimestamp", 1L
+            )
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "numberOfProcessedMeasurements", 1
+            )
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "initialized", true
             )
 
-        val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
-        requireNotNull(internalDetectorListener)
+            detector.setPrivateProperty("collector", collector)
+            every { collector.start(startTimestamp) }.returns(false)
 
-        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
-        requireNotNull(internalDetector)
-        internalDetectorListener.onInitializationStarted(internalDetector)
+            assertThrows(IllegalStateException::class.java) {
+                detector.start()
+            }
 
-        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(intervalDetector) }
+            verify(exactly = 1) { timeIntervalEstimator.totalSamples = Integer.MAX_VALUE }
+            verify(exactly = 1) { timeIntervalEstimator.reset() }
+            verify(exactly = 1) { internalDetector.reset() }
+            val unreliable: Boolean? = getPrivateProperty(
+                IntervalDetector::class, detector, "unreliable"
+            )
+            requireNotNull(unreliable)
+            assertFalse(unreliable)
+            val initialTimestamp: Long? = getPrivateProperty(
+                IntervalDetector::class, detector, "initialTimestamp"
+            )
+            requireNotNull(initialTimestamp)
+            assertEquals(0L, initialTimestamp)
+            assertEquals(0, detector.numberOfProcessedMeasurements)
+            val initialized: Boolean? = getPrivateProperty(
+                IntervalDetector::class,
+                detector, "initialized"
+            )
+            requireNotNull(initialized)
+            assertFalse(initialized)
+            verify(exactly = 1) { collector.start(startTimestamp) }
+        }
     }
 
     @Test
-    fun onInitializationCompleted_whenNoListener_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context)
+    fun start_whenNotRunningAndCollectorSucceeds_completesSuccessfully() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            val detector = GyroscopeIntervalDetector(context)
+
+            detector.setPrivateProperty("timeIntervalEstimator", timeIntervalEstimator)
+            justRun { timeIntervalEstimator.totalSamples = Integer.MAX_VALUE }
+            every { timeIntervalEstimator.reset() }.returns(true)
+            detector.setPrivateProperty("internalDetector", internalDetector)
+            justRun { internalDetector.reset() }
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "unreliable", true
+            )
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "initialTimestamp", 1L
+            )
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "numberOfProcessedMeasurements", 1
+            )
+            setPrivateProperty(
+                IntervalDetector::class, detector,
+                "initialized", true
+            )
+
+            detector.setPrivateProperty("collector", collector)
+            every { collector.start(startTimestamp) }.returns(true)
+
+            detector.start()
+
+            verify(exactly = 1) { timeIntervalEstimator.totalSamples = Integer.MAX_VALUE }
+            verify(exactly = 1) { timeIntervalEstimator.reset() }
+            verify(exactly = 1) { internalDetector.reset() }
+            val unreliable: Boolean? = getPrivateProperty(
+                IntervalDetector::class, detector, "unreliable"
+            )
+            requireNotNull(unreliable)
+            assertFalse(unreliable)
+            val initialTimestamp: Long? = getPrivateProperty(
+                IntervalDetector::class, detector, "initialTimestamp"
+            )
+            requireNotNull(initialTimestamp)
+            assertEquals(0L, initialTimestamp)
+            assertEquals(0, detector.numberOfProcessedMeasurements)
+            val initialized: Boolean? = getPrivateProperty(
+                IntervalDetector::class,
+                detector, "initialized"
+            )
+            requireNotNull(initialized)
+            assertFalse(initialized)
+            verify(exactly = 1) { collector.start(startTimestamp) }
+        }
+    }
+
+    @Test
+    fun stop_stopsCollector() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        detector.setPrivateProperty("collector", collector)
+        justRun { collector.stop() }
+        setPrivateProperty(
+            IntervalDetector::class, detector, "running",
+            true
+        )
+
+        detector.stop()
+
+        verify(exactly = 1) { collector.stop() }
+        assertFalse(detector.running)
+    }
+
+    @Test
+    fun internalDetectorListener_whenOnInitializationStartedAndNoListener_makesNoAction() {
+        val detector = GyroscopeIntervalDetector(context)
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
+        internalDetectorListener.onInitializationStarted(internalDetector)
+    }
+
+    @Test
+    fun internalDetectorListener_whenOnInitializationStartedAndListener_callsListener() {
+        val detector = GyroscopeIntervalDetector(
+            context,
+            initializationStartedListener = initializationStartedListener
+        )
+
+        val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
+            detector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
+            detector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+
+        internalDetectorListener.onInitializationStarted(internalDetector)
+
+        verify(exactly = 1) { initializationStartedListener.onInitializationStarted(detector) }
+    }
+
+    @Test
+    fun internalDetectorListener_whenOnInitializationCompletedAndNoListener_makesNoAction() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
+            detector.getPrivateProperty("internalDetectorListener")
+        requireNotNull(internalDetectorListener)
+
+        val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
+            detector.getPrivateProperty("internalDetector")
+        requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         internalDetectorListener.onInitializationCompleted(internalDetector, baseNoiseLevel)
     }
 
     @Test
-    fun onInitializationCompleted_whenListener_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(
+    fun internalDetectorListener_whenOnInitializationCompletedAndListener_callsListener() {
+        val detector = GyroscopeIntervalDetector(
             context,
             initializationCompletedListener = initializationCompletedListener
         )
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val baseNoiseLevel = randomizer.nextDouble()
         internalDetectorListener.onInitializationCompleted(internalDetector, baseNoiseLevel)
 
         verify(exactly = 1) {
             initializationCompletedListener.onInitializationCompleted(
-                intervalDetector,
+                detector,
                 baseNoiseLevel
             )
         }
     }
 
     @Test
-    fun onError_whenNoListener_stops() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context)
+    fun internalDetectorListener_whenOnErrorAndNoListener_stops() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        detector.setPrivateProperty("collector", collector)
+        justRun { collector.stop() }
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val accumulatedNoiseLevel = randomizer.nextDouble()
         val instantaneousNoiseLevel = randomizer.nextDouble()
-
-        val collector: GyroscopeSensorCollector? =
-            intervalDetector.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        intervalDetector.setPrivateProperty("collector", collectorSpy)
-
         internalDetectorListener.onError(
             internalDetector,
             accumulatedNoiseLevel,
@@ -5209,31 +2481,30 @@ class GyroscopeIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collector.stop() }
     }
 
     @Test
-    fun onError_whenListener_stopsAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context, errorListener = errorListener)
+    fun internalDetectorListener_whenOnErrorAndListener_stopsAndNotifies() {
+        val detector = GyroscopeIntervalDetector(
+            context,
+            errorListener = errorListener
+        )
+
+        detector.setPrivateProperty("collector", collector)
+        justRun { collector.stop() }
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val accumulatedNoiseLevel = randomizer.nextDouble()
         val instantaneousNoiseLevel = randomizer.nextDouble()
-
-        val collector: GyroscopeSensorCollector? =
-            intervalDetector.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        intervalDetector.setPrivateProperty("collector", collectorSpy)
-
         internalDetectorListener.onError(
             internalDetector,
             accumulatedNoiseLevel,
@@ -5241,27 +2512,27 @@ class GyroscopeIntervalDetectorTest {
             TriadStaticIntervalDetector.ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED
         )
 
-        verify(exactly = 1) { collectorSpy.stop() }
+        verify(exactly = 1) { collector.stop() }
         verify(exactly = 1) {
             errorListener.onError(
-                intervalDetector,
+                detector,
                 ErrorReason.SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION
             )
         }
     }
 
     @Test
-    fun onStaticIntervalDetected_whenNoListener_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context)
+    fun internalDetectorListener_whenOnStaticIntervalDetectedAndNoListener_makesNoAction() {
+        val detector = GyroscopeIntervalDetector(context)
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val instantaneousAvgX = randomizer.nextDouble()
         val instantaneousAvgY = randomizer.nextDouble()
@@ -5281,20 +2552,20 @@ class GyroscopeIntervalDetectorTest {
     }
 
     @Test
-    fun onStaticIntervalDetected_whenListener_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(
+    fun internalDetectorListener_whenOnStaticIntervalDetectedAndListener_callsListener() {
+        val detector = GyroscopeIntervalDetector(
             context,
             staticIntervalDetectedListener = staticIntervalDetectedListener
         )
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val instantaneousAvgX = randomizer.nextDouble()
         val instantaneousAvgY = randomizer.nextDouble()
@@ -5314,7 +2585,7 @@ class GyroscopeIntervalDetectorTest {
 
         verify(exactly = 1) {
             staticIntervalDetectedListener.onStaticIntervalDetected(
-                intervalDetector,
+                detector,
                 instantaneousAvgX,
                 instantaneousAvgY,
                 instantaneousAvgZ,
@@ -5326,17 +2597,17 @@ class GyroscopeIntervalDetectorTest {
     }
 
     @Test
-    fun onDynamicIntervalDetected_whenNoListener_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context)
+    fun internalDetectorListener_whenOnDynamicIntervalDetectedAndNoListener_makesNoAction() {
+        val detector = GyroscopeIntervalDetector(context)
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val instantaneousAvgX = randomizer.nextDouble()
         val instantaneousAvgY = randomizer.nextDouble()
@@ -5368,20 +2639,20 @@ class GyroscopeIntervalDetectorTest {
     }
 
     @Test
-    fun onDynamicIntervalDetected_whenListener_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(
+    fun internalDetectorListener_whenOnDynamicIntervalDetectedAndListener_callsListener() {
+        val detector = GyroscopeIntervalDetector(
             context,
             dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
         )
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
+
         val randomizer = UniformRandomizer()
         val instantaneousAvgX = randomizer.nextDouble()
         val instantaneousAvgY = randomizer.nextDouble()
@@ -5413,7 +2684,7 @@ class GyroscopeIntervalDetectorTest {
 
         verify(exactly = 1) {
             dynamicIntervalDetectedListener.onDynamicIntervalDetected(
-                intervalDetector,
+                detector,
                 instantaneousAvgX,
                 instantaneousAvgY,
                 instantaneousAvgZ,
@@ -5431,38 +2702,294 @@ class GyroscopeIntervalDetectorTest {
     }
 
     @Test
-    fun onReset_whenNoListener_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context)
+    fun internalDetectorListener_whenOnResetAndNoListener_makesNoAction() {
+        val detector = GyroscopeIntervalDetector(context)
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
 
         internalDetectorListener.onReset(internalDetector)
     }
 
     @Test
-    fun onReset_whenListener_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val intervalDetector = GyroscopeIntervalDetector(context, resetListener = resetListener)
+    fun internalDetectorListener_whenOnResetAndListener_callsListener() {
+        val detector = GyroscopeIntervalDetector(
+            context,
+            resetListener = resetListener
+        )
 
         val internalDetectorListener: AngularSpeedTriadStaticIntervalDetectorListener? =
-            intervalDetector.getPrivateProperty("internalDetectorListener")
+            detector.getPrivateProperty("internalDetectorListener")
         requireNotNull(internalDetectorListener)
 
         val internalDetector: AngularSpeedTriadStaticIntervalDetector? =
-            intervalDetector.getPrivateProperty("internalDetector")
+            detector.getPrivateProperty("internalDetector")
         requireNotNull(internalDetector)
 
         internalDetectorListener.onReset(internalDetector)
 
-        verify(exactly = 1) { resetListener.onReset(intervalDetector) }
+        verify(exactly = 1) { resetListener.onReset(detector) }
     }
+
+    @Test
+    fun measurementListener_whenInitializingAndNoProcessedMeasurements_setsInitialTimestampAndIncreasesNumberOfProcessedMeasurements() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        val measurementListener: SensorCollector.OnMeasurementListener<
+                GyroscopeSensorMeasurement, GyroscopeSensorCollector>? =
+            detector.getPrivateProperty("measurementListener")
+        requireNotNull(measurementListener)
+        val collector: GyroscopeSensorCollector? = detector.getPrivateProperty(
+            "collector"
+        )
+        requireNotNull(collector)
+
+        detector.setPrivateProperty("internalDetector", internalDetector)
+        every { internalDetector.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        every { internalDetector.process(any()) }.returns(true)
+        setPrivateProperty(
+            IntervalDetector::class, detector,
+            "numberOfProcessedMeasurements", 0
+        )
+
+        val randomizer = UniformRandomizer()
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = System.nanoTime()
+        val measurement = GyroscopeSensorMeasurement(wx, wy, wz, bx, by, bz, timestamp)
+        measurementListener.onMeasurement(collector, measurement)
+
+        // check
+        val initialTimestamp: Long? = getPrivateProperty(
+            IntervalDetector::class, detector, "initialTimestamp"
+        )
+        requireNotNull(initialTimestamp)
+        assertEquals(timestamp, initialTimestamp)
+
+        val slot = slot<AngularSpeedTriad>()
+        verify { internalDetector.process(capture(slot)) }
+        val triad = slot.captured
+        assertEquals(wy.toDouble() + by.toDouble(), triad.valueX, 0.0)
+        assertEquals(wx.toDouble() + bx.toDouble(), triad.valueY, 0.0)
+        assertEquals(-wz.toDouble() - bz.toDouble(), triad.valueZ, 0.0)
+
+        assertEquals(1, detector.numberOfProcessedMeasurements)
+    }
+
+    @Test
+    fun measurementListener_whenInitializingAndProcessedMeasurements_addsTimestampAndIncreasesNumberOfProcessedMeasurements() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        val measurementListener: SensorCollector.OnMeasurementListener<
+                GyroscopeSensorMeasurement, GyroscopeSensorCollector>? =
+            detector.getPrivateProperty("measurementListener")
+        requireNotNull(measurementListener)
+        val collector: GyroscopeSensorCollector? = detector.getPrivateProperty(
+            "collector"
+        )
+        requireNotNull(collector)
+
+        detector.setPrivateProperty("internalDetector", internalDetector)
+        every { internalDetector.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZING)
+        every { internalDetector.process(any()) }.returns(true)
+        setPrivateProperty(
+            IntervalDetector::class, detector,
+            "numberOfProcessedMeasurements", 1
+        )
+
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimator
+        )
+        every { timeIntervalEstimator.addTimestamp(any<Double>()) }.returns(true)
+
+        val randomizer = UniformRandomizer()
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = System.nanoTime()
+        val measurement = GyroscopeSensorMeasurement(wx, wy, wz, bx, by, bz, timestamp)
+        measurementListener.onMeasurement(collector, measurement)
+
+        // check
+        val initialTimestamp: Long? = getPrivateProperty(
+            IntervalDetector::class, detector, "initialTimestamp"
+        )
+        requireNotNull(initialTimestamp)
+        assertEquals(0L, initialTimestamp)
+
+        val diffSeconds = TimeConverter.nanosecondToSecond(timestamp.toDouble())
+        verify(exactly = 1) { timeIntervalEstimator.addTimestamp(diffSeconds) }
+
+        val slot = slot<AngularSpeedTriad>()
+        verify { internalDetector.process(capture(slot)) }
+        val triad = slot.captured
+        assertEquals(wy.toDouble() + by.toDouble(), triad.valueX, 0.0)
+        assertEquals(wx.toDouble() + bx.toDouble(), triad.valueY, 0.0)
+        assertEquals(-wz.toDouble() - bz.toDouble(), triad.valueZ, 0.0)
+
+        assertEquals(2, detector.numberOfProcessedMeasurements)
+    }
+
+    @Test
+    fun measurementListener_whenInitializationCompletedAndProcessedMeasurements_setsTimeInterval() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        val measurementListener: SensorCollector.OnMeasurementListener<
+                GyroscopeSensorMeasurement, GyroscopeSensorCollector>? =
+            detector.getPrivateProperty("measurementListener")
+        requireNotNull(measurementListener)
+        val collector: GyroscopeSensorCollector? = detector.getPrivateProperty(
+            "collector"
+        )
+        requireNotNull(collector)
+
+        detector.setPrivateProperty("internalDetector", internalDetector)
+        every { internalDetector.status }
+            .returns(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED)
+        every { internalDetector.process(any()) }.returns(true)
+        setPrivateProperty(
+            IntervalDetector::class, detector,
+            "numberOfProcessedMeasurements", 0
+        )
+
+        setPrivateProperty(
+            IntervalDetector::class,
+            detector,
+            "timeIntervalEstimator",
+            timeIntervalEstimator
+        )
+
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        every { timeIntervalEstimator.averageTimeInterval }.returns(averageTimeInterval)
+        justRun { internalDetector.timeInterval = averageTimeInterval }
+
+
+        val wx = randomizer.nextFloat()
+        val wy = randomizer.nextFloat()
+        val wz = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp = System.nanoTime()
+        val measurement = GyroscopeSensorMeasurement(wx, wy, wz, bx, by, bz, timestamp)
+        measurementListener.onMeasurement(collector, measurement)
+
+        // check
+        val initialTimestamp: Long? = getPrivateProperty(
+            IntervalDetector::class, detector, "initialTimestamp"
+        )
+        requireNotNull(initialTimestamp)
+        assertEquals(0L, initialTimestamp)
+
+        val slot = slot<AngularSpeedTriad>()
+        verify { internalDetector.process(capture(slot)) }
+        val triad = slot.captured
+        assertEquals(wy.toDouble() + by.toDouble(), triad.valueX, 0.0)
+        assertEquals(wx.toDouble() + bx.toDouble(), triad.valueY, 0.0)
+        assertEquals(-wz.toDouble() - bz.toDouble(), triad.valueZ, 0.0)
+
+        assertEquals(1, detector.numberOfProcessedMeasurements)
+        verify(exactly = 1) { internalDetector.timeInterval = averageTimeInterval }
+
+        val initialized: Boolean? = getPrivateProperty(
+            IntervalDetector::class,
+            detector, "initialized"
+        )
+        requireNotNull(initialized)
+        assertTrue(initialized)
+    }
+
+    @Test
+    fun accuracyChangedListener_whenUnreliableAndNoListener_stopsAndMarksAsUnreliable() {
+        val detector = GyroscopeIntervalDetector(context)
+
+        detector.setPrivateProperty("collector", collector)
+        justRun { collector.stop() }
+
+        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener<
+                GyroscopeSensorMeasurement, GyroscopeSensorCollector>? =
+            detector.getPrivateProperty("accuracyChangedListener")
+        requireNotNull(accuracyChangedListener)
+
+        accuracyChangedListener.onAccuracyChanged(collector, SensorAccuracy.UNRELIABLE)
+
+        verify(exactly = 1) { collector.stop() }
+        val unreliable: Boolean? = getPrivateProperty(
+            IntervalDetector::class, detector, "unreliable")
+        requireNotNull(unreliable)
+        assertTrue(unreliable)
+    }
+
+    @Test
+    fun accuracyChangedListener_whenUnreliableAndListener_stopsMarksAsUnreliableAndNotifies() {
+        val detector = GyroscopeIntervalDetector(
+            context,
+            errorListener = errorListener
+        )
+
+        detector.setPrivateProperty("collector", collector)
+        justRun { collector.stop() }
+
+        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener<
+                GyroscopeSensorMeasurement, GyroscopeSensorCollector>? =
+            detector.getPrivateProperty("accuracyChangedListener")
+        requireNotNull(accuracyChangedListener)
+
+        accuracyChangedListener.onAccuracyChanged(collector, SensorAccuracy.UNRELIABLE)
+
+        verify(exactly = 1) { collector.stop() }
+        val unreliable: Boolean? = getPrivateProperty(
+            IntervalDetector::class, detector, "unreliable")
+        requireNotNull(unreliable)
+        assertTrue(unreliable)
+
+        verify(exactly = 1) { errorListener.onError(detector, ErrorReason.UNRELIABLE_SENSOR) }
+    }
+
+    @Test
+    fun accuracyChangedListener_whenNotUnreliable_makesNoAction() {
+        val detector = GyroscopeIntervalDetector(
+            context,
+            errorListener = errorListener
+        )
+
+        detector.setPrivateProperty("collector", collector)
+        justRun { collector.stop() }
+
+        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener<
+                GyroscopeSensorMeasurement, GyroscopeSensorCollector>? =
+            detector.getPrivateProperty("accuracyChangedListener")
+        requireNotNull(accuracyChangedListener)
+
+        accuracyChangedListener.onAccuracyChanged(collector, SensorAccuracy.HIGH)
+
+        verify { collector wasNot Called }
+        val unreliable: Boolean? = getPrivateProperty(
+            IntervalDetector::class, detector, "unreliable")
+        requireNotNull(unreliable)
+        assertFalse(unreliable)
+
+        verify { errorListener wasNot Called }
+    }
+
 
     private companion object {
         const val WINDOW_SIZE = 201
@@ -5474,49 +3001,5 @@ class GyroscopeIntervalDetectorTest {
         const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
 
         const val BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD = 100.0
-
-        const val MIN_LATITUDE_DEGREES = -90.0
-        const val MAX_LATITUDE_DEGREES = 90.0
-
-        const val MIN_LONGITUDE_DEGREES = -180.0
-        const val MAX_LONGITUDE_DEGREES = 180.0
-
-        const val MIN_HEIGHT = -50.0
-        const val MAX_HEIGHT = 400.0
-
-        const val TIME_INTERVAL_MILLIS = 20L
-
-        const val TIME_INTERVAL_SECONDS = TIME_INTERVAL_MILLIS.toDouble() / 1000
-
-        const val MILLIS_TO_NANOS = 1000000L
-
-        private fun getBodyKinematics(): BodyKinematics {
-            val randomizer = UniformRandomizer()
-            val latitude =
-                Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
-            val longitude =
-                Math.toRadians(randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES))
-            val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-            val nedPosition = NEDPosition(latitude, longitude, height)
-            val nedVelocity = NEDVelocity()
-            val ecefPosition = ECEFPosition()
-            val ecefVelocity = ECEFVelocity()
-            NEDtoECEFPositionVelocityConverter.convertNEDtoECEF(
-                nedPosition, nedVelocity,
-                ecefPosition, ecefVelocity
-            )
-            val c = CoordinateTransformation(
-                FrameType.BODY_FRAME,
-                FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
-            )
-            return ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
-                TIME_INTERVAL_SECONDS,
-                c,
-                c,
-                ecefVelocity,
-                ecefVelocity,
-                ecefPosition
-            )
-        }
     }
 }

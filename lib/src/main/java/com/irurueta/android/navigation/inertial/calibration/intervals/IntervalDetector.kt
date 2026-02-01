@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
@@ -59,10 +59,12 @@ import com.irurueta.units.Time
  * @property dynamicIntervalDetectedListener listener to notify when a new dynamic interval is
  * detected.
  * @property resetListener listener to notify when a reset occurs.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  */
-abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : SensorCollector,
-        U : Enum<*>, M : Measurement<U>, T : Triad<U, M>,
+abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>,
+        S : SensorCollector<*, S>,
+        U : Enum<*>,
+        M : Measurement<U>,
+        T : Triad<U, M>,
         D : TriadStaticIntervalDetector<U, M, T, D, L>,
         L : TriadStaticIntervalDetectorListener<U, M, T, D>>(
     val context: Context,
@@ -73,7 +75,6 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     var staticIntervalDetectedListener: OnStaticIntervalDetectedListener<I>? = null,
     var dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<I>? = null,
     var resetListener: OnResetListener<I>? = null,
-    var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) {
     /**
      * Listener for internal interval detector.
@@ -104,25 +105,6 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     protected var initialTimestamp: Long = 0L
 
     /**
-     * Listener to detect when accuracy of sensor changes.
-     * When sensor becomes unreliable, an error is notified.
-     */
-    @Suppress("UNCHECKED_CAST")
-    protected val internalAccuracyChangedListener =
-        SensorCollector.OnAccuracyChangedListener { accuracy ->
-            if (accuracy == SensorAccuracy.UNRELIABLE) {
-                stop()
-                unreliable = true
-                errorListener?.onError(
-                    this@IntervalDetector as I,
-                    ErrorReason.UNRELIABLE_SENSOR
-                )
-            }
-
-            accuracyChangedListener?.onAccuracyChanged(accuracy)
-        }
-
-    /**
      * Indicates whether detector successfully completed initialization.
      */
     protected var initialized: Boolean = false
@@ -131,7 +113,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
      * Indicates whether sensor has become unreliable, and thus
      * the interval detector is considered to be in [Status.FAILED].
      */
-    private var unreliable = false
+    protected var unreliable = false
 
     /**
      * Gets sensor being used to obtain measurements, or null if not available.
@@ -957,7 +939,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     /**
      * Interface to notify when detector starts initialization.
      *
-     * @param T an implementation of [IntervalDetector]
+     * @param T an implementation of [IntervalDetector].
      */
     fun interface OnInitializationStartedListener<T : IntervalDetector<T, *, *, *, *, *, *>> {
         /**
@@ -971,7 +953,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     /**
      * Interface to notify when detector completes its initialization.
      *
-     * @param T an implementation of [IntervalDetector]
+     * @param T an implementation of [IntervalDetector].
      */
     fun interface OnInitializationCompletedListener<T : IntervalDetector<T, *, *, *, *, *, *>> {
         /**
@@ -980,7 +962,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
          *
          * @param detector detector that raised the event.
          * @param baseNoiseLevel base measurement noise level expressed in meters per squared second
-         * (m/s^2) for accelerometer sensor, radians per second (rad/s) for gyroscope sensor and
+         * (m/se^2) for accelerometer sensor, radians per second (rad/s) for gyroscope sensor and
          * Teslas (T) for magnetometer sensor.
          */
         fun onInitializationCompleted(detector: T, baseNoiseLevel: Double)
@@ -989,7 +971,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
     /**
      * Interface to notify when an error occurs.
      *
-     * @param T an implementation of [IntervalDetector]
+     * @param T an implementation of [IntervalDetector].
      */
     fun interface OnErrorListener<T : IntervalDetector<T, *, *, *, *, *, *>> {
         /**
@@ -1009,29 +991,29 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : S
      * provided at the time the new static interval is detected (and consequently detector ends
      * a previous dynamic interval or its initialization stage).
      *
-     * @param T an implementation of [IntervalDetector]
+     * @param T an implementation of [IntervalDetector].
      */
     fun interface OnStaticIntervalDetectedListener<T : IntervalDetector<T, *, *, *, *, *, *>> {
         /**
          * Called when a static interval has been detected after initialization.
          *
-         * @param detector detector that raised the event
+         * @param detector detector that raised the event.
          * @param instantaneousAvgX instantaneous average x-coordinate of measurements within the
          * window expressed in meters per squared second (m/s^2) for acceleration, radians per
-         * second (rad/s) for angular speed or Teslas (T) for magnetic flux density.
+         * second (rad/s) for angular speed or Teslas (T) for magnetic flow density.
          * @param instantaneousAvgY instantaneous average y-coordinate of measurements within the
          * window expressed in meters per squared second (m/s^2) for acceleration, radians per
-         * second (rad/s) for angular speed or Teslas (T) for magnetic flux density.
+         * second (rad/s) for angular speed or Teslas (T) for magnetic flow density.
          * @param instantaneousAvgZ instantaneous average z-coordinate of measurements within the
          * window expressed in meters per squared second (m/s^2) for acceleration, radians per
-         * second (rad/s) for angular speed or Teslas (T) for magnetic flux density.
+         * second (rad/s) for angular speed or Teslas (T) for magnetic flow density.
          * @param instantaneousStdX instantaneous standard deviation of x-coordinate measurements
          * within the window expressed in meters per squared second (m/s^2) for acceleration,
          * radians per second (rad/s) for angular speed or Teslas (T) for magnetic flux density.
-         * @param instantaneousStdY instantaneous standard deviation of y-coordinate measurements
+         * @param instantaneousStdY instantaneous standard deviation of y-coordinate measurement
          * within the window expressed in meters per squared second (m/s^2) for acceleration,
          * radians per second (rad/s) for angular speed or Teslas (T) for magnetic flux density.
-         * @param instantaneousStdZ instantaneous standard deviation of z-coordinate measurements
+         * @param instantaneousStdZ instantaneous standard deviation of z-coordinate measurement
          * within the window expressed in meters per squared second (m/s^2) for acceleration,
          * radians per second (rad/s) for angular speed or Teslas (T) for magnetic flux density.
          */

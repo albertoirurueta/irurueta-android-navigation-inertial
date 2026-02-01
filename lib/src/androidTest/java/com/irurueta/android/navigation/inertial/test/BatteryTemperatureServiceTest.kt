@@ -15,6 +15,7 @@
  */
 package com.irurueta.android.navigation.inertial.test
 
+import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.BatteryTemperatureService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
@@ -71,6 +72,7 @@ class BatteryTemperatureServiceTest {
         val service =
             BatteryTemperatureService(context, batteryTemperatureChangedListener = { temperature ->
                 assertTrue(temperature > 0.0f)
+                Log.d("BatteryTemperatureServiceTest", "temperature: $temperature")
                 syncHelper.notifyAll { completed++ }
             })
 

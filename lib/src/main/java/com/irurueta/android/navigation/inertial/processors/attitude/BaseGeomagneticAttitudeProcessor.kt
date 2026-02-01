@@ -17,10 +17,10 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.SyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.old.collectors.SyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.NEDPosition

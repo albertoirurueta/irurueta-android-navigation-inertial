@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener
+import com.irurueta.android.navigation.inertial.calibration.StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.CalibrationMeasurementGenerator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.CalibrationMeasurementGeneratorProcessor
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.units.Acceleration
 import com.irurueta.units.Time
@@ -47,38 +59,35 @@ import com.irurueta.units.Time
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
  * @property calibrationCompletedListener listener to notify when calibration solving completes.
  * @property stoppedListener listener to notify when calibrator is stopped.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @param C an implementation of [StaticIntervalWithMeasurementGeneratorCalibrator].
  * @param I type of input data to be processed by internal generator.
+ * @param P type of processor to be used by internal generator.
  */
-abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>, I>(
+abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<
+        C : StaticIntervalWithMeasurementGeneratorCalibrator<C, I>,
+        I,
+        P : CalibrationMeasurementGeneratorProcessor<I>>(
     override val context: Context,
     override val accelerometerSensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     override val accelerometerSensorDelay: SensorDelay = SensorDelay.FASTEST,
     override val solveCalibrationWhenEnoughMeasurements: Boolean = true,
-    override var initializationStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationStartedListener<C>? = null,
-    override var initializationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnInitializationCompletedListener<C>? = null,
-    override var errorListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnErrorListener<C>? = null,
-    override var staticIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalDetectedListener<C>? = null,
-    override var dynamicIntervalDetectedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalDetectedListener<C>? = null,
-    override var staticIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStaticIntervalSkippedListener<C>? = null,
-    override var dynamicIntervalSkippedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnDynamicIntervalSkippedListener<C>? = null,
-    override var readyToSolveCalibrationListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnReadyToSolveCalibrationListener<C>? = null,
-    override var calibrationSolvingStartedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationSolvingStartedListener<C>? = null,
-    override var calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<C>? = null,
-    override var stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<C>? = null,
-    override var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
+    override var initializationStartedListener: OnInitializationStartedListener<C>? = null,
+    override var initializationCompletedListener: OnInitializationCompletedListener<C>? = null,
+    override var errorListener: OnErrorListener<C>? = null,
+    override var staticIntervalDetectedListener: OnStaticIntervalDetectedListener<C>? = null,
+    override var dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<C>? = null,
+    override var staticIntervalSkippedListener: OnStaticIntervalSkippedListener<C>? = null,
+    override var dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<C>? = null,
+    override var readyToSolveCalibrationListener: OnReadyToSolveCalibrationListener<C>? = null,
+    override var calibrationSolvingStartedListener: OnCalibrationSolvingStartedListener<C>? = null,
+    override var calibrationCompletedListener: OnCalibrationCompletedListener<C>? = null,
+    override var stoppedListener: OnStoppedListener<C>? = null
 ) : StaticIntervalWithMeasurementGeneratorCalibrator<C, I> {
+
     /**
      * Internal generator to generate measurements for calibration.
      */
-    protected abstract val generator: CalibrationMeasurementGenerator<I>
-
-    /**
-     * Indicates whether the generator has picked the first accelerometer measurement.
-     */
-    protected val isFirstAccelerometerMeasurement
-        get() = generator.numberOfProcessedAccelerometerMeasurements <= FIRST_MEASUREMENT
+    protected abstract val generator: CalibrationMeasurementGenerator<I, P>
 
     /**
      * Indicates whether enough measurements have been picked at static intervals so that the
@@ -376,7 +385,6 @@ abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIn
             field = value
         }
 
-
     /**
      * Number of accelerometer measurements that have been processed.
      */
@@ -427,8 +435,9 @@ abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIn
      */
     @Throws(IllegalStateException::class)
     override fun calibrate(): Boolean {
-        check(isReadyToSolveCalibration)
         check(!running)
+        check(isReadyToSolveCalibration)
+
         return internalCalibrate()
     }
 
@@ -459,11 +468,4 @@ abstract class BaseStaticIntervalWithMeasurementGeneratorCalibrator<C : StaticIn
      * Resets calibrator to its initial state.
      */
     protected abstract fun reset()
-
-    companion object {
-        /**
-         * Indicates when first sensor measurement is obtained.
-         */
-        private const val FIRST_MEASUREMENT = 1
-    }
 }

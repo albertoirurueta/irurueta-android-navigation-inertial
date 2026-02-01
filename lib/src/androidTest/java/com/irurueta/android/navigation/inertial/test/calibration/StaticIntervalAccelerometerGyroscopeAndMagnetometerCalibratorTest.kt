@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,21 @@
  */
 package com.irurueta.android.navigation.inertial.test.calibration
 
+import android.Manifest
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.GyroscopeSensorType
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.android.testutils.RequiresRealDevice
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import io.mockk.spyk
 import org.junit.Assert
@@ -47,9 +48,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     @Before
@@ -57,7 +58,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         completed = 0
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerSensorGyroscopeSensorAndAccelerometerSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -79,7 +80,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerSensorGyroscopeSensorAndAccelerometerUncalibratedSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -101,7 +102,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerSensorGyroscopeUncalibratedSensorAndAccelerometerSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -123,7 +124,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerSensorGyroscopeUncalibratedSensorAndAccelerometerUncalibratedSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -145,7 +146,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerUncalibratedSensorGyroscopeSensorAndAccelerometerSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -167,7 +168,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerUncalibratedSensorGyroscopeSensorAndAccelerometerUncalibratedSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -189,7 +190,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerUncalibratedSensorGyroscopeUncalibratedSensorAndAccelerometerSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -211,7 +212,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerUncalibratedSensorGyroscopeUncalibratedSensorAndAccelerometerUncalibratedSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -298,24 +299,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
                 syncHelper.notifyAll { completed++ }
             },
-            initialMagnetometerHardIronAvailableListener = { _, hardIronX, hardIronY, hardIronZ ->
-                Log.i(
-                    "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "Initial magnetometer hard iron available. x: $hardIronX, y: $hardIronY, z: $hardIronZ µT"
-                )
-            },
-            initialGyroscopeBiasAvailableListener = { _, biasX, biasY, biasZ ->
-                Log.i(
-                    "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "Initial gyroscope bias available. x: $biasX, y: $biasY, z: $biasZ rad/s"
-                )
-            },
-            initialAccelerometerBiasAvailableListener = { _, biasX, biasY, biasZ ->
-                Log.i(
-                    "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-                    "Initial accelerometer bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
-                )
-            },
             generatedAccelerometerMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
@@ -365,6 +348,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         calibrator.gyroscopeRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.magnetometerRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+
         return calibrator
     }
 
@@ -400,7 +386,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-            "initial Gg: ${calibrator.gyroscopeInitialGg.buffer}"
+            "initial Gg: ${calibrator.gyroscopeInitialGg.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
@@ -721,11 +707,27 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-            "Estimated accelerometer covariance: ${calibrator.estimatedAccelerometerCovariance?.buffer}"
+            "Estimated accelerometer covariance: ${calibrator.estimatedAccelerometerCovariance?.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
             "Estimated accelerometer chi sq: ${calibrator.estimatedAccelerometerChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated accelerometer chi sq degrees of freedom: ${calibrator.estimatedAccelerometerChiSqDegreesOfFreedom}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated accelerometer reduced chi sq: ${calibrator.estimatedAccelerometerReducedChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated accelerometer P: ${calibrator.estimatedAccelerometerQ}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated accelerometer Q: ${calibrator.estimatedAccelerometerQ}"
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
@@ -777,11 +779,27 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-            "Estimated gyroscope covariance: ${calibrator.estimatedGyroscopeCovariance?.buffer}"
+            "Estimated gyroscope covariance: ${calibrator.estimatedGyroscopeCovariance?.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
             "Estimated gyroscope chi sq: ${calibrator.estimatedGyroscopeChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated gyroscope chi sq degrees of freedom: ${calibrator.estimatedGyroscopeChiSqDegreesOfFreedom}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated gyroscope reduced chi sq: ${calibrator.estimatedGyroscopeReducedChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated gyroscope P: ${calibrator.estimatedGyroscopeP}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
+            "Estimated gyroscope Q: ${calibrator.estimatedGyroscopeQ}"
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
@@ -801,7 +819,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         Log.i(
             "StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest",
-            "Initial gyroscope Gg: ${calibrator.estimatedGyroscopeGg?.buffer}"
+            "Initial gyroscope Gg: ${calibrator.estimatedGyroscopeGg?.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
@@ -841,11 +859,27 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
         )
         Log.i(
             "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
-            "Estimated magnetometer covariance: ${calibrator.estimatedMagnetometerCovariance?.buffer}"
+            "Estimated magnetometer covariance: ${calibrator.estimatedMagnetometerCovariance?.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
             "Estimated magnetometer chi sq: ${calibrator.estimatedMagnetometerChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
+            "Estimated magnetometer chi sq degrees of freedom: ${calibrator.estimatedMagnetometerChiSqDegreesOfFreedom}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
+            "Estimated magnetometer reduced chi sq: ${calibrator.estimatedMagnetometerReducedChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
+            "Estimated magnetometer P: ${calibrator.estimatedMagnetometerP}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
+            "Estimated magnetometer Q: ${calibrator.estimatedMagnetometerQ}"
         )
         Log.i(
             "StaticIntervalAccelerometerAndGyroscopeCalibratorTest",
@@ -859,5 +893,9 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibratorTest {
 
     private companion object {
         const val TIMEOUT = 5000L
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val THRESHOLD_FACTOR = 3.0
     }
 }

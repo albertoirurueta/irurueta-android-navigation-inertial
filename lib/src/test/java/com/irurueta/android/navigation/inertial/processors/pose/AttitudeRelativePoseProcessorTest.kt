@@ -17,9 +17,9 @@ package com.irurueta.android.navigation.inertial.processors.pose
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AttitudeAndAccelerometerSyncedSensorMeasurement
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.old.collectors.AttitudeAndAccelerometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad

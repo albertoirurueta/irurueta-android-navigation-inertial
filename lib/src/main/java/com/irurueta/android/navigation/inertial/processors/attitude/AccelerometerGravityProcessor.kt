@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
 import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
 
@@ -57,14 +57,14 @@ class AccelerometerGravityProcessor(
      * accelerometer measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
      *
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.BufferedAccelerometerSensorCollector
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndGyroscopeSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.BufferedAccelerometerSensorCollector
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerSensorCollector
      */
     override fun process(measurement: AccelerometerSensorMeasurement, timestamp: Long): Boolean {
         val ax = measurement.ax.toDouble()

@@ -17,8 +17,8 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.hardware.SensorManager
 import android.location.Location
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
-import com.irurueta.android.navigation.inertial.collectors.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.navigation.inertial.NEDGravity
@@ -158,11 +158,11 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
      * accelerometer or gravity measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
      *
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.BufferedGravitySensorCollector
-     * @see com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.BufferedGravitySensorCollector
+     * @see com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
      */
     abstract fun process(measurement: T, timestamp: Long = measurement.timestamp): Boolean
 

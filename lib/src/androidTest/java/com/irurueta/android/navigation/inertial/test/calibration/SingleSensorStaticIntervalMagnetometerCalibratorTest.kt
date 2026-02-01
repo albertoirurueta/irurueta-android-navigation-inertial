@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.calibration
 
+import android.Manifest
 import android.content.Context
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.SingleSensorStaticIntervalMagnetometerCalibrator
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
+import com.irurueta.android.testutils.RequiresRealDevice
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import org.junit.Before
 import org.junit.Rule
@@ -37,9 +39,9 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     @Before
@@ -47,7 +49,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         completed = 0
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -63,7 +65,7 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenMagnetometerUncalibratedSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -108,12 +110,6 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
                 )
 
                 syncHelper.notifyAll { completed++ }
-            },
-            initialHardIronAvailableListener = { _, hardIronX, hardIronY, hardIronZ ->
-                Log.i(
-                    "SingleSensorStaticIntervalMagnetometerCalibratorTest",
-                    "Initial bias available. x: $hardIronX, y: $hardIronY, z: $hardIronZ T"
-                )
             },
             newCalibrationMeasurementAvailableListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
@@ -332,11 +328,27 @@ class SingleSensorStaticIntervalMagnetometerCalibratorTest {
         )
         Log.i(
             "SingleSensorStaticIntervalMagnetometerCalibratorTest",
-            "Estimated covariance: ${calibrator.estimatedCovariance?.buffer}"
+            "Estimated covariance: ${calibrator.estimatedCovariance?.buffer.contentToString()}"
         )
         Log.i(
             "SingleSensorStaticIntervalMagnetometerCalibratorTest",
             "Estimated chi sq: ${calibrator.estimatedChiSq}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Estimated chi sq degrees of freedom: ${calibrator.estimatedChiSqDegreesOfFreedom}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Estimated reduced chi sq: ${calibrator.estimatedReducedChiSq}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Estimated P: ${calibrator.estimatedP}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalMagnetometerCalibratorTest",
+            "Estimated Q: ${calibrator.estimatedQ}"
         )
         Log.i(
             "SingleSensorStaticIntervalMagnetometerCalibratorTest",

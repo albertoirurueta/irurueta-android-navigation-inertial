@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,58 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Test
 
 class StatusTest {
 
     @Test
     fun mapStatus_returnsExpectedValue() {
-        assertEquals(
+        Assert.assertEquals(
             Status.FAILED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.IDLE, true)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.FAILED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.INITIALIZING, true)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.FAILED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED, true)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.FAILED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.STATIC_INTERVAL, true)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.FAILED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL, true)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.FAILED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.FAILED, true)
         )
-        assertEquals(Status.IDLE, Status.mapStatus(TriadStaticIntervalDetector.Status.IDLE, false))
-        assertEquals(
+        Assert.assertEquals(
+            Status.IDLE,
+            Status.mapStatus(TriadStaticIntervalDetector.Status.IDLE, false)
+        )
+        Assert.assertEquals(
             Status.INITIALIZING,
             Status.mapStatus(TriadStaticIntervalDetector.Status.INITIALIZING, false)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.INITIALIZATION_COMPLETED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.INITIALIZATION_COMPLETED, false)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.STATIC_INTERVAL,
             Status.mapStatus(TriadStaticIntervalDetector.Status.STATIC_INTERVAL, false)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.DYNAMIC_INTERVAL,
             Status.mapStatus(TriadStaticIntervalDetector.Status.DYNAMIC_INTERVAL, false)
         )
-        assertEquals(
+        Assert.assertEquals(
             Status.FAILED,
             Status.mapStatus(TriadStaticIntervalDetector.Status.FAILED, false)
         )

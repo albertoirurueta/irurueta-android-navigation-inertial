@@ -16,9 +16,13 @@
 package com.irurueta.android.navigation.inertial.estimators.pose
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.collectors.*
 import com.irurueta.android.navigation.inertial.estimators.attitude.GravityEstimator
 import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
+import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.old.collectors.GyroscopeSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
 
 /**
  * Base interface for pose estimators.

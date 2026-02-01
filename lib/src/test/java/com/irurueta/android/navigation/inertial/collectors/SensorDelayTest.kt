@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.collectors
 
 import android.hardware.SensorManager
@@ -27,7 +28,10 @@ class SensorDelayTest {
     @Test
     fun sensorDelay_fromValues_returnsExpectedValues() {
         assertEquals(4, SensorDelay.entries.size)
-        assertEquals(SensorDelay.FASTEST, SensorDelay.from(SensorManager.SENSOR_DELAY_FASTEST))
+        assertEquals(
+            SensorDelay.FASTEST,
+            SensorDelay.from(SensorManager.SENSOR_DELAY_FASTEST)
+        )
         assertEquals(SensorDelay.GAME, SensorDelay.from(SensorManager.SENSOR_DELAY_GAME))
         assertEquals(SensorDelay.UI, SensorDelay.from(SensorManager.SENSOR_DELAY_UI))
         assertEquals(SensorDelay.NORMAL, SensorDelay.from(SensorManager.SENSOR_DELAY_NORMAL))

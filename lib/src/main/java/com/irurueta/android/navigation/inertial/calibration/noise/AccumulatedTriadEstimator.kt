@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import android.hardware.Sensor
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.TriadConvertible
 import com.irurueta.navigation.inertial.calibration.Triad
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedTriadNoiseEstimator
 import com.irurueta.units.Measurement
+import com.irurueta.units.Time
+import kotlin.Enum
 
 /**
  * Estimates the accumulated mean values of a triad of measurements.
@@ -37,53 +41,64 @@ import com.irurueta.units.Measurement
  *
  * @property context Android context.
  * @property sensorDelay Delay of sensor between samples.
- * @param maxSamples Maximum number of samples to take into account before completion. This is
- * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
- * [StopMode.MAX_SAMPLES_OR_DURATION].
- * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
- * before completion. This is only taken into account if using either
- * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
- * @param stopMode Determines when this estimator will consider its estimation completed.
- * @property completedListener Listener to notify when estimation is complete.
- * @property unreliableListener Listener to notify when sensor becomes unreliable, and thus,
- * estimation must be discarded.
- * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
+ * @property completedListener listener to notify when estimation completes.
+ * @property unreliableListener listener to notify when measurements become unreliable.
+ * @param E Type of estimator.
+ * @param P Type of processor.
+ * @param C Sensor collector.
+ * @param U Type of measurement unit.
+ * @param M Type of measurement.
+ * @param T Type of triad.
+ * @param SM Type of sensor measurement.
  */
-abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, U, M, T>,
-        N : AccumulatedTriadNoiseEstimator<U, M, T, *, *>, C : SensorCollector,
-        U : Enum<*>, M : Measurement<U>, T : Triad<U, M>>(
+abstract class AccumulatedTriadEstimator<E, P, C, U, M, T, SM>(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    maxSamples: Int = DEFAULT_MAX_SAMPLES,
-    maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
-    stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-    var completedListener: OnEstimationCompletedListener<A>? = null,
-    var unreliableListener: OnUnreliableListener<A>? = null
-) : BaseAccumulatedEstimator(maxSamples, maxDurationMillis, stopMode) {
+    var completedListener: OnEstimationCompletedListener<E>? = null,
+    var unreliableListener: OnUnreliableListener<E>? = null
+) where E : AccumulatedTriadEstimator<E, P, C, U, M, T, SM>,
+        P : AccumulatedTriadProcessor<P, *, U, M, T, SM>,
+        C : SensorCollector<SM, C>,
+        U : Enum<*>,
+        M : Measurement<U>,
+        T : Triad<U, M>,
+        SM : SensorMeasurement<SM>,
+        SM : TriadConvertible<T> {
 
     /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
+     * Internal processor that processes measurements.
      */
-    protected abstract val triad: T
+    protected abstract val processor: P
 
     /**
-     * Internal noise estimator of magnitude measurements.
-     * This can be used to estimate statistics about a given measurement magnitude.
-     */
-    protected abstract val noiseEstimator: N
-
-    /**
-     * Collector for measurements.
+     * Internal sensor collector that collects measurements.
      */
     protected abstract val collector: C
 
     /**
-     * Gets sensor being used to obtain measurements or null if not available.
-     * This can be used to obtain additional information about the sensor.
+     * Listener to handle changes of accuracy in accelerometer sensor.
      */
-    val sensor
+    protected val accuracyChangedListener =
+        SensorCollector.OnAccuracyChangedListener<SM, C> { _, accuracy ->
+            if (accuracy == SensorAccuracy.UNRELIABLE) {
+                resultUnreliable = true
+                notifyUnreliableListener()
+            }
+        }
+
+    /**
+     * Listener to handle accelerometer measurements.
+     */
+    protected val measurementListener =
+        SensorCollector.OnMeasurementListener<SM, C> { _, measurement ->
+            handleMeasurement(measurement)
+        }
+
+    /**
+     * Gets sensor being used to obtain measurements or null if not available.
+     *This can be used to obtain additional information about the sensor.
+     */
+    val sensor: Sensor?
         get() = collector.sensor
 
     /**
@@ -103,11 +118,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * magnetometer).
      */
     val averageX
-        get() = if (resultAvailable) {
-            noiseEstimator.avgX
-        } else {
-            null
-        }
+        get() = processor.averageX
 
     /**
      * Gets estimated average value of sensor x-axis measurements.
@@ -119,11 +130,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * magnetometer).
      */
     val averageXAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.avgXAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.averageXAsMeasurement
 
     /**
      * Gets estimated average value of sensor x-axis measurements.
@@ -138,12 +145,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getAverageXAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getAvgXAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAverageXAsMeasurement(result)
     }
 
     /**
@@ -157,11 +159,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * magnetometer).
      */
     val averageY
-        get() = if (resultAvailable) {
-            noiseEstimator.avgY
-        } else {
-            null
-        }
+        get() = processor.averageY
 
     /**
      * Gets estimated average value of accelerometer y-axis measurements.
@@ -173,11 +171,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * magnetometer).
      */
     val averageYAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.avgYAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.averageYAsMeasurement
 
     /**
      * Gets estimated average value of accelerometer y-axis measurements.
@@ -192,12 +186,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getAverageYAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getAvgYAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAverageYAsMeasurement(result)
     }
 
     /**
@@ -211,11 +200,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * magnetometer).
      */
     val averageZ
-        get() = if (resultAvailable) {
-            noiseEstimator.avgZ
-        } else {
-            null
-        }
+        get() = processor.averageZ
 
     /**
      * Gets estimated average value of sensor z-axis measurements.
@@ -227,11 +212,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * magnetometer).
      */
     val averageZAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.avgZAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.averageZAsMeasurement
 
     /**
      * Gets estimated average value of sensor z-axis measurements.
@@ -246,12 +227,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getAverageZAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getAvgZAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAverageZAsMeasurement(result)
     }
 
     /**
@@ -264,11 +240,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * magnetometer).
      */
     val averageTriad
-        get() = if (resultAvailable) {
-            noiseEstimator.avgTriad
-        } else {
-            null
-        }
+        get() = processor.averageTriad
 
     /**
      * Gets estimated average values of sensor.
@@ -283,12 +255,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getAverageTriad(result: T): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getAvgTriad(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAverageTriad(result)
     }
 
     /**
@@ -301,11 +268,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * intensity (for magnetometer).
      */
     val averageNorm
-        get() = if (resultAvailable) {
-            noiseEstimator.avgNorm
-        } else {
-            null
-        }
+        get() = processor.averageNorm
 
     /**
      * Gets estimated average norm of sensor measurements expressed in sensor default unit
@@ -317,11 +280,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * intensity (for magnetometer).
      */
     val averageNormAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.avgNormAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.averageNormAsMeasurement
 
     /**
      * Gets estimated average norm of sensor measurements expressed in sensor default unit
@@ -336,12 +295,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getAverageNormAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getAvgNormAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAverageNormAsMeasurement(result)
     }
 
     /**
@@ -354,11 +308,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val varianceX
-        get() = if (resultAvailable) {
-            noiseEstimator.varianceX
-        } else {
-            null
-        }
+        get() = processor.varianceX
 
     /**
      * Gets estimated variance value of sensor y-axis measurements expressed in its default squared
@@ -370,11 +320,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val varianceY
-        get() = if (resultAvailable) {
-            noiseEstimator.varianceY
-        } else {
-            null
-        }
+        get() = processor.varianceY
 
     /**
      * Gets estimated variance value of sensor z-axis measurements expressed in its default squared
@@ -386,11 +332,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val varianceZ
-        get() = if (resultAvailable) {
-            noiseEstimator.varianceZ
-        } else {
-            null
-        }
+        get() = processor.varianceZ
 
     /**
      * Gets estimated standard deviation value of sensor x-axis measurements expressed in its
@@ -401,11 +343,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationX
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationX
-        } else {
-            null
-        }
+        get() = processor.standardDeviationX
 
     /**
      * Gets estimated standard deviation value of sensor x-axis measurements.
@@ -414,11 +352,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationXAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationXAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.standardDeviationXAsMeasurement
 
     /**
      * Gets estimated standard deviation value of sensor x-axis measurements.
@@ -430,12 +364,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getStandardDeviationXAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getStandardDeviationXAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getStandardDeviationXAsMeasurement(result)
     }
 
     /**
@@ -447,11 +376,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationY
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationY
-        } else {
-            null
-        }
+        get() = processor.standardDeviationY
 
     /**
      * Gets estimated standard deviation value of sensor y-axis measurements.
@@ -460,11 +385,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationYAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationYAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.standardDeviationYAsMeasurement
 
     /**
      * Gets estimated standard deviation value of sensor y-axis measurements.
@@ -476,12 +397,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getStandardDeviationYAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getStandardDeviationYAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getStandardDeviationYAsMeasurement(result)
     }
 
     /**
@@ -493,11 +409,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationZ
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationZ
-        } else {
-            null
-        }
+        get() = processor.standardDeviationZ
 
     /**
      * Gets estimated standard deviation value of sensor z-axis measurements.
@@ -506,11 +418,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationZAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationZAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.standardDeviationZAsMeasurement
 
     /**
      * Gets estimated standard deviation value of sensor z-axis measurements.
@@ -522,12 +430,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getStandardDeviationZAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getStandardDeviationZAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getStandardDeviationZAsMeasurement(result)
     }
 
     /**
@@ -537,11 +440,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val standardDeviationTriad
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationTriad
-        } else {
-            null
-        }
+        get() = processor.standardDeviationTriad
 
     /**
      * Gets estimated standard deviation values of sensor.
@@ -553,12 +452,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getStandardDeviationTriad(result: T): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getStandardDeviationTriad(result)
-            true
-        } else {
-            false
-        }
+        return processor.getStandardDeviationTriad(result)
     }
 
     /**
@@ -569,11 +463,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationNorm
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationNorm
-        } else {
-            null
-        }
+        get() = processor.standardDeviationNorm
 
     /**
      * Gets norm of estimated standard deviations of sensor measurements.
@@ -582,11 +472,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val standardDeviationNormAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationNormAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.standardDeviationNormAsMeasurement
 
     /**
      * Gets norm of estimated standard deviations of sensor measurements.
@@ -598,12 +484,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getStandardDeviationNormAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getStandardDeviationNormAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getStandardDeviationNormAsMeasurement(result)
     }
 
     /**
@@ -614,11 +495,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val averageStandardDeviation
-        get() = if (resultAvailable) {
-            noiseEstimator.averageStandardDeviation
-        } else {
-            null
-        }
+        get() = processor.averageStandardDeviation
 
     /**
      * Gets average of estimated standard deviations of sensor measurements.
@@ -627,11 +504,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * indication of sensor noise.
      */
     val averageStandardDeviationAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.averageStandardDeviationAsMeasurement
-        } else {
-            null
-        }
+        get() = processor.averageStandardDeviationAsMeasurement
 
     /**
      * Gets average of estimated standard deviations of sensor measurements.
@@ -643,12 +516,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * @return true if result is available, false otherwise.
      */
     fun getAverageStandardDeviationAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getAverageStandardDeviationAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAverageStandardDeviationAsMeasurement(result)
     }
 
     /**
@@ -659,11 +527,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val psdX
-        get() = if (resultAvailable) {
-            noiseEstimator.psdX
-        } else {
-            null
-        }
+        get() = processor.psdX
 
     /**
      * Gets sensor noise PSD (Power Spectral Density) on y axis expressed in  (m^2 * s^-3) for
@@ -673,11 +537,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val psdY
-        get() = if (resultAvailable) {
-            noiseEstimator.psdY
-        } else {
-            null
-        }
+        get() = processor.psdY
 
     /**
      * Gets sensor noise PSD (Power Spectral Density) on z axis expressed in  (m^2 * s^-3) for
@@ -687,11 +547,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val psdZ
-        get() = if (resultAvailable) {
-            noiseEstimator.psdZ
-        } else {
-            null
-        }
+        get() = processor.psdZ
 
     /**
      * Gets sensor noise root PSD (Power Spectral Density) on x axis expressed in
@@ -701,11 +557,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val rootPsdX
-        get() = if (resultAvailable) {
-            noiseEstimator.rootPsdX
-        } else {
-            null
-        }
+        get() = processor.rootPsdX
 
     /**
      * Gets sensor noise root PSD (Power Spectral Density) on y axis expressed in
@@ -715,11 +567,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val rootPsdY
-        get() = if (resultAvailable) {
-            noiseEstimator.rootPsdY
-        } else {
-            null
-        }
+        get() = processor.rootPsdY
 
     /**
      * Gets sensor noise root PSD (Power Spectral Density) on z axis expressed in
@@ -729,11 +577,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val rootPsdZ
-        get() = if (resultAvailable) {
-            noiseEstimator.rootPsdZ
-        } else {
-            null
-        }
+        get() = processor.rootPsdZ
 
     /**
      * Gets average sensor measurement noise PSD (Power Spectral Density) expressed in
@@ -743,11 +587,7 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val averageNoisePsd
-        get() = if (resultAvailable) {
-            noiseEstimator.avgNoisePsd
-        } else {
-            null
-        }
+        get() = processor.averageNoisePsd
 
     /**
      * Gets norm of sensor noise root PSD (Power Spectral Density) expressed in (m * s^-1.5) for
@@ -757,14 +597,146 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
      * sensor noise.
      */
     val noiseRootPsdNorm
-        get() = if (resultAvailable) {
-            noiseEstimator.noiseRootPsdNorm
-        } else {
-            null
-        }
+        get() = processor.noiseRootPsdNorm
 
     /**
-     * Starts collection of sensor measurements.
+     * Contains timestamp when the first measurement was processed expressed in nanoseconds
+     * using [android.os.SystemClock.elapsedRealtimeNanos] time base.
+     */
+    val initialTimestampNanos: Long
+        get () = processor.initialTimestampNanos
+
+    /**
+     * Contains timestamp when the last measurement was processed expressed in nanoseconds
+     * using [android.os.SystemClock.elapsedRealtimeNanos] time base.
+     */
+    val endTimestampNanos: Long
+        get() = processor.endTimestampNanos
+
+    /**
+     * Number of measurements that have been processed.
+     */
+    val numberOfProcessedMeasurements: Long
+        get() = processor.numberOfProcessedMeasurements
+
+    /**
+     * Gets maximum number of samples to take into account before completion. This is only taken
+     * into account if using either [StopMode.MAX_SAMPLES_ONLY] or
+     * [StopMode.MAX_SAMPLES_OR_DURATION].
+     */
+    val maxSamples: Int
+        get() = processor.maxSamples
+
+    /**
+     * Gets maximum duration expressed in milliseconds to take into account before completion. This
+     * is only taken into account if using either [StopMode.MAX_DURATION_ONLY] or
+     * [StopMode.MAX_SAMPLES_OR_DURATION].
+     */
+    val maxDurationMillis: Long
+        get() = processor.maxDurationMillis
+
+    /**
+     * Determines when this processor will consider its estimation completed.
+     */
+    val stopMode: StopMode
+        get() = processor.stopMode
+
+    /**
+     * Indicates whether estimated average and time interval between measurements are available
+     * or not.
+     */
+    val resultAvailable: Boolean
+        get() = processor.resultAvailable
+
+    /**
+     * Indicates whether estimated result is unreliable or not.
+     */
+    var resultUnreliable: Boolean = false
+        protected set
+
+    /**
+     * Gets average time interval between measurements expressed in seconds (s). This is only
+     * available when estimation completes successfully and [resultAvailable] is true.
+     */
+    val averageTimeInterval: Double?
+        get() = processor.averageTimeInterval
+
+    /**
+     * Gets average time interval between measurements. This is only available when estimation
+     * completes successfully and [resultAvailable] is true.
+     */
+    val averageTimeIntervalAsTime: Time?
+        get() = processor.averageTimeIntervalAsTime
+
+    /**
+     * Gets average time interval between measurements.
+     * This is only available when estimation completes successfully and [resultAvailable] is true.
+     *
+     * @param result instance where average time interval will be stored.
+     * @return true if result was set, false otherwise.
+     */
+    fun getAverageTimeIntervalAsTime(result: Time): Boolean {
+        return processor.getAverageTimeIntervalAsTime(result)
+    }
+
+    /**
+     * Gets estimated variance of time interval between measurements expressed in seconds squared
+     * (s^2). This is only available when estimation completes successfully and [resultAvailable]
+     * is true.
+     */
+    val timeIntervalVariance: Double?
+        get() = processor.timeIntervalVariance
+
+    /**
+     * Gets estimated standard deviation of time interval between measurements expressed in
+     * seconds (s). This is only available when estimation completes successfully and
+     * [resultAvailable] is true.
+     */
+    val timeIntervalStandardDeviation: Double?
+        get() = processor.timeIntervalStandardDeviation
+
+    /**
+     * Gets estimated standard deviation of time interval between measurements. This is only
+     * available when estimation completes successfully and [resultAvailable] is true.
+     */
+    val timeIntervalStandardDeviationAsTime: Time?
+        get() = processor.timeIntervalStandardDeviationAsTime
+
+    /**
+     * Gets estimated standard deviation of time interval between measurements. This is only
+     * available when estimation completes successfully and [resultAvailable] is true.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result was set, false otherwise.
+     */
+    fun getTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
+        return processor.getTimeIntervalStandardDeviationAsTime(result)
+    }
+
+    /**
+     * Gets elapsed time since first measurement was processed expressed in nanoseconds (ns).
+     */
+    val elapsedTimeNanos: Long
+        get() = processor.elapsedTimeNanos
+
+
+    /**
+     * Gets elapsed time since first measurement was processed.
+     */
+    val elapsedTime: Time
+        get() = processor.elapsedTime
+
+    /**
+     * Gets elapsed time since first measurement was processed.
+     *
+     * @param result instance where result will be stored.
+     */
+    fun getElapsedTime(result: Time) {
+        processor.getElapsedTime(result)
+    }
+
+    /**
+     * Starts collection of sensor norm measurements.
      *
      * @throws IllegalStateException if estimator is already running or sensor is not available.
      */
@@ -781,9 +753,14 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
     }
 
     /**
-     * Stops collection of sensor measurements.
+     * Stops collection of sensor norm measurements.
+     *
+     * @throws IllegalStateException if estimator is NOT already running.
      */
+    @Throws(IllegalStateException::class)
     fun stop() {
+        check(running)
+
         collector.stop()
         running = false
     }
@@ -791,89 +768,59 @@ abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, 
     /**
      * Notifies unreliable listener.
      */
-    override fun notifyUnreliableListener() {
+    protected fun notifyUnreliableListener() {
         @Suppress("UNCHECKED_CAST")
-        unreliableListener?.onUnreliable(this as A)
+        unreliableListener?.onUnreliable(this as E)
     }
 
     /**
-     * Handles a measurement triad.
+     * Handles a new measurement.
      *
-     * @param valueX value of x-axis measurement expressed in sensor unit.
-     * @param valueY value of y-axis measurement expressed in sensor unit.
-     * @param valueZ value of z-axis measurement expressed in sensor unit.
-     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
-     * will be monotonically increasing using the same time base as
-     * [android.os.SystemClock.elapsedRealtimeNanos].
-     * @param accuracy sensor accuracy.
+     * @param measurement new measurement.
      */
-    protected fun handleMeasurement(
-        valueX: Double,
-        valueY: Double,
-        valueZ: Double,
-        timestamp: Long,
-        accuracy: SensorAccuracy?
-    ) {
-        if (accuracy == SensorAccuracy.UNRELIABLE) {
+    protected fun handleMeasurement(measurement: SM) {
+        if (measurement.accuracy == SensorAccuracy.UNRELIABLE) {
             resultUnreliable = true
         }
 
-        if (numberOfProcessedMeasurements == 0) {
-            initialTimestampNanos = timestamp
-        }
-
-        // convert from device ENU coordinate to local plane NED coordinates
-        ENUtoNEDConverter.convert(valueX, valueY, valueZ, triad)
-
-        noiseEstimator.addTriad(triad.valueX, triad.valueY, triad.valueZ)
-
-        handleTimestamp(timestamp)
-        numberOfProcessedMeasurements++
-
-        if (isComplete()) {
-            // once time interval has been estimated, it is set into noise estimator so that
-            // PSD values can be correctly estimated.
-            noiseEstimator.timeInterval = timeIntervalEstimator.averageTimeInterval
-            resultAvailable = true
-
+        if (processor.process(measurement)) {
             stop()
 
             @Suppress("UNCHECKED_CAST")
-            completedListener?.onEstimationCompleted(this as A)
+            completedListener?.onEstimationCompleted(this as E)
         }
     }
 
     /**
-     * Resets internal estimators.
+     * Resets this estimator to its initial state.
      */
-    override fun reset() {
-        noiseEstimator.reset()
-        noiseEstimator.timeInterval = 0.0
-
-        super.reset()
+    fun reset() {
+        processor.reset()
     }
 
     /**
-     * Interface to notify when estimation completes.
+     * Notifies when estimation completes.
      */
-    fun interface OnEstimationCompletedListener<A : AccumulatedTriadEstimator<*, *, *, *, *, *>> {
+    fun interface OnEstimationCompletedListener<E : AccumulatedTriadEstimator<E, *, *, *, *, *, *>> {
+
         /**
-         * Called when estimation completes.
+         * Called when estimation is completed.
          *
-         * @param estimator estimator that generated the event.
+         * @param estimator estimator that completed its estimation.
          */
-        fun onEstimationCompleted(estimator: A)
+        fun onEstimationCompleted(estimator: E)
     }
 
     /**
-     * Interface to notify when measurements become unreliable.
+     * Notifies when measurements become unreliable.
      */
-    fun interface OnUnreliableListener<A : AccumulatedTriadEstimator<*, *, *, *, *, *>> {
+    fun interface OnUnreliableListener<E : AccumulatedTriadEstimator<E, *, *, *, *, *, *>> {
+
         /**
          * Called when measurements become unreliable.
          *
-         * @param estimator estimator that generated the event.
+         * @param estimator estimator whose measurements have become unreliable.
          */
-        fun onUnreliable(estimator: A)
+        fun onUnreliable(estimator: E)
     }
 }

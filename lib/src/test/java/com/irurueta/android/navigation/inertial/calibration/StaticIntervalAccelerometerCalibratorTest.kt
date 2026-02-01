@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.SystemClock
-import androidx.test.core.app.ApplicationProvider
+import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.*
+import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.ErrorReason
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.SingleSensorCalibrationMeasurementGenerator
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
@@ -39,7 +45,31 @@ import com.irurueta.navigation.inertial.calibration.BodyKinematicsGenerator
 import com.irurueta.navigation.inertial.calibration.CalibrationException
 import com.irurueta.navigation.inertial.calibration.IMUErrors
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
-import com.irurueta.navigation.inertial.calibration.accelerometer.*
+import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.KnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.LMedSRobustKnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.MSACRobustKnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROMedSRobustKnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.PROSACRobustKnownPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownBiasAndGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownGravityNormAccelerometerCalibrator
+import com.irurueta.navigation.inertial.calibration.accelerometer.RANSACRobustKnownPositionAccelerometerCalibrator
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.thresholdfactor.QualityScoreMapper
 import com.irurueta.navigation.inertial.estimators.ECEFKinematicsEstimator
@@ -49,18 +79,20 @@ import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
-import io.mockk.*
+import io.mockk.Called
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import io.mockk.verify
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import java.lang.reflect.InvocationTargetException
-import java.util.*
+import java.util.Random
 
-@RunWith(RobolectricTestRunner::class)
 class StaticIntervalAccelerometerCalibratorTest {
 
     @get:Rule
@@ -119,22 +151,11 @@ class StaticIntervalAccelerometerCalibratorTest {
             StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener
 
     @MockK
-    private lateinit var initialBiasAvailableListener:
-            StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener
-
-    @MockK
-    private lateinit var accuracyChangedListener: SensorCollector.OnAccuracyChangedListener
-
-    @MockK
     private lateinit var qualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>
 
     @MockK
     private lateinit var unreliableGravityNormEstimationListener:
             StaticIntervalAccelerometerCalibrator.OnUnreliableGravityEstimationListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var initialAccelerometerBiasAvailableListener:
-            StaticIntervalAccelerometerCalibrator.OnInitialAccelerometerBiasAvailableListener
 
     @MockK
     private lateinit var generator: AccelerometerMeasurementGenerator
@@ -151,9 +172,35 @@ class StaticIntervalAccelerometerCalibratorTest {
     @MockK
     private lateinit var location: Location
 
+    @MockK
+    private lateinit var context: Context
+
+    @MockK
+    private lateinit var sensorManager: SensorManager
+
+    @MockK
+    private lateinit var accelerometerSensor: Sensor
+
+    @MockK
+    private lateinit var gravitySensor: Sensor
+
     @Test
     fun constructor_whenContext_returnsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default values
@@ -179,8 +226,6 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.calibrationCompletedListener)
         assertNull(calibrator.stoppedListener)
         assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
         assertNotNull(calibrator.accelerometerQualityScoreMapper)
         assertNull(calibrator.gravityNorm)
         assertFalse(calibrator.accelerometerResultUnreliable)
@@ -198,8 +243,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val triad = AccelerationTriad()
         assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
         assertTrue(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
+        assertSame(accelerometerSensor, calibrator.accelerometerSensor)
+        assertSame(gravitySensor, calibrator.gravitySensor)
         val ma1 = Matrix(MA_SIZE, MA_SIZE)
         assertEquals(ma1, calibrator.accelerometerInitialMa)
         val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
@@ -269,200 +314,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerMzy)
         assertNull(calibrator.estimatedAccelerometerCovariance)
         assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenAccelerometerSensorType_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.FASTEST, calibrator.accelerometerSensorDelay)
-        assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertNull(calibrator.location)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertTrue(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
+        assertNull(calibrator.estimatedAccelerometerChiSqDegreesOfFreedom)
+        assertNull(calibrator.estimatedAccelerometerReducedChiSq)
+        assertNull(calibrator.estimatedAccelerometerP)
+        assertNull(calibrator.estimatedAccelerometerQ)
         assertNull(calibrator.estimatedAccelerometerMse)
         assertNull(calibrator.estimatedAccelerometerBiasX)
         assertNull(calibrator.estimatedAccelerometerBiasY)
@@ -537,3278 +392,23 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun constructor_whenAccelerometerSensorDelay_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL
+    fun constructor_whenAllParameters_returnsExpectedValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
         )
 
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertTrue(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertNull(calibrator.location)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertTrue(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenSolveCalibrationWhenEnoughMeasurements_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            false
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertFalse(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertNull(calibrator.location)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertTrue(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenIsAccelerometerGroundTruthInitialBias_returnsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertNull(calibrator.location)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertTrue(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenLocation_returnsExpectedValues() {
         val location = getLocation()
-
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertNull(calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenInitializationStartedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertNull(calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenInitializationCompletedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertNull(calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenErrorListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertNull(calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenStaticIntervalDetectedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertNull(calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenDynamicIntervalDetectedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertNull(calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenStaticIntervalSkippedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertNull(calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenDynamicIntervalSkippedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertNull(calibrator.generatedAccelerometerMeasurementListener)
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenGeneratedAccelerometerMeasurementListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertNull(calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenReadyToSolveCalibrationListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener,
-            readyToSolveCalibrationListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertNull(calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenCalibrationSolvingStartedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener,
-            readyToSolveCalibrationListener,
-            calibrationSolvingStartedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertNull(calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenCalibrationCompletedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener,
-            readyToSolveCalibrationListener,
-            calibrationSolvingStartedListener,
-            calibrationCompletedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
-        assertNull(calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenStoppedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener,
-            readyToSolveCalibrationListener,
-            calibrationSolvingStartedListener,
-            calibrationCompletedListener,
-            stoppedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
-        assertSame(stoppedListener, calibrator.stoppedListener)
-        assertNull(calibrator.unreliableGravityNormEstimationListener)
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenUnreliableGravityNormEstimationListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             AccelerometerSensorType.ACCELEROMETER,
@@ -3828,672 +428,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrationSolvingStartedListener,
             calibrationCompletedListener,
             stoppedListener,
-            unreliableGravityNormEstimatorListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
-        assertSame(stoppedListener, calibrator.stoppedListener)
-        assertSame(
-            unreliableGravityNormEstimatorListener,
-            calibrator.unreliableGravityNormEstimationListener
-        )
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenInitialBiasAvailableListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener,
-            readyToSolveCalibrationListener,
-            calibrationSolvingStartedListener,
-            calibrationCompletedListener,
-            stoppedListener,
-            unreliableGravityNormEstimatorListener,
-            initialBiasAvailableListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
-        assertSame(stoppedListener, calibrator.stoppedListener)
-        assertSame(
-            unreliableGravityNormEstimatorListener,
-            calibrator.unreliableGravityNormEstimationListener
-        )
-        assertSame(
-            initialBiasAvailableListener,
-            calibrator.initialAccelerometerBiasAvailableListener
-        )
-        assertNull(calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenAccuracyChangedListener_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener,
-            readyToSolveCalibrationListener,
-            calibrationSolvingStartedListener,
-            calibrationCompletedListener,
-            stoppedListener,
-            unreliableGravityNormEstimatorListener,
-            initialBiasAvailableListener,
-            accuracyChangedListener
-        )
-
-        // check default values
-        assertSame(context, calibrator.context)
-        assertEquals(
-            AccelerometerSensorType.ACCELEROMETER,
-            calibrator.accelerometerSensorType
-        )
-        assertEquals(SensorDelay.NORMAL, calibrator.accelerometerSensorDelay)
-        assertFalse(calibrator.solveCalibrationWhenEnoughMeasurements)
-        assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
-        assertSame(location, calibrator.location)
-        assertSame(initializationStartedListener, calibrator.initializationStartedListener)
-        assertSame(initializationCompletedListener, calibrator.initializationCompletedListener)
-        assertSame(errorListener, calibrator.errorListener)
-        assertSame(staticIntervalDetectedListener, calibrator.staticIntervalDetectedListener)
-        assertSame(dynamicIntervalDetectedListener, calibrator.dynamicIntervalDetectedListener)
-        assertSame(staticIntervalSkippedListener, calibrator.staticIntervalSkippedListener)
-        assertSame(dynamicIntervalSkippedListener, calibrator.dynamicIntervalSkippedListener)
-        assertSame(
-            generatedAccelerometerMeasurementListener,
-            calibrator.generatedAccelerometerMeasurementListener
-        )
-        assertSame(readyToSolveCalibrationListener, calibrator.readyToSolveCalibrationListener)
-        assertSame(calibrationSolvingStartedListener, calibrator.calibrationSolvingStartedListener)
-        assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
-        assertSame(stoppedListener, calibrator.stoppedListener)
-        assertSame(
-            unreliableGravityNormEstimatorListener,
-            calibrator.unreliableGravityNormEstimationListener
-        )
-        assertSame(
-            initialBiasAvailableListener,
-            calibrator.initialAccelerometerBiasAvailableListener
-        )
-        assertSame(accuracyChangedListener, calibrator.accuracyChangedListener)
-        assertNotNull(calibrator.accelerometerQualityScoreMapper)
-        assertNotNull(calibrator.gravityNorm)
-        assertFalse(calibrator.accelerometerResultUnreliable)
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-        assertNull(calibrator.accelerometerInitialBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(calibrator.getAccelerometerInitialBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasYAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasZAsMeasurement)
-        assertFalse(calibrator.getAccelerometerInitialBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerInitialBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
-        assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
-        val ma1 = Matrix(MA_SIZE, MA_SIZE)
-        assertEquals(ma1, calibrator.accelerometerInitialMa)
-        val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma2)
-        assertEquals(ma1, ma2)
-        assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxy, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMxz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMyz, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzx, 0.0)
-        assertEquals(0.0, calibrator.accelerometerInitialMzy, 0.0)
-        assertFalse(calibrator.isAccelerometerCommonAxisUsed)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.minimumRequiredAccelerometerMeasurements
-        )
-        assertEquals(
-            calibrator.minimumRequiredAccelerometerMeasurements,
-            calibrator.minimumRequiredMeasurements
-        )
-        assertNull(calibrator.averageGravityNorm)
-        assertNull(calibrator.averageGravityNormAsMeasurement)
-        assertFalse(calibrator.getAverageGravityNormAsMeasurement(acceleration))
-        assertNull(calibrator.gravityNormVariance)
-        assertNull(calibrator.gravityNormStandardDeviation)
-        assertNull(calibrator.gravityNormStandardDeviationAsMeasurement)
-        assertFalse(calibrator.getGravityNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(calibrator.gravityPsd)
-        assertNull(calibrator.gravityRootPsd)
-        assertNull(calibrator.accelerometerRobustMethod)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_CONFIDENCE,
-            calibrator.accelerometerRobustConfidence,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ROBUST_DEFAULT_MAX_ITERATIONS,
-            calibrator.accelerometerRobustMaxIterations
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_KNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.accelerometerRobustPreliminarySubsetSize
-        )
-        assertNull(calibrator.accelerometerRobustThreshold)
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustThresholdFactor,
-            0.0
-        )
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.DEFAULT_ROBUST_STOP_THRESHOLD_FACTOR,
-            calibrator.accelerometerRobustStopThresholdFactor,
-            0.0
-        )
-        assertNull(calibrator.estimatedAccelerometerMa)
-        assertNull(calibrator.estimatedAccelerometerSx)
-        assertNull(calibrator.estimatedAccelerometerSy)
-        assertNull(calibrator.estimatedAccelerometerSz)
-        assertNull(calibrator.estimatedAccelerometerMxy)
-        assertNull(calibrator.estimatedAccelerometerMxz)
-        assertNull(calibrator.estimatedAccelerometerMyx)
-        assertNull(calibrator.estimatedAccelerometerMyz)
-        assertNull(calibrator.estimatedAccelerometerMzx)
-        assertNull(calibrator.estimatedAccelerometerMzy)
-        assertNull(calibrator.estimatedAccelerometerCovariance)
-        assertNull(calibrator.estimatedAccelerometerChiSq)
-        assertNull(calibrator.estimatedAccelerometerMse)
-        assertNull(calibrator.estimatedAccelerometerBiasX)
-        assertNull(calibrator.estimatedAccelerometerBiasY)
-        assertNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        assertFalse(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-        assertTrue(calibrator.accelerometerMeasurements.isEmpty())
-        assertFalse(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INITIAL_STATIC_SAMPLES,
-            calibrator.initialStaticSamples
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_THRESHOLD_FACTOR,
-            calibrator.thresholdFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_INSTANTANEOUS_NOISE_LEVEL_FACTOR,
-            calibrator.instantaneousNoiseLevelFactor,
-            0.0
-        )
-        assertEquals(
-            TriadStaticIntervalDetector.DEFAULT_BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            0.0
-        )
-        val baseNoiseLevel1 = calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement
-        assertEquals(
-            calibrator.baseNoiseLevelAbsoluteThreshold,
-            baseNoiseLevel1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, baseNoiseLevel1.unit)
-        val baseNoiseLevel2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.getBaseNoiseLevelAbsoluteThresholdAsMeasurement(baseNoiseLevel2)
-        assertEquals(baseNoiseLevel1, baseNoiseLevel2)
-        assertNull(calibrator.accelerometerBaseNoiseLevel)
-        assertNull(calibrator.accelerometerBaseNoiseLevelAsMeasurement)
-        assertFalse(calibrator.getAccelerometerBaseNoiseLevelAsMeasurement(acceleration))
-        assertNull(calibrator.accelerometerBaseNoiseLevelPsd)
-        assertNull(calibrator.accelerometerBaseNoiseLevelRootPsd)
-        assertNull(calibrator.threshold)
-        assertNull(calibrator.thresholdAsMeasurement)
-        assertFalse(calibrator.getThresholdAsMeasurement(acceleration))
-        assertEquals(0, calibrator.processedStaticSamples)
-        assertEquals(0, calibrator.processedDynamicSamples)
-        assertFalse(calibrator.isStaticIntervalSkipped)
-        assertFalse(calibrator.isDynamicIntervalSkipped)
-        assertNull(calibrator.accelerometerAverageTimeInterval)
-        assertNull(calibrator.accelerometerAverageTimeIntervalAsTime)
-        val time = Time(0.0, TimeUnit.SECOND)
-        assertFalse(calibrator.getAccelerometerAverageTimeIntervalAsTime(time))
-        assertNull(calibrator.accelerometerTimeIntervalVariance)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviation)
-        assertNull(calibrator.accelerometerTimeIntervalStandardDeviationAsTime)
-        assertFalse(calibrator.getAccelerometerTimeIntervalStandardDeviationAsTime(time))
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_COMMON_Z_AXIS,
-            calibrator.requiredMeasurements
-        )
-        assertEquals(0, calibrator.numberOfProcessedAccelerometerMeasurements)
-    }
-
-    @Test
-    fun constructor_whenQualityScoreMapper_returnsExpectedValues() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            AccelerometerSensorType.ACCELEROMETER,
-            SensorDelay.NORMAL,
-            solveCalibrationWhenEnoughMeasurements = false,
-            isAccelerometerGroundTruthInitialBias = true,
-            location,
-            initializationStartedListener,
-            initializationCompletedListener,
-            errorListener,
-            staticIntervalDetectedListener,
-            dynamicIntervalDetectedListener,
-            staticIntervalSkippedListener,
-            dynamicIntervalSkippedListener,
-            generatedAccelerometerMeasurementListener,
-            readyToSolveCalibrationListener,
-            calibrationSolvingStartedListener,
-            calibrationCompletedListener,
-            stoppedListener,
-            unreliableGravityNormEstimatorListener,
-            initialBiasAvailableListener,
-            accuracyChangedListener,
+            unreliableGravityNormEstimationListener,
             qualityScoreMapper
         )
 
@@ -4523,15 +458,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertSame(calibrationCompletedListener, calibrator.calibrationCompletedListener)
         assertSame(stoppedListener, calibrator.stoppedListener)
         assertSame(
-            unreliableGravityNormEstimatorListener,
+            unreliableGravityNormEstimationListener,
             calibrator.unreliableGravityNormEstimationListener
         )
-        assertSame(
-            initialBiasAvailableListener,
-            calibrator.initialAccelerometerBiasAvailableListener
-        )
-        assertSame(accuracyChangedListener, calibrator.accuracyChangedListener)
-        assertSame(qualityScoreMapper, calibrator.accelerometerQualityScoreMapper)
+        assertNotNull(calibrator.accelerometerQualityScoreMapper)
         assertNotNull(calibrator.gravityNorm)
         assertFalse(calibrator.accelerometerResultUnreliable)
         assertNull(calibrator.accelerometerInitialBiasX)
@@ -4548,8 +478,8 @@ class StaticIntervalAccelerometerCalibratorTest {
         val triad = AccelerationTriad()
         assertFalse(calibrator.getAccelerometerInitialBiasAsTriad(triad))
         assertFalse(calibrator.isGravityNormEstimated)
-        assertNull(calibrator.accelerometerSensor)
-        assertNull(calibrator.gravitySensor)
+        assertSame(accelerometerSensor, calibrator.accelerometerSensor)
+        assertSame(gravitySensor, calibrator.gravitySensor)
         val ma1 = Matrix(MA_SIZE, MA_SIZE)
         assertEquals(ma1, calibrator.accelerometerInitialMa)
         val ma2 = Matrix.identity(MA_SIZE, MA_SIZE)
@@ -4619,6 +549,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.estimatedAccelerometerMzy)
         assertNull(calibrator.estimatedAccelerometerCovariance)
         assertNull(calibrator.estimatedAccelerometerChiSq)
+        assertNull(calibrator.estimatedAccelerometerChiSqDegreesOfFreedom)
+        assertNull(calibrator.estimatedAccelerometerReducedChiSq)
+        assertNull(calibrator.estimatedAccelerometerP)
+        assertNull(calibrator.estimatedAccelerometerQ)
         assertNull(calibrator.estimatedAccelerometerMse)
         assertNull(calibrator.estimatedAccelerometerBiasX)
         assertNull(calibrator.estimatedAccelerometerBiasY)
@@ -4694,7 +628,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun initializationStartedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4709,7 +657,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun initializationCompletedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4724,7 +686,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun errorListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4739,7 +715,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun staticIntervalDetectedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4754,7 +744,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun dynamicIntervalDetectedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4769,7 +773,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun staticIntervalSkippedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4784,7 +802,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun dynamicIntervalSkippedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4799,7 +831,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun generatedAccelerometerMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4818,7 +864,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun readyToSolveCalibrationListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4833,7 +893,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun calibrationSolvingStartedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4848,7 +922,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun calibrationCompletedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4863,7 +951,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun stoppedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4878,7 +980,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun unreliableGravityNormEstimationListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4895,42 +1011,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun initialAccelerometerBiasAvailableListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
-
-        // check default value
-        assertNull(calibrator.initialAccelerometerBiasAvailableListener)
-
-        // set new value
-        calibrator.initialAccelerometerBiasAvailableListener =
-            initialAccelerometerBiasAvailableListener
-
-        // check
-        assertSame(
-            initialAccelerometerBiasAvailableListener,
-            calibrator.initialAccelerometerBiasAvailableListener
-        )
-    }
-
-    @Test
-    fun accuracyChangedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
-
-        // check default value
-        assertNull(calibrator.accuracyChangedListener)
-
-        // set new value
-        calibrator.accuracyChangedListener = accuracyChangedListener
-
-        // check
-        assertSame(accuracyChangedListener, calibrator.accuracyChangedListener)
-    }
-
-    @Test
     fun isAccelerometerGroundTruthInitialBias_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4943,9 +1039,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertTrue(calibrator.isAccelerometerGroundTruthInitialBias)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isAccelerometerGroundTruthInitialBias_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -4955,12 +1065,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.isAccelerometerGroundTruthInitialBias = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isAccelerometerGroundTruthInitialBias = true
+        }
     }
 
     @Test
     fun location_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -4982,9 +1108,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.location)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun location_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -4995,16 +1135,36 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
 
         val location = getLocation()
-        calibrator.location = location
+
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.location = location
+        }
     }
 
     @Test
     fun accelerometerInitialMa_whenValid_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
-        assertEquals(Matrix(MA_SIZE, MA_SIZE), calibrator.accelerometerInitialMa)
+        assertEquals(
+            Matrix(MA_SIZE, MA_SIZE),
+            calibrator.accelerometerInitialMa
+        )
         assertEquals(0.0, calibrator.accelerometerInitialSx, 0.0)
         assertEquals(0.0, calibrator.accelerometerInitialSy, 0.0)
         assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
@@ -5055,27 +1215,75 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMzy, calibrator.accelerometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerInitialMa_whenInvalidRowsSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val ma = Matrix(1, MA_SIZE)
-        calibrator.accelerometerInitialMa = ma
+
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerInitialMa = ma
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerInitialMa_whenInvalidColumnsSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val ma = Matrix(MA_SIZE, 1)
-        calibrator.accelerometerInitialMa = ma
+
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerInitialMa = ma
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMa_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5085,12 +1293,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMa = Matrix(MA_SIZE, MA_SIZE)
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMa = Matrix(MA_SIZE, MA_SIZE)
+        }
     }
 
     @Test
     fun getAccelerometerInitialMa_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // set new value
@@ -5134,27 +1358,75 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialSz, ma.getElementAtIndex(8), 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getAccelerometerInitialMa_whenInvalidRowSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val ma = Matrix(1, MA_SIZE)
-        calibrator.getAccelerometerInitialMa(ma)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getAccelerometerInitialMa(ma)
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun getAccelerometerInitialMa_whenInvalidColumnSize_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val ma = Matrix(MA_SIZE, 1)
-        calibrator.getAccelerometerInitialMa(ma)
+
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.getAccelerometerInitialMa(ma)
+        }
     }
 
     @Test
     fun accelerometerInitialSx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5169,9 +1441,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialSx, calibrator.accelerometerInitialSx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialSx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5181,12 +1467,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialSx = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialSx = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialSy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5201,9 +1503,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialSy, calibrator.accelerometerInitialSy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialSy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5213,12 +1529,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialSy = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialSy = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialSz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5233,9 +1565,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialSz, calibrator.accelerometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialSz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5245,12 +1591,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialSz = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialSz = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMxy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5265,9 +1627,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMxy, calibrator.accelerometerInitialMxy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMxy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5277,12 +1653,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMxy = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMxy = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMxz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5297,9 +1689,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMxz, calibrator.accelerometerInitialMxz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMxz_whenRunning_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5309,12 +1715,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMxz = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMxz = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMyx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5329,9 +1751,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMyx, calibrator.accelerometerInitialMyx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMyx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5341,12 +1777,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMyx = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMyx = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMyz_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5361,9 +1813,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMyz, calibrator.accelerometerInitialMyz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMyz_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5373,12 +1839,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMyz = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMyz = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMzx_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5393,9 +1875,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMzx, calibrator.accelerometerInitialMzx, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMzx_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5405,12 +1901,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMzx = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMzx = 0.0
+        }
     }
 
     @Test
     fun accelerometerInitialMzy_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5425,9 +1937,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMzy, calibrator.accelerometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerInitialMzy_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5437,12 +1963,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerInitialMzy = 0.0
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerInitialMzy = 0.0
+        }
     }
 
     @Test
     fun setAccelerometerInitialScalingFactors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default values
@@ -5463,9 +2005,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialSz, calibrator.accelerometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setAccelerometerInitialScalingFactors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5479,12 +2035,33 @@ class StaticIntervalAccelerometerCalibratorTest {
         val initialSx = randomizer.nextDouble()
         val initialSy = randomizer.nextDouble()
         val initialSz = randomizer.nextDouble()
-        calibrator.setAccelerometerInitialScalingFactors(initialSx, initialSy, initialSz)
+
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setAccelerometerInitialScalingFactors(
+                initialSx,
+                initialSy,
+                initialSz
+            )
+        }
     }
 
     @Test
     fun setAccelerometerInitialCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default values
@@ -5525,9 +2102,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(0.0, calibrator.accelerometerInitialSz, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setAccelerometerInitialCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5544,19 +2135,36 @@ class StaticIntervalAccelerometerCalibratorTest {
         val initialMyz = randomizer.nextDouble()
         val initialMzx = randomizer.nextDouble()
         val initialMzy = randomizer.nextDouble()
-        calibrator.setAccelerometerInitialCrossCouplingErrors(
-            initialMxy,
-            initialMxz,
-            initialMyx,
-            initialMyz,
-            initialMzx,
-            initialMzy
-        )
+
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setAccelerometerInitialCrossCouplingErrors(
+                initialMxy,
+                initialMxz,
+                initialMyx,
+                initialMyz,
+                initialMzx,
+                initialMzy
+            )
+        }
     }
 
     @Test
     fun setAccelerometerInitialScalingFactorsAndCrossCouplingErrors_whenNotRunning_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default values
@@ -5605,9 +2213,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(initialMzy, calibrator.accelerometerInitialMzy, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun setAccelerometerInitialScalingFactorsAndCrossCouplingErrors_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5627,22 +2249,39 @@ class StaticIntervalAccelerometerCalibratorTest {
         val initialMyz = randomizer.nextDouble()
         val initialMzx = randomizer.nextDouble()
         val initialMzy = randomizer.nextDouble()
-        calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
-            initialSx,
-            initialSy,
-            initialSz,
-            initialMxy,
-            initialMxz,
-            initialMyx,
-            initialMyz,
-            initialMzx,
-            initialMzy
-        )
+
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.setAccelerometerInitialScalingFactorsAndCrossCouplingErrors(
+                initialSx,
+                initialSy,
+                initialSz,
+                initialMxy,
+                initialMxz,
+                initialMyx,
+                initialMyz,
+                initialMzx,
+                initialMzy
+            )
+        }
     }
 
     @Test
     fun isAccelerometerCommonAxisUsed_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertFalse(calibrator.isAccelerometerCommonAxisUsed)
@@ -5654,9 +2293,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertTrue(calibrator.isAccelerometerCommonAxisUsed)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun isAccelerometerCommonAxisUsed_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5666,12 +2319,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.isAccelerometerCommonAxisUsed = true
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.isAccelerometerCommonAxisUsed = true
+        }
     }
 
     @Test
     fun accelerometerRobustMethod_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5684,9 +2353,23 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(RobustEstimatorMethod.RANSAC, calibrator.accelerometerRobustMethod)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustMethod_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5696,12 +2379,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustMethod = RobustEstimatorMethod.RANSAC
+        }
     }
 
     @Test
     fun accelerometerRobustConfidence_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5718,25 +2417,71 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(ROBUST_CONFIDENCE, calibrator.accelerometerRobustConfidence, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustConfidence_whenInvalidLowerBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.accelerometerRobustConfidence = -1.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustConfidence = -1.0
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustConfidence_whenInvalidUpperBound_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.accelerometerRobustConfidence = 2.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustConfidence = 2.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustConfidence_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5746,12 +2491,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustConfidence = ROBUST_CONFIDENCE
+        }
     }
 
     @Test
     fun accelerometerRobustMaxIterations_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5767,17 +2528,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(ROBUST_MAX_ITERATIONS, calibrator.accelerometerRobustMaxIterations)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustMaxIterations_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.accelerometerRobustMaxIterations = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustMaxIterations = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustMaxIterations_whenRunning_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5787,12 +2578,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustMaxIterations = ROBUST_MAX_ITERATIONS
+        }
     }
 
     @Test
     fun accelerometerRobustPreliminarySubsetSize_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5811,17 +2618,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustPreliminarySubsetSize_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.accelerometerRobustPreliminarySubsetSize = 12
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustPreliminarySubsetSize = 12
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustPreliminarySubsetSize_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5831,12 +2668,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustPreliminarySubsetSize = ROBUST_PRELIMINARY_SUBSET_SIZE
+        }
     }
 
     @Test
     fun accelerometerRobustThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5857,17 +2710,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNull(calibrator.accelerometerRobustThreshold)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.accelerometerRobustThreshold = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustThreshold = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5877,12 +2760,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustThreshold = ROBUST_THRESHOLD
+        }
     }
 
     @Test
     fun accelerometerRobustThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -5896,20 +2795,54 @@ class StaticIntervalAccelerometerCalibratorTest {
         calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
 
         // check
-        assertEquals(ROBUST_THRESHOLD_FACTOR, calibrator.accelerometerRobustThresholdFactor, 0.0)
+        assertEquals(
+            ROBUST_THRESHOLD_FACTOR,
+            calibrator.accelerometerRobustThresholdFactor,
+            0.0
+        )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.accelerometerRobustThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5919,12 +2852,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustThresholdFactor = ROBUST_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun accelerometerRobustStopThresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertEquals(
@@ -5944,17 +2893,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun accelerometerRobustStopThresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.accelerometerRobustStopThresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.accelerometerRobustStopThresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun accelerometerRobustStopThresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -5964,15 +2943,34 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.accelerometerRobustStopThresholdFactor = ROBUST_STOP_THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun windowSize_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        assertEquals(TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE, calibrator.windowSize)
+        assertEquals(
+            TriadStaticIntervalDetector.DEFAULT_WINDOW_SIZE,
+            calibrator.windowSize
+        )
 
         // set new value
         calibrator.windowSize = WINDOW_SIZE
@@ -5981,17 +2979,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(WINDOW_SIZE, calibrator.windowSize)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun windowSize_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.windowSize = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.windowSize = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun windowSize_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6001,12 +3029,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.windowSize = WINDOW_SIZE
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.windowSize = WINDOW_SIZE
+        }
     }
 
     @Test
     fun initialStaticSamples_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -6022,17 +3066,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(INITIAL_STATIC_SAMPLES, calibrator.initialStaticSamples)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun initialStaticSamples_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.initialStaticSamples = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.initialStaticSamples = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun initialStaticSamples_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6042,12 +3116,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.initialStaticSamples = INITIAL_STATIC_SAMPLES
+        }
     }
 
     @Test
     fun thresholdFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -6064,17 +3154,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(THRESHOLD_FACTOR, calibrator.thresholdFactor, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun thresholdFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.thresholdFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.thresholdFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun thresholdFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6084,12 +3204,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.thresholdFactor = THRESHOLD_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.thresholdFactor = THRESHOLD_FACTOR
+        }
     }
 
     @Test
     fun instantaneousNoiseLevelFactor_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -6110,17 +3246,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun instantaneousNoiseLevelFactor_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.instantaneousNoiseLevelFactor = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.instantaneousNoiseLevelFactor = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun instantaneousNoiseLevelFactor_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6130,12 +3296,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        }
     }
 
     @Test
     fun baseNoiseLevelAbsoluteThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -6156,17 +3338,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.baseNoiseLevelAbsoluteThreshold = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThreshold = 0.0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6176,12 +3388,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThreshold = BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD
+        }
     }
 
     @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -6205,18 +3433,48 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(value2, value3)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThresholdAsMeasurement_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val value = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun baseNoiseLevelAbsoluteThresholdMeasurement_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6230,12 +3488,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             BASE_NOISE_LEVEL_ABSOLUTE_THRESHOLD,
             AccelerationUnit.METERS_PER_SQUARED_SECOND
         )
-        calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.baseNoiseLevelAbsoluteThresholdAsMeasurement = value
+        }
     }
 
     @Test
     fun getBaseNoiseLevelAbsoluteThresholdAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -6264,7 +3538,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun requiredMeasurements_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -6280,17 +3568,47 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertEquals(REQUIRED_MEASUREMENTS, calibrator.requiredMeasurements)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun requiredMeasurements_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.requiredMeasurements = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            calibrator.requiredMeasurements = 0
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun requiredMeasurements_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6300,12 +3618,28 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.requiredMeasurements = REQUIRED_MEASUREMENTS
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.requiredMeasurements = REQUIRED_MEASUREMENTS
+        }
     }
 
     @Test
     fun onInitializationStarted_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generatorInitializationStartedListener: SingleSensorCalibrationMeasurementGenerator.OnInitializationStartedListener<AccelerometerMeasurementGenerator>? =
@@ -6317,7 +3651,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onInitializationStarted_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             initializationStartedListener = initializationStartedListener
@@ -6334,7 +3682,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenNoListenerAvailable_setsGravityNorm() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check initial value
@@ -6365,7 +3727,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onInitializationCompleted_whenListenerAvailable_setsGravityNormAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             initializationCompletedListener = initializationCompletedListener
@@ -6401,7 +3777,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onError_whenNoListeners_stopsGeneratorAndGravityNormEstimator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -6416,6 +3806,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
@@ -6423,6 +3814,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         requireNotNull(gravityNormEstimator)
         val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         every { gravityNormEstimatorSpy.running }.returns(true)
+        justRun { gravityNormEstimatorSpy.stop() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>? =
@@ -6439,7 +3831,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onError_whenListenersAvailable_stopsAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             errorListener = errorListener,
@@ -6458,6 +3864,7 @@ class StaticIntervalAccelerometerCalibratorTest {
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         val gravityNormEstimator: GravityNormEstimator? =
@@ -6465,6 +3872,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         requireNotNull(gravityNormEstimator)
         val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         every { gravityNormEstimatorSpy.running }.returns(true)
+        justRun { gravityNormEstimatorSpy.stop() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generatorErrorListener: SingleSensorCalibrationMeasurementGenerator.OnErrorListener<AccelerometerMeasurementGenerator>? =
@@ -6488,7 +3896,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onStaticIntervalDetected_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generatorStaticIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalDetectedListener<AccelerometerMeasurementGenerator>? =
@@ -6500,7 +3922,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onStaticIntervalDetected_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             staticIntervalDetectedListener = staticIntervalDetectedListener
@@ -6517,7 +3953,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generatorDynamicIntervalDetectedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalDetectedListener<AccelerometerMeasurementGenerator>? =
@@ -6529,7 +3979,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalDetected_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             dynamicIntervalDetectedListener = dynamicIntervalDetectedListener
@@ -6546,7 +4010,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onStaticIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generatorStaticIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>? =
@@ -6558,7 +4036,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onStaticIntervalSkipped_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             staticIntervalSkippedListener = staticIntervalSkippedListener
@@ -6575,7 +4067,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalSkipped_whenNoListenerAvailable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generatorDynamicIntervalSkippedListener: SingleSensorCalibrationMeasurementGenerator.OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>? =
@@ -6587,7 +4093,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onDynamicIntervalSkipped_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             dynamicIntervalSkippedListener = dynamicIntervalSkippedListener
@@ -6604,7 +4124,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_addsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.accelerometerMeasurements.isEmpty())
@@ -6622,7 +4156,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onGeneratedMeasurement_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             generatedAccelerometerMeasurementListener = generatedAccelerometerMeasurementListener
@@ -6653,7 +4201,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun onGeneratedMeasurement_whenReadyToCalibrate_stopsAndBuildsCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = false,
@@ -6678,12 +4241,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         requireNotNull(gravityNormEstimator)
         val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         every { gravityNormEstimatorSpy.running }.returns(true)
+        justRun { gravityNormEstimatorSpy.stop() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6707,7 +4272,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun onGeneratedMeasurement_whenReadyToSolveCalibrationListenerAvailable_notifies() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             readyToSolveCalibrationListener = readyToSolveCalibrationListener,
@@ -6733,12 +4313,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         requireNotNull(gravityNormEstimator)
         val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         every { gravityNormEstimatorSpy.running }.returns(true)
+        justRun { gravityNormEstimatorSpy.stop() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -6761,149 +4343,24 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun onGeneratedMeasurement_whenSolveCalibrationEnabled_solvesCalibration() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            solveCalibrationWhenEnoughMeasurements = true,
-            location = location
-        )
-
-        assertEquals(
-            StaticIntervalAccelerometerCalibrator.ACCELEROMETER_UNKNOWN_BIAS_MINIMUM_MEASUREMENTS_GENERAL,
-            calibrator.requiredMeasurements
-        )
-        assertFalse(calibrator.isReadyToSolveCalibration)
-
-        // add enough measurements
-        val requiredMeasurements = calibrator.requiredMeasurements
-        assertEquals(13, requiredMeasurements)
-        val minimumRequiredMeasurements = calibrator.minimumRequiredMeasurements
-        assertEquals(13, minimumRequiredMeasurements)
-        val reqMeasurements = requiredMeasurements.coerceAtLeast(minimumRequiredMeasurements)
-
-        val nedPosition = location.toNEDPosition()
-
-        val ba = generateBa()
-        val bg = generateBg()
-        val ma = generateMaGeneral()
-        val mg = generateMg()
-        val gg = generateGg()
-
-        val accelNoiseRootPSD = 0.0
-        val gyroNoiseRootPSD = 0.0
-        val accelQuantLevel = 0.0
-        val gyroQuantLevel = 0.0
-
-        val errors = IMUErrors(
-            ba,
-            bg,
-            ma,
-            mg,
-            gg,
-            accelNoiseRootPSD,
-            gyroNoiseRootPSD,
-            accelQuantLevel,
-            gyroQuantLevel
-        )
-
-        val randomizer = UniformRandomizer()
-        val random = Random()
-
-        (1..reqMeasurements).forEach { _ ->
-            val roll = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
-            val pitch = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
-            val yaw = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
-            val nedC = CoordinateTransformation(
-                roll,
-                pitch,
-                yaw,
-                FrameType.BODY_FRAME,
-                FrameType.LOCAL_NAVIGATION_FRAME
-            )
-
-            val nedFrame = NEDFrame(nedPosition, nedC)
-            val ecefFrame = NEDtoECEFFrameConverter.convertNEDtoECEFAndReturnNew(nedFrame)
-
-            val trueKinematics = ECEFKinematicsEstimator.estimateKinematicsAndReturnNew(
-                TIME_INTERVAL_SECONDS, ecefFrame, ecefFrame
-            )
-
-            val measuredKinematics = BodyKinematicsGenerator
-                .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
-
-            val measurement =
-                StandardDeviationBodyKinematics(measuredKinematics, ACCUMULATED_STD, 0.0)
-            calibrator.accelerometerMeasurements.add(measurement)
-        }
-        assertTrue(calibrator.isReadyToSolveCalibration)
-
-        val gravityNormEstimator: GravityNormEstimator? =
-            calibrator.getPrivateProperty("gravityNormEstimator")
-        requireNotNull(gravityNormEstimator)
-        val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
-        every { gravityNormEstimatorSpy.running }.returns(true)
-        calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
-
-        val generator: AccelerometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
-            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
-        assertNull(accelerometerInternalCalibrator)
-
-        val generatorGeneratedMeasurementListener: SingleSensorCalibrationMeasurementGenerator.OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? =
-            calibrator.getPrivateProperty("generatorGeneratedMeasurementListener")
-        requireNotNull(generatorGeneratedMeasurementListener)
-
-        val measurement =
-            StandardDeviationBodyKinematics(calibrator.accelerometerMeasurements.last())
-        generatorGeneratedMeasurementListener.onGeneratedMeasurement(generatorSpy, measurement)
-
-        verify(exactly = 1) { gravityNormEstimatorSpy.stop() }
-        verify(exactly = 1) { generatorSpy.stop() }
-
-        accelerometerInternalCalibrator =
-            calibrator.getPrivateProperty("accelerometerInternalCalibrator")
-        assertNotNull(accelerometerInternalCalibrator)
-
-        assertNotNull(calibrator.estimatedAccelerometerMa)
-        assertNotNull(calibrator.estimatedAccelerometerSx)
-        assertNotNull(calibrator.estimatedAccelerometerSy)
-        assertNotNull(calibrator.estimatedAccelerometerSz)
-        assertNotNull(calibrator.estimatedAccelerometerMxy)
-        assertNotNull(calibrator.estimatedAccelerometerMxz)
-        assertNotNull(calibrator.estimatedAccelerometerMyx)
-        assertNotNull(calibrator.estimatedAccelerometerMyz)
-        assertNotNull(calibrator.estimatedAccelerometerMzx)
-        assertNotNull(calibrator.estimatedAccelerometerMzy)
-        assertNotNull(calibrator.estimatedAccelerometerCovariance)
-        assertNotNull(calibrator.estimatedAccelerometerChiSq)
-        assertNotNull(calibrator.estimatedAccelerometerMse)
-        assertNotNull(calibrator.estimatedAccelerometerBiasX)
-        assertNotNull(calibrator.estimatedAccelerometerBiasY)
-        assertNotNull(calibrator.estimatedAccelerometerBiasZ)
-        assertNotNull(calibrator.estimatedAccelerometerBiasXAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertTrue(calibrator.getEstimatedAccelerometerBiasXAsMeasurement(acceleration))
-        assertNotNull(calibrator.estimatedAccelerometerBiasYAsMeasurement)
-        assertTrue(calibrator.getEstimatedAccelerometerBiasYAsMeasurement(acceleration))
-        assertNotNull(calibrator.estimatedAccelerometerBiasZAsMeasurement)
-        assertTrue(calibrator.getEstimatedAccelerometerBiasZAsMeasurement(acceleration))
-        assertNotNull(calibrator.estimatedAccelerometerBiasAsTriad)
-        val triad = AccelerationTriad()
-        assertTrue(calibrator.getEstimatedAccelerometerBiasAsTriad(triad))
-        assertNotNull(calibrator.estimatedAccelerometerBiasStandardDeviationNorm)
-    }
-
-    @Test
     fun onGeneratedMeasurement_whenSolveCalibrationEnabledAndListenersAvailable_solvesCalibrationAndNotifies() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             solveCalibrationWhenEnoughMeasurements = true,
@@ -6978,8 +4435,11 @@ class StaticIntervalAccelerometerCalibratorTest {
             val measuredKinematics = BodyKinematicsGenerator
                 .generate(TIME_INTERVAL_SECONDS, trueKinematics, errors, random)
 
-            val measurement =
-                StandardDeviationBodyKinematics(measuredKinematics, ACCUMULATED_STD, 0.0)
+            val measurement = StandardDeviationBodyKinematics(
+                measuredKinematics,
+                ACCUMULATED_STD,
+                0.0
+            )
             calibrator.accelerometerMeasurements.add(measurement)
         }
         assertTrue(calibrator.isReadyToSolveCalibration)
@@ -6989,12 +4449,14 @@ class StaticIntervalAccelerometerCalibratorTest {
         requireNotNull(gravityNormEstimator)
         val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         every { gravityNormEstimatorSpy.running }.returns(true)
+        justRun { gravityNormEstimatorSpy.stop() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         val generator: AccelerometerMeasurementGenerator? =
             calibrator.getPrivateProperty("generator")
         requireNotNull(generator)
         val generatorSpy = spyk(generator)
+        justRun { generatorSpy.stop() }
         calibrator.setPrivateProperty("generator", generatorSpy)
 
         var accelerometerInternalCalibrator: AccelerometerNonLinearCalibrator? =
@@ -7028,6 +4490,10 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertNotNull(calibrator.estimatedAccelerometerMzy)
         assertNotNull(calibrator.estimatedAccelerometerCovariance)
         assertNotNull(calibrator.estimatedAccelerometerChiSq)
+        assertNotNull(calibrator.estimatedAccelerometerChiSqDegreesOfFreedom)
+        assertNotNull(calibrator.estimatedAccelerometerReducedChiSq)
+        assertNotNull(calibrator.estimatedAccelerometerP)
+        assertNotNull(calibrator.estimatedAccelerometerQ)
         assertNotNull(calibrator.estimatedAccelerometerMse)
         assertNotNull(calibrator.estimatedAccelerometerBiasX)
         assertNotNull(calibrator.estimatedAccelerometerBiasY)
@@ -7056,322 +4522,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     }
 
     @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurement_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(by.toDouble(), initialBiasX, 0.0)
-        assertEquals(bx.toDouble(), initialBiasY, 0.0)
-        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasX_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            null,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasY_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            null,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndNoBiasZ_updatesInitialBiases() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            null,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(0.0, initialBiasX, 0.0)
-        assertEquals(0.0, initialBiasY, 0.0)
-        assertEquals(0.0, initialBiasZ, 0.0)
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenFirstMeasurementAndListener_updatesInitialBiasesAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            initialAccelerometerBiasAvailableListener = initialAccelerometerBiasAvailableListener
-        )
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(0)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        val initialBiasX = calibrator.accelerometerInitialBiasX
-        requireNotNull(initialBiasX)
-        val initialBiasY = calibrator.accelerometerInitialBiasY
-        requireNotNull(initialBiasY)
-        val initialBiasZ = calibrator.accelerometerInitialBiasZ
-        requireNotNull(initialBiasZ)
-        assertEquals(by.toDouble(), initialBiasX, 0.0)
-        assertEquals(bx.toDouble(), initialBiasY, 0.0)
-        assertEquals(-bz.toDouble(), initialBiasZ, 0.0)
-
-        verify(exactly = 1) {
-            initialAccelerometerBiasAvailableListener.onInitialBiasAvailable(
-                calibrator,
-                by.toDouble(),
-                bx.toDouble(),
-                -bz.toDouble()
-            )
-        }
-    }
-
-    @Test
-    fun onAccelerometerMeasurement_whenNotFirstMeasurement_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            initialAccelerometerBiasAvailableListener = initialAccelerometerBiasAvailableListener
-        )
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        val generator: AccelerometerMeasurementGenerator? =
-            calibrator.getPrivateProperty("generator")
-        requireNotNull(generator)
-        val generatorSpy = spyk(generator)
-        every { generatorSpy.numberOfProcessedAccelerometerMeasurements }.returns(2)
-        calibrator.setPrivateProperty("generator", generatorSpy)
-
-        val generatorAccelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? =
-            calibrator.getPrivateProperty("generatorAccelerometerMeasurementListener")
-        requireNotNull(generatorAccelerometerMeasurementListener)
-
-        val randomizer = UniformRandomizer()
-        val ax = randomizer.nextFloat()
-        val ay = randomizer.nextFloat()
-        val az = randomizer.nextFloat()
-        val bx = randomizer.nextFloat()
-        val by = randomizer.nextFloat()
-        val bz = randomizer.nextFloat()
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.HIGH
-        generatorAccelerometerMeasurementListener.onMeasurement(
-            ax,
-            ay,
-            az,
-            bx,
-            by,
-            bz,
-            timestamp,
-            accuracy
-        )
-
-        assertNull(calibrator.accelerometerInitialBiasX)
-        assertNull(calibrator.accelerometerInitialBiasY)
-        assertNull(calibrator.accelerometerInitialBiasZ)
-
-        verify { initialAccelerometerBiasAvailableListener wasNot Called }
-    }
-
-    @Test
     fun onGravityNormCompletedListener_setsGravityNorm() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.gravityNorm)
@@ -7390,7 +4556,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onGravityNormUnreliable_whenNoListenerAvailable_setsResultAsUnreliable() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertFalse(calibrator.accelerometerResultUnreliable)
@@ -7406,7 +4586,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun onGravityNormUnreliable_whenListenerAvailable_setsResultAsUnreliableAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             unreliableGravityNormEstimationListener = unreliableGravityNormEstimatorListener
@@ -7431,7 +4625,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevel_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7450,7 +4658,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7471,7 +4693,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getAccelerometerBaseNoiseLevelAsMeasurement_getsGeneratorBaseNoiseLevel() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7502,7 +4738,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelPsd_getsGeneratorBaseNoiseLevelPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7520,7 +4770,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerBaseNoiseLevelRootPsd_getsGeneratorBaseNoiseLevelRootPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7538,7 +4802,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun threshold_getsGeneratorThreshold() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7559,7 +4837,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun thresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7581,7 +4873,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getThresholdAsMeasurement_getsGeneratorThresholdAsMeasurement() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7610,7 +4916,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun processedStaticSamples_getsGeneratorProcessedStaticSamples() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7628,7 +4948,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun processedDynamicSamples_getsGeneratorProcessedDynamicSamples() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7646,7 +4980,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun isStaticIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7662,7 +5010,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun isDynamicIntervalSkipped_getsGeneratorStaticIntervalSkipped() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7678,7 +5040,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerAverageTimeInterval_getsGeneratorAccelerometerAverageTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7696,7 +5072,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerAverageTimeIntervalAsTime_getsGeneratorAverageTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7715,7 +5105,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getAccelerometerAverageTimeIntervalAsTime_getsGeneratorAverageTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7744,7 +5148,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalVariance_getsGeneratorAccelerometerTimeIntervalVariance() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7765,7 +5183,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalStandardDeviation_getsGeneratorAccelerometerTimeIntervalStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7791,7 +5223,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7810,7 +5256,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getAccelerometerTimeIntervalStandardDeviationAsTime_getsGeneratorAccelerometerTimeIntervalStandardDeviationAsTime() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7839,7 +5299,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun numberOfProcessedAccelerometerMeasurements_getsGeneratorNumberOfProcessedAccelerometerMeasurements() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -7863,7 +5337,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasX_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7879,7 +5367,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasY_getExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7895,7 +5397,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasZ_getExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7911,7 +5427,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7930,7 +5460,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasXAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7950,7 +5494,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7969,7 +5527,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasYAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -7989,7 +5561,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -8008,7 +5594,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasZAsMeasurement_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -8028,7 +5628,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun accelerometerInitialBiasAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -8060,7 +5674,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getAccelerometerInitialBiasAsTriad_getsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         // check default value
@@ -8092,7 +5720,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenCommonAxisAndKnownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         calibrator.isAccelerometerCommonAxisUsed = true
@@ -8106,7 +5748,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenCommonAxisAndUnknownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         calibrator.isAccelerometerCommonAxisUsed = true
@@ -8120,7 +5776,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenNotCommonAxisAndKnownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         calibrator.isAccelerometerCommonAxisUsed = false
@@ -8134,7 +5804,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun minimumRequiredAccelerometerMeasurements_whenNotCommonAxisAndUnknownBias_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         calibrator.isAccelerometerCommonAxisUsed = false
@@ -8149,7 +5833,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun averageGravityNorm_whenGravityNormEstimated_getsEstimatorAverageNorm() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8169,7 +5868,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun averageGravityNorm_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8180,7 +5894,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun averageGravityNormAsMeasurement_whenGravityNormEstimated_getsEstimatorAverageNorm() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8201,7 +5930,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun averageGravityNormAsMeasurement_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8212,7 +5956,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun getAverageGravityNormAsMeasurement_whenGravityNormEstimated_getsEstimatorAverageNorm() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8240,7 +5999,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun getAverageGravityNormAsMeasurement_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8253,7 +6027,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun gravityNormVariance_whenGravityNormEstimated_getsEstimatorVariance() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8276,7 +6064,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun gravityNormVariance_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertNull(calibrator.gravityNormVariance)
@@ -8284,7 +6087,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun gravityNormStandardDeviation_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8307,7 +6124,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun gravityNormStandardDeviation_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8317,7 +6149,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun gravityNormStandardDeviationAsMeasurement_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8341,7 +6187,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun gravityNormStandardDeviationAsMeasurement_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8351,7 +6212,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getGravityNormStandardDeviationAsMeasurement_whenGravityNormEstimated_getsEstimatorStandardDeviation() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8384,7 +6259,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun getGravityNormStandardDeviationAsMeasurement_whenGravityNormNotEstimated_returnsFalse() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8395,7 +6285,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun gravityPsd_whenGravityNormEstimated_getsEstimatorPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8416,7 +6320,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun gravityPsd_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8426,7 +6345,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun gravityRootPsd_whenGravityNormEstimated_getEstimatorRootPsd() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertTrue(calibrator.isGravityNormEstimated)
@@ -8447,7 +6380,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun gravityRootPsd_whenGravityNormNotEstimated_returnsNull() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.isGravityNormEstimated)
@@ -8458,7 +6406,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun start_whenNotRunningAndGravityNormNotEstimated_resetsAndStartsGenerator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context, location = location)
 
         assertFalse(calibrator.running)
@@ -8505,7 +6468,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun start_whenNotRunningAndGravityNormEstimated_resetsAndStartsGenerator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertFalse(calibrator.running)
@@ -8551,23 +6528,63 @@ class StaticIntervalAccelerometerCalibratorTest {
         verify(exactly = 1) { generatorSpy.start() }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun start_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
 
-        assertFalse(calibrator.running)
+            every { context.getSystemService(Context.SENSOR_SERVICE) }
+                .returns(sensorManager)
+            every {
+                sensorManager.getDefaultSensor(
+                    AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+                )
+            }.returns(
+                accelerometerSensor
+            )
+            every {
+                sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            }.returns(
+                gravitySensor
+            )
+            every {
+                sensorManager.registerListener(
+                    any<SensorEventListener>(), any<Sensor>(), any()
+                )
+            }.returns(true)
 
-        calibrator.start()
+            val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        assertTrue(calibrator.running)
+            assertFalse(calibrator.running)
 
-        calibrator.start()
+            calibrator.start()
+
+            assertTrue(calibrator.running)
+
+            assertThrows(IllegalStateException::class.java) {
+                calibrator.start()
+            }
+        }
     }
 
     @Test
     fun stop_whenGravityNormEstimatorNotRunning_stopsGenerator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -8602,7 +6619,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun stop_whenGravityNormEstimatorRunning_stopsGenerator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val generator: AccelerometerMeasurementGenerator? =
@@ -8617,6 +6648,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         requireNotNull(gravityNormEstimator)
         val gravityNormEstimatorSpy = spyk(gravityNormEstimator)
         every { gravityNormEstimatorSpy.running }.returns(true)
+        justRun { gravityNormEstimatorSpy.stop() }
         calibrator.setPrivateProperty("gravityNormEstimator", gravityNormEstimatorSpy)
 
         setPrivateProperty(
@@ -8638,7 +6670,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun stop_whenListenerAvailable_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             stoppedListener = stoppedListener
@@ -8675,17 +6721,50 @@ class StaticIntervalAccelerometerCalibratorTest {
         assertFalse(gravityNormEstimatorSpy.running)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun calibrate_whenNotReadyToSolveCalibration_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
-        calibrator.calibrate()
+        assertFalse(calibrator.running)
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.calibrate()
+        }
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun calibrate_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         setPrivateProperty(
@@ -8695,12 +6774,31 @@ class StaticIntervalAccelerometerCalibratorTest {
             true
         )
 
-        calibrator.calibrate()
+        assertTrue(calibrator.running)
+        assertFalse(calibrator.isReadyToSolveCalibration)
+
+        assertThrows(IllegalStateException::class.java) {
+            calibrator.calibrate()
+        }
     }
 
     @Test
     fun calibrate_whenReadyNotRunningAndNoInternalCalibrator_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         (1..13).forEach { _ ->
@@ -8717,7 +6815,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun calibrate_whenReadyNotRunningAndInternalCalibratorAndListeners_callsInternalCalibratorAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             calibrationSolvingStartedListener = calibrationSolvingStartedListener,
@@ -8747,56 +6859,106 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun calibrate_whenFailure_setsAsNotRunning() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(context)
+        mockkStatic(Log::class) {
+            every { Log.e(any(), any(), any()) }.returns(1)
 
-        (1..13).forEach { _ ->
-            calibrator.accelerometerMeasurements.add(measurement)
+            every { context.getSystemService(Context.SENSOR_SERVICE) }
+                .returns(sensorManager)
+            every {
+                sensorManager.getDefaultSensor(
+                    AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+                )
+            }.returns(
+                accelerometerSensor
+            )
+            every {
+                sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            }.returns(
+                gravitySensor
+            )
+
+            val calibrator = StaticIntervalAccelerometerCalibrator(context)
+
+            (1..13).forEach { _ ->
+                calibrator.accelerometerMeasurements.add(measurement)
+            }
+
+            assertTrue(calibrator.isReadyToSolveCalibration)
+            assertFalse(calibrator.running)
+
+            every { internalCalibrator.calibrate() }.throws(CalibrationException())
+            calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
+
+            assertFalse(calibrator.calibrate())
+
+            assertFalse(calibrator.running)
         }
-
-        assertTrue(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-
-        every { internalCalibrator.calibrate() }.throws(CalibrationException())
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
-
-        assertFalse(calibrator.calibrate())
-
-        assertFalse(calibrator.running)
     }
 
     @Test
     fun calibrate_whenFailureAndErrorListener_setsAsNotRunning() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val calibrator = StaticIntervalAccelerometerCalibrator(
-            context,
-            errorListener = errorListener
-        )
+        mockkStatic(Log::class) {
+            every { Log.e(any(), any(), any()) }.returns(1)
 
-        (1..13).forEach { _ ->
-            calibrator.accelerometerMeasurements.add(measurement)
-        }
-
-        assertTrue(calibrator.isReadyToSolveCalibration)
-        assertFalse(calibrator.running)
-
-        every { internalCalibrator.calibrate() }.throws(CalibrationException())
-        calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
-
-        assertFalse(calibrator.calibrate())
-
-        assertFalse(calibrator.running)
-        verify(exactly = 1) {
-            errorListener.onError(
-                calibrator,
-                CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+            every { context.getSystemService(Context.SENSOR_SERVICE) }
+                .returns(sensorManager)
+            every {
+                sensorManager.getDefaultSensor(
+                    AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+                )
+            }.returns(
+                accelerometerSensor
             )
+            every {
+                sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+            }.returns(
+                gravitySensor
+            )
+
+            val calibrator = StaticIntervalAccelerometerCalibrator(
+                context,
+                errorListener = errorListener
+            )
+
+            (1..13).forEach { _ ->
+                calibrator.accelerometerMeasurements.add(measurement)
+            }
+
+            assertTrue(calibrator.isReadyToSolveCalibration)
+            assertFalse(calibrator.running)
+
+            every { internalCalibrator.calibrate() }.throws(CalibrationException())
+            calibrator.setPrivateProperty("accelerometerInternalCalibrator", internalCalibrator)
+
+            assertFalse(calibrator.calibrate())
+
+            assertFalse(calibrator.running)
+            verify(exactly = 1) {
+                errorListener.onError(
+                    calibrator,
+                    CalibratorErrorReason.NUMERICAL_INSTABILITY_DURING_CALIBRATION
+                )
+            }
         }
     }
 
     @Test
     fun estimatedAccelerometerBiasX_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -8805,7 +6967,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasX_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -8819,7 +6995,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasX_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -8833,7 +7023,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasY_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -8842,7 +7046,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasY_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -8856,7 +7074,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasY_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -8870,7 +7102,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZ_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -8879,7 +7125,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZ_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -8893,7 +7153,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZ_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -8907,7 +7181,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasXAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -8916,7 +7204,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasXAsMeasurement_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -8931,7 +7233,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasXAsMeasurement_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -8946,7 +7262,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasXAsMeasurement_whenNoInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -8956,7 +7286,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasXAsMeasurement_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -8979,7 +7323,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasXAsMeasurement_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9001,7 +7359,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasYAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -9010,7 +7382,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasYAsMeasurement_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -9025,7 +7411,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasYAsMeasurement_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9040,7 +7440,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasYAsMeasurement_whenNoInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -9050,7 +7464,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasYAsMeasurement_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -9073,7 +7501,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasYAsMeasurement_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9095,7 +7537,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZAsMeasurement_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -9104,7 +7560,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZAsMeasurement_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -9119,7 +7589,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasZAsMeasurement_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9134,7 +7618,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasZAsMeasurement_whenNoInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -9144,7 +7642,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasZAsMeasurement_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -9167,7 +7679,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasZAsMeasurement_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9189,7 +7715,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasAsTriad_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -9198,7 +7738,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasAsTriad_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -9220,7 +7774,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasAsTriad_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9242,7 +7810,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasAsTriad_whenNoInternalCalibrator_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -9253,7 +7835,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasAsTriad_whenUnknownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -9284,7 +7880,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun getEstimatedAccelerometerBiasAsTriad_whenKnownBiasInternalCalibrator_callsInternalCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9314,7 +7924,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasStandardDeviationNorm_whenNoInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         assertNull(calibrator.getPrivateProperty("accelerometerInternalCalibrator"))
@@ -9324,7 +7948,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasStandardDeviationNorm_whenBiasUncertaintySourceInternalCalibrator_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownPositionAccelerometerCalibrator())
@@ -9343,7 +7981,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun estimatedAccelerometerBiasStandardDeviationNorm_whenOtherInternalCalibrator_returnsNull() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(context)
 
         val internalCalibratorSpy = spyk(KnownBiasAndPositionAccelerometerCalibrator())
@@ -9355,7 +8007,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndPositionBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -9400,7 +8067,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         val internalCalibrator2 = internalCalibrator as KnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            StaticIntervalAccelerometerCalibratorTest.Companion.ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -9420,7 +8089,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndPositionBiasSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -9471,7 +8155,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         val internalCalibrator2 = internalCalibrator as KnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
@@ -9498,7 +8184,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndPositionBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -9543,7 +8244,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         val internalCalibrator2 = internalCalibrator as KnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -9569,7 +8272,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndGravityBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -9644,7 +8361,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndGravityBiasSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -9725,7 +8456,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndGravityBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -9800,7 +8545,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustGroundTruthBiasAndGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -9848,7 +8607,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndPositionBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -9893,7 +8667,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         val internalCalibrator2 = internalCalibrator as KnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -9920,7 +8696,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndPositionBiasNotAndCommonAxisNotUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -9971,7 +8762,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         val internalCalibrator2 = internalCalibrator as KnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
@@ -9998,7 +8791,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndPositionBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10043,7 +8851,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
         // check
         val internalCalibrator2 = internalCalibrator as KnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertTrue(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -10069,7 +8879,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndGravityBiasNotSetAndCommonAxisNotUsed_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -10143,7 +8967,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndGravityBiasNotSetAndCommonAxisUsed_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -10217,7 +9055,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenNonRobustNoGroundTruthBiasAndGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -10265,7 +9117,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10325,7 +9192,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -10356,7 +9225,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10422,7 +9306,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
@@ -10453,7 +9339,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10524,7 +9425,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as RANSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -10555,7 +9458,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10619,7 +9537,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasLocationBiasNotSetAndRobustThreshold() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10679,7 +9612,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as MSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -10710,7 +9645,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10776,7 +9726,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as MSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
@@ -10807,7 +9759,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10877,7 +9844,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as MSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -10908,7 +9877,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -10972,7 +9956,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11036,7 +10035,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -11071,7 +10072,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11140,7 +10156,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
@@ -11175,7 +10193,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11248,7 +10281,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROSACRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -11283,7 +10318,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11350,7 +10400,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11410,7 +10475,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -11441,7 +10508,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11507,7 +10589,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
@@ -11538,7 +10622,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11614,7 +10713,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as LMedSRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -11649,7 +10750,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11713,7 +10829,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11776,7 +10907,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -11811,7 +10944,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11880,7 +11028,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.biasX, 0.0)
@@ -11915,7 +11065,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -11994,7 +11159,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROMedSRobustKnownBiasAndPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.biasX, 0.0)
@@ -12033,7 +11200,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -12099,7 +11281,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12192,7 +11388,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12291,7 +11501,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12394,7 +11618,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12458,7 +11696,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12525,7 +11777,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12618,7 +11884,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12717,7 +11997,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12820,7 +12114,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12884,7 +12192,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -12951,7 +12273,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13051,7 +12387,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13157,7 +12507,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13267,7 +12631,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13334,7 +12712,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13404,7 +12796,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13497,7 +12903,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13596,7 +13016,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13704,7 +13138,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13768,7 +13216,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13835,7 +13297,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -13935,7 +13411,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14041,7 +13531,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14156,7 +13660,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14223,7 +13741,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGroundTruthBiasGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = true
@@ -14294,7 +13826,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -14354,7 +13901,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as RANSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -14385,7 +13934,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -14451,7 +14015,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as RANSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
@@ -14482,7 +14048,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -14552,7 +14133,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as RANSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -14583,7 +14166,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -14647,7 +14245,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -14707,7 +14320,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as MSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -14738,7 +14353,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -14804,7 +14434,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as MSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
@@ -14835,7 +14467,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -14905,7 +14552,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as MSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -14936,7 +14585,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15000,7 +14664,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15063,7 +14742,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -15098,7 +14779,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15167,7 +14863,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
@@ -15202,7 +14900,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15275,7 +14988,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROSACRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -15310,7 +15025,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15377,7 +15107,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15437,7 +15182,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as LMedSRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -15468,7 +15215,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15534,7 +15296,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as LMedSRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
@@ -15565,7 +15329,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location
@@ -15635,7 +15414,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as LMedSRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -15670,7 +15451,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15734,7 +15530,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSLocationBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15797,7 +15608,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROMedSRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -15832,7 +15645,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSLocationBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -15901,7 +15729,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROMedSRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(initialBiasX, internalCalibrator2.initialBiasX, 0.0)
@@ -15936,7 +15766,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSLocationBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -16010,7 +15855,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         // check
         val internalCalibrator2 =
             internalCalibrator as PROMedSRobustKnownPositionAccelerometerCalibrator
-        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition, ABSOLUTE_ERROR))
+        assertTrue(location.toNEDPosition().equals(internalCalibrator2.nedPosition,
+            ABSOLUTE_ERROR
+        ))
         assertSame(calibrator.accelerometerMeasurements, internalCalibrator2.measurements)
         assertFalse(internalCalibrator2.isCommonAxisUsed)
         assertEquals(0.0, internalCalibrator2.initialBiasX, 0.0)
@@ -16049,7 +15896,22 @@ class StaticIntervalAccelerometerCalibratorTest {
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSLocationMissingBaseNoiseLevel_throwsIllegalStateException() {
         val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             location = location,
@@ -16115,7 +15977,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16208,7 +16084,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16307,7 +16197,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16410,7 +16314,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16474,7 +16392,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenRANSACGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16541,7 +16473,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16634,7 +16580,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16733,7 +16693,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16836,7 +16810,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16900,7 +16888,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenMSACGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -16967,7 +16969,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17067,7 +17083,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17173,7 +17203,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17283,7 +17327,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17350,7 +17408,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROSACGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17420,7 +17492,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17513,7 +17599,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17612,7 +17712,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17720,7 +17834,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17784,7 +17912,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenLMedSGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17851,7 +17993,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGravityBiasNotSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -17953,7 +18109,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGravityBiasSetAndRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -18059,7 +18229,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGravityBiasNotSetAndNoRobustThreshold_buildsExpectedCalibrator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -18174,7 +18358,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGravityMissingGravityNorm_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false
@@ -18241,7 +18439,21 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @Test
     fun buildAccelerometerInternalCalibrator_whenPROMedSGravityMissingBaseNoiseLevel_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(
+                AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value
+            )
+        }.returns(
+            accelerometerSensor
+        )
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            gravitySensor
+        )
+
         val calibrator = StaticIntervalAccelerometerCalibrator(
             context,
             isAccelerometerGroundTruthInitialBias = false

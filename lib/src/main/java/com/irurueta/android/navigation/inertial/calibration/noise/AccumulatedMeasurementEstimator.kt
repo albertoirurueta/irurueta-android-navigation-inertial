@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
+import android.hardware.Sensor
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMeasurementNoiseEstimator
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import com.irurueta.units.Measurement
+import com.irurueta.units.Time
 
 /**
  * Estimates the accumulated mean value of a measurement.
@@ -29,49 +32,61 @@ import com.irurueta.units.Measurement
  * measurement norm average, standard deviation and variance, as well as average time interval
  * between measurements.
  * For best accuracy of estimated results, device should remain static while data is being
- * collected.
+ * processed.
  *
+ * @param E Type of estimator.
+ * @param P Type of processor.
+ * @param C Sensor collector.
+ * @param M Type of measurement.
+ * @param SM Type of sensor measurement.
  * @property context Android context.
  * @property sensorDelay Delay of sensor between samples.
- * @param maxSamples Maximum number of samples to take into account before completion. This is
- * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
- * [StopMode.MAX_SAMPLES_OR_DURATION].
- * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
- * before completion. This is only taken into account if using either
- * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
- * @param stopMode Determines when this estimator will consider its estimation completed.
- * @property completedListener Listener to notify when estimation is complete.
- * @property unreliableListener Listener to notify when sensor becomes unreliable, and thus,
- * estimation must be discarded.
+ * @property completedListener listener to notify when estimation completes.
+ * @property unreliableListener listener to notify when measurements become unreliable.
  */
-abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimator<A, N, C, U, M>,
-        N : AccumulatedMeasurementNoiseEstimator<U, M, *, *>, C : SensorCollector,
-        U : Enum<*>, M : Measurement<U>>(
+abstract class AccumulatedMeasurementEstimator<E : AccumulatedMeasurementEstimator<E, P, C, M, SM>,
+        P : AccumulatedMeasurementProcessor<*, *, *, M, SM>, C: SensorCollector<SM, C>,
+        M : Measurement<*>, SM : SensorMeasurement<SM>>(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    maxSamples: Int = DEFAULT_MAX_SAMPLES,
-    maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
-    stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-    var completedListener: OnEstimationCompletedListener<A>? = null,
-    var unreliableListener: OnUnreliableListener<A>? = null
-) : BaseAccumulatedEstimator(maxSamples, maxDurationMillis, stopMode) {
+    var completedListener: OnEstimationCompletedListener<E>? = null,
+    var unreliableListener: OnUnreliableListener<E>? = null
+) {
 
     /**
-     * Internal noise estimator of magnitude measurements.
-     * This can be used to estimate statistics about a given measurement magnitude.
+     * Internal processor that processes measurements.
      */
-    protected abstract val noiseEstimator: N
+    protected abstract val processor: P
 
     /**
-     * Collector for magnitude measurements.
+     * Internal collector that collects measurements.
      */
     protected abstract val collector: C
 
     /**
-     * Gets sensor being used to obtain measurements or null if not available.
-     * This can be used to obtain additional information about the sensor.
+     * Listener to handle changes of accuracy in accelerometer sensor.
      */
-    val sensor
+    protected val accuracyChangedListener =
+        SensorCollector.OnAccuracyChangedListener<SM, C> { _, accuracy ->
+            if (accuracy == SensorAccuracy.UNRELIABLE) {
+                resultUnreliable = true
+                notifyUnreliableListener()
+            }
+        }
+
+    /**
+     * Listener to handle accelerometer measurements.
+     */
+    protected val measurementListener =
+        SensorCollector.OnMeasurementListener<SM, C> { _, measurement ->
+            handleMeasurement(measurement)
+        }
+
+    /**
+     * Gets sensor being used to obtain measurements or null if not available.
+     *This can be used to obtain additional information about the sensor.
+     */
+    val sensor: Sensor?
         get() = collector.sensor
 
     /**
@@ -85,38 +100,25 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
      * acceleration, rad/s for angular speed or T for magnetic flux density).
      * This is only available when estimation completes successfully and [resultAvailable] is true.
      */
-    val averageNorm
-        get() = if (resultAvailable) {
-            noiseEstimator.avg
-        } else {
-            null
-        }
+    val averageNorm: Double?
+        get() = processor.averageNorm
 
     /**
      * Gets estimated average measurement norm as a measurement.
      * This is only available when estimation completes successfully and [resultAvailable] is true.
      */
-    val averageNormAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.avgAsMeasurement
-        } else {
-            null
-        }
+    val averageNormAsMeasurement: M?
+        get() = processor.averageNormAsMeasurement
 
     /**
      * Gets estimated average measurement norm as a measurement instance.
      * This is only available when estimation completes successfully and [resultAvailable] is true.
      *
      * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
+     * @return true if result was set, false otherwise.
      */
     fun getAverageNormAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getAvgAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getAverageNormAsMeasurement(result)
     }
 
     /**
@@ -125,35 +127,23 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
      * magnetic flux density).
      * This is only available when estimation completes successfully and [resultAvailable] is true.
      */
-    val normVariance
-        get() = if (resultAvailable) {
-            noiseEstimator.variance
-        } else {
-            null
-        }
+    val normVariance: Double?
+        get() = processor.normVariance
 
     /**
      * Gets estimated standard deviation of norm expressed in the default unit of
      * measurement (m/s^2 for acceleration, rad/s for angular speed or T for magnetic flux density).
      * This is only available when estimation completes successfully and [resultAvailable] is true.
      */
-    val normStandardDeviation
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviation
-        } else {
-            null
-        }
+    val normStandardDeviation: Double?
+        get() = processor.normStandardDeviation
 
     /**
      * Gets estimated standard deviation of norm as a measurement.
      * This is only available when estimation completes successfully and [resultAvailable] is true.
      */
-    val normStandardDeviationAsMeasurement
-        get() = if (resultAvailable) {
-            noiseEstimator.standardDeviationAsMeasurement
-        } else {
-            null
-        }
+    val normStandardDeviationAsMeasurement: M?
+        get() = processor.normStandardDeviationAsMeasurement
 
     /**
      * Gets estimated standard deviation of norm as a measurement.
@@ -163,12 +153,7 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
      * @return true if result is available, false otherwise.
      */
     fun getNormStandardDeviationAsMeasurement(result: M): Boolean {
-        return if (resultAvailable) {
-            noiseEstimator.getStandardDeviationAsMeasurement(result)
-            true
-        } else {
-            false
-        }
+        return processor.getNormStandardDeviationAsMeasurement(result)
     }
 
     /**
@@ -177,12 +162,8 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
      * This is only available when estimation completes successfully and average time interval
      * between measurements is reliably estimated.
      */
-    val psd
-        get() = if (resultAvailable) {
-            noiseEstimator.psd
-        } else {
-            null
-        }
+    val psd : Double?
+        get() = processor.psd
 
     /**
      * Gets root PSD (Power Spectral Density) of norm expressed in (m * s^-1.5) for
@@ -190,12 +171,144 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
      * This is only available when estimation completes successfully and average time interval
      * between measurements is reliably estimated.
      */
-    val rootPsd
-        get() = if (resultAvailable) {
-            noiseEstimator.rootPsd
-        } else {
-            null
-        }
+    val rootPsd: Double?
+        get() = processor.rootPsd
+
+    /**
+     * Contains timestamp when the first measurement was processed expressed in nanoseconds
+     * using [android.os.SystemClock.elapsedRealtimeNanos] time base.
+     */
+    val initialTimestampNanos: Long
+        get () = processor.initialTimestampNanos
+
+    /**
+     * Contains timestamp when the last measurement was processed expressed in nanoseconds
+     * using [android.os.SystemClock.elapsedRealtimeNanos] time base.
+     */
+    val endTimestampNanos: Long
+        get() = processor.endTimestampNanos
+
+    /**
+     * Number of measurements that have been processed.
+     */
+    val numberOfProcessedMeasurements: Long
+        get() = processor.numberOfProcessedMeasurements
+
+    /**
+     * Gets maximum number of samples to take into account before completion. This is only taken
+     * into account if using either [StopMode.MAX_SAMPLES_ONLY] or
+     * [StopMode.MAX_SAMPLES_OR_DURATION].
+     */
+    val maxSamples: Int
+        get() = processor.maxSamples
+
+    /**
+     * Gets maximum duration expressed in milliseconds to take into account before completion. This
+     * is only taken into account if using either [StopMode.MAX_DURATION_ONLY] or
+     * [StopMode.MAX_SAMPLES_OR_DURATION].
+     */
+    val maxDurationMillis: Long
+        get() = processor.maxDurationMillis
+
+    /**
+     * Determines when this processor will consider its estimation completed.
+     */
+    val stopMode: StopMode
+        get() = processor.stopMode
+
+    /**
+     * Indicates whether estimated average and time interval between measurements are available
+     * or not.
+     */
+    val resultAvailable: Boolean
+        get() = processor.resultAvailable
+
+    /**
+     * Indicates whether estimated result is unreliable or not.
+     */
+    var resultUnreliable: Boolean = false
+        protected set
+
+    /**
+     * Gets average time interval between measurements expressed in seconds (s). This is only
+     * available when estimation completes successfully and [resultAvailable] is true.
+     */
+    val averageTimeInterval: Double?
+        get() = processor.averageTimeInterval
+
+    /**
+     * Gets average time interval between measurements. This is only available when estimation
+     * completes successfully and [resultAvailable] is true.
+     */
+    val averageTimeIntervalAsTime: Time?
+        get() = processor.averageTimeIntervalAsTime
+
+    /**
+     * Gets average time interval between measurements.
+     * This is only available when estimation completes successfully and [resultAvailable] is true.
+     *
+     * @param result instance where average time interval will be stored.
+     * @return true if result was set, false otherwise.
+     */
+    fun getAverageTimeIntervalAsTime(result: Time): Boolean {
+        return processor.getAverageTimeIntervalAsTime(result)
+    }
+
+    /**
+     * Gets estimated variance of time interval between measurements expressed in seconds squared
+     * (s^2). This is only available when estimation completes successfully and [resultAvailable]
+     * is true.
+     */
+    val timeIntervalVariance: Double?
+        get() = processor.timeIntervalVariance
+
+    /**
+     * Gets estimated standard deviation of time interval between measurements expressed in
+     * seconds (s). This is only available when estimation completes successfully and
+     * [resultAvailable] is true.
+     */
+    val timeIntervalStandardDeviation: Double?
+        get() = processor.timeIntervalStandardDeviation
+
+    /**
+     * Gets estimated standard deviation of time interval between measurements. This is only
+     * available when estimation completes successfully and [resultAvailable] is true.
+     */
+    val timeIntervalStandardDeviationAsTime: Time?
+        get() = processor.timeIntervalStandardDeviationAsTime
+
+    /**
+     * Gets estimated standard deviation of time interval between measurements. This is only
+     * available when estimation completes successfully and [resultAvailable] is true.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result was set, false otherwise.
+     */
+    fun getTimeIntervalStandardDeviationAsTime(result: Time): Boolean {
+        return processor.getTimeIntervalStandardDeviationAsTime(result)
+    }
+
+    /**
+     * Gets elapsed time since first measurement was processed expressed in nanoseconds (ns).
+     */
+    val elapsedTimeNanos: Long
+        get() = processor.elapsedTimeNanos
+
+
+    /**
+     * Gets elapsed time since first measurement was processed.
+     */
+    val elapsedTime: Time
+        get() = processor.elapsedTime
+
+    /**
+     * Gets elapsed time since first measurement was processed.
+     *
+     * @param result instance where result will be stored.
+     */
+    fun getElapsedTime(result: Time) {
+        processor.getElapsedTime(result)
+    }
 
     /**
      * Starts collection of sensor norm measurements.
@@ -216,8 +329,13 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
 
     /**
      * Stops collection of sensor norm measurements.
+     *
+     * @throws IllegalStateException if estimator is NOT already running.
      */
+    @Throws(IllegalStateException::class)
     fun stop() {
+        check(running)
+
         collector.stop()
         running = false
     }
@@ -225,78 +343,59 @@ abstract class AccumulatedMeasurementEstimator<A : AccumulatedMeasurementEstimat
     /**
      * Notifies unreliable listener.
      */
-    override fun notifyUnreliableListener() {
+    protected fun notifyUnreliableListener() {
         @Suppress("UNCHECKED_CAST")
-        unreliableListener?.onUnreliable(this as A)
+        unreliableListener?.onUnreliable(this as E)
     }
 
     /**
-     * Handles a magnitude measurement
+     * Handles a new measurement.
      *
-     * @param value value of measurement expressed in sensor unit.
-     * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
-     * will be monotonically increasing using the same time base as
-     * [android.os.SystemClock.elapsedRealtimeNanos].
-     * @param accuracy sensor accuracy.
+     * @param measurement new measurement.
      */
-    protected fun handleMeasurement(value: Double, timestamp: Long, accuracy: SensorAccuracy?) {
-        if (accuracy == SensorAccuracy.UNRELIABLE) {
+    protected fun handleMeasurement(measurement: SM) {
+        if (measurement.accuracy == SensorAccuracy.UNRELIABLE) {
             resultUnreliable = true
         }
 
-        if (numberOfProcessedMeasurements == 0) {
-            initialTimestampNanos = timestamp
-        }
-
-        noiseEstimator.addMeasurement(value)
-
-        handleTimestamp(timestamp)
-        numberOfProcessedMeasurements++
-
-        if (isComplete()) {
-            // once time interval has been estimated, it is set into noise estimator so that
-            // PSD values can be correctly estimated.
-            noiseEstimator.timeInterval = timeIntervalEstimator.averageTimeInterval
-            resultAvailable = true
-
+        if (processor.process(measurement)) {
             stop()
 
             @Suppress("UNCHECKED_CAST")
-            completedListener?.onEstimationCompleted(this as A)
+            completedListener?.onEstimationCompleted(this as E)
         }
     }
 
     /**
-     * Resets internal estimators.
+     * Resets this estimator to its initial state.
      */
-    override fun reset() {
-        noiseEstimator.reset()
-        noiseEstimator.timeInterval = 0.0
-
-        super.reset()
+    fun reset() {
+        processor.reset()
     }
 
     /**
-     * Interface to notify when estimation completes.
+     * Notifies when estimation completes.
      */
-    fun interface OnEstimationCompletedListener<A : AccumulatedMeasurementEstimator<*, *, *, *, *>> {
+    fun interface OnEstimationCompletedListener<E : AccumulatedMeasurementEstimator<E, *, *, *, *>> {
+
         /**
          * Called when estimation completes.
          *
-         * @param estimator estimator that generated the event.
+         * @param estimator instance that raised the event.
          */
-        fun onEstimationCompleted(estimator: A)
+        fun onEstimationCompleted(estimator: E)
     }
 
     /**
-     * Interface to notify when measurements become unreliable.
+     * Notifies when measurements become unreliable.
      */
-    fun interface OnUnreliableListener<A : AccumulatedMeasurementEstimator<*, *, *, *, *>> {
+    fun interface OnUnreliableListener<E : AccumulatedMeasurementEstimator<E, *, *, *, *>> {
+
         /**
          * Called when measurements become unreliable.
          *
-         * @param estimator estimator that generated the event.
+         * @param estimator instance that raised the event.
          */
-        fun onUnreliable(estimator: A)
+        fun onUnreliable(estimator: E)
     }
 }

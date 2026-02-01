@@ -17,7 +17,7 @@ package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 
 /**
  * Collects gravity measurements based on android coordinates system (ENU), and converts them to
@@ -42,11 +42,11 @@ class GravityProcessor(
      * gravity measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
      *
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.collectors.BufferedGravitySensorCollector
-     * @see com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
+     * @see com.irurueta.android.navigation.inertial.old.collectors.BufferedGravitySensorCollector
+     * @see com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
      */
     override fun process(measurement: GravitySensorMeasurement, timestamp: Long): Boolean {
         ENUtoNEDConverter.convert(

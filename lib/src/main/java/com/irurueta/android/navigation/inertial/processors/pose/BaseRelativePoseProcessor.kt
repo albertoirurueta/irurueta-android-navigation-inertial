@@ -18,7 +18,7 @@ package com.irurueta.android.navigation.inertial.processors.pose
 import android.location.Location
 import com.irurueta.algebra.Matrix
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.estimators.pose.SpeedTriad
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.geometry.InhomogeneousPoint3D

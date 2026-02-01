@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.collectors
 
 import android.hardware.Sensor
 import android.hardware.SensorDirectChannel
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import org.junit.Assert.*
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
+import com.irurueta.android.testutils.RequiresRealDevice
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -40,13 +45,13 @@ class AccelerometerSensorCollectorTest {
         measured = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun sensor_whenAccelerometerSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = AccelerometerSensorCollector(
             context,
-            AccelerometerSensorType.ACCELEROMETER
-        )
+            AccelerometerSensorType.ACCELEROMETER)
 
         val sensor = collector.sensor
         requireNotNull(sensor)
@@ -54,7 +59,7 @@ class AccelerometerSensorCollectorTest {
         logSensor(sensor)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun sensor_whenAccelerometerUncalibratedSensorType_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -69,6 +74,7 @@ class AccelerometerSensorCollectorTest {
         logSensor(sensor)
     }
 
+    @RequiresRealDevice
     @Test
     fun sensorAvailable_whenAccelerometerSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -80,7 +86,7 @@ class AccelerometerSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun sensorAvailable_whenAccelerometerUncalibratedSensorType_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -92,6 +98,7 @@ class AccelerometerSensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -99,25 +106,44 @@ class AccelerometerSensorCollectorTest {
             context,
             AccelerometerSensorType.ACCELEROMETER,
             SensorDelay.FASTEST,
-            measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+            accuracyChangedListener = { _, accuracy ->
+                Log.d(
+                    "AccelerometerSensorCollectorTest",
+                    "onAccuracyChanged - accuracy: $accuracy"
+                )
+            },
+            measurementListener = { _, measurement ->
+                val ax = measurement.ax
+                val ay = measurement.ay
+                val az = measurement.az
+                val bx = measurement.bx
+                val by = measurement.by
+                val bz = measurement.bz
+                val timestamp = measurement.timestamp
+                val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                val coordinateSystem = measurement.sensorCoordinateSystem
+
                 assertNull(bx)
                 assertNull(by)
                 assertNull(bz)
+                assertEquals(AccelerometerSensorType.ACCELEROMETER, sensorType)
+                assertEquals(SensorCoordinateSystem.ENU, coordinateSystem)
 
                 Log.d(
                     "AccelerometerSensorCollectorTest",
-                    "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                    """onMeasurement - ax: $ax m/s^2, ay: $ay m/s^2, az: $az m/s^2, 
+                        |bx: $bx m/s^2, by: $by m/s^2, bz: $bz m/s^2,
+                        |timestamp: $timestamp, 
+                        |accuracy: $accuracy, 
+                        |sensorType: $sensorType,
+                        |coordinateSystem: $coordinateSystem
+                    """.trimMargin()
                 )
 
                 syncHelper.notifyAll { measured++ }
             }
-        ) { accuracy ->
-            Log.d(
-                "AccelerometerSensorCollectorTest",
-                "onAccuracyChanged - accuracy: $accuracy"
-            )
-        }
+        )
 
         collector.start()
 
@@ -128,7 +154,7 @@ class AccelerometerSensorCollectorTest {
         assertTrue(measured > 0)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorType_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -136,25 +162,44 @@ class AccelerometerSensorCollectorTest {
             context,
             AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             SensorDelay.FASTEST,
-            measurementListener = { ax, ay, az, bx, by, bz, timestamp, accuracy ->
+            accuracyChangedListener = { _, accuracy ->
+                Log.d(
+                    "AccelerometerSensorCollectorTest",
+                    "onAccuracyChanged - accuracy: $accuracy"
+                )
+            },
+            measurementListener = { _, measurement ->
+                val ax = measurement.ax
+                val ay = measurement.ay
+                val az = measurement.az
+                val bx = measurement.bx
+                val by = measurement.by
+                val bz = measurement.bz
+                val timestamp = measurement.timestamp
+                val accuracy = measurement.accuracy
+                val sensorType = measurement.sensorType
+                val coordinateSystem = measurement.sensorCoordinateSystem
+
                 assertNotNull(bx)
                 assertNotNull(by)
                 assertNotNull(bz)
+                assertEquals(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED, sensorType)
+                assertEquals(SensorCoordinateSystem.ENU, coordinateSystem)
 
                 Log.d(
                     "AccelerometerSensorCollectorTest",
-                    "onMeasurement - ax: $ax, ay: $ay, az: $az, bx: $bx, by: $by, bz: $bz, "
-                            + "timestamp: $timestamp, accuracy: $accuracy"
+                    """onMeasurement - ax: $ax m/s^2, ay: $ay m/s^2, az: $az m/s^2, 
+                        |bx: $bx m/s^2, by: $by m/s^2, bz: $bz m/s^2,
+                        |timestamp: $timestamp, 
+                        |accuracy: $accuracy, 
+                        |sensorType: $sensorType,
+                        |coordinateSystem: $coordinateSystem
+                    """.trimMargin()
                 )
 
                 syncHelper.notifyAll { measured++ }
             }
-        ) { accuracy ->
-            Log.d(
-                "AccelerometerSensorCollectorTest",
-                "onAccuracyChanged - accuracy: $accuracy"
-            )
-        }
+        )
 
         collector.start()
 

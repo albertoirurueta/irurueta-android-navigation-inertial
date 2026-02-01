@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,12 @@
 package com.irurueta.android.navigation.inertial.test.calibration.intervals.measurements
 
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.MagnetometerMeasurementGenerator
 import org.junit.Before
 import org.junit.Test
 
-@RequiresDevice
 class MagnetometerMeasurementGeneratorTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -39,7 +37,8 @@ class MagnetometerMeasurementGeneratorTest {
     @Test
     fun startAndStop_generatesMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val generator = MagnetometerMeasurementGenerator(context,
+        val generator = MagnetometerMeasurementGenerator(
+            context,
             initializationStartedListener = {
                 Log.i("MagnetometerMeasurementGeneratorTest", "Initialization started")
             },
@@ -69,11 +68,11 @@ class MagnetometerMeasurementGeneratorTest {
             },
             resetListener = {
                 Log.i("MagnetometerMeasurementGeneratorTest", "Reset")
-            },
-            accuracyChangedListener = {
-                Log.i("MagnetometerMeasurementGeneratorTest", "Accuracy changed")
             }
         )
+
+        generator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        generator.thresholdFactor = THRESHOLD_FACTOR
 
         generator.start()
 
@@ -84,5 +83,9 @@ class MagnetometerMeasurementGeneratorTest {
 
     private companion object {
         const val TIMEOUT = 1000L
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val THRESHOLD_FACTOR = 3.0
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,12 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.AccelerometerMeasurementsGeneratorListener
-import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 
 /**
  * Generates measurements that can later be used by accelerometer calibrators.
@@ -52,9 +47,6 @@ import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticInterva
  * @property generatedMeasurementListener listener to notify when a new calibration measurement is
  * generated.
  * @property resetListener listener to notify when generator is restarted.
- * @property accelerometerMeasurementListener listener to notify when a new accelerometer
- * measurement is received.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  */
 class AccelerometerMeasurementGenerator(
     context: Context,
@@ -69,12 +61,13 @@ class AccelerometerMeasurementGenerator(
     staticIntervalSkippedListener: OnStaticIntervalSkippedListener<AccelerometerMeasurementGenerator>? = null,
     dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<AccelerometerMeasurementGenerator>? = null,
     generatedMeasurementListener: OnGeneratedMeasurementListener<AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics>? = null,
-    resetListener: OnResetListener<AccelerometerMeasurementGenerator>? = null,
-    accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
+    resetListener: OnResetListener<AccelerometerMeasurementGenerator>? = null
 ) : SingleSensorCalibrationMeasurementGenerator<
-        AccelerometerMeasurementGenerator, StandardDeviationBodyKinematics,
-        AccelerometerMeasurementsGenerator, AccelerometerMeasurementsGeneratorListener,
+        AccelerometerMeasurementGenerator,
+        AccelerometerMeasurementGeneratorProcessor,
+        StandardDeviationBodyKinematics,
+        AccelerometerMeasurementsGenerator,
+        AccelerometerMeasurementsGeneratorListener,
         BodyKinematics>(
     context,
     accelerometerSensorType,
@@ -87,124 +80,50 @@ class AccelerometerMeasurementGenerator(
     staticIntervalSkippedListener,
     dynamicIntervalSkippedListener,
     generatedMeasurementListener,
-    resetListener,
-    accelerometerMeasurementListener,
-    accuracyChangedListener
+    resetListener
 ) {
     /**
-     * Triad containing acceleration samples converted from device ENU coordinates to local plane
-     * NED coordinates.
-     * This is reused for performance reasons.
+     * Internal processor to process accelerometer sensor measurements.
      */
-    private val acceleration = AccelerationTriad()
-
-    /**
-     * Listener for internal measurement generator.
-     */
-    override val measurementsGeneratorListener =
-        object : AccelerometerMeasurementsGeneratorListener {
-            override fun onInitializationStarted(generator: AccelerometerMeasurementsGenerator?) {
-                initializationStartedListener?.onInitializationStarted(
-                    this@AccelerometerMeasurementGenerator
-                )
-            }
-
-            override fun onInitializationCompleted(
-                generator: AccelerometerMeasurementsGenerator?,
-                baseNoiseLevel: Double
-            ) {
-                initializationCompletedListener?.onInitializationCompleted(
-                    this@AccelerometerMeasurementGenerator,
-                    baseNoiseLevel
-                )
-            }
-
-            override fun onError(
-                generator: AccelerometerMeasurementsGenerator?,
-                reason: TriadStaticIntervalDetector.ErrorReason
-            ) {
-                errorListener?.onError(
-                    this@AccelerometerMeasurementGenerator,
-                    mapErrorReason(reason)
-                )
-            }
-
-            override fun onStaticIntervalDetected(generator: AccelerometerMeasurementsGenerator?) {
-                staticIntervalDetectedListener?.onStaticIntervalDetected(
-                    this@AccelerometerMeasurementGenerator
-                )
-            }
-
-            override fun onDynamicIntervalDetected(generator: AccelerometerMeasurementsGenerator?) {
-                dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
-                    this@AccelerometerMeasurementGenerator
-                )
-            }
-
-            override fun onStaticIntervalSkipped(generator: AccelerometerMeasurementsGenerator?) {
-                staticIntervalSkippedListener?.onStaticIntervalSkipped(
-                    this@AccelerometerMeasurementGenerator
-                )
-            }
-
-            override fun onDynamicIntervalSkipped(generator: AccelerometerMeasurementsGenerator?) {
-                dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(
-                    this@AccelerometerMeasurementGenerator
-                )
-            }
-
-            override fun onGeneratedMeasurement(
-                generator: AccelerometerMeasurementsGenerator?,
-                measurement: StandardDeviationBodyKinematics
-            ) {
-                generatedMeasurementListener?.onGeneratedMeasurement(
-                    this@AccelerometerMeasurementGenerator,
-                    measurement
-                )
-            }
-
-            override fun onReset(generator: AccelerometerMeasurementsGenerator?) {
-                resetListener?.onReset(this@AccelerometerMeasurementGenerator)
-            }
-        }
-
-    /**
-     * Internal measurements generator for accelerometer calibration.
-     */
-    override val measurementsGenerator =
-        AccelerometerMeasurementsGenerator(measurementsGeneratorListener)
-
-    /**
-     * Processes an accelerometer measurement to generate an instance of type [BodyKinematics] to be
-     * used by the internal measurement generator.
-     * Since [AccelerometerMeasurementsGenerator] only requires acceleration information, no data is
-     * provided for angular rates in processed result.
-     *
-     * @param ax acceleration on device x-axis expressed in meters per squared second (m/s^2).
-     * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
-     * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
-     * @param diffSeconds elapsed seconds since accelerometer started.
-     * @param result instance where processed sample result will be stored.
-     */
-    override fun processSample(
-        ax: Float,
-        ay: Float,
-        az: Float,
-        diffSeconds: Double,
-        result: BodyKinematics
-    ) {
-        // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
-
-        // set accelerometer information
-        result.fx = acceleration.valueX
-        result.fy = acceleration.valueY
-        result.fz = acceleration.valueZ
-    }
-
-    /**
-     * Body kinematics used by internal measurement generator.
-     * For accelerometer calibration purposes, only specific force is required.
-     */
-    override val sample = BodyKinematics()
+    override val processor = AccelerometerMeasurementGeneratorProcessor(
+        initializationStartedListener = { _ ->
+            initializationStartedListener?.onInitializationStarted(
+                this
+            )
+        },
+        initializationCompletedListener = { _, baseNoiseLevel ->
+            initializationCompletedListener?.onInitializationCompleted(
+                this,
+                baseNoiseLevel
+            )
+        },
+        errorListener = { _, reason -> errorListener?.onError(this, reason) },
+        staticIntervalDetectedListener = { _ ->
+            staticIntervalDetectedListener?.onStaticIntervalDetected(
+                this
+            )
+        },
+        dynamicIntervalDetectedListener = { _ ->
+            dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
+                this
+            )
+        },
+        staticIntervalSkippedListener = { _ ->
+            staticIntervalSkippedListener?.onStaticIntervalSkipped(
+                this
+            )
+        },
+        dynamicIntervalSkippedListener = { _ ->
+            dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(
+                this
+            )
+        },
+        generatedMeasurementListener = { _, measurement ->
+            generatedMeasurementListener?.onGeneratedMeasurement(
+                this,
+                measurement
+            )
+        },
+        resetListener = { _ -> resetListener?.onReset(this) }
+    )
 }

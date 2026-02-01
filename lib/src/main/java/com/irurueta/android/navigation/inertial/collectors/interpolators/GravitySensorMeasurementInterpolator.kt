@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,39 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.collectors.interpolators
 
-import com.irurueta.android.navigation.inertial.collectors.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 
 /**
- * Gravity interpolator.
+ * Interpolates gravity measurements.
  */
-interface GravitySensorMeasurementInterpolator {
+class GravitySensorMeasurementInterpolator() :
+    SensorMeasurementInterpolator<GravitySensorMeasurement>() {
 
     /**
-     * Pushes previous measurement into collection of processed measurements.
+     * Interpolates between two gravity measurements.
      *
-     * @param previousMeasurement previous measurement to be pushed.
+     * @param measurement1 the first gravity measurement.
+     * @param measurement2 the second gravity measurement.
+     * @param alpha the interpolation factor (as a value between 0.0f and 1.0f).
+     * @param targetNanoSeconds the target timestamp of resulting measurement expressed in
+     * nanoseconds (using the same clock as the other measurements).
+     * @param result the resulting gravity measurement.
      */
-    fun push(previousMeasurement: GravitySensorMeasurement)
-
-    /**
-     * Interpolates provided current measurement.
-     *
-     * @param currentMeasurement current measurement to be interpolated with previous ones.
-     * @param result instance where result of interpolation will be stored.
-     * @param timestamp timestamp to perform interpolation respect previous measurements.
-     * @return true if interpolation has been computed and result instance contains expected value,
-     * false if result of interpolation must be discarded.
-     */
-    fun interpolate(
-        currentMeasurement: GravitySensorMeasurement,
-        timestamp: Long,
+    override fun interpolate(
+        measurement1: GravitySensorMeasurement,
+        measurement2: GravitySensorMeasurement,
+        alpha: Float,
+        targetNanoSeconds: Long,
         result: GravitySensorMeasurement
-    ): Boolean
+    ) {
+        val gx1 = measurement1.gx
+        val gy1 = measurement1.gy
+        val gz1 = measurement1.gz
 
-    /**
-     * Resets this interpolator.
-     */
-    fun reset()
+        val gx2 = measurement2.gx
+        val gy2 = measurement2.gy
+        val gz2 = measurement2.gz
+
+        val gx = interpolate(gx1, gx2, alpha)
+        val gy = interpolate(gy1, gy2, alpha)
+        val gz = interpolate(gz1, gz2, alpha)
+
+        result.gx = gx
+        result.gy = gy
+        result.gz = gz
+        result.timestamp = targetNanoSeconds
+        result.accuracy = measurement1.accuracy
+        result.sensorCoordinateSystem = measurement1.sensorCoordinateSystem
+    }
 }

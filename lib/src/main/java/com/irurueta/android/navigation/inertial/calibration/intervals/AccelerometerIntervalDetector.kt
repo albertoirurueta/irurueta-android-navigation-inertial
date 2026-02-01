@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.intervals.AccelerationTriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.AccelerationTriadStaticIntervalDetectorListener
@@ -57,13 +59,10 @@ import com.irurueta.units.TimeConverter
  * @property dynamicIntervalDetectedListener listener to notify when a new dynamic interval is
  * detected.
  * @property resetListener listener to notify when a reset occurs.
- * @property measurementListener listener to notify collected accelerometer measurements.
- * @property accuracyChangedListener listener to notify when accelerometer accuracy changes.
  */
 class AccelerometerIntervalDetector(
     context: Context,
-    val sensorType: AccelerometerSensorType =
-        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+    val sensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
     initializationStartedListener: OnInitializationStartedListener<AccelerometerIntervalDetector>? = null,
     initializationCompletedListener: OnInitializationCompletedListener<AccelerometerIntervalDetector>? = null,
@@ -71,8 +70,6 @@ class AccelerometerIntervalDetector(
     staticIntervalDetectedListener: OnStaticIntervalDetectedListener<AccelerometerIntervalDetector>? = null,
     dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<AccelerometerIntervalDetector>? = null,
     resetListener: OnResetListener<AccelerometerIntervalDetector>? = null,
-    var measurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) : IntervalDetector<AccelerometerIntervalDetector, AccelerometerSensorCollector, AccelerationUnit,
         Acceleration, AccelerationTriad, AccelerationTriadStaticIntervalDetector,
         AccelerationTriadStaticIntervalDetectorListener>(
@@ -83,8 +80,7 @@ class AccelerometerIntervalDetector(
     errorListener,
     staticIntervalDetectedListener,
     dynamicIntervalDetectedListener,
-    resetListener,
-    accuracyChangedListener
+    resetListener
 ) {
     /**
      * Listener for internal interval detector.
@@ -94,7 +90,8 @@ class AccelerometerIntervalDetector(
             override fun onInitializationStarted(
                 detector: AccelerationTriadStaticIntervalDetector?
             ) {
-                initializationStartedListener?.onInitializationStarted(this@AccelerometerIntervalDetector)
+                initializationStartedListener?.onInitializationStarted(
+                    this@AccelerometerIntervalDetector)
             }
 
             override fun onInitializationCompleted(
@@ -114,7 +111,8 @@ class AccelerometerIntervalDetector(
                 reason: TriadStaticIntervalDetector.ErrorReason
             ) {
                 stop()
-                errorListener?.onError(this@AccelerometerIntervalDetector, mapErrorReason(reason))
+                errorListener?.onError(this@AccelerometerIntervalDetector,
+                    mapErrorReason(reason))
             }
 
             override fun onStaticIntervalDetected(
@@ -189,54 +187,67 @@ class AccelerometerIntervalDetector(
     private val acceleration = AccelerationTriad()
 
     /**
+     * Accelerometer sensor measurement expressed in NED coordinates.
+     */
+    private val nedMeasurement = AccelerometerSensorMeasurement()
+
+    /**
      * Internal listener for accelerometer sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
      */
-    private val internalMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
-            val status = status
-            if (status == Status.INITIALIZING) {
-                // during initialization phase, also estimate time interval duration.
-                if (numberOfProcessedMeasurements > 0) {
-                    val diff = timestamp - initialTimestamp
-                    val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-                    timeIntervalEstimator.addTimestamp(diffSeconds)
-                } else {
-                    initialTimestamp = timestamp
-                }
+    private val measurementListener = SensorCollector.OnMeasurementListener<
+            AccelerometerSensorMeasurement, AccelerometerSensorCollector> { _, measurement ->
+        val status = status
+        if (status == Status.INITIALIZING) {
+            // during initialization phase, also estimate time interval duration.
+            if (numberOfProcessedMeasurements > 0) {
+                val diff = measurement.timestamp - initialTimestamp
+                val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+                timeIntervalEstimator.addTimestamp(diffSeconds)
+            } else {
+                initialTimestamp = measurement.timestamp
             }
-
-            // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDConverter.convert(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
-                acceleration
-            )
-
-            internalDetector.process(acceleration.valueX, acceleration.valueY, acceleration.valueZ)
-            numberOfProcessedMeasurements++
-
-            if (status == Status.INITIALIZATION_COMPLETED) {
-                // once initialized, set time interval into internal detector
-                internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
-                initialized = true
-            }
-
-            measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
         }
+
+        // convert from device ENU coordinates to local plane NED coordinates
+        measurement.toNed(nedMeasurement)
+        nedMeasurement.toTriad(acceleration)
+
+        internalDetector.process(acceleration)
+        numberOfProcessedMeasurements++
+
+        if (status == Status.INITIALIZATION_COMPLETED) {
+            // once initialized, set time interval into internal detector
+            internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
+            initialized = true
+        }
+    }
+
+    /**
+     * Listener to detect when accuracy of accelerometer sensor changes.
+     * When sensor becomes unreliable, an error is notified.
+     */
+    private val accuracyChangedListener = SensorCollector.OnAccuracyChangedListener<AccelerometerSensorMeasurement, AccelerometerSensorCollector> { _, accuracy ->
+        if (accuracy == SensorAccuracy.UNRELIABLE) {
+            stop()
+            unreliable = true
+            errorListener?.onError(
+                this,
+                ErrorReason.UNRELIABLE_SENSOR
+            )
+        }
+    }
 
     /**
      * Accelerometer sensor collector.
      * Collects accelerometer measurements.
      */
-    override val collector =
-        AccelerometerSensorCollector(
-            context,
-            sensorType,
-            sensorDelay,
-            internalMeasurementListener,
-            internalAccuracyChangedListener
-        )
+    override val collector = AccelerometerSensorCollector(
+        context,
+        sensorType,
+        sensorDelay,
+        accuracyChangedListener,
+        measurementListener
+    )
 }

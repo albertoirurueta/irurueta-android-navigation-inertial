@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,39 +13,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.collectors.interpolators
 
-import com.irurueta.android.navigation.inertial.collectors.AttitudeSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorMeasurement
+import com.irurueta.geometry.Quaternion
+import kotlin.math.max
+import kotlin.math.min
 
 /**
- * Attitude interpolator.
+ * Interpolates attitude measurements.
  */
-interface AttitudeSensorMeasurementInterpolator {
+class AttitudeSensorMeasurementInterpolator() :
+    SensorMeasurementInterpolator<AttitudeSensorMeasurement>() {
 
     /**
-     * Pushes previous measurement into collection of processed measurements.
+     * Interpolates between two attitude measurements.
      *
-     * @param previousMeasurement previous measurement to be pushed.
+     * @param measurement1 the first attitude measurement.
+     * @param measurement2 the second attitude measurement.
+     * @param alpha the interpolation factor (as a value between 0.0f and 1.0f).
+     * @param targetNanoSeconds the target timestamp of resulting measurement expressed in
+     * nanoseconds (using the same clock as the other measurements).
+     * @param result the resulting attitude measurement.
      */
-    fun push(previousMeasurement: AttitudeSensorMeasurement)
-
-    /**
-     * Interpolates provided current measurement.
-     *
-     * @param currentMeasurement current measurement to be interpolated with previous ones.
-     * @param result instance where result of interpolation will be stored.
-     * @param timestamp timestamp to perform interpolation respect previous measurements.
-     * @return true if interpolation has been computed and result instance contains expected value,
-     * false if result of interpolation must be discarded.
-     */
-    fun interpolate(
-        currentMeasurement: AttitudeSensorMeasurement,
-        timestamp: Long,
+    override fun interpolate(
+        measurement1: AttitudeSensorMeasurement,
+        measurement2: AttitudeSensorMeasurement,
+        alpha: Float,
+        targetNanoSeconds: Long,
         result: AttitudeSensorMeasurement
-    ): Boolean
+    ) {
+        Quaternion.slerp(
+            measurement1.attitude,
+            measurement2.attitude,
+            min(max(0.0, alpha.toDouble()), 1.0),
+            result.attitude
+        )
 
-    /**
-     * Resets this interpolator.
-     */
-    fun reset()
+        val headingAccuracy1 = measurement1.headingAccuracy
+        val headingAccuracy2 = measurement2.headingAccuracy
+        val headingAccuracy = if (headingAccuracy1 != null && headingAccuracy2 != null) {
+            interpolate(headingAccuracy1, headingAccuracy2, alpha)
+        } else {
+            null
+        }
+
+        result.headingAccuracy = headingAccuracy
+        result.timestamp = targetNanoSeconds
+        result.accuracy = measurement1.accuracy
+        result.sensorType = measurement1.sensorType
+        result.sensorCoordinateSystem = measurement1.sensorCoordinateSystem
+    }
 }

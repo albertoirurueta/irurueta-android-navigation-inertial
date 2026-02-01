@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationMeasurementNoiseEstimator
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.units.Acceleration
-import com.irurueta.units.AccelerationUnit
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
  * Estimates accelerometer norm.
@@ -34,68 +32,51 @@ import kotlin.math.sqrt
  * collected. In such case, average accelerometer norm should match gravity norm at current
  * location.
  *
- * @param context Android context
- * @property sensorType One of the supported accelerometer sensor types.
+ * @param context Android context.
  * @param sensorDelay Delay of sensor between samples.
  * @param maxSamples Maximum number of samples to take into account before completion. This is
  * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
  * [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
- * before completion. This is only taken into account if using either
- * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
+ * before completion. This is only taken into account if using either [StopMode.MAX_DURATION_ONLY]
+ * or [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param stopMode Determines when this estimator will consider its estimation completed.
- * @param completedListener Listener to notify when estimation is complete.
- * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
- * estimation must be discarded.
- * @param measurementListener Listener to notify collected sensor measurements.
- * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
+ * @param completedListener listener to notify when estimation completes.
+ * @param unreliableListener listener to notify when measurements become unreliable.
  */
 class AccelerometerNormEstimator(
     context: Context,
     val sensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
     sensorDelay: SensorDelay = SensorDelay.FASTEST,
-    maxSamples: Int = DEFAULT_MAX_SAMPLES,
-    maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
+    maxSamples: Int = BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+    maxDurationMillis: Long = BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<AccelerometerNormEstimator>? = null,
-    unreliableListener: OnUnreliableListener<AccelerometerNormEstimator>? = null,
-    var measurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null
-) : AccumulatedMeasurementEstimator<AccelerometerNormEstimator,
-        AccumulatedAccelerationMeasurementNoiseEstimator, AccelerometerSensorCollector,
-        AccelerationUnit, Acceleration>(
+    unreliableListener: OnUnreliableListener<AccelerometerNormEstimator>? = null
+) : AccumulatedMeasurementEstimator<AccelerometerNormEstimator, AccelerometerNormProcessor,
+        AccelerometerSensorCollector, Acceleration, AccelerometerSensorMeasurement>(
     context,
     sensorDelay,
-    maxSamples,
-    maxDurationMillis,
-    stopMode,
     completedListener,
     unreliableListener
 ) {
-
     /**
-     * Listener to handle accelerometer measurements.
+     * Internal processor that processes measurements.
      */
-    private val accelerometerMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { ax, ay, az, bx, by, bz, timestamp, accuracy ->
-            val a = sqrt(ax.toDouble().pow(2.0) + ay.toDouble().pow(2.0) + az.toDouble().pow(2.0))
-            handleMeasurement(a, timestamp, accuracy)
-            measurementListener?.onMeasurement(ax, ay, az, bx, by, bz, timestamp, accuracy)
-        }
+    override val processor = AccelerometerNormProcessor(
+        maxSamples,
+        maxDurationMillis,
+        stopMode
+    )
 
     /**
-     * Internal noise estimator of acceleration magnitude measurements.
-     * This can be used to estimate statistics about a given measurement magnitude.
-     */
-    override val noiseEstimator = AccumulatedAccelerationMeasurementNoiseEstimator()
-
-    /**
-     * Collector for accelerometer measurements.
+     * Internal collector that collects measurements.
      */
     override val collector = AccelerometerSensorCollector(
         context,
         sensorType,
         sensorDelay,
-        accelerometerMeasurementListener,
-        accuracyChangedListener
+        accuracyChangedListener,
+        measurementListener,
     )
 }

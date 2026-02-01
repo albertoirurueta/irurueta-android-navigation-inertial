@@ -1,0 +1,1853 @@
+/*
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.irurueta.android.navigation.inertial.collectors
+
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.SystemClock
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravityAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.testutils.callPrivateFunc
+import com.irurueta.android.testutils.callPrivateFuncWithResult
+import com.irurueta.android.testutils.getPrivateProperty
+import com.irurueta.android.testutils.setPrivateProperty
+import com.irurueta.statistics.UniformRandomizer
+import io.mockk.Called
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit4.MockKRule
+import io.mockk.justRun
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.Assert.*
+import org.junit.Rule
+import org.junit.Test
+import java.util.LinkedList
+import java.util.Queue
+
+@Suppress("UNCHECKED_CAST")
+class GravityAndMagnetometerSyncedSensorCollectorTest {
+
+    @get:Rule
+    val mockkRule = MockKRule(this)
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var measurementListener:
+            SyncedSensorCollector.OnMeasurementListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSyncedSensorCollector>
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var gravityAccuracyChangedListener:
+            GravityAndMagnetometerSyncedSensorCollector.OnGravityAccuracyChangedListener
+
+    @MockK(relaxUnitFun = true)
+    private lateinit var magnetometerAccuracyChangedListener:
+            GravityAndMagnetometerSyncedSensorCollector.OnMagnetometerAccuracyChangedListener
+
+    @MockK
+    private lateinit var gravitySensor: Sensor
+
+    @MockK
+    private lateinit var magnetometerSensor: Sensor
+
+    @MockK
+    private lateinit var event: SensorEvent
+
+    @MockK
+    private lateinit var context: Context
+
+    @MockK
+    private lateinit var sensorManager: SensorManager
+
+    @Test
+    fun constructor_whenRequiredParameters_setsDefaultValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        // check values
+        assertSame(context, collector.context)
+        assertEquals(SyncedSensorCollector.DEFAULT_WINDOW_NANOSECONDS, collector.windowNanoseconds)
+        assertEquals(
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            collector.magnetometerSensorType
+        )
+        assertEquals(SensorDelay.FASTEST, collector.gravitySensorDelay)
+        assertEquals(SensorDelay.FASTEST, collector.magnetometerSensorDelay)
+        assertEquals(
+            GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.MAGNETOMETER,
+            collector.primarySensor
+        )
+        assertTrue(collector.interpolationEnabled)
+        assertNull(collector.measurementListener)
+        assertNull(collector.gravityAccuracyChangedListener)
+        assertNull(collector.magnetometerAccuracyChangedListener)
+        assertSame(gravitySensor, collector.gravitySensor)
+        assertSame(magnetometerSensor, collector.magnetometerSensor)
+        assertTrue(collector.gravitySensorAvailable)
+        assertTrue(collector.magnetometerSensorAvailable)
+        val sensors = collector.sensors
+        requireNotNull(sensors)
+        assertTrue(sensors.contains(gravitySensor))
+        assertTrue(sensors.contains(magnetometerSensor))
+        assertTrue(collector.sensorsAvailable)
+        assertEquals(0L, collector.startTimestamp)
+        assertFalse(collector.running)
+        assertEquals(0L, collector.numberOfProcessedMeasurements)
+        assertEquals(0L, collector.mostRecentTimestamp)
+    }
+
+    @Test
+    fun constructor_whenAllParameters_setsDefaultValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            DEFAULT_WINDOW_NANOSECONDS,
+            MagnetometerSensorType.MAGNETOMETER,
+            SensorDelay.NORMAL,
+            SensorDelay.GAME,
+            GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY,
+            false,
+            measurementListener,
+            gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener
+        )
+
+        // check values
+        assertSame(context, collector.context)
+        assertEquals(DEFAULT_WINDOW_NANOSECONDS, collector.windowNanoseconds)
+        assertEquals(
+            MagnetometerSensorType.MAGNETOMETER,
+            collector.magnetometerSensorType
+        )
+        assertEquals(SensorDelay.NORMAL, collector.gravitySensorDelay)
+        assertEquals(SensorDelay.GAME, collector.magnetometerSensorDelay)
+        assertEquals(
+            GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY,
+            collector.primarySensor
+        )
+        assertFalse(collector.interpolationEnabled)
+        assertSame(measurementListener, collector.measurementListener)
+        assertSame(gravityAccuracyChangedListener, collector.gravityAccuracyChangedListener)
+        assertSame(
+            magnetometerAccuracyChangedListener,
+            collector.magnetometerAccuracyChangedListener
+        )
+        assertSame(gravitySensor, collector.gravitySensor)
+        assertSame(magnetometerSensor, collector.magnetometerSensor)
+        assertTrue(collector.gravitySensorAvailable)
+        assertTrue(collector.magnetometerSensorAvailable)
+        val sensors = collector.sensors
+        requireNotNull(sensors)
+        assertTrue(sensors.contains(gravitySensor))
+        assertTrue(sensors.contains(magnetometerSensor))
+        assertTrue(collector.sensorsAvailable)
+        assertEquals(0L, collector.startTimestamp)
+        assertFalse(collector.running)
+        assertEquals(0L, collector.numberOfProcessedMeasurements)
+        assertEquals(0L, collector.mostRecentTimestamp)
+    }
+
+    @Test
+    fun measurementListener_setsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        // check default value
+        assertNull(collector.measurementListener)
+
+        // set new value
+        collector.measurementListener = measurementListener
+
+        // check
+        assertSame(measurementListener, collector.measurementListener)
+    }
+
+    @Test
+    fun gravityAccuracyChangedListener_setsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        // check default value
+        assertNull(collector.gravityAccuracyChangedListener)
+
+        // set new value
+        collector.gravityAccuracyChangedListener = gravityAccuracyChangedListener
+
+        // check
+        assertSame(
+            gravityAccuracyChangedListener,
+            collector.gravityAccuracyChangedListener
+        )
+    }
+
+    @Test
+    fun magnetometerAccuracyChangedListener_setsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        // check default value
+        assertNull(collector.magnetometerAccuracyChangedListener)
+
+        // set new value
+        collector.magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+
+        // check
+        assertSame(
+            magnetometerAccuracyChangedListener,
+            collector.magnetometerAccuracyChangedListener
+        )
+    }
+
+    @Test
+    fun gravitySensor_whenNoSensorManager_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertNull(collector.gravitySensor)
+    }
+
+    @Test
+    fun gravitySensor_whenSensorManager_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertSame(gravitySensor, collector.gravitySensor)
+        verify(exactly = 1) { context.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+    }
+
+    @Test
+    fun magnetometerSensor_whenNoSensorManager_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertNull(collector.magnetometerSensor)
+    }
+
+    @Test
+    fun magnetometerSensor_whenSensorTypeMagnetometer_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER
+        )
+
+        assertSame(magnetometerSensor, collector.magnetometerSensor)
+        verify(exactly = 1) { context.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD) }
+    }
+
+    @Test
+    fun magnetometerSensor_whenSensorTypeMagnetometerUncalibrated_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED
+        )
+
+        assertSame(magnetometerSensor, collector.magnetometerSensor)
+        verify(exactly = 1) { context.getSystemService(Context.SENSOR_SERVICE) }
+        verify(exactly = 1) { sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED) }
+    }
+
+    @Test
+    fun gravitySensorAvailable_whenNoSensor_returnsFalse() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertFalse(collector.gravitySensorAvailable)
+    }
+
+    @Test
+    fun gravitySensorAvailable_whenSensor_returnsTrue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(
+            gravitySensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertTrue(collector.gravitySensorAvailable)
+    }
+
+    @Test
+    fun magnetometerSensorAvailable_whenNoSensor_returnsFalse() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertFalse(collector.magnetometerSensorAvailable)
+    }
+
+    @Test
+    fun magnetometerSensorAvailable_whenSensor_returnsTrue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertTrue(collector.magnetometerSensorAvailable)
+    }
+
+    @Test
+    fun primarySensorType_whenGravity_returnsExpectedResult() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY
+        )
+
+        val result: Int? = collector.getPrivateProperty("primarySensorType")
+
+        requireNotNull(result)
+        assertEquals(Sensor.TYPE_GRAVITY, result)
+    }
+
+    @Test
+    fun primarySensorType_whenMagnetometerUncalibrated_returnsExpectedResult() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.MAGNETOMETER
+        )
+
+        val result: Int? = collector.getPrivateProperty("primarySensorType")
+
+        requireNotNull(result)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value, result)
+    }
+
+    @Test
+    fun primarySensorType_whenMagnetometer_returnsExpectedResult() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.MAGNETOMETER
+        )
+
+        val result: Int? = collector.getPrivateProperty("primarySensorType")
+
+        requireNotNull(result)
+        assertEquals(MagnetometerSensorType.MAGNETOMETER.value, result)
+    }
+
+    @Test
+    fun sensors_whenAvailable_returnsExpectedResult() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        val sensors = collector.sensors
+        requireNotNull(sensors)
+        assertTrue(sensors.contains(gravitySensor))
+        assertTrue(sensors.contains(magnetometerSensor))
+    }
+
+    @Test
+    fun sensors_whenNotAvailable_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertNull(collector.sensors)
+    }
+
+    @Test
+    fun sensors_whenNoGravityAvailable_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(null)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertNull(collector.sensors)
+    }
+
+    @Test
+    fun sensors_whenNoMagnetometerAvailable_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            null
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertNull(collector.sensors)
+    }
+
+    @Test
+    fun getSensorDelayFor_whenGravitySensor_returnsExpectedResult() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravitySensorDelay = SensorDelay.GAME
+        )
+
+        assertSame(gravitySensor, collector.gravitySensor)
+        assertSame(magnetometerSensor, collector.magnetometerSensor)
+
+        val result: Int? =
+            collector.callPrivateFuncWithResult("getSensorDelayFor", gravitySensor)
+        assertEquals(SensorDelay.GAME.value, result)
+    }
+
+    @Test
+    fun getSensorDelayFor_whenMagnetometerSensor_returnsExpectedResult() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            magnetometerSensorDelay = SensorDelay.GAME
+        )
+
+        assertSame(gravitySensor, collector.gravitySensor)
+        assertSame(magnetometerSensor, collector.magnetometerSensor)
+
+        val result: Int? =
+            collector.callPrivateFuncWithResult("getSensorDelayFor", magnetometerSensor)
+        assertEquals(SensorDelay.GAME.value, result)
+    }
+
+    @Test
+    fun sensorsAvailable_whenAllSensorsAvailable_returnsTrue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertTrue(collector.sensorsAvailable)
+    }
+
+    @Test
+    fun sensorsAvailable_whenNoGravitySensor_returnsFalse() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(null)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertFalse(collector.sensorsAvailable)
+    }
+
+    @Test
+    fun sensorsAvailable_whenNoMagnetometerSensor_returnsFalse() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            null
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        assertFalse(collector.sensorsAvailable)
+    }
+
+    @Test
+    fun createSensorMeasurement_whenNoEvent_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        val result: SensorMeasurement<*>? =
+            collector.callPrivateFuncWithResult("createSensorMeasurement", null)
+        assertNull(result)
+    }
+
+    @Test
+    fun createSensorMeasurement_whenNoEventSensor_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        event.sensor = null
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        val result: SensorMeasurement<*>? =
+            collector.callPrivateFuncWithResult("createSensorMeasurement", event)
+        assertNull(result)
+    }
+
+    @Test
+    fun createSensorMeasurement_whenUnsupportedSensorEventType_returnsNull() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        event.sensor = gravitySensor
+        every { gravitySensor.type }.returns(-1)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        val result: SensorMeasurement<*>? =
+            collector.callPrivateFuncWithResult("createSensorMeasurement", event)
+        assertNull(result)
+    }
+
+    @Test
+    fun createSensorMeasurement_whenGravitySensorType_returnsExpectedResult() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        setUpGravityEvent()
+
+        val result: SensorMeasurement<*>? =
+            collector.callPrivateFuncWithResult("createSensorMeasurement", event)
+        assertNotNull(result)
+        assertTrue(result is GravitySensorMeasurement)
+    }
+
+    @Test
+    fun createSensorMeasurement_whenMagnetometerSensorType_returnsExpectedResult() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        setUpMagnetometerEvent()
+
+        val result: SensorMeasurement<*>? =
+            collector.callPrivateFuncWithResult("createSensorMeasurement", event)
+        assertNotNull(result)
+        val magnetometerResult = result as MagnetometerSensorMeasurement
+        assertEquals(
+            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+            magnetometerResult.sensorType
+        )
+    }
+
+    @Test
+    fun processSyncedSample_whenNoGravityQueue_returnsFalse() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        val timestamp = System.nanoTime()
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertFalse(result)
+    }
+
+    @Test
+    fun processSyncedSample_whenNoMagnetometerQueue_returnsFalse() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+
+        val timestamp = System.nanoTime()
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertFalse(result)
+    }
+
+    @Test
+    fun processSyncedSample_whenInterpolationEnabledAndMeasurementsAvailable_returnsTrueAndSetsExpectedMeasurement() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            interpolationEnabled = true
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        val gravityMeasurement = createGravityMeasurement()
+        val magnetometerMeasurement = createMagnetometerMeasurement()
+        gravityQueue.add(gravityMeasurement)
+        magnetometerQueue.add(magnetometerMeasurement)
+        val timestamp = System.nanoTime()
+
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertTrue(result)
+
+        val measurement: GravityAndMagnetometerSyncedSensorMeasurement? =
+            collector.getPrivateProperty("measurement")
+
+        requireNotNull(measurement)
+        val interpolatedGravityMeasurement = gravityMeasurement.copy()
+        interpolatedGravityMeasurement.timestamp = timestamp
+        val interpolatedMagnetometerMeasurement = magnetometerMeasurement.copy()
+        interpolatedMagnetometerMeasurement.timestamp = timestamp
+
+        assertEquals(interpolatedGravityMeasurement, measurement.gravityMeasurement)
+        assertNotSame(interpolatedGravityMeasurement, measurement.gravityMeasurement)
+        assertEquals(interpolatedMagnetometerMeasurement, measurement.magnetometerMeasurement)
+        assertNotSame(interpolatedMagnetometerMeasurement, measurement.magnetometerMeasurement)
+        assertEquals(timestamp, measurement.timestamp)
+    }
+
+    @Test
+    fun processSyncedSample_whenInterpolationEnabledAndNoGravityMeasurementAvailable_returnsFalseAndDoesNotUpdateMeasurement() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            interpolationEnabled = true
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        val magnetometerMeasurement = createMagnetometerMeasurement()
+        magnetometerQueue.add(magnetometerMeasurement)
+        val timestamp = System.nanoTime()
+
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertFalse(result)
+
+        val measurement: GravityAndMagnetometerSyncedSensorMeasurement? =
+            collector.getPrivateProperty("measurement")
+
+        requireNotNull(measurement)
+        assertEquals(0L, measurement.timestamp)
+    }
+
+    @Test
+    fun processSyncedSample_whenInterpolationEnabledAndNoMagnetometerMeasurementAvailable_returnsFalseAndDoesNotUpdateMeasurement() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            interpolationEnabled = true
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        val gravityMeasurement = createGravityMeasurement()
+        gravityQueue.add(gravityMeasurement)
+        val timestamp = System.nanoTime()
+
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertFalse(result)
+
+        val measurement: GravityAndMagnetometerSyncedSensorMeasurement? =
+            collector.getPrivateProperty("measurement")
+
+        requireNotNull(measurement)
+        assertEquals(0L, measurement.timestamp)
+    }
+
+    @Test
+    fun processSyncedSample_whenInterpolationDisabledAndMeasurementsAvailable_returnsTrueAndSetsExpectedMeasurement() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            interpolationEnabled = false
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        val gravityMeasurement = createGravityMeasurement()
+        val magnetometerMeasurement = createMagnetometerMeasurement()
+        gravityQueue.add(gravityMeasurement)
+        magnetometerQueue.add(magnetometerMeasurement)
+        val timestamp = System.nanoTime()
+
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertTrue(result)
+
+        val measurement: GravityAndMagnetometerSyncedSensorMeasurement? =
+            collector.getPrivateProperty("measurement")
+
+        requireNotNull(measurement)
+        assertEquals(gravityMeasurement, measurement.gravityMeasurement)
+        assertNotSame(gravityMeasurement, measurement.gravityMeasurement)
+        assertEquals(magnetometerMeasurement, measurement.magnetometerMeasurement)
+        assertNotSame(magnetometerMeasurement, measurement.magnetometerMeasurement)
+        assertEquals(timestamp, measurement.timestamp)
+    }
+
+    @Test
+    fun processSyncedSample_whenInterpolationDisabledAndNoGravityMeasurementAvailable_returnsFalseAndDoesNotUpdateMeasurement() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            interpolationEnabled = false
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        val magnetometerMeasurement = createMagnetometerMeasurement()
+        magnetometerQueue.add(magnetometerMeasurement)
+        val timestamp = System.nanoTime()
+
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertFalse(result)
+
+        val measurement: GravityAndMagnetometerSyncedSensorMeasurement? =
+            collector.getPrivateProperty("measurement")
+
+        requireNotNull(measurement)
+        assertEquals(0L, measurement.timestamp)
+    }
+
+    @Test
+    fun processSyncedSample_whenInterpolationDisabledAndNoMagnetometerMeasurementAvailable_returnsFalseAndDoesNotUpdateMeasurement() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            interpolationEnabled = false
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        val gravityMeasurement = createGravityMeasurement()
+        gravityQueue.add(gravityMeasurement)
+        val timestamp = System.nanoTime()
+
+        val result: Boolean? = collector.callPrivateFuncWithResult(
+            "processSyncedSample",
+            timestamp
+        )
+
+        requireNotNull(result)
+        assertFalse(result)
+
+        val measurement: GravityAndMagnetometerSyncedSensorMeasurement? =
+            collector.getPrivateProperty("measurement")
+
+        requireNotNull(measurement)
+        assertEquals(0L, measurement.timestamp)
+    }
+
+    @Test
+    fun processAccuracyChanges_whenNoSensor_desNotCallAnyListener() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        collector.callPrivateFunc("processAccuracyChanged", null, SensorAccuracy.HIGH.value)
+
+        verify { gravityAccuracyChangedListener wasNot Called }
+        verify { magnetometerAccuracyChangedListener wasNot Called }
+    }
+
+    @Test
+    fun processAccuracyChanges_whenUnsupportedAccuracy_desNotCallAnyListener() {
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        collector.callPrivateFunc("processAccuracyChanged", gravitySensor, -1)
+
+        verify { gravityAccuracyChangedListener wasNot Called }
+        verify { magnetometerAccuracyChangedListener wasNot Called }
+    }
+
+    @Test
+    fun processAccuracyChanges_whenUnsupportedSensor_desNotCallAnyListener() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        val unknownSensor = mockk<Sensor>()
+        collector.callPrivateFunc(
+            "processAccuracyChanged",
+            unknownSensor,
+            SensorAccuracy.HIGH.value
+        )
+
+        verify { gravityAccuracyChangedListener wasNot Called }
+        verify { magnetometerAccuracyChangedListener wasNot Called }
+    }
+
+    @Test
+    fun processAccuracyChanges_whenGravitySensor_callsExpectedListener() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        collector.callPrivateFunc(
+            "processAccuracyChanged",
+            gravitySensor,
+            SensorAccuracy.HIGH.value
+        )
+
+        verify(exactly = 1) {
+            gravityAccuracyChangedListener.onAccuracyChanged(
+                collector,
+                SensorAccuracy.HIGH
+            )
+        }
+        verify { magnetometerAccuracyChangedListener wasNot Called }
+    }
+
+    @Test
+    fun processAccuracyChanges_whenGravitySensorAndNoListener_noCallIsMade() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        collector.callPrivateFunc(
+            "processAccuracyChanged",
+            gravitySensor,
+            SensorAccuracy.HIGH.value
+        )
+
+        verify { gravityAccuracyChangedListener wasNot Called }
+        verify { magnetometerAccuracyChangedListener wasNot Called }
+    }
+
+    @Test
+    fun processAccuracyChanges_whenMagnetometerSensor_callsExpectedListener() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        collector.callPrivateFunc(
+            "processAccuracyChanged",
+            magnetometerSensor,
+            SensorAccuracy.HIGH.value
+        )
+
+        verify { gravityAccuracyChangedListener wasNot Called }
+        verify(exactly = 1) {
+            magnetometerAccuracyChangedListener.onAccuracyChanged(
+                collector,
+                SensorAccuracy.HIGH
+            )
+        }
+    }
+
+    @Test
+    fun processAccuracyChanges_whenMagnetometerSensorAndNoListener_noCallIsMade() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener
+        )
+
+        collector.callPrivateFunc(
+            "processAccuracyChanged",
+            magnetometerSensor,
+            SensorAccuracy.HIGH.value
+        )
+
+        verify { gravityAccuracyChangedListener wasNot Called }
+        verify { magnetometerAccuracyChangedListener wasNot Called }
+    }
+
+    @Test
+    fun onSensorChanged_whenNoEvent_makesNoAction() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            measurementListener = measurementListener
+        )
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onSensorChanged(null)
+
+        // check
+        verify { measurementListener wasNot Called }
+    }
+
+    @Test
+    fun onSensorChanged_whenUnsupportedEvent_makesNoAction() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        event.sensor = gravitySensor
+        every { gravitySensor.type }.returns(-1)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            measurementListener = measurementListener
+        )
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        verify { measurementListener wasNot Called }
+    }
+
+    @Test
+    fun onSensorChanged_whenNotPrimarySensorEvent_updatesBuffer() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY,
+            measurementListener = measurementListener
+        )
+
+        setUpMagnetometerEvent()
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        assertEquals(1, buffer.size)
+        assertTrue(buffer.containsKey(collector.magnetometerSensorType.value))
+        val magnetometerQueue = buffer[collector.magnetometerSensorType.value]
+        requireNotNull(magnetometerQueue)
+        assertEquals(1, magnetometerQueue.size)
+        assertTrue(magnetometerQueue.first() is MagnetometerSensorMeasurement)
+
+        verify { measurementListener wasNot Called }
+    }
+
+    @Test
+    fun onSensorChanged_whenBufferIsTrimmed_updatesBuffer() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY,
+            measurementListener = measurementListener
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        // save initial measurements in buffer that will be trimmed
+        val gravityMeasurement = createGravityMeasurement()
+        gravityMeasurement.timestamp -= 2 * collector.windowNanoseconds
+        val magnetometerMeasurement = createMagnetometerMeasurement()
+        magnetometerMeasurement.timestamp -= 2 * collector.windowNanoseconds
+        gravityQueue.add(gravityMeasurement)
+        magnetometerQueue.add(magnetometerMeasurement)
+
+        setUpMagnetometerEvent()
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        assertEquals(2, buffer.size)
+        assertEquals(1, magnetometerQueue.size)
+        assertTrue(magnetometerQueue.first() is MagnetometerSensorMeasurement)
+        assertNotEquals(magnetometerMeasurement, magnetometerQueue.first())
+        assertTrue(gravityQueue.isEmpty())
+
+        verify { measurementListener wasNot Called }
+    }
+
+    @Test
+    fun onSensorChanged_whenPrimarySensorEventAndBufferNotEmpty_notifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY,
+            measurementListener = measurementListener
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        // save initial measurements in buffer that will be trimmed
+        val prevGravityMeasurement = createGravityMeasurement()
+        prevGravityMeasurement.timestamp -= 2 * collector.windowNanoseconds
+        val prevMagnetometerMeasurement = createMagnetometerMeasurement()
+        gravityQueue.add(prevGravityMeasurement)
+        magnetometerQueue.add(prevMagnetometerMeasurement)
+
+        setUpGravityEvent()
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        assertEquals(2, buffer.size)
+        assertEquals(1, gravityQueue.size)
+        assertTrue(gravityQueue.first() is GravitySensorMeasurement)
+        // new primary measurement is stored in buffer
+        val primaryGravityMeasurement = gravityQueue.first() as GravitySensorMeasurement
+        // and does not match previous measurement
+        assertNotEquals(prevGravityMeasurement, gravityQueue.first())
+        assertEquals(1, magnetometerQueue.size)
+        assertTrue(magnetometerQueue.first() is MagnetometerSensorMeasurement)
+        assertEquals(prevMagnetometerMeasurement, magnetometerQueue.first())
+
+        val slot = slot<GravityAndMagnetometerSyncedSensorMeasurement>()
+        verify(exactly = 1) { measurementListener.onMeasurement(collector, capture(slot)) }
+
+        val syncedMeasurement = slot.captured
+
+        assertEquals(primaryGravityMeasurement, syncedMeasurement.gravityMeasurement)
+        val interpolatedMagnetometerMeasurement = prevMagnetometerMeasurement.copy()
+        interpolatedMagnetometerMeasurement.timestamp = primaryGravityMeasurement.timestamp
+        assertEquals(
+            interpolatedMagnetometerMeasurement,
+            syncedMeasurement.magnetometerMeasurement
+        )
+    }
+
+    @Test
+    fun onSensorChanged_whenPrimarySensorEventBufferNotEmptyAndNoListener_updatesBuffer() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        // save initial measurements in buffer that will be trimmed
+        val prevGravityMeasurement = createGravityMeasurement()
+        prevGravityMeasurement.timestamp -= 2 * collector.windowNanoseconds
+        val prevMagnetometerMeasurement = createMagnetometerMeasurement()
+        gravityQueue.add(prevGravityMeasurement)
+        magnetometerQueue.add(prevMagnetometerMeasurement)
+
+        setUpGravityEvent()
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        assertEquals(2, buffer.size)
+        assertEquals(1, gravityQueue.size)
+        assertTrue(gravityQueue.first() is GravitySensorMeasurement)
+        // new primary measurement is stored in buffer
+        // and does not match previous measurement
+        assertNotEquals(prevGravityMeasurement, gravityQueue.first())
+        assertEquals(1, magnetometerQueue.size)
+        assertTrue(magnetometerQueue.first() is MagnetometerSensorMeasurement)
+        assertEquals(prevMagnetometerMeasurement, magnetometerQueue.first())
+
+        verify { measurementListener wasNot Called }
+    }
+
+    @Test
+    fun onSensorChanged_whenPrimarySensorEventAndEmptyBuffer_updatesBuffer() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            primarySensor = GravityAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY,
+            measurementListener = measurementListener
+        )
+
+        val buffer: MutableMap<Int, Queue<SensorMeasurement<*>>>? =
+            collector.getPrivateProperty("buffer")
+        requireNotNull(buffer)
+
+        val gravityQueue = LinkedList<GravitySensorMeasurement>() as Queue<SensorMeasurement<*>>
+        val magnetometerQueue =
+            LinkedList<MagnetometerSensorMeasurement>() as Queue<SensorMeasurement<*>>
+        buffer[Sensor.TYPE_GRAVITY] = gravityQueue
+        buffer[collector.magnetometerSensorType.value] = magnetometerQueue
+
+        assertTrue(gravityQueue.isEmpty())
+        assertTrue(magnetometerQueue.isEmpty())
+
+        setUpGravityEvent()
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onSensorChanged(event)
+
+        // check
+        assertEquals(2, buffer.size)
+        assertEquals(1, gravityQueue.size)
+        assertTrue(gravityQueue.first() is GravitySensorMeasurement)
+        assertTrue(magnetometerQueue.isEmpty())
+
+        verify { measurementListener wasNot Called }
+    }
+
+    @Test
+    fun onAccuracyChanged_whenGravitySensor_callsExpectedListener() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onAccuracyChanged(gravitySensor, SensorAccuracy.HIGH.value)
+
+        verify(exactly = 1) {
+            gravityAccuracyChangedListener.onAccuracyChanged(
+                collector,
+                SensorAccuracy.HIGH
+            )
+        }
+        verify { magnetometerAccuracyChangedListener wasNot Called }
+    }
+
+    @Test
+    fun onAccuracyChanged_whenMagnetometerSensor_callsExpectedListener() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(
+            context,
+            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
+            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+        )
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        requireNotNull(sensorEventListener)
+
+        sensorEventListener.onAccuracyChanged(magnetometerSensor, SensorAccuracy.HIGH.value)
+
+        verify { gravityAccuracyChangedListener wasNot Called }
+        verify(exactly = 1) {
+            magnetometerAccuracyChangedListener.onAccuracyChanged(
+                collector,
+                SensorAccuracy.HIGH
+            )
+        }
+    }
+
+    @Test
+    fun start_whenRunning_returnsFalse() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+            setPrivateProperty(SyncedSensorCollector::class, collector, "running", true)
+            assertTrue(collector.running)
+
+            assertFalse(collector.start())
+        }
+    }
+
+    @Test
+    fun start_whenNoSensorManager_returnsFalse() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+
+            val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+            assertFalse(collector.start())
+            assertNull(collector.sensors)
+
+            assertFalse(collector.running)
+            assertEquals(0L, collector.startTimestamp)
+        }
+    }
+
+    @Test
+    fun start_whenNoSensors_returnsFalse() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
+                null
+            )
+            every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(null)
+            every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
+                null
+            )
+            every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+                null
+            )
+
+            val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+            assertFalse(collector.start())
+            assertNull(collector.sensors)
+
+            assertFalse(collector.running)
+            assertEquals(0L, collector.startTimestamp)
+        }
+    }
+
+    @Test
+    fun start_whenGravityRegisterListenerFails_returnsFalse() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+            every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+                magnetometerSensor
+            )
+
+            every { sensorManager.registerListener(any(), gravitySensor, any()) }.returns(false)
+            every { sensorManager.registerListener(any(), magnetometerSensor, any()) }.returns(true)
+
+            val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+            assertFalse(collector.start())
+            assertNotNull(collector.sensors)
+
+            val slot1 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot1),
+                    gravitySensor,
+                    collector.gravitySensorDelay.value
+                )
+            }
+            val slot2 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot2),
+                    magnetometerSensor,
+                    collector.magnetometerSensorDelay.value
+                )
+            }
+
+            assertSame(slot1.captured, slot2.captured)
+            val eventListener = slot1.captured
+
+            val sensorEventListener: SensorEventListener? =
+                getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+            requireNotNull(sensorEventListener)
+            assertSame(sensorEventListener, eventListener)
+
+            assertFalse(collector.running)
+            assertNotEquals(0L, collector.startTimestamp)
+        }
+    }
+
+    @Test
+    fun start_whenMagnetometerRegisterListenerFails_returnsFalse() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+            every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+                magnetometerSensor
+            )
+
+            every { sensorManager.registerListener(any(), gravitySensor, any()) }.returns(true)
+            every { sensorManager.registerListener(any(), magnetometerSensor, any()) }.returns(false)
+
+            val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+            assertFalse(collector.start())
+            assertNotNull(collector.sensors)
+
+            val slot1 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot1),
+                    gravitySensor,
+                    collector.gravitySensorDelay.value
+                )
+            }
+            val slot2 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot2),
+                    magnetometerSensor,
+                    collector.magnetometerSensorDelay.value
+                )
+            }
+
+            assertSame(slot1.captured, slot2.captured)
+            val eventListener = slot1.captured
+
+            val sensorEventListener: SensorEventListener? =
+                getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+            requireNotNull(sensorEventListener)
+            assertSame(sensorEventListener, eventListener)
+
+            assertFalse(collector.running)
+            assertNotEquals(0L, collector.startTimestamp)
+        }
+    }
+
+    @Test
+    fun start_whenRegisterListenerSucceedsForAllSensors_returnsTrue() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+            every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+                magnetometerSensor
+            )
+
+            every { sensorManager.registerListener(any(), gravitySensor, any()) }.returns(true)
+            every { sensorManager.registerListener(any(), magnetometerSensor, any()) }.returns(true)
+
+            val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+            assertTrue(collector.start())
+            assertNotNull(collector.sensors)
+
+            val slot1 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot1),
+                    gravitySensor,
+                    collector.gravitySensorDelay.value
+                )
+            }
+            val slot2 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot2),
+                    magnetometerSensor,
+                    collector.magnetometerSensorDelay.value
+                )
+            }
+
+            assertSame(slot1.captured, slot2.captured)
+            val eventListener = slot1.captured
+
+            val sensorEventListener: SensorEventListener? =
+                getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+            requireNotNull(sensorEventListener)
+            assertSame(sensorEventListener, eventListener)
+
+            assertTrue(collector.running)
+            assertEquals(startTimestamp, collector.startTimestamp)
+        }
+    }
+
+    @Test
+    fun start_whenStartTimestampProvided_setsProvidedTimestamp() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+            every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+                magnetometerSensor
+            )
+
+            every { sensorManager.registerListener(any(), gravitySensor, any()) }.returns(true)
+            every { sensorManager.registerListener(any(), magnetometerSensor, any()) }.returns(true)
+
+            val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+            assertTrue(collector.start(startTimestamp))
+            assertNotNull(collector.sensors)
+
+            val slot1 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot1),
+                    gravitySensor,
+                    collector.gravitySensorDelay.value
+                )
+            }
+            val slot2 = slot<SensorEventListener>()
+            verify(exactly = 1) {
+                sensorManager.registerListener(
+                    capture(slot2),
+                    magnetometerSensor,
+                    collector.magnetometerSensorDelay.value
+                )
+            }
+
+            assertSame(slot1.captured, slot2.captured)
+            val eventListener = slot1.captured
+
+            val sensorEventListener: SensorEventListener? =
+                getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+            requireNotNull(sensorEventListener)
+            assertSame(sensorEventListener, eventListener)
+
+            assertTrue(collector.running)
+            assertEquals(startTimestamp, collector.startTimestamp)
+        }
+    }
+
+    @Test
+    fun stop_whenNoSensorManager_makesNoAction() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(null)
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        setPrivateProperty(
+            SyncedSensorCollector::class,
+            collector,
+            "numberOfProcessedMeasurements",
+            1L
+        )
+        setPrivateProperty(
+            SyncedSensorCollector::class,
+            collector,
+            "mostRecentTimestamp",
+            2L
+        )
+        setPrivateProperty(
+            SyncedSensorCollector::class,
+            collector,
+            "running",
+            true
+        )
+
+        assertNull(collector.sensors)
+
+        collector.stop()
+
+        assertEquals(1L, collector.numberOfProcessedMeasurements)
+        assertEquals(2L, collector.mostRecentTimestamp)
+        assertTrue(collector.running)
+    }
+
+    @Test
+    fun stop_whenSensorManager_unregisterListenersAndResetsParameters() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
+            magnetometerSensor
+        )
+        justRun { sensorManager.unregisterListener(any(), any<Sensor>()) }
+
+        val collector = GravityAndMagnetometerSyncedSensorCollector(context)
+
+        setPrivateProperty(
+            SyncedSensorCollector::class,
+            collector,
+            "numberOfProcessedMeasurements",
+            1L
+        )
+        setPrivateProperty(
+            SyncedSensorCollector::class,
+            collector,
+            "mostRecentTimestamp",
+            2L
+        )
+        setPrivateProperty(
+            SyncedSensorCollector::class,
+            collector,
+            "running",
+            true
+        )
+
+        assertNotNull(collector.sensors)
+        assertEquals(1L, collector.numberOfProcessedMeasurements)
+        assertEquals(2L, collector.mostRecentTimestamp)
+        assertTrue(collector.running)
+
+        collector.stop()
+
+        assertEquals(0L, collector.numberOfProcessedMeasurements)
+        assertEquals(0L, collector.mostRecentTimestamp)
+        assertFalse(collector.running)
+
+        val slot1 = slot<SensorEventListener>()
+        verify(exactly = 1) { sensorManager.unregisterListener(capture(slot1), gravitySensor) }
+        val slot2 = slot<SensorEventListener>()
+        verify(exactly = 1) { sensorManager.unregisterListener(capture(slot2), magnetometerSensor) }
+
+        assertSame(slot1.captured, slot2.captured)
+
+        val eventListener = slot1.captured
+
+        val sensorEventListener: SensorEventListener? =
+            getPrivateProperty(SyncedSensorCollector::class, collector, "sensorEventListener")
+        assertSame(sensorEventListener, eventListener)
+    }
+
+    private fun setUpGravityEvent() {
+        every { gravitySensor.type }.returns(Sensor.TYPE_GRAVITY)
+        event.sensor = gravitySensor
+
+        val timestamp = System.nanoTime()
+        event.timestamp = timestamp
+
+        val randomizer = UniformRandomizer()
+        val gx = randomizer.nextFloat()
+        val gy = randomizer.nextFloat()
+        val gz = randomizer.nextFloat()
+        val values = floatArrayOf(gx, gy, gz)
+        val valuesField = SensorEvent::class.java.getDeclaredField("values")
+        valuesField.isAccessible = true
+        valuesField.set(event, values)
+
+        event.accuracy = SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM
+    }
+
+    private fun setUpMagnetometerEvent() {
+        every { magnetometerSensor.type }.returns(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED)
+        event.sensor = magnetometerSensor
+
+        val timestamp = System.nanoTime()
+        event.timestamp = timestamp
+
+        val randomizer = UniformRandomizer()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val hardIronX = randomizer.nextFloat()
+        val hardIronY = randomizer.nextFloat()
+        val hardIronZ = randomizer.nextFloat()
+        val values = floatArrayOf(bx, by, bz, hardIronX, hardIronY, hardIronZ)
+        val valuesField = SensorEvent::class.java.getDeclaredField("values")
+        valuesField.isAccessible = true
+        valuesField.set(event, values)
+
+        event.accuracy = SensorManager.SENSOR_STATUS_ACCURACY_LOW
+    }
+
+    private companion object {
+        const val DEFAULT_WINDOW_NANOSECONDS = 1000000L
+
+        private fun createGravityMeasurement(): GravitySensorMeasurement {
+            val randomizer = UniformRandomizer()
+            val gx = randomizer.nextFloat()
+            val gy = randomizer.nextFloat()
+            val gz = randomizer.nextFloat()
+            val timestamp = System.nanoTime()
+            return GravitySensorMeasurement(
+                gx,
+                gy,
+                gz,
+                timestamp,
+                SensorAccuracy.MEDIUM,
+                SensorCoordinateSystem.ENU
+            )
+        }
+
+        private fun createMagnetometerMeasurement(): MagnetometerSensorMeasurement {
+            val randomizer = UniformRandomizer()
+            val bx = randomizer.nextFloat()
+            val by = randomizer.nextFloat()
+            val bz = randomizer.nextFloat()
+            val hardIronX = randomizer.nextFloat()
+            val hardIronY = randomizer.nextFloat()
+            val hardIronZ = randomizer.nextFloat()
+            val timestamp = System.nanoTime()
+            return MagnetometerSensorMeasurement(
+                bx,
+                by,
+                bz,
+                hardIronX,
+                hardIronY,
+                hardIronZ,
+                timestamp,
+                SensorAccuracy.HIGH,
+                MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+                SensorCoordinateSystem.ENU
+            )
+        }
+    }
+}

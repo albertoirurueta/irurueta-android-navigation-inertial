@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,89 +13,100 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.SystemClock
-import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.GravityHelper
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
-import com.irurueta.android.navigation.inertial.collectors.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
-import com.irurueta.navigation.frames.NEDPosition
-import com.irurueta.navigation.inertial.ECEFGravity
-import com.irurueta.navigation.inertial.calibration.TimeIntervalEstimator
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedAccelerationMeasurementNoiseEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import com.irurueta.units.Time
 import com.irurueta.units.TimeUnit
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
-import io.mockk.spyk
+import io.mockk.justRun
+import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
-@RunWith(RobolectricTestRunner::class)
 class GravityNormEstimatorTest {
 
     @get:Rule
     val mockkRule = MockKRule(this)
 
-    @MockK(relaxUnitFun = true)
-    private lateinit var completedListener:
-            AccumulatedMeasurementEstimator.OnEstimationCompletedListener<GravityNormEstimator>
+    @MockK
+    private lateinit var context: Context
 
-    @MockK(relaxUnitFun = true)
-    private lateinit var unreliableListener:
-            AccumulatedMeasurementEstimator.OnUnreliableListener<GravityNormEstimator>
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var measurementListener: GravitySensorCollector.OnMeasurementListener
+    @MockK
+    private lateinit var sensorManager: SensorManager
 
     @MockK
     private lateinit var sensor: Sensor
 
+    @MockK
+    private lateinit var completedListener: AccumulatedMeasurementEstimator
+    .OnEstimationCompletedListener<GravityNormEstimator>
+
+    @MockK
+    private lateinit var unreliableListener: AccumulatedMeasurementEstimator
+    .OnUnreliableListener<GravityNormEstimator>
+
+    @MockK
+    private lateinit var processor: GravityNormProcessor
+
     @Test
-    fun constructor_whenContext_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun constructor_whenDefaultValues_setsExpectedValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
         val estimator = GravityNormEstimator(context)
 
-        // check default values
         assertSame(context, estimator.context)
         assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
-        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+            estimator.maxSamples
+        )
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
-        assertNull(estimator.measurementListener)
-        assertNull(estimator.sensor)
+        assertSame(sensor, estimator.sensor)
         assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        val acceleration = Acceleration(
+            0.0,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
         assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.normVariance)
         assertNull(estimator.normStandardDeviation)
@@ -103,46 +114,62 @@ class GravityNormEstimatorTest {
         assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psd)
         assertNull(estimator.rootPsd)
+        assertEquals(0L, estimator.initialTimestampNanos)
+        assertEquals(0L, estimator.endTimestampNanos)
+        assertEquals(0L, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageTimeInterval)
         assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time))
         assertNull(estimator.timeIntervalVariance)
         assertNull(estimator.timeIntervalStandardDeviation)
         assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
+        val elapsedTime = Time(0.0, TimeUnit.NANOSECOND)
+        assertEquals(elapsedTime, estimator.elapsedTime)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
     }
 
     @Test
     fun constructor_whenSensorDelay_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context, SensorDelay.NORMAL)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
 
-        // check values
+        val estimator = GravityNormEstimator(
+            context,
+            sensorDelay = SensorDelay.NORMAL
+        )
+
         assertSame(context, estimator.context)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(BaseAccumulatedEstimator.DEFAULT_MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+            estimator.maxSamples
+        )
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
-        assertNull(estimator.measurementListener)
-        assertNull(estimator.sensor)
+        assertSame(sensor, estimator.sensor)
         assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        val acceleration = Acceleration(
+            0.0,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
         assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.normVariance)
         assertNull(estimator.normStandardDeviation)
@@ -150,52 +177,77 @@ class GravityNormEstimatorTest {
         assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psd)
         assertNull(estimator.rootPsd)
+        assertEquals(0L, estimator.initialTimestampNanos)
+        assertEquals(0L, estimator.endTimestampNanos)
+        assertEquals(0L, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageTimeInterval)
         assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time))
         assertNull(estimator.timeIntervalVariance)
         assertNull(estimator.timeIntervalStandardDeviation)
         assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
+        val elapsedTime = Time(0.0, TimeUnit.NANOSECOND)
+        assertEquals(elapsedTime, estimator.elapsedTime)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun constructor_whenNegativeMaxSamples_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        GravityNormEstimator(context, SensorDelay.NORMAL, -1)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            GravityNormEstimator(
+                context,
+                maxSamples = -1
+            )
+        }
     }
 
     @Test
     fun constructor_whenMaxSamples_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context, SensorDelay.NORMAL, MAX_SAMPLES)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
 
-        // check values
+        val estimator = GravityNormEstimator(
+            context,
+            maxSamples = MAX_SAMPLES
+        )
+
         assertSame(context, estimator.context)
-        assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
+        assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
         assertEquals(MAX_SAMPLES, estimator.maxSamples)
         assertEquals(
-            BaseAccumulatedEstimator.DEFAULT_MAX_DURATION_MILLIS,
+            BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
             estimator.maxDurationMillis
         )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
-        assertNull(estimator.measurementListener)
-        assertNull(estimator.sensor)
+        assertSame(sensor, estimator.sensor)
         assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        val acceleration = Acceleration(
+            0.0,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
         assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.normVariance)
         assertNull(estimator.normStandardDeviation)
@@ -203,50 +255,80 @@ class GravityNormEstimatorTest {
         assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psd)
         assertNull(estimator.rootPsd)
+        assertEquals(0L, estimator.initialTimestampNanos)
+        assertEquals(0L, estimator.endTimestampNanos)
+        assertEquals(0L, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageTimeInterval)
         assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time))
         assertNull(estimator.timeIntervalVariance)
         assertNull(estimator.timeIntervalStandardDeviation)
         assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
+        val elapsedTime = Time(0.0, TimeUnit.NANOSECOND)
+        assertEquals(elapsedTime, estimator.elapsedTime)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun constructor_whenNegativeMaxDurationMillis_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        GravityNormEstimator(context, SensorDelay.NORMAL, MAX_SAMPLES, -1L)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            GravityNormEstimator(
+                context,
+                maxDurationMillis = -1
+            )
+        }
     }
 
     @Test
     fun constructor_whenMaxDurationMillis_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(context, SensorDelay.NORMAL, MAX_SAMPLES, MAX_DURATION_MILLIS)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
 
-        // check values
+        val estimator = GravityNormEstimator(
+            context,
+            maxDurationMillis = MAX_DURATION_MILLIS
+        )
+
         assertSame(context, estimator.context)
-        assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(MAX_SAMPLES, estimator.maxSamples)
-        assertEquals(MAX_DURATION_MILLIS, estimator.maxDurationMillis)
+        assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+            estimator.maxSamples
+        )
+        assertEquals(
+            MAX_DURATION_MILLIS,
+            estimator.maxDurationMillis
+        )
         assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
         assertNull(estimator.completedListener)
         assertNull(estimator.unreliableListener)
-        assertNull(estimator.measurementListener)
-        assertNull(estimator.sensor)
+        assertSame(sensor, estimator.sensor)
         assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageNorm)
         assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
+        val acceleration = Acceleration(
+            0.0,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
         assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
         assertNull(estimator.normVariance)
         assertNull(estimator.normStandardDeviation)
@@ -254,1367 +336,1282 @@ class GravityNormEstimatorTest {
         assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
         assertNull(estimator.psd)
         assertNull(estimator.rootPsd)
+        assertEquals(0L, estimator.initialTimestampNanos)
+        assertEquals(0L, estimator.endTimestampNanos)
+        assertEquals(0L, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
+        assertFalse(estimator.resultUnreliable)
         assertNull(estimator.averageTimeInterval)
         assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time))
         assertNull(estimator.timeIntervalVariance)
         assertNull(estimator.timeIntervalStandardDeviation)
         assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time))
         assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
+        val elapsedTime = Time(0.0, TimeUnit.NANOSECOND)
+        assertEquals(elapsedTime, estimator.elapsedTime)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
     }
 
     @Test
     fun constructor_whenStopMode_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                SensorDelay.NORMAL,
-                MAX_SAMPLES,
-                MAX_DURATION_MILLIS,
-                StopMode.MAX_SAMPLES_ONLY
-            )
-
-        // check values
-        assertSame(context, estimator.context)
-        assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(MAX_SAMPLES, estimator.maxSamples)
-        assertEquals(MAX_DURATION_MILLIS, estimator.maxDurationMillis)
-        assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
-        assertNull(estimator.completedListener)
-        assertNull(estimator.unreliableListener)
-        assertNull(estimator.measurementListener)
-        assertNull(estimator.sensor)
-        assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
-        assertNull(estimator.averageNorm)
-        assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
-        assertNull(estimator.normVariance)
-        assertNull(estimator.normStandardDeviation)
-        assertNull(estimator.normStandardDeviationAsMeasurement)
-        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(estimator.psd)
-        assertNull(estimator.rootPsd)
-        assertNull(estimator.averageTimeInterval)
-        assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
-        assertNull(estimator.timeIntervalVariance)
-        assertNull(estimator.timeIntervalStandardDeviation)
-        assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
-        assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
-    }
-
-    @Test
-    fun constructor_whenCompletedListener_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                SensorDelay.NORMAL,
-                MAX_SAMPLES,
-                MAX_DURATION_MILLIS,
-                StopMode.MAX_SAMPLES_ONLY,
-                completedListener
-            )
-
-        // check values
-        assertSame(context, estimator.context)
-        assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(MAX_SAMPLES, estimator.maxSamples)
-        assertEquals(MAX_DURATION_MILLIS, estimator.maxDurationMillis)
-        assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
-        assertSame(completedListener, estimator.completedListener)
-        assertNull(estimator.unreliableListener)
-        assertNull(estimator.measurementListener)
-        assertNull(estimator.sensor)
-        assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
-        assertNull(estimator.averageNorm)
-        assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
-        assertNull(estimator.normVariance)
-        assertNull(estimator.normStandardDeviation)
-        assertNull(estimator.normStandardDeviationAsMeasurement)
-        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(estimator.psd)
-        assertNull(estimator.rootPsd)
-        assertNull(estimator.averageTimeInterval)
-        assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
-        assertNull(estimator.timeIntervalVariance)
-        assertNull(estimator.timeIntervalStandardDeviation)
-        assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
-        assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
-    }
-
-    @Test
-    fun constructor_whenUnreliableListener_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                SensorDelay.NORMAL,
-                MAX_SAMPLES,
-                MAX_DURATION_MILLIS,
-                StopMode.MAX_SAMPLES_ONLY,
-                completedListener,
-                unreliableListener
-            )
-
-        // check values
-        assertSame(context, estimator.context)
-        assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(MAX_SAMPLES, estimator.maxSamples)
-        assertEquals(MAX_DURATION_MILLIS, estimator.maxDurationMillis)
-        assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
-        assertSame(completedListener, estimator.completedListener)
-        assertSame(unreliableListener, estimator.unreliableListener)
-        assertNull(estimator.measurementListener)
-        assertNull(estimator.sensor)
-        assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
-        assertNull(estimator.averageNorm)
-        assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
-        assertNull(estimator.normVariance)
-        assertNull(estimator.normStandardDeviation)
-        assertNull(estimator.normStandardDeviationAsMeasurement)
-        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(estimator.psd)
-        assertNull(estimator.rootPsd)
-        assertNull(estimator.averageTimeInterval)
-        assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
-        assertNull(estimator.timeIntervalVariance)
-        assertNull(estimator.timeIntervalStandardDeviation)
-        assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
-        assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
-    }
-
-    @Test
-    fun constructor_whenMeasurementListener_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                SensorDelay.NORMAL,
-                MAX_SAMPLES,
-                MAX_DURATION_MILLIS,
-                StopMode.MAX_SAMPLES_ONLY,
-                completedListener,
-                unreliableListener,
-                measurementListener
-            )
-
-        // check values
-        assertSame(context, estimator.context)
-        assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
-        assertEquals(MAX_SAMPLES, estimator.maxSamples)
-        assertEquals(MAX_DURATION_MILLIS, estimator.maxDurationMillis)
-        assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
-        assertSame(completedListener, estimator.completedListener)
-        assertSame(unreliableListener, estimator.unreliableListener)
-        assertSame(measurementListener, estimator.measurementListener)
-        assertNull(estimator.sensor)
-        assertFalse(estimator.running)
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
-        assertNull(estimator.averageNorm)
-        assertNull(estimator.averageNormAsMeasurement)
-        val acceleration = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
-        assertNull(estimator.normVariance)
-        assertNull(estimator.normStandardDeviation)
-        assertNull(estimator.normStandardDeviationAsMeasurement)
-        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
-        assertNull(estimator.psd)
-        assertNull(estimator.rootPsd)
-        assertNull(estimator.averageTimeInterval)
-        assertNull(estimator.averageTimeIntervalAsTime)
-        val time1 = Time(0.0, TimeUnit.SECOND)
-        assertFalse(estimator.getAverageTimeIntervalAsTime(time1))
-        assertNull(estimator.timeIntervalVariance)
-        assertNull(estimator.timeIntervalStandardDeviation)
-        assertNull(estimator.timeIntervalStandardDeviationAsTime)
-        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time1))
-        assertEquals(0L, estimator.elapsedTimeNanos)
-        assertEquals(Time(0.0, TimeUnit.NANOSECOND), estimator.elapsedTime)
-        val time2 = Time(1.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(time2)
-        assertEquals(estimator.elapsedTime, time2)
-    }
-
-    @Test
-    fun completedListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        // check default value
-        assertNull(estimator.completedListener)
-
-        // set new value
-        estimator.completedListener = completedListener
-
-        // check
-        assertSame(completedListener, estimator.completedListener)
-    }
-
-    @Test
-    fun unreliableListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        // check default value
-        assertNull(estimator.unreliableListener)
-
-        // set new value
-        estimator.unreliableListener = unreliableListener
-
-        // check
-        assertSame(unreliableListener, estimator.unreliableListener)
-    }
-
-    @Test
-    fun measurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        // check default value
-        assertNull(estimator.measurementListener)
-
-        // set new value
-        estimator.measurementListener = measurementListener
-
-        // check
-        assertSame(measurementListener, estimator.measurementListener)
-    }
-
-    @Test
-    fun sensor_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        // check
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.sensor }.returns(sensor)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        assertSame(sensor, estimator.sensor)
-    }
-
-    @Test
-    fun start_whenSensorAvailable_startsCollector() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorDelay, estimator.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
-
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        assertFalse(estimator.running)
-
-        estimator.start()
-
-        assertTrue(estimator.running)
-        verify(exactly = 1) { collectorSpy.start() }
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun start_whenSensorUnavailable_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorDelay, estimator.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
-
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(false)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        assertFalse(estimator.running)
-
-        estimator.start()
-    }
-
-    @Test
-    fun start_whenDefaultStopMode_resets() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
-            estimator.getPrivateProperty("noiseEstimator")
-        requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
-        estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "timeIntervalEstimator"
-        )
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        setPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
         )
 
-        assertFalse(estimator.running)
-
-        estimator.start()
-
-        assertTrue(estimator.running)
-
-        verify(exactly = 1) { noiseEstimatorSpy.reset() }
-        assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
-
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
-        assertEquals(estimator.maxSamples, timeIntervalEstimatorSpy.totalSamples)
-    }
-
-    @Test
-    fun start_whenMaxDurationOnlyStopMode_resets() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityNormEstimator(
             context,
             stopMode = StopMode.MAX_DURATION_ONLY
         )
 
-        val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
-            estimator.getPrivateProperty("noiseEstimator")
-        requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
-        estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? = getPrivateProperty(
-            BaseAccumulatedEstimator::class, estimator, "timeIntervalEstimator"
+        assertSame(context, estimator.context)
+        assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+            estimator.maxSamples
         )
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        setPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
+            estimator.maxDurationMillis
         )
-
+        assertEquals(StopMode.MAX_DURATION_ONLY, estimator.stopMode)
+        assertNull(estimator.completedListener)
+        assertNull(estimator.unreliableListener)
+        assertSame(sensor, estimator.sensor)
         assertFalse(estimator.running)
-
-        estimator.start()
-
-        assertTrue(estimator.running)
-
-        verify(exactly = 1) { noiseEstimatorSpy.reset() }
-        assertEquals(0.0, noiseEstimatorSpy.timeInterval, 0.0)
-
-        verify(exactly = 1) { timeIntervalEstimatorSpy.reset() }
-        assertEquals(Integer.MAX_VALUE, timeIntervalEstimatorSpy.totalSamples)
-    }
-
-    @Test
-    fun start_whenResultUnreliable_resets() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        setPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "resultUnreliable",
-            true
+        assertNull(estimator.averageNorm)
+        assertNull(estimator.averageNormAsMeasurement)
+        val acceleration = Acceleration(
+            0.0,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
         )
-        assertTrue(estimator.resultUnreliable)
-
-        assertFalse(estimator.running)
-
-        estimator.start()
-
-        assertTrue(estimator.running)
-
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
+        assertNull(estimator.normVariance)
+        assertNull(estimator.normStandardDeviation)
+        assertNull(estimator.normStandardDeviationAsMeasurement)
+        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
+        assertNull(estimator.psd)
+        assertNull(estimator.rootPsd)
+        assertEquals(0L, estimator.initialTimestampNanos)
+        assertEquals(0L, estimator.endTimestampNanos)
+        assertEquals(0L, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
         assertFalse(estimator.resultUnreliable)
-    }
-
-    @Test(expected = IllegalStateException::class)
-    fun start_whenAlreadyRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        assertFalse(estimator.running)
-
-        estimator.start()
-
-        assertTrue(estimator.running)
-
-        // start again
-        estimator.start()
-    }
-
-    @Test
-    fun stop_whenAlreadyStarted_stopsSensorCollector() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorDelay, estimator.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
-
-        val collectorSpy = spyk(collector)
-        every { collectorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        assertFalse(estimator.running)
-
-        estimator.start()
-
-        assertTrue(estimator.running)
-        verify(exactly = 1) { collectorSpy.start() }
-
-        // stop
-        estimator.stop()
-
-        assertFalse(estimator.running)
-        verify(exactly = 1) { collectorSpy.stop() }
+        assertNull(estimator.averageTimeInterval)
+        assertNull(estimator.averageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time))
+        assertNull(estimator.timeIntervalVariance)
+        assertNull(estimator.timeIntervalStandardDeviation)
+        assertNull(estimator.timeIntervalStandardDeviationAsTime)
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0L, estimator.elapsedTimeNanos)
+        val elapsedTime = Time(0.0, TimeUnit.NANOSECOND)
+        assertEquals(elapsedTime, estimator.elapsedTime)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
     }
 
     @Test
-    fun stop_whenNotAlreadyStarted_stopsSensorCollector() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
+    fun constructor_whenCompletedListener_setsExpectedValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
 
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        assertSame(context, collector.context)
-        assertEquals(collector.sensorDelay, estimator.sensorDelay)
-        assertNotNull(collector.measurementListener)
-        assertNotNull(collector.accuracyChangedListener)
+        val estimator = GravityNormEstimator(context, completedListener = completedListener)
 
-        val collectorSpy = spyk(collector)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
+        assertSame(context, estimator.context)
+        assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+            estimator.maxSamples
+        )
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
+            estimator.maxDurationMillis
+        )
+        assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
+        assertSame(completedListener, estimator.completedListener)
+        assertNull(estimator.unreliableListener)
+        assertSame(sensor, estimator.sensor)
         assertFalse(estimator.running)
-
-        // stop
-        estimator.stop()
-
-        assertFalse(estimator.running)
-        verify(exactly = 1) { collectorSpy.stop() }
-    }
-
-    @Test
-    fun onMeasurement_whenMeasurementListener_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context, measurementListener = measurementListener)
-
-        val gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(gravityMeasurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.UNRELIABLE
-
-        gravityMeasurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
-
-        verify(exactly = 1) {
-            measurementListener.onMeasurement(
-                gx,
-                gy,
-                gz,
-                g,
-                timestamp,
-                accuracy
-            )
-        }
-    }
-
-    @Test
-    fun onMeasurement_whenUnreliableAccuracy_makesResultUnreliable() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
+        assertNull(estimator.averageNorm)
+        assertNull(estimator.averageNormAsMeasurement)
+        val acceleration = Acceleration(
+            0.0,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
+        assertNull(estimator.normVariance)
+        assertNull(estimator.normStandardDeviation)
+        assertNull(estimator.normStandardDeviationAsMeasurement)
+        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
+        assertNull(estimator.psd)
+        assertNull(estimator.rootPsd)
+        assertEquals(0L, estimator.initialTimestampNanos)
+        assertEquals(0L, estimator.endTimestampNanos)
+        assertEquals(0L, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
         assertFalse(estimator.resultUnreliable)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.UNRELIABLE
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
-
-        assertTrue(estimator.resultUnreliable)
+        assertNull(estimator.averageTimeInterval)
+        assertNull(estimator.averageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time))
+        assertNull(estimator.timeIntervalVariance)
+        assertNull(estimator.timeIntervalStandardDeviation)
+        assertNull(estimator.timeIntervalStandardDeviationAsTime)
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0L, estimator.elapsedTimeNanos)
+        val elapsedTime = Time(0.0, TimeUnit.NANOSECOND)
+        assertEquals(elapsedTime, estimator.elapsedTime)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
     }
 
     @Test
-    fun onMeasurement_whenFirstMeasurement_setsInitialTimestamp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val initialTimestampNanos1: Long? = getPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "initialTimestampNanos"
-        )
-        requireNotNull(initialTimestampNanos1)
-        assertEquals(0L, initialTimestampNanos1)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val timestamp2 = SystemClock.elapsedRealtimeNanos() + 1000000
-        val accuracy = SensorAccuracy.MEDIUM
-
-        // set measurement
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
-
-        val initialTimestampNanos2: Long? = getPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "initialTimestampNanos"
-        )
-        requireNotNull(initialTimestampNanos2)
-        assertEquals(timestamp1, initialTimestampNanos2)
-
-        // calling again with another timestamp, makes no effect
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
-
-        val initialTimestampNanos3: Long? = getPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "initialTimestampNanos"
-        )
-        requireNotNull(initialTimestampNanos3)
-        assertEquals(timestamp1, initialTimestampNanos3)
-    }
-
-    @Test
-    fun onMeasurement_addsMeasurementToNoiseAndTimeIntervalEstimators() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val noiseEstimator: AccumulatedAccelerationMeasurementNoiseEstimator? =
-            estimator.getPrivateProperty("noiseEstimator")
-        requireNotNull(noiseEstimator)
-        val noiseEstimatorSpy = spyk(noiseEstimator)
-        estimator.setPrivateProperty("noiseEstimator", noiseEstimatorSpy)
-
-        val timeIntervalEstimator: TimeIntervalEstimator? =
-            getPrivateProperty(
-                BaseAccumulatedEstimator::class,
-                estimator,
-                "timeIntervalEstimator"
-            )
-        requireNotNull(timeIntervalEstimator)
-        val timeIntervalEstimatorSpy = spyk(timeIntervalEstimator)
-        setPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "timeIntervalEstimator",
-            timeIntervalEstimatorSpy
+    fun constructor_whenUnreliableListener_setsExpectedValues() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
         )
 
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        // set measurement
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
-
-        verify(exactly = 1) { noiseEstimatorSpy.addMeasurement(g) }
-        verify(exactly = 0) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
-
-        // set another measurement
-        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
-
-        verify(exactly = 2) { noiseEstimatorSpy.addMeasurement(g) }
-        verify(exactly = 1) { timeIntervalEstimatorSpy.addTimestamp(any<Double>()) }
-    }
-
-    @Test
-    fun onMeasurement_updatesEndTimestampNanos() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        val endTimestampNanos1: Long? = getPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "endTimestampNanos"
-        )
-        requireNotNull(endTimestampNanos1)
-        assertEquals(0L, endTimestampNanos1)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        // set measurement
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
-
-        val endTimestampNanos2: Long? = getPrivateProperty(
-            BaseAccumulatedEstimator::class,
-            estimator,
-            "endTimestampNanos"
-        )
-        requireNotNull(endTimestampNanos2)
-        assertEquals(timestamp, endTimestampNanos2)
-    }
-
-    @Test
-    fun onMeasurement_increasesNumberOfProcessedMeasurements() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        // check default value
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        // set measurement
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp, accuracy)
-
-        // check
-        assertEquals(1, estimator.numberOfProcessedMeasurements)
-    }
-
-    @Test
-    fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndNoListener() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(context, stopMode = StopMode.MAX_SAMPLES_ONLY)
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val maxSamples = estimator.maxSamples
-
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        for (i in 1..maxSamples) {
-            measurementListener.onMeasurement(
-                gx,
-                gy,
-                gz,
-                g,
-                timestamp + i * MILLIS_TO_NANOS,
-                accuracy
-            )
-
-            assertEquals(i, estimator.numberOfProcessedMeasurements)
-        }
-
-        assertEquals(maxSamples, estimator.numberOfProcessedMeasurements)
-
-        // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-
-        // check result
-        checkResultMaxSamples(estimator, g)
-    }
-
-    @Test
-    fun onMeasurement_whenIsCompleteMaxSamplesOnlyAndListener() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                stopMode = StopMode.MAX_SAMPLES_ONLY,
-                completedListener = completedListener
-            )
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val maxSamples = estimator.maxSamples
-
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        for (i in 1..maxSamples) {
-            measurementListener.onMeasurement(
-                gx,
-                gy,
-                gz,
-                g,
-                timestamp + i * MILLIS_TO_NANOS,
-                accuracy
-            )
-
-            assertEquals(i, estimator.numberOfProcessedMeasurements)
-        }
-
-        assertEquals(maxSamples, estimator.numberOfProcessedMeasurements)
-        assertTrue(estimator.resultAvailable)
-
-        // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
-
-        // check result
-        checkResultMaxSamples(estimator, g)
-    }
-
-    @Test
-    fun onMeasurement_whenIsCompleteMaxDurationOnlyAndNoListener() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                stopMode = StopMode.MAX_DURATION_ONLY
-            )
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val maxDurationMillis = estimator.maxDurationMillis
-
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
-
-        assertEquals(1, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
-
-        assertEquals(2, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        // add another measurement after max duration
-        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp3, accuracy)
-
-        assertEquals(3, estimator.numberOfProcessedMeasurements)
-        assertTrue(estimator.resultAvailable)
-
-        // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-
-        // check result
-        checkResultMaxDuration(estimator, g)
-    }
-
-    @Test
-    fun onMeasurement_whenIsCompleteMaxDurationOnlyAndListener() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                stopMode = StopMode.MAX_DURATION_ONLY,
-                completedListener = completedListener
-            )
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val maxDurationMillis = estimator.maxDurationMillis
-
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
-
-        assertEquals(1, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
-
-        assertEquals(2, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        // add another measurement after max duration
-        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp3, accuracy)
-
-        assertEquals(3, estimator.numberOfProcessedMeasurements)
-        assertTrue(estimator.resultAvailable)
-
-        // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-
-        // check that listener was called
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
-
-        // check result
-        checkResultMaxDuration(estimator, g)
-    }
-
-    @Test
-    fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndNoListener() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                stopMode = StopMode.MAX_SAMPLES_OR_DURATION
-            )
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val maxDurationMillis = estimator.maxDurationMillis
-
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
-
-        assertEquals(1, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
-
-        assertEquals(2, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        // add another measurement after max duration
-        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp3, accuracy)
-
-        assertEquals(3, estimator.numberOfProcessedMeasurements)
-        assertTrue(estimator.resultAvailable)
-
-        // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-
-        // check result
-        checkResultMaxDuration(estimator, g)
-    }
-
-    @Test
-    fun onMeasurement_whenIsCompleteMaxSamplesOrDurationAndListener() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator =
-            GravityNormEstimator(
-                context,
-                stopMode = StopMode.MAX_SAMPLES_OR_DURATION,
-                completedListener = completedListener
-            )
-
-        val collector: GravitySensorCollector? =
-            estimator.getPrivateProperty("collector")
-        requireNotNull(collector)
-        val collectorSpy = spyk(collector)
-        estimator.setPrivateProperty("collector", collectorSpy)
-
-        val maxDurationMillis = estimator.maxDurationMillis
-
-        assertEquals(0, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val measurementListener: GravitySensorCollector.OnMeasurementListener? =
-            estimator.getPrivateProperty("gravityMeasurementListener")
-        requireNotNull(measurementListener)
-
-        val gravity = getGravity()
-        val gx = gravity.gx.toFloat()
-        val gy = gravity.gy.toFloat()
-        val gz = gravity.gz.toFloat()
-        val g = gravity.norm
-        val timestamp1 = SystemClock.elapsedRealtimeNanos()
-        val accuracy = SensorAccuracy.MEDIUM
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp1, accuracy)
-
-        assertEquals(1, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        val timestamp2 = timestamp1 + TIME_INTERVAL_MILLIS * MILLIS_TO_NANOS
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp2, accuracy)
-
-        assertEquals(2, estimator.numberOfProcessedMeasurements)
-        assertFalse(estimator.resultAvailable)
-
-        // add another measurement after max duration
-        val timestamp3 = timestamp1 + maxDurationMillis * MILLIS_TO_NANOS
-
-        measurementListener.onMeasurement(gx, gy, gz, g, timestamp3, accuracy)
-
-        assertEquals(3, estimator.numberOfProcessedMeasurements)
-        assertTrue(estimator.resultAvailable)
-
-        // check that after completion, collector was stopped
-        verify(exactly = 1) { collectorSpy.stop() }
-
-        // check that listener was called
-        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
-
-        // check result
-        checkResultMaxDuration(estimator, g)
-    }
-
-    @Test
-    fun onAccuracyChanged_whenUnreliableAndNoListener_setsResultAsUnreliable() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context)
-
-        // check default value
-        assertFalse(estimator.resultUnreliable)
-
-        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            getPrivateProperty(
-                BaseAccumulatedEstimator::class,
-                estimator,
-                "accuracyChangedListener"
-            )
-        requireNotNull(accuracyChangedListener)
-
-        accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
-
-        // check
-        assertTrue(estimator.resultUnreliable)
-    }
-
-    @Test
-    fun onAccuracyChanged_whenUnreliableAndListener_setsResultAsUnreliable() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = GravityNormEstimator(context, unreliableListener = unreliableListener)
 
-        // check default value
+        assertSame(context, estimator.context)
+        assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_SAMPLES,
+            estimator.maxSamples
+        )
+        assertEquals(
+            BaseAccumulatedProcessor.DEFAULT_MAX_DURATION_MILLIS,
+            estimator.maxDurationMillis
+        )
+        assertEquals(StopMode.MAX_SAMPLES_OR_DURATION, estimator.stopMode)
+        assertNull(estimator.completedListener)
+        assertSame(unreliableListener, estimator.unreliableListener)
+        assertSame(sensor, estimator.sensor)
+        assertFalse(estimator.running)
+        assertNull(estimator.averageNorm)
+        assertNull(estimator.averageNormAsMeasurement)
+        val acceleration = Acceleration(
+            0.0,
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        assertFalse(estimator.getAverageNormAsMeasurement(acceleration))
+        assertNull(estimator.normVariance)
+        assertNull(estimator.normStandardDeviation)
+        assertNull(estimator.normStandardDeviationAsMeasurement)
+        assertFalse(estimator.getNormStandardDeviationAsMeasurement(acceleration))
+        assertNull(estimator.psd)
+        assertNull(estimator.rootPsd)
+        assertEquals(0L, estimator.initialTimestampNanos)
+        assertEquals(0L, estimator.endTimestampNanos)
+        assertEquals(0L, estimator.numberOfProcessedMeasurements)
+        assertFalse(estimator.resultAvailable)
         assertFalse(estimator.resultUnreliable)
+        assertNull(estimator.averageTimeInterval)
+        assertNull(estimator.averageTimeIntervalAsTime)
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertFalse(estimator.getAverageTimeIntervalAsTime(time))
+        assertNull(estimator.timeIntervalVariance)
+        assertNull(estimator.timeIntervalStandardDeviation)
+        assertNull(estimator.timeIntervalStandardDeviationAsTime)
+        assertFalse(estimator.getTimeIntervalStandardDeviationAsTime(time))
+        assertEquals(0L, estimator.elapsedTimeNanos)
+        val elapsedTime = Time(0.0, TimeUnit.NANOSECOND)
+        assertEquals(elapsedTime, estimator.elapsedTime)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
+    }
 
-        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            getPrivateProperty(
-                BaseAccumulatedEstimator::class,
-                estimator,
-                "accuracyChangedListener"
+    @Test
+    fun sensor_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        assertSame(sensor, estimator.sensor)
+    }
+
+    @Test
+    fun running_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+        every {
+            sensorManager.registerListener(
+                any(), any<Sensor>(),
+                any()
             )
-        requireNotNull(accuracyChangedListener)
+        }.returns(true)
+        justRun { sensorManager.unregisterListener(any(), any<Sensor>()) }
 
-        accuracyChangedListener.onAccuracyChanged(SensorAccuracy.UNRELIABLE)
+        val estimator = GravityNormEstimator(context)
+
+        // check default value
+        assertFalse(estimator.running)
+
+        // set running to true
+        mockkStatic(SystemClock::class) {
+            every { SystemClock.elapsedRealtimeNanos() }.returns(System.nanoTime())
+            estimator.start()
+        }
+
+        assertTrue(estimator.running)
+
+        // set running to false
+        estimator.stop()
+        assertFalse(estimator.running)
+    }
+
+    @Test
+    fun averageNorm_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val averageNorm = randomizer.nextDouble()
+        every { processor.averageNorm }.returns(averageNorm)
+
+        // check
+        assertEquals(averageNorm, estimator.averageNorm)
+        verify(exactly = 1) { processor.averageNorm }
+    }
+
+    @Test
+    fun averageNormAsMeasurement_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val averageNorm = Acceleration(
+            randomizer.nextDouble(),
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        every { processor.averageNormAsMeasurement }.returns(averageNorm)
+
+        // check
+        assertSame(averageNorm, estimator.averageNormAsMeasurement)
+        verify(exactly = 1) { processor.averageNormAsMeasurement }
+    }
+
+    @Test
+    fun getAverageNormAsMeasurement_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val averageNorm = Acceleration(
+            randomizer.nextDouble(),
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        every { processor.getAverageNormAsMeasurement(any()) }.returns(true)
+
+        // check
+        assertTrue(estimator.getAverageNormAsMeasurement(averageNorm))
+
+        val slot = slot<Acceleration>()
+        verify(exactly = 1) { processor.getAverageNormAsMeasurement(capture(slot)) }
+        assertSame(averageNorm, slot.captured)
+    }
+
+    @Test
+    fun normVariance_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val normVariance = randomizer.nextDouble()
+        every { processor.normVariance }.returns(normVariance)
+
+        // check
+        assertEquals(normVariance, estimator.normVariance)
+        verify(exactly = 1) { processor.normVariance }
+    }
+
+    @Test
+    fun normStandardDeviation_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val normStandardDeviation = randomizer.nextDouble()
+        every { processor.normStandardDeviation }.returns(normStandardDeviation)
+
+        // check
+        assertEquals(normStandardDeviation, estimator.normStandardDeviation)
+        verify(exactly = 1) { processor.normStandardDeviation }
+    }
+
+    @Test
+    fun normStandardDeviationAsMeasurement_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val normStandardDeviation = Acceleration(
+            randomizer.nextDouble(),
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        every { processor.normStandardDeviationAsMeasurement }.returns(normStandardDeviation)
+
+        // check
+        assertSame(normStandardDeviation, estimator.normStandardDeviationAsMeasurement)
+        verify(exactly = 1) { processor.normStandardDeviationAsMeasurement }
+    }
+
+    @Test
+    fun getNormStandardDeviationAsMeasurement_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val normStandardDeviation = Acceleration(
+            randomizer.nextDouble(),
+            AccelerationUnit.METERS_PER_SQUARED_SECOND
+        )
+        every { processor.getNormStandardDeviationAsMeasurement(any()) }
+            .returns(true)
+
+        // check
+        assertTrue(estimator.getNormStandardDeviationAsMeasurement(normStandardDeviation))
+
+        val slot = slot<Acceleration>()
+        verify(exactly = 1) {
+            processor.getNormStandardDeviationAsMeasurement(
+                capture(slot)
+            )
+        }
+        assertSame(normStandardDeviation, slot.captured)
+    }
+
+    @Test
+    fun psd_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val psd = randomizer.nextDouble()
+        every { processor.psd }.returns(psd)
+
+        // check
+        assertEquals(psd, estimator.psd)
+        verify(exactly = 1) { processor.psd }
+    }
+
+    @Test
+    fun rootPsd_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val rootPsd = randomizer.nextDouble()
+        every { processor.rootPsd }.returns(rootPsd)
+
+        // check
+        assertEquals(rootPsd, estimator.rootPsd)
+        verify(exactly = 1) { processor.rootPsd }
+    }
+
+    @Test
+    fun initialTimestampNanos_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val initialTimestampNanos = randomizer.nextLong()
+        every { processor.initialTimestampNanos }.returns(initialTimestampNanos)
+
+        // check
+        assertEquals(initialTimestampNanos, estimator.initialTimestampNanos)
+        verify(exactly = 1) { processor.initialTimestampNanos }
+    }
+
+    @Test
+    fun endTimestampNanos_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val endTimestampNanos = randomizer.nextLong()
+        every { processor.endTimestampNanos }.returns(endTimestampNanos)
+
+        // check
+        assertEquals(endTimestampNanos, estimator.endTimestampNanos)
+        verify(exactly = 1) { processor.endTimestampNanos }
+    }
+
+    @Test
+    fun numberOfProcessedMeasurements_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val numberOfProcessedMeasurements = randomizer.nextLong()
+        every { processor.numberOfProcessedMeasurements }.returns(numberOfProcessedMeasurements)
+
+        // check
+        assertEquals(
+            numberOfProcessedMeasurements,
+            estimator.numberOfProcessedMeasurements
+        )
+        verify(exactly = 1) { processor.numberOfProcessedMeasurements }
+    }
+
+    @Test
+    fun maxSamples_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val maxSamples = randomizer.nextInt(1, 100)
+        every { processor.maxSamples }.returns(maxSamples)
+
+        // check
+        assertEquals(maxSamples, estimator.maxSamples)
+        verify(exactly = 1) { processor.maxSamples }
+    }
+
+    @Test
+    fun maxDurationMillis_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val maxDurationMillis = randomizer.nextLong(1, 100)
+        every { processor.maxDurationMillis }.returns(maxDurationMillis)
+
+        // check
+        assertEquals(maxDurationMillis, estimator.maxDurationMillis)
+        verify(exactly = 1) { processor.maxDurationMillis }
+    }
+
+    @Test
+    fun stopMode_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        every { processor.stopMode }.returns(StopMode.MAX_SAMPLES_ONLY)
+
+        // check
+        assertEquals(StopMode.MAX_SAMPLES_ONLY, estimator.stopMode)
+        verify(exactly = 1) { processor.stopMode }
+    }
+
+    @Test
+    fun resultAvailable_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        every { processor.resultAvailable }.returns(true)
+
+        // check
+        assertTrue(estimator.resultAvailable)
+        verify(exactly = 1) { processor.resultAvailable }
+    }
+
+    @Test
+    fun resultUnreliable_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("resultUnreliable", true)
 
         // check
         assertTrue(estimator.resultUnreliable)
+    }
+
+    @Test
+    fun averageTimeInterval_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = randomizer.nextDouble()
+        every { processor.averageTimeInterval }.returns(averageTimeInterval)
+
+        // check
+        assertEquals(averageTimeInterval, estimator.averageTimeInterval)
+        verify(exactly = 1) { processor.averageTimeInterval }
+    }
+
+    @Test
+    fun averageTimeIntervalAsTime_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val averageTimeInterval = Time(
+            randomizer.nextDouble(),
+            TimeUnit.SECOND
+        )
+        every { processor.averageTimeIntervalAsTime }.returns(averageTimeInterval)
+
+        // check
+        assertSame(averageTimeInterval, estimator.averageTimeIntervalAsTime)
+        verify(exactly = 1) { processor.averageTimeIntervalAsTime }
+    }
+
+    @Test
+    fun getAverageTimeIntervalAsTime_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        every { processor.getAverageTimeIntervalAsTime(any()) }.returns(true)
+
+        // check
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertTrue(estimator.getAverageTimeIntervalAsTime(time))
+
+        val slot = slot<Time>()
+        verify(exactly = 1) { processor.getAverageTimeIntervalAsTime(capture(slot)) }
+        assertSame(time, slot.captured)
+    }
+
+    @Test
+    fun timeIntervalVariance_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val timeIntervalVariance = randomizer.nextDouble()
+        every { processor.timeIntervalVariance }.returns(timeIntervalVariance)
+
+        // check
+        assertEquals(timeIntervalVariance, estimator.timeIntervalVariance)
+        verify(exactly = 1) { processor.timeIntervalVariance }
+    }
+
+    @Test
+    fun timeIntervalStandardDeviation_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val timeIntervalStandardDeviation = randomizer.nextDouble()
+        every { processor.timeIntervalStandardDeviation }.returns(timeIntervalStandardDeviation)
+
+        // check
+        assertEquals(timeIntervalStandardDeviation, estimator.timeIntervalStandardDeviation)
+        verify(exactly = 1) { processor.timeIntervalStandardDeviation }
+    }
+
+    @Test
+    fun timeIntervalStandardDeviationAsTime_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val timeIntervalStandardDeviation = Time(
+            randomizer.nextDouble(),
+            TimeUnit.SECOND
+        )
+        every { processor.timeIntervalStandardDeviationAsTime }
+            .returns(timeIntervalStandardDeviation)
+
+        // check
+        assertSame(timeIntervalStandardDeviation, estimator.timeIntervalStandardDeviationAsTime)
+        verify(exactly = 1) { processor.timeIntervalStandardDeviationAsTime }
+    }
+
+    @Test
+    fun getTimeIntervalStandardDeviationAsTime_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        every { processor.getTimeIntervalStandardDeviationAsTime(any()) }.returns(true)
+
+        // check
+        val time = Time(0.0, TimeUnit.SECOND)
+        assertTrue(estimator.getTimeIntervalStandardDeviationAsTime(time))
+
+        val slot = slot<Time>()
+        verify(exactly = 1) { processor.getTimeIntervalStandardDeviationAsTime(capture(slot)) }
+        assertSame(time, slot.captured)
+    }
+
+    @Test
+    fun elapsedTimeNanos_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val elapsedTimeNanos = randomizer.nextLong()
+        every { processor.elapsedTimeNanos }.returns(elapsedTimeNanos)
+
+        // check
+        assertEquals(elapsedTimeNanos, estimator.elapsedTimeNanos)
+        verify(exactly = 1) { processor.elapsedTimeNanos }
+    }
+
+    @Test
+    fun elapsedTime_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val elapsedTime = Time(
+            randomizer.nextDouble(),
+            TimeUnit.NANOSECOND
+        )
+        every { processor.elapsedTime }.returns(elapsedTime)
+
+        // check
+        assertSame(elapsedTime, estimator.elapsedTime)
+        verify(exactly = 1) { processor.elapsedTime }
+    }
+
+    @Test
+    fun getElapsedTime_returnsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(context)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        val randomizer = UniformRandomizer()
+        val elapsedTime = Time(
+            randomizer.nextDouble(),
+            TimeUnit.NANOSECOND
+        )
+        every { processor.getElapsedTime(any()) }.answers {
+            val time = firstArg<Time>()
+            time.value = elapsedTime.value
+            time.unit = elapsedTime.unit
+        }
+
+        // check
+        val time = Time(0.0, TimeUnit.NANOSECOND)
+        estimator.getElapsedTime(time)
+        assertEquals(elapsedTime, time)
+
+        val slot = slot<Time>()
+        verify(exactly = 1) { processor.getElapsedTime(capture(slot)) }
+        assertSame(time, slot.captured)
+    }
+
+    @Test
+    fun start_whenRunning_throwsIllegalStateException() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("running", true)
+
+        assertThrows(IllegalStateException::class.java) {
+            estimator.start()
+        }
+
+        verify(exactly = 0) {
+            sensorManager.registerListener(
+                any(),
+                any<Sensor>(),
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun start_whenNotRunningButSensorCollectorFails_throwsIllegalStateException() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+        every {
+            sensorManager.registerListener(
+                any(), any<Sensor>(),
+                any()
+            )
+        }.returns(false)
+
+        val estimator = GravityNormEstimator(context)
+
+        mockkStatic(SystemClock::class) {
+            every { SystemClock.elapsedRealtimeNanos() }.returns(System.nanoTime())
+            assertThrows(IllegalStateException::class.java) {
+                estimator.start()
+            }
+        }
+
+        verify(exactly = 1) {
+            sensorManager.registerListener(
+                any(),
+                sensor,
+                SensorDelay.FASTEST.value
+            )
+        }
+    }
+
+    @Test
+    fun start_whenSucceeds_startsCollector() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+        every {
+            sensorManager.registerListener(
+                any(), any<Sensor>(),
+                any()
+            )
+        }.returns(true)
+
+        val estimator = GravityNormEstimator(context)
+
+        mockkStatic(SystemClock::class) {
+            every { SystemClock.elapsedRealtimeNanos() }.returns(System.nanoTime())
+            estimator.start()
+        }
+
+        assertTrue(estimator.running)
+        verify(exactly = 1) {
+            sensorManager.registerListener(
+                any(),
+                sensor,
+                SensorDelay.FASTEST.value
+            )
+        }
+    }
+
+    @Test
+    fun stop_whenNotRunning_throwsIllegalStateException() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        // not running yet
+        assertFalse(estimator.running)
+
+        // stop should do nothing
+        assertThrows(IllegalStateException::class.java) {
+            estimator.stop()
+        }
+
+        verify(exactly = 0) {
+            sensorManager.unregisterListener(any(), any<Sensor>())
+        }
+    }
+
+    @Test
+    fun stop_whenRunning_stopsCollector() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+        justRun { sensorManager.unregisterListener(any(), any<Sensor>()) }
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("running", true)
+
+        assertTrue(estimator.running)
+
+        // stop
+        estimator.stop()
+
+        assertFalse(estimator.running)
+        verify(exactly = 1) {
+            sensorManager.unregisterListener(any(), any<Sensor>())
+        }
+    }
+
+    @Test
+    fun reset_resetsProcessor() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        justRun { processor.reset() }
+
+        // reset
+        estimator.reset()
+
+        verify(exactly = 1) { processor.reset() }
+    }
+
+    @Test
+    fun accuracyChangedListener_whenReliable_doesNothing() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context, unreliableListener = unreliableListener)
+
+        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener<
+                GravitySensorMeasurement, GravitySensorCollector>? =
+            estimator.getPrivateProperty("accuracyChangedListener")
+        requireNotNull(accuracyChangedListener)
+
+        val collector: GravitySensorCollector? = estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+
+        accuracyChangedListener.onAccuracyChanged(collector, SensorAccuracy.HIGH)
+        verify { unreliableListener wasNot Called }
+    }
+
+    @Test
+    fun accuracyChangedListener_whenUnreliableWithListener_notifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context, unreliableListener = unreliableListener)
+
+        justRun { unreliableListener.onUnreliable(estimator) }
+
+        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener<
+                GravitySensorMeasurement, GravitySensorCollector>? =
+            estimator.getPrivateProperty("accuracyChangedListener")
+        requireNotNull(accuracyChangedListener)
+
+        val collector: GravitySensorCollector? = estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+
+        accuracyChangedListener.onAccuracyChanged(collector, SensorAccuracy.UNRELIABLE)
         verify(exactly = 1) { unreliableListener.onUnreliable(estimator) }
     }
 
     @Test
-    fun onAccuracyChanged_whenNotUnreliable_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = GravityNormEstimator(context, unreliableListener = unreliableListener)
+    fun accuracyChangedListener_whenUnreliableWithoutListener_doesNothing() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
 
-        // check default value
-        assertFalse(estimator.resultUnreliable)
+        val estimator = GravityNormEstimator(context)
 
-        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? =
-            getPrivateProperty(
-                BaseAccumulatedEstimator::class,
-                estimator,
-                "accuracyChangedListener"
-            )
+        val accuracyChangedListener: SensorCollector.OnAccuracyChangedListener<
+                GravitySensorMeasurement, GravitySensorCollector>? =
+            estimator.getPrivateProperty("accuracyChangedListener")
         requireNotNull(accuracyChangedListener)
 
-        accuracyChangedListener.onAccuracyChanged(SensorAccuracy.MEDIUM)
+        val collector: GravitySensorCollector? = estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
 
-        // check
-        assertFalse(estimator.resultUnreliable)
-        verify(exactly = 0) { unreliableListener.onUnreliable(estimator) }
+        accuracyChangedListener.onAccuracyChanged(collector, SensorAccuracy.UNRELIABLE)
+        verify { unreliableListener wasNot Called }
     }
 
-    private fun checkResultMaxSamples(estimator: GravityNormEstimator, g: Double) {
+    @Test
+    fun measurementListener_whenUnreliable_marksResultAsUnreliable() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+
+        val estimator = GravityNormEstimator(context, completedListener = completedListener)
+
+        estimator.setPrivateProperty("processor", processor)
+
+        every { processor.process(any()) }.returns(false)
+
+        val measurementListener: SensorCollector.OnMeasurementListener<
+                GravitySensorMeasurement, GravitySensorCollector>? =
+            estimator.getPrivateProperty("measurementListener")
+        requireNotNull(measurementListener)
+
+        val collector: GravitySensorCollector? = estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+
+        val measurement = GravitySensorMeasurement(accuracy = SensorAccuracy.UNRELIABLE)
+        measurementListener.onMeasurement(collector, measurement)
+
+        assertTrue(estimator.resultUnreliable)
+        verify(exactly = 1) { processor.process(measurement) }
+        verify { completedListener wasNot Called }
+    }
+
+    @Test
+    fun measurementListener_whenComplete_stopsAndNotifiesCompletion() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+        justRun { sensorManager.unregisterListener(any(), any<Sensor>()) }
+
+        val estimator = GravityNormEstimator(context, completedListener = completedListener)
+
+        estimator.setPrivateProperty("processor", processor)
+        estimator.setPrivateProperty("running", true)
+
+        every { processor.process(any()) }.returns(true)
+
+        val measurementListener: SensorCollector.OnMeasurementListener<
+                GravitySensorMeasurement, GravitySensorCollector>? =
+            estimator.getPrivateProperty("measurementListener")
+        requireNotNull(measurementListener)
+
+        val collector: GravitySensorCollector? = estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+
+        assertTrue(estimator.running)
+        justRun { completedListener.onEstimationCompleted(estimator) }
+
+        val measurement = GravitySensorMeasurement()
+        measurementListener.onMeasurement(collector, measurement)
+
+        assertFalse(estimator.resultUnreliable)
         assertFalse(estimator.running)
-        assertTrue(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
 
-        val averageNorm = estimator.averageNorm
-        requireNotNull(averageNorm)
-        assertEquals(g, averageNorm, ABSOLUTE_ERROR)
-
-        val averageNorm1 = estimator.averageNormAsMeasurement
-        requireNotNull(averageNorm1)
-        val averageNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertTrue(estimator.getAverageNormAsMeasurement(averageNorm2))
-        assertEquals(averageNorm1, averageNorm2)
-        assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
-
-        val normVariance = estimator.normVariance
-        requireNotNull(normVariance)
-        assertEquals(0.0, normVariance, ABSOLUTE_ERROR)
-
-        val normStandardDeviation = estimator.normStandardDeviation
-        requireNotNull(normStandardDeviation)
-        assertEquals(0.0, normStandardDeviation, ABSOLUTE_ERROR)
-        val normStandardDeviation1 = estimator.normStandardDeviationAsMeasurement
-        requireNotNull(normStandardDeviation1)
-        val normStandardDeviation2 =
-            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertTrue(estimator.getNormStandardDeviationAsMeasurement(normStandardDeviation2))
-        assertEquals(normStandardDeviation1, normStandardDeviation2)
-        assertEquals(
-            normStandardDeviation,
-            normStandardDeviation1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, normStandardDeviation1.unit)
-
-        val psd = estimator.psd
-        requireNotNull(psd)
-        assertTrue(psd > 0.0)
-
-        val rootPsd = estimator.rootPsd
-        requireNotNull(rootPsd)
-        assertTrue(rootPsd > 0.0)
-
-        val averageTimeInterval = estimator.averageTimeInterval
-        requireNotNull(averageTimeInterval)
-        assertTrue(averageTimeInterval > 0.0)
-        val averageTimeInterval1 = estimator.averageTimeIntervalAsTime
-        requireNotNull(averageTimeInterval1)
-        val averageTimeInterval2 = Time(0.0, TimeUnit.NANOSECOND)
-        assertTrue(estimator.getAverageTimeIntervalAsTime(averageTimeInterval2))
-        assertEquals(averageTimeInterval1, averageTimeInterval2)
-        assertEquals(averageTimeInterval, averageTimeInterval1.value.toDouble(), 0.0)
-        assertEquals(TimeUnit.SECOND, averageTimeInterval1.unit)
-
-        val timeIntervalVariance = estimator.timeIntervalVariance
-        requireNotNull(timeIntervalVariance)
-        assertEquals(0.0, timeIntervalVariance, LARGE_ABSOLUTE_ERROR)
-
-        val timeIntervalStandardDeviation = estimator.timeIntervalStandardDeviation
-        requireNotNull(timeIntervalStandardDeviation)
-        assertEquals(0.0, timeIntervalStandardDeviation, LARGE_ABSOLUTE_ERROR)
-        val timeIntervalStandardDeviation1 = estimator.timeIntervalStandardDeviationAsTime
-        requireNotNull(timeIntervalStandardDeviation1)
-        val timeIntervalStandardDeviation2 = Time(0.0, TimeUnit.NANOSECOND)
-        assertTrue(estimator.getTimeIntervalStandardDeviationAsTime(timeIntervalStandardDeviation2))
-        assertEquals(timeIntervalStandardDeviation1, timeIntervalStandardDeviation2)
-        assertEquals(
-            timeIntervalStandardDeviation,
-            timeIntervalStandardDeviation1.value.toDouble(),
-            0.0
-        )
-        assertEquals(TimeUnit.SECOND, timeIntervalStandardDeviation1.unit)
-
-        val elapsedTimeNanos = estimator.elapsedTimeNanos
-        assertTrue(elapsedTimeNanos > 0L)
-        val elapsedTime1 = estimator.elapsedTime
-        val elapsedTime2 = Time(0.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(elapsedTime2)
-        assertEquals(elapsedTime1, elapsedTime2)
-        assertEquals(elapsedTimeNanos.toDouble(), elapsedTime1.value.toDouble(), 0.0)
-        assertEquals(TimeUnit.NANOSECOND, elapsedTime1.unit)
+        verify(exactly = 1) { processor.process(measurement) }
+        verify(exactly = 1) { completedListener.onEstimationCompleted(estimator) }
+        verify(exactly = 1) {
+            sensorManager.unregisterListener(any(), any<Sensor>())
+        }
     }
 
-    private fun checkResultMaxDuration(estimator: GravityNormEstimator, g: Double) {
+    @Test
+    fun measurementListener_whenCompleteAndNoListener_makesNoAction() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }
+            .returns(sensorManager)
+        every {
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
+        }.returns(
+            sensor
+        )
+        justRun { sensorManager.unregisterListener(any(), any<Sensor>()) }
+
+        val estimator = GravityNormEstimator(context)
+
+        estimator.setPrivateProperty("processor", processor)
+        estimator.setPrivateProperty("running", true)
+
+        every { processor.process(any()) }.returns(true)
+
+        val measurementListener: SensorCollector.OnMeasurementListener<
+                GravitySensorMeasurement, GravitySensorCollector>? =
+            estimator.getPrivateProperty("measurementListener")
+        requireNotNull(measurementListener)
+
+        val collector: GravitySensorCollector? = estimator.getPrivateProperty("collector")
+        requireNotNull(collector)
+
+        assertTrue(estimator.running)
+
+        val measurement = GravitySensorMeasurement()
+        measurementListener.onMeasurement(collector, measurement)
+
+        assertFalse(estimator.resultUnreliable)
         assertFalse(estimator.running)
-        assertTrue(estimator.resultAvailable)
-        assertFalse(estimator.resultUnreliable)
 
-        val averageNorm = estimator.averageNorm
-        requireNotNull(averageNorm)
-        assertEquals(g, averageNorm, ABSOLUTE_ERROR)
-
-        val averageNorm1 = estimator.averageNormAsMeasurement
-        requireNotNull(averageNorm1)
-        val averageNorm2 = Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertTrue(estimator.getAverageNormAsMeasurement(averageNorm2))
-        assertEquals(averageNorm1, averageNorm2)
-        assertEquals(averageNorm, averageNorm1.value.toDouble(), 0.0)
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, averageNorm1.unit)
-
-        val normVariance = estimator.normVariance
-        requireNotNull(normVariance)
-        assertEquals(0.0, normVariance, ABSOLUTE_ERROR)
-
-        val normStandardDeviation = estimator.normStandardDeviation
-        requireNotNull(normStandardDeviation)
-        assertEquals(0.0, normStandardDeviation, ABSOLUTE_ERROR)
-        val normStandardDeviation1 = estimator.normStandardDeviationAsMeasurement
-        requireNotNull(normStandardDeviation1)
-        val normStandardDeviation2 =
-            Acceleration(0.0, AccelerationUnit.METERS_PER_SQUARED_SECOND)
-        assertTrue(estimator.getNormStandardDeviationAsMeasurement(normStandardDeviation2))
-        assertEquals(normStandardDeviation1, normStandardDeviation2)
-        assertEquals(
-            normStandardDeviation,
-            normStandardDeviation1.value.toDouble(),
-            0.0
-        )
-        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, normStandardDeviation1.unit)
-
-        val psd = estimator.psd
-        requireNotNull(psd)
-        assertEquals(psd, 0.0, 0.0)
-
-        val rootPsd = estimator.rootPsd
-        requireNotNull(rootPsd)
-        assertEquals(rootPsd, 0.0, 0.0)
-
-        val averageTimeInterval = estimator.averageTimeInterval
-        requireNotNull(averageTimeInterval)
-        assertTrue(averageTimeInterval > 0.0)
-        val averageTimeInterval1 = estimator.averageTimeIntervalAsTime
-        requireNotNull(averageTimeInterval1)
-        val averageTimeInterval2 = Time(0.0, TimeUnit.NANOSECOND)
-        assertTrue(estimator.getAverageTimeIntervalAsTime(averageTimeInterval2))
-        assertEquals(averageTimeInterval1, averageTimeInterval2)
-        assertEquals(averageTimeInterval, averageTimeInterval1.value.toDouble(), 0.0)
-        assertEquals(TimeUnit.SECOND, averageTimeInterval1.unit)
-
-        val timeIntervalVariance = estimator.timeIntervalVariance
-        requireNotNull(timeIntervalVariance)
-        assertTrue(timeIntervalVariance > 0.0)
-
-        val timeIntervalStandardDeviation = estimator.timeIntervalStandardDeviation
-        requireNotNull(timeIntervalStandardDeviation)
-        assertTrue(timeIntervalStandardDeviation > 0.0)
-        val timeIntervalStandardDeviation1 = estimator.timeIntervalStandardDeviationAsTime
-        requireNotNull(timeIntervalStandardDeviation1)
-        val timeIntervalStandardDeviation2 = Time(0.0, TimeUnit.NANOSECOND)
-        assertTrue(estimator.getTimeIntervalStandardDeviationAsTime(timeIntervalStandardDeviation2))
-        assertEquals(timeIntervalStandardDeviation1, timeIntervalStandardDeviation2)
-        assertEquals(
-            timeIntervalStandardDeviation,
-            timeIntervalStandardDeviation1.value.toDouble(),
-            0.0
-        )
-        assertEquals(TimeUnit.SECOND, timeIntervalStandardDeviation1.unit)
-
-        val elapsedTimeNanos = estimator.elapsedTimeNanos
-        assertTrue(elapsedTimeNanos > 0L)
-        val elapsedTime1 = estimator.elapsedTime
-        val elapsedTime2 = Time(0.0, TimeUnit.NANOSECOND)
-        estimator.getElapsedTime(elapsedTime2)
-        assertEquals(elapsedTime1, elapsedTime2)
-        assertEquals(elapsedTimeNanos.toDouble(), elapsedTime1.value.toDouble(), 0.0)
-        assertEquals(TimeUnit.NANOSECOND, elapsedTime1.unit)
-    }
-
-    private fun getGravity(): ECEFGravity {
-        val randomizer = UniformRandomizer()
-        val latitude =
-            Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
-        val longitude =
-            Math.toRadians(randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES))
-        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
-        val nedPosition = NEDPosition(latitude, longitude, height)
-        return GravityHelper.getGravityForPosition(nedPosition)
+        verify(exactly = 1) { processor.process(measurement) }
+        verify { completedListener wasNot Called }
+        verify(exactly = 1) {
+            sensorManager.unregisterListener(any(), any<Sensor>())
+        }
     }
 
     private companion object {
         const val MAX_SAMPLES = 100
 
         const val MAX_DURATION_MILLIS = 1000L
-
-        const val MIN_LATITUDE_DEGREES = -90.0
-        const val MAX_LATITUDE_DEGREES = 90.0
-
-        const val MIN_LONGITUDE_DEGREES = -180.0
-        const val MAX_LONGITUDE_DEGREES = 180.0
-
-        const val MIN_HEIGHT = -50.0
-        const val MAX_HEIGHT = 400.0
-
-        const val TIME_INTERVAL_MILLIS = 20L
-
-        const val MILLIS_TO_NANOS = 1000000
-
-        const val ABSOLUTE_ERROR = 1e-12
-
-        const val LARGE_ABSOLUTE_ERROR = 5e-5
     }
 }

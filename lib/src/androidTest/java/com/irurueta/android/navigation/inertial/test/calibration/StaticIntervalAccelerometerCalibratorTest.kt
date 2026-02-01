@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,19 @@
  */
 package com.irurueta.android.navigation.inertial.test.calibration
 
+import android.Manifest
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.StaticIntervalAccelerometerCalibrator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.android.testutils.RequiresRealDevice
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import io.mockk.spyk
 import org.junit.Assert
@@ -47,9 +48,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     @Before
@@ -57,7 +58,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         completed = 0
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenNoLocationAccelerometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -73,7 +74,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenLocationAccelerometerSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -92,7 +93,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenNoLocationAccelerometerUncalibratedSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -111,7 +112,7 @@ class StaticIntervalAccelerometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenLocationAccelerometerUncalibratedSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -197,12 +198,6 @@ class StaticIntervalAccelerometerCalibratorTest {
                     "Unreliable gravity"
                 )
             },
-            initialAccelerometerBiasAvailableListener = { _, biasX, biasY, biasZ ->
-                Log.i(
-                    "StaticIntervalAccelerometerCalibratorTest",
-                    "Initial bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
-                )
-            },
             generatedAccelerometerMeasurementListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "StaticIntervalAccelerometerCalibratorTest",
@@ -238,6 +233,9 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
         calibrator.accelerometerRobustMethod = RobustEstimatorMethod.PROSAC
         calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+
         return calibrator
     }
 
@@ -415,11 +413,27 @@ class StaticIntervalAccelerometerCalibratorTest {
         )
         Log.i(
             "StaticIntervalAccelerometerCalibratorTest",
-            "Estimated covariance: ${calibrator.estimatedAccelerometerCovariance?.buffer}"
+            "Estimated covariance: ${calibrator.estimatedAccelerometerCovariance?.buffer.contentToString()}"
         )
         Log.i(
             "StaticIntervalAccelerometerCalibratorTest",
             "Estimated chi sq: ${calibrator.estimatedAccelerometerChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerCalibratorTest",
+            "Estimated chi sq degrees of freedom: ${calibrator.estimatedAccelerometerChiSqDegreesOfFreedom}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerCalibratorTest",
+            "Estimated reduced chi sq: ${calibrator.estimatedAccelerometerReducedChiSq}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerCalibratorTest",
+            "Estimated P: ${calibrator.estimatedAccelerometerP}"
+        )
+        Log.i(
+            "StaticIntervalAccelerometerCalibratorTest",
+            "Estimated Q: ${calibrator.estimatedAccelerometerQ}"
         )
         Log.i(
             "StaticIntervalAccelerometerCalibratorTest",
@@ -437,5 +451,9 @@ class StaticIntervalAccelerometerCalibratorTest {
 
     private companion object {
         const val TIMEOUT = 5000L
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val THRESHOLD_FACTOR = 3.0
     }
 }

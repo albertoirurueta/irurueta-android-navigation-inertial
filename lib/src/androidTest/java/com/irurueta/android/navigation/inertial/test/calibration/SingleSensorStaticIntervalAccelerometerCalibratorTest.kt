@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.calibration
 
+import android.Manifest
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.calibration.SingleSensorStaticIntervalAccelerometerCalibrator
-import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.android.testutils.RequiresRealDevice
 import com.irurueta.numerical.robust.RobustEstimatorMethod
 import io.mockk.spyk
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -45,9 +49,9 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     @Before
@@ -55,7 +59,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         completed = 0
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenNoLocationAccelerometerSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -71,7 +75,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenLocationAccelerometerSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -90,7 +94,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenNoLocationAccelerometerUncalibratedSensor_completesCalibration() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -109,7 +113,7 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         logCalibrationResult(calibrator)
     }
 
-    @RequiresDevice
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenLocationAccelerometerUncalibratedSensor_completesCalibration() {
         val location = getCurrentLocation()
@@ -195,12 +199,6 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
                     "Unreliable gravity"
                 )
             },
-            initialBiasAvailableListener = { _, biasX, biasY, biasZ ->
-                Log.i(
-                    "SingleSensorStaticIntervalAccelerometerCalibratorTest",
-                    "Initial bias available. x: $biasX, y: $biasY, z: $biasZ m/s^2"
-                )
-            },
             newCalibrationMeasurementAvailableListener = { _, _, measurementsFoundSoFar, requiredMeasurements ->
                 Log.i(
                     "SingleSensorStaticIntervalAccelerometerCalibratorTest",
@@ -236,234 +234,257 @@ class SingleSensorStaticIntervalAccelerometerCalibratorTest {
         )
         calibrator.robustMethod = RobustEstimatorMethod.PROSAC
         calibrator.requiredMeasurements = 3 * calibrator.minimumRequiredMeasurements
+        calibrator.instantaneousNoiseLevelFactor = INSTANTANEOUS_NOISE_LEVEL_FACTOR
+        calibrator.thresholdFactor = THRESHOLD_FACTOR
+
         return calibrator
     }
 
     private fun logCalibrationResult(calibrator: SingleSensorStaticIntervalAccelerometerCalibrator) {
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Result unreliable: ${calibrator.resultUnreliable}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial bias. x: ${calibrator.initialBiasX}, y: ${calibrator.initialBiasY}, z: ${calibrator.initialBiasZ} m/s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "is ground truth initial bias: ${calibrator.isGroundTruthInitialBias}"
         )
-        Log.i("StaticIntervalAccelerometerCalibratorTest", "Location: ${calibrator.location}")
+        Log.i("SingleSensorStaticIntervalAccelerometerCalibratorTest", "Location: ${calibrator.location}")
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Accelerometer sensor: ${calibrator.accelerometerSensor}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Gravity sensor: ${calibrator.gravitySensor}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Window size: ${calibrator.windowSize}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial static samples: ${calibrator.initialStaticSamples}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Threshold factor: ${calibrator.thresholdFactor}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Instantaneous noise level factor: ${calibrator.instantaneousNoiseLevelFactor}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Base noise level absolute threshold: ${calibrator.baseNoiseLevelAbsoluteThreshold} m/s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Base noise level: ${calibrator.baseNoiseLevel} m/s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Base noise level PSD: ${calibrator.baseNoiseLevelPsd} m^2 * s^-3"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Base noise level root PSD: ${calibrator.baseNoiseLevelRootPsd} m * s^-1.5"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Threshold: ${calibrator.threshold} m/s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Average time interval: ${calibrator.averageTimeInterval} s"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Time interval variance: ${calibrator.timeIntervalVariance} s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Time interval standard deviation: ${calibrator.timeIntervalStandardDeviation} s"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial sx: ${calibrator.initialSx}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial sy: ${calibrator.initialSy}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial sz: ${calibrator.initialSz}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial mxy: ${calibrator.initialMxy}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial mxz: ${calibrator.initialMxz}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial myx: ${calibrator.initialMyx}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial myz: ${calibrator.initialMyz}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial mzx: ${calibrator.initialMzx}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Initial mzy: ${calibrator.initialMzy}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Is common axis used: ${calibrator.isCommonAxisUsed}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Minimum required measurements: ${calibrator.minimumRequiredMeasurements}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Required measurements: ${calibrator.requiredMeasurements}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Robust method: ${calibrator.robustMethod}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Robust confidence: ${calibrator.robustConfidence}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Robust max iterations: ${calibrator.robustMaxIterations}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Robust preliminary subset size: ${calibrator.robustPreliminarySubsetSize}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Robust threshold: ${calibrator.robustThreshold}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Robust threshold factor: ${calibrator.robustThresholdFactor}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Robust stop threshold factor: ${calibrator.robustStopThresholdFactor}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Average gravity norm: ${calibrator.averageGravityNorm} m/s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Gravity norm variance: ${calibrator.gravityNormVariance} m^2/s^4"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Gravity norm standard deviation: ${calibrator.gravityNormStandardDeviation} m/s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Gravity PSD: ${calibrator.gravityPsd} m^2 * s^-3"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Gravity root PSD: ${calibrator.gravityRootPsd} m * s^-1.5"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated sx: ${calibrator.estimatedSx}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated sy: ${calibrator.estimatedSy}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated sz: ${calibrator.estimatedSz}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated mxy: ${calibrator.estimatedMxy}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated mxz: ${calibrator.estimatedMxz}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated myx: ${calibrator.estimatedMyx}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated myz: ${calibrator.estimatedMyz}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated mzx: ${calibrator.estimatedMzx}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated mzy: ${calibrator.estimatedMzy}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
-            "Estimated covariance: ${calibrator.estimatedCovariance?.buffer}"
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
+            "Estimated covariance: ${calibrator.estimatedCovariance?.buffer.contentToString()}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated chi sq: ${calibrator.estimatedChiSq}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
+            "Estimated chi sq degrees of freedom: ${calibrator.estimatedChiSqDegreesOfFreedom}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
+            "Estimated reduced chi sq: ${calibrator.estimatedReducedChiSq}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
+            "Estimated P: ${calibrator.estimatedP}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
+            "Estimated Q: ${calibrator.estimatedQ}"
+        )
+        Log.i(
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated mse: ${calibrator.estimatedMse}"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated bias. x: ${calibrator.estimatedBiasX}, y: ${calibrator.estimatedBiasY}, z: ${calibrator.estimatedBiasZ} m/s^2"
         )
         Log.i(
-            "SingleSensorStaticIntervalAccelerometerCalibrator",
+            "SingleSensorStaticIntervalAccelerometerCalibratorTest",
             "Estimated bias standard deviation norm: ${calibrator.estimatedBiasStandardDeviationNorm} m/s^2"
         )
     }
 
     private companion object {
         const val TIMEOUT = 5000L
+
+        const val INSTANTANEOUS_NOISE_LEVEL_FACTOR = 3.0
+
+        const val THRESHOLD_FACTOR = 3.0
     }
 }

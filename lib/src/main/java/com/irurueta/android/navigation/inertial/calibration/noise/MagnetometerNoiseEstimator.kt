@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.noise
 
 import android.content.Context
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.old.calibration.noise.BaseAccumulatedEstimator.Companion.DEFAULT_MAX_DURATION_MILLIS
+import com.irurueta.android.navigation.inertial.old.calibration.noise.BaseAccumulatedEstimator.Companion.DEFAULT_MAX_SAMPLES
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
 import com.irurueta.units.MagneticFluxDensity
-import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
 
 /**
@@ -44,13 +46,12 @@ import com.irurueta.units.MagneticFluxDensityUnit
  * only taken into account if using either [StopMode.MAX_SAMPLES_ONLY] or
  * [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param maxDurationMillis Maximum duration expressed in milliseconds to take into account
- * before completion. This is only taken into account if using either
- * [StopMode.MAX_DURATION_ONLY] or [StopMode.MAX_SAMPLES_OR_DURATION].
+ * before completion. This is only taken into account if using either [StopMode.MAX_DURATION_ONLY] or
+ * [StopMode.MAX_SAMPLES_OR_DURATION].
  * @param stopMode Determines when this estimator will consider its estimation completed.
  * @param completedListener Listener to notify when estimation is complete.
  * @param unreliableListener Listener to notify when sensor becomes unreliable, and thus,
  * estimation must be discarded.
- * @property measurementListener Listener to notify collected sensor measurements.
  * @throws IllegalArgumentException when either [maxSamples] or [maxDurationMillis] is negative.
  */
 class MagnetometerNoiseEstimator(
@@ -61,62 +62,32 @@ class MagnetometerNoiseEstimator(
     maxDurationMillis: Long = DEFAULT_MAX_DURATION_MILLIS,
     stopMode: StopMode = StopMode.MAX_SAMPLES_OR_DURATION,
     completedListener: OnEstimationCompletedListener<MagnetometerNoiseEstimator>? = null,
-    unreliableListener: OnUnreliableListener<MagnetometerNoiseEstimator>? = null,
-    var measurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null
-) : AccumulatedTriadEstimator<MagnetometerNoiseEstimator,
-        AccumulatedMagneticFluxDensityTriadNoiseEstimator, MagnetometerSensorCollector,
-        MagneticFluxDensityUnit, MagneticFluxDensity, MagneticFluxDensityTriad>(
+    unreliableListener: OnUnreliableListener<MagnetometerNoiseEstimator>? = null
+) : AccumulatedTriadEstimator<MagnetometerNoiseEstimator, MagnetometerNoiseProcessor,
+        MagnetometerSensorCollector, MagneticFluxDensityUnit, MagneticFluxDensity,
+        MagneticFluxDensityTriad, MagnetometerSensorMeasurement>(
     context,
     sensorDelay,
-    maxSamples,
-    maxDurationMillis,
-    stopMode,
     completedListener,
     unreliableListener
-) {
+){
     /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
+     * Internal processor that processes measurements.
      */
-    override val triad = MagneticFluxDensityTriad()
+    override val processor = MagnetometerNoiseProcessor(
+        maxSamples,
+        maxDurationMillis,
+        stopMode
+    )
 
     /**
-     * Internal noise estimator of magnetometer measurements.
-     * This can be used to estimate statistics about magnetometer noise measurements.
-     */
-    override val noiseEstimator = AccumulatedMagneticFluxDensityTriadNoiseEstimator()
-
-    /**
-     * Listener to handle magnetometer measurements.
-     */
-    private val magnetometerMeasurementListener =
-        MagnetometerSensorCollector.OnMeasurementListener { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
-            val bxT = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
-            val byT = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
-            val bzT = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
-
-            handleMeasurement(bxT, byT, bzT, timestamp, accuracy)
-            measurementListener?.onMeasurement(
-                bx,
-                by,
-                bz,
-                hardIronX,
-                hardIronY,
-                hardIronZ,
-                timestamp,
-                accuracy
-            )
-        }
-
-    /**
-     * Collector for magnetometer measurements.
+     * Internal collector that collects measurements.
      */
     override val collector = MagnetometerSensorCollector(
         context,
         sensorType,
         sensorDelay,
-        magnetometerMeasurementListener,
-        accuracyChangedListener
+        accuracyChangedListener,
+        measurementListener,
     )
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration
 
 import android.content.Context
 import android.location.Location
 import android.util.Log
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.GravityHelper
-import com.irurueta.android.navigation.inertial.calibration.builder.AccelerometerInternalCalibratorBuilder
-import com.irurueta.android.navigation.inertial.calibration.builder.GyroscopeInternalCalibratorBuilder
-import com.irurueta.android.navigation.inertial.calibration.builder.MagnetometerInternalCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.builder.InternalAccelerometerCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.builder.InternalGyroscopeCalibratorBuilder
+import com.irurueta.android.navigation.inertial.calibration.builder.InternalMagnetometerCalibratorBuilder
 import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGenerator
+import com.irurueta.android.navigation.inertial.calibration.intervals.measurements.AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorProcessor
 import com.irurueta.android.navigation.inertial.calibration.noise.AccumulatedMeasurementEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.GravityNormEstimator
 import com.irurueta.android.navigation.inertial.calibration.noise.StopMode
-import com.irurueta.android.navigation.inertial.collectors.*
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.navigation.NavigationException
 import com.irurueta.navigation.inertial.BodyKinematics
-import com.irurueta.navigation.inertial.calibration.*
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.calibration.AccelerometerBiasUncertaintySource
+import com.irurueta.navigation.inertial.calibration.AngularSpeedTriad
+import com.irurueta.navigation.inertial.calibration.BodyKinematicsSequence
+import com.irurueta.navigation.inertial.calibration.GyroscopeBiasUncertaintySource
+import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyKinematics
+import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
+import com.irurueta.navigation.inertial.calibration.StandardDeviationTimedBodyKinematics
+import com.irurueta.navigation.inertial.calibration.TimedBodyKinematicsAndMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.accelerometer.AccelerometerNonLinearCalibrator
 import com.irurueta.navigation.inertial.calibration.accelerometer.KnownBiasAccelerometerCalibrator
 import com.irurueta.navigation.inertial.calibration.accelerometer.UnknownBiasAccelerometerCalibrator
@@ -47,8 +60,13 @@ import com.irurueta.navigation.inertial.calibration.magnetometer.MagnetometerNon
 import com.irurueta.navigation.inertial.calibration.magnetometer.UnknownHardIronMagnetometerCalibrator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.numerical.robust.RobustEstimatorMethod
-import com.irurueta.units.*
-import java.util.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import com.irurueta.units.AngularSpeed
+import com.irurueta.units.AngularSpeedUnit
+import com.irurueta.units.MagneticFluxDensity
+import com.irurueta.units.MagneticFluxDensityUnit
+import java.util.Date
 import kotlin.math.max
 
 /**
@@ -90,13 +108,6 @@ import kotlin.math.max
  * @property calibrationSolvingStartedListener listener to notify when calibration solving starts.
  * @property calibrationCompletedListener listener to notify when calibration solving completes.
  * @property stoppedListener listener to notify when calibrator is stopped.
- * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
- * values is obtained.
- * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
- * is obtained.
- * @property initialMagnetometerHardIronAvailableListener listener to notify when a guess of
- * magnetometer hard iron is obtained.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  * @property accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
  * into quality scores, based on the amount of standard deviation (the larger the variability, the
  * worse the score will be).
@@ -131,14 +142,13 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>?,
     var unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener?,
-    var initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener?,
-    var initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener?,
-    var initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener?,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener?,
     val accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics>,
     val gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>>,
     val magnetometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyMagneticFluxDensity>
-) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator, TimedBodyKinematicsAndMagneticFluxDensity>(
+) : BaseStaticIntervalWithMeasurementGeneratorCalibrator<
+        StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
+        TimedBodyKinematicsAndMagneticFluxDensity,
+        AccelerometerGyroscopeAndMagnetometerMeasurementGeneratorProcessor>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -153,8 +163,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     readyToSolveCalibrationListener,
     calibrationSolvingStartedListener,
     calibrationCompletedListener,
-    stoppedListener,
-    accuracyChangedListener
+    stoppedListener
 ) {
     /**
      * Constructor.
@@ -215,13 +224,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      * @property stoppedListener listener to notify when calibrator is stopped.
      * @param unreliableGravityNormEstimationListener listener to notify when gravity norm
      * estimation becomes unreliable. This is only used if no location is provided.
-     * @property initialAccelerometerBiasAvailableListener listener to notify when a guess of bias
-     * values is obtained.
-     * @property initialGyroscopeBiasAvailableListener listener to notify when a guess of bias values
-     * is obtained.
-     * @property initialMagnetometerHardIronAvailableListener listener to notify when a guess of
-     * magnetometer hard iron is obtained.
-     * @property accuracyChangedListener listener to notify when sensor accuracy changes.
      * @property accelerometerQualityScoreMapper mapper to convert collected accelerometer measurements
      * into quality scores, based on the amount of standard deviation (the larger the variability, the
      * worse the score will be).
@@ -264,10 +266,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         calibrationCompletedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnCalibrationCompletedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         stoppedListener: StaticIntervalWithMeasurementGeneratorCalibrator.OnStoppedListener<StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator>? = null,
         unreliableGravityNormEstimationListener: OnUnreliableGravityEstimationListener? = null,
-        initialAccelerometerBiasAvailableListener: OnInitialAccelerometerBiasAvailableListener? = null,
-        initialGyroscopeBiasAvailableListener: OnInitialGyroscopeBiasAvailableListener? = null,
-        initialMagnetometerHardIronAvailableListener: OnInitialMagnetometerHardIronAvailableListener? = null,
-        accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null,
         accelerometerQualityScoreMapper: QualityScoreMapper<StandardDeviationBodyKinematics> =
             DefaultAccelerometerQualityScoreMapper(),
         gyroscopeQualityScoreMapper: QualityScoreMapper<BodyKinematicsSequence<StandardDeviationTimedBodyKinematics>> =
@@ -298,10 +296,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         calibrationCompletedListener,
         stoppedListener,
         unreliableGravityNormEstimationListener,
-        initialAccelerometerBiasAvailableListener,
-        initialGyroscopeBiasAvailableListener,
-        initialMagnetometerHardIronAvailableListener,
-        accuracyChangedListener,
         accelerometerQualityScoreMapper,
         gyroscopeQualityScoreMapper,
         magnetometerQualityScoreMapper
@@ -321,27 +315,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
 
         requiredMeasurements = minimumRequiredMeasurements
     }
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val accelerometerBiasTriad = AccelerationTriad()
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val gyroscopeBiasTriad = AngularSpeedTriad()
-
-    /**
-     * Triad containing samples converted from device ENU coordinates to local plane NED
-     * coordinates.
-     * This is reused for performance reasons.
-     */
-    private val magnetometerBiasTriad = MagneticFluxDensityTriad()
 
     /**
      * Listener used by internal generator to handle events when initialization is started.
@@ -471,60 +444,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         }
 
     /**
-     * Listener for accelerometer sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for accelerometer bias (only available if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val generatorAccelerometerMeasurementListener =
-        AccelerometerSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstAccelerometerMeasurement) {
-                updateAccelerometerInitialBiases(bx, by, bz)
-            }
-        }
-
-    /**
-     * Listener for gyroscope sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for gyroscope bias (only available if
-     * [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED] is used, otherwise zero
-     * bias is assumed as an initial guess).
-     */
-    private val generatorGyroscopeMeasurementListener =
-        GyroscopeSensorCollector.OnMeasurementListener { _, _, _, bx, by, bz, _, _ ->
-            if (isFirstGyroscopeMeasurement) {
-                updateGyroscopeInitialBiases(bx, by, bz)
-            }
-        }
-
-    /**
-     * Listener for magnetometer sensor collector.
-     * This is used to determine device calibration and obtain initial guesses
-     * for magnetometer hard iron values (only available if
-     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used, otherwise zero
-     * hard iron is assumed as an initial guess).
-     */
-    private val generatorMagnetometerMeasurementListener =
-        MagnetometerSensorCollector.OnMeasurementListener { _, _, _, hardIronX, hardIronY, hardIronZ, _, _ ->
-            if (isFirstMagnetometerMeasurement) {
-                val hardIronXTesla = if (hardIronX != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronX.toDouble())
-                else
-                    null
-                val hardIronYTesla = if (hardIronY != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronY.toDouble())
-                else
-                    null
-                val hardIronZTesla = if (hardIronZ != null)
-                    MagneticFluxDensityConverter.microTeslaToTesla(hardIronZ.toDouble())
-                else
-                    null
-                updateMagnetometerInitialHardIrons(hardIronXTesla, hardIronYTesla, hardIronZTesla)
-            }
-        }
-
-    /**
      * Listener for gravity norm estimator.
      * This is used to approximately estimate gravity when no location is provided, by using the
      * gravity sensor provided by the device.
@@ -565,11 +484,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         generatorDynamicIntervalSkippedListener,
         generatorGeneratedAccelerometerMeasurementListener,
         generatorGeneratedGyroscopeMeasurementListener,
-        generatorGeneratedMagnetometerMeasurementListener,
-        accelerometerMeasurementListener = generatorAccelerometerMeasurementListener,
-        gyroscopeMeasurementListener = generatorGyroscopeMeasurementListener,
-        magnetometerMeasurementListener = generatorMagnetometerMeasurementListener,
-        accuracyChangedListener = accuracyChangedListener
+        generatorGeneratedMagnetometerMeasurementListener
     )
 
     /**
@@ -3085,6 +3000,39 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         get() = accelerometerInternalCalibrator?.estimatedChiSq
 
     /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    val estimatedAccelerometerChiSqDegreesOfFreedom: Int?
+        get() = accelerometerInternalCalibrator?.estimatedChiSqDegreesOfFreedom
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    val estimatedAccelerometerReducedChiSq: Double?
+        get() = accelerometerInternalCalibrator?.estimatedReducedChiSq
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    val estimatedAccelerometerP: Double?
+        get() = accelerometerInternalCalibrator?.estimatedP
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    val estimatedAccelerometerQ: Double?
+        get() = accelerometerInternalCalibrator?.estimatedQ
+
+    /**
      * Gets estimated mean square error respect to provided accelerometer measurements or null if
      * not available.
      */
@@ -3475,6 +3423,39 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         get() = gyroscopeInternalCalibrator?.estimatedChiSq
 
     /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    val estimatedGyroscopeChiSqDegreesOfFreedom: Int?
+        get() = gyroscopeInternalCalibrator?.estimatedChiSqDegreesOfFreedom
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    val estimatedGyroscopeReducedChiSq: Double?
+        get() = gyroscopeInternalCalibrator?.estimatedReducedChiSq
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    val estimatedGyroscopeP: Double?
+        get() = gyroscopeInternalCalibrator?.estimatedP
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    val estimatedGyroscopeQ: Double?
+        get() = gyroscopeInternalCalibrator?.estimatedQ
+
+    /**
      * Gets estimated mean square error respect to provided gyroscope measurements or null if
      * not available.
      */
@@ -3862,6 +3843,39 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     val estimatedMagnetometerChiSq: Double?
         get() = magnetometerInternalCalibrator?.estimatedChiSq
+
+    /**
+     * Gets estimated chi square degrees of freedom. Degrees of freedom is equal to the number of
+     * sampled data minus the number of estimated parameters.
+     */
+    val estimatedMagnetometerChiSqDegreesOfFreedom: Int?
+        get() = magnetometerInternalCalibrator?.estimatedChiSqDegreesOfFreedom
+
+    /**
+     * Gets estimated reduced chi square value. This is equal to estimated chi square value divided
+     * by its degrees of freedom. Ideally this value should be close to 1.0, indicating that fit is
+     * optimal. A value larger than 1.0 indicates that fit is not good or noise has been
+     * underestimated, and a value smaller than 1.0 indicates that there is overfitting or noise has
+     * been overestimated.
+     */
+    val estimatedMagnetometerReducedChiSq: Double?
+        get() = magnetometerInternalCalibrator?.estimatedReducedChiSq
+
+    /**
+     * Gets estimated probability of finding a smaller chi square value expressed as a value between
+     * 0.0 and 1.0. The smaller the found chi square value is, the better the fit of the estimated
+     * result and covariances. Thus, the smaller the chance of finding a smaller chi
+     * square value, then the better the estimated result and covariance is.
+     */
+    val estimatedMagnetometerP: Double?
+        get() = magnetometerInternalCalibrator?.estimatedP
+
+    /**
+     * Gets estimated measure of quality of estimated fit as a value between 0.0 and 1.0. The larger
+     * the quality value is, the better the result and covariance that has been estimated.
+     */
+    val estimatedMagnetometerQ: Double?
+        get() = magnetometerInternalCalibrator?.estimatedQ
 
     /**
      * Gets estimated mean square error respect to provided magnetometer measurements or null if
@@ -4382,155 +4396,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
     }
 
     /**
-     * Updates initial biases values when first accelerometer measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED] is used.
-     *
-     * @param bx x-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param by y-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     * @param bz z-coordinate of initial bias to be set expressed in meters per squared second
-     * (m/s^2).
-     */
-    private fun updateAccelerometerInitialBiases(bx: Float?, by: Float?, bz: Float?) {
-        val initialBiasX: Double
-        val initialBiasY: Double
-        val initialBiasZ: Double
-        if (bx != null && by != null && bz != null) {
-            initialBiasX = bx.toDouble()
-            initialBiasY = by.toDouble()
-            initialBiasZ = bz.toDouble()
-        } else {
-            initialBiasX = 0.0
-            initialBiasY = 0.0
-            initialBiasZ = 0.0
-        }
-
-        // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDConverter.convert(
-            initialBiasX,
-            initialBiasY,
-            initialBiasZ,
-            accelerometerBiasTriad
-        )
-
-        accelerometerInitialBiasX = accelerometerBiasTriad.valueX
-        accelerometerInitialBiasY = accelerometerBiasTriad.valueY
-        accelerometerInitialBiasZ = accelerometerBiasTriad.valueZ
-
-        initialAccelerometerBiasAvailableListener?.onInitialBiasAvailable(
-            this,
-            accelerometerBiasTriad.valueX,
-            accelerometerBiasTriad.valueY,
-            accelerometerBiasTriad.valueZ
-        )
-    }
-
-    /**
-     * Updates initial biases values when first gyroscope measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [GyroscopeSensorType.GYROSCOPE_UNCALIBRATED] is used.
-     *
-     * @param bx x-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     * @param by y-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     * @param bz z-coordinate of initial bias to be set expressed in radians per second (rad/s).
-     */
-    private fun updateGyroscopeInitialBiases(bx: Float?, by: Float?, bz: Float?) {
-        val initialBiasX: Double
-        val initialBiasY: Double
-        val initialBiasZ: Double
-        if (bx != null && by != null && bz != null) {
-            initialBiasX = bx.toDouble()
-            initialBiasY = by.toDouble()
-            initialBiasZ = bz.toDouble()
-        } else {
-            initialBiasX = 0.0
-            initialBiasY = 0.0
-            initialBiasZ = 0.0
-        }
-
-        // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDConverter.convert(initialBiasX, initialBiasY, initialBiasZ, gyroscopeBiasTriad)
-
-        gyroscopeInitialBiasX = gyroscopeBiasTriad.valueX
-        gyroscopeInitialBiasY = gyroscopeBiasTriad.valueY
-        gyroscopeInitialBiasZ = gyroscopeBiasTriad.valueZ
-
-        initialGyroscopeBiasAvailableListener?.onInitialBiasAvailable(
-            this,
-            gyroscopeBiasTriad.valueX,
-            gyroscopeBiasTriad.valueY,
-            gyroscopeBiasTriad.valueZ
-        )
-    }
-
-    /**
-     * Updates initial hard iron values when first magnetometer measurement is received, so
-     * that hardware calibrated biases are retrieved if
-     * [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED] is used.
-     *
-     * @param hardIronX hard iron on device x-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param hardIronY hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     * @param hardIronZ hard iron on device y-axis expressed in Teslas (T). Only
-     * available when using [MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED].
-     * If available, this value remains constant with calibrated bias value.
-     */
-    private fun updateMagnetometerInitialHardIrons(
-        hardIronX: Double?,
-        hardIronY: Double?,
-        hardIronZ: Double?
-    ) {
-        val initialHardIronX: Double
-        val initialHardIronY: Double
-        val initialHardIronZ: Double
-        if (hardIronX != null && hardIronY != null && hardIronZ != null) {
-            initialHardIronX = hardIronX
-            initialHardIronY = hardIronY
-            initialHardIronZ = hardIronZ
-        } else {
-            initialHardIronX = 0.0
-            initialHardIronY = 0.0
-            initialHardIronZ = 0.0
-        }
-
-        // convert from device ENU coordinates to local plane NED coordinates
-        ENUtoNEDConverter.convert(
-            initialHardIronX,
-            initialHardIronY,
-            initialHardIronZ,
-            magnetometerBiasTriad
-        )
-
-        magnetometerInitialHardIronX = magnetometerBiasTriad.valueX
-        magnetometerInitialHardIronY = magnetometerBiasTriad.valueY
-        magnetometerInitialHardIronZ = magnetometerBiasTriad.valueZ
-
-        initialMagnetometerHardIronAvailableListener?.onInitialHardIronAvailable(
-            this,
-            magnetometerBiasTriad.valueX,
-            magnetometerBiasTriad.valueY,
-            magnetometerBiasTriad.valueZ
-        )
-    }
-
-    /**
-     * Indicates whether the generator has picked the first gyroscope measurement.
-     */
-    private val isFirstGyroscopeMeasurement: Boolean
-        get() = generator.numberOfProcessedGyroscopeMeasurements <= FIRST_MEASUREMENT
-
-    /**
-     * Indicates whether the generator has picked the first accelerometer measurement.
-     */
-    private val isFirstMagnetometerMeasurement: Boolean
-        get() = generator.numberOfProcessedMagnetometerMeasurements <= FIRST_MEASUREMENT
-
-    /**
      * Builds an internal accelerometer calibrator based on all provided parameters.
      *
      * @return an internal accelerometer calibrator.
@@ -4538,7 +4403,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     @Throws(IllegalStateException::class)
     private fun buildAccelerometerInternalCalibrator(): AccelerometerNonLinearCalibrator {
-        return AccelerometerInternalCalibratorBuilder(
+        return InternalAccelerometerCalibratorBuilder(
             accelerometerMeasurements,
             accelerometerRobustPreliminarySubsetSize,
             minimumRequiredAccelerometerMeasurements,
@@ -4606,7 +4471,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
         val accelerometerMzy = estimatedAccelerometerMzy
         checkNotNull(accelerometerMzy)
 
-        return GyroscopeInternalCalibratorBuilder(
+        return InternalGyroscopeCalibratorBuilder(
             gyroscopeMeasurements,
             gyroscopeRobustPreliminarySubsetSize,
             minimumRequiredGyroscopeMeasurements,
@@ -4657,7 +4522,7 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
      */
     @Throws(IllegalStateException::class)
     private fun buildMagnetometerInternalCalibrator(): MagnetometerNonLinearCalibrator {
-        return MagnetometerInternalCalibratorBuilder(
+        return InternalMagnetometerCalibratorBuilder(
             magnetometerMeasurements,
             magnetometerRobustPreliminarySubsetSize,
             minimumRequiredMagnetometerMeasurements,
@@ -4688,13 +4553,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
             worldMagneticModel,
             magnetometerQualityScoreMapper
         ).build()
-    }
-
-    private companion object {
-        /**
-         * Indicates when first sensor measurement is obtained.
-         */
-        private const val FIRST_MEASUREMENT = 1
     }
 
     /**
@@ -4771,83 +4629,6 @@ class StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator private cons
          */
         fun onUnreliableGravityEstimation(
             calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator
-        )
-    }
-
-    /**
-     * Interface to notify when initial accelerometer bias guess is available.
-     * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered the true
-     * value after solving calibration, otherwise, initial bias is considered only an initial guess.
-     */
-    fun interface OnInitialAccelerometerBiasAvailableListener {
-        /**
-         * Called when initial accelerometer bias is available.
-         * If [isAccelerometerGroundTruthInitialBias] is true, then initial bias is considered the
-         * true value after solving calibration, otherwise, initial bias is considered only an
-         * initial guess.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param biasX x-coordinate of bias expressed in meters per squared second (m/s^2).
-         * @param biasY y-coordinate of bias expressed in meters per squared second (m/s^2).
-         * @param biasZ z-coordinate of bias expressed in meters per squared second (m/s^2).
-         */
-        fun onInitialBiasAvailable(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
-            biasX: Double,
-            biasY: Double,
-            biasZ: Double
-        )
-    }
-
-    /**
-     * Interface to notify when initial gyroscope bias guess is available.
-     * If [isGyroscopeGroundTruthInitialBias] is true, then initial bias is considered the true
-     * value after solving calibration, otherwise, initial bias is considered only an initial guess.
-     */
-    fun interface OnInitialGyroscopeBiasAvailableListener {
-        /**
-         * Called when initial gyroscope bias is available.
-         * If [isGyroscopeGroundTruthInitialBias] is true, then initial bias is considered the true
-         * value after solving calibration, otherwise, initial bias is considered only an initial
-         * guess.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param biasX x-coordinate of bias expressed in radians per second (rad/s).
-         * @param biasY y-coordinate of bias expressed in radians per second (rad/s).
-         * @param biasZ z-coordinate of bias expressed in radians per second (rad/s).
-         */
-        fun onInitialBiasAvailable(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
-            biasX: Double,
-            biasY: Double,
-            biasZ: Double
-        )
-    }
-
-    /**
-     * Interface to notify when initial hard iron guess is available.
-     * If [isMagnetometerGroundTruthInitialHardIron] is true, then initial hard iron is considered
-     * the true value after solving calibration, otherwise, initial hard iron is considered only an
-     * initial guess.
-     */
-    fun interface OnInitialMagnetometerHardIronAvailableListener {
-
-        /**
-         * Called when initial hard iron is available.
-         * If [isMagnetometerGroundTruthInitialHardIron] is true, then initial hard iron is considered
-         * the true value after solving calibration, otherwise, initial hard iron is considered only an
-         * initial guess.
-         *
-         * @param calibrator calibrator that raised the event.
-         * @param hardIronX x-coordinate of hard iron expressed in micro-Teslas (µT).
-         * @param hardIronY y-coordinate of hard iron expressed in micro-Teslas (µT).
-         * @param hardIronZ z-coordinate of hard iron expressed in micro-Teslas (µT).
-         */
-        fun onInitialHardIronAvailable(
-            calibrator: StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator,
-            hardIronX: Double,
-            hardIronY: Double,
-            hardIronZ: Double
         )
     }
 }

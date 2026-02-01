@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.collectors
 
 import android.hardware.Sensor
 import android.hardware.SensorDirectChannel
 import android.util.Log
-import androidx.test.filters.RequiresDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
+import com.irurueta.android.testutils.RequiresRealDevice
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@RequiresDevice
 class GravitySensorCollectorTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -40,6 +42,7 @@ class GravitySensorCollectorTest {
         measured = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun sensor_returnsSensor() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -51,6 +54,7 @@ class GravitySensorCollectorTest {
         logSensor(sensor)
     }
 
+    @RequiresRealDevice
     @Test
     fun sensorAvailable_returnsTrue() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
@@ -59,27 +63,41 @@ class GravitySensorCollectorTest {
         assertTrue(collector.sensorAvailable)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_collectsMeasurements() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val collector = GravitySensorCollector(
             context,
             SensorDelay.FASTEST,
-            measurementListener = { gx, gy, gz, g, timestamp, accuracy ->
+            accuracyChangedListener = { _, accuracy ->
                 Log.d(
                     "GravitySensorCollectorTest",
-                    "onMeasurement - gx: $gx, gy: $gy, gz: $gz, g: $g, timestamp: $timestamp, "
-                            + "accuracy: $accuracy"
+                    "onAccuracyChanged - accuracy: $accuracy"
+                )
+            },
+            measurementListener = { _, measurement ->
+                val gx = measurement.gx
+                val gy = measurement.gy
+                val gz = measurement.gz
+                val timestamp = measurement.timestamp
+                val accuracy = measurement.accuracy
+                val coordinateSystem = measurement.sensorCoordinateSystem
+
+                assertEquals(SensorCoordinateSystem.ENU, coordinateSystem)
+
+                Log.d(
+                    "GravitySensorCollectorTest",
+                    """onMeasurement - gx: $gx m/s^2, gy: $gy m/s^2, gz: $gz m/s^2, 
+                        |timestamp: $timestamp,
+                        |accuracy: $accuracy,
+                        |coordinateSystem: $coordinateSystem
+                    """.trimMargin()
                 )
 
                 syncHelper.notifyAll { measured++ }
             }
-        ) { accuracy ->
-            Log.d(
-                "GravitySensorCollectorTest",
-                "onAccuracyChanged - accuracy: $accuracy"
-            )
-        }
+        )
 
         collector.start()
 

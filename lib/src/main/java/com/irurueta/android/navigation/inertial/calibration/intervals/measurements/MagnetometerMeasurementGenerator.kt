@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,17 @@
 package com.irurueta.android.navigation.inertial.calibration.intervals.measurements
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.calibration.intervals.Status
-import com.irurueta.android.navigation.inertial.collectors.*
-import com.irurueta.navigation.inertial.BodyKinematics
+import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorCollector
+import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.navigation.inertial.BodyKinematicsAndMagneticFluxDensity
-import com.irurueta.navigation.inertial.BodyMagneticFluxDensity
-import com.irurueta.navigation.inertial.calibration.AccelerationTriad
-import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.StandardDeviationBodyMagneticFluxDensity
 import com.irurueta.navigation.inertial.calibration.generators.MagnetometerMeasurementsGenerator
 import com.irurueta.navigation.inertial.calibration.generators.MagnetometerMeasurementsGeneratorListener
-import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
-import com.irurueta.navigation.inertial.calibration.noise.AccumulatedMagneticFluxDensityTriadNoiseEstimator
 import com.irurueta.units.MagneticFluxDensity
-import com.irurueta.units.MagneticFluxDensityConverter
-import com.irurueta.units.MagneticFluxDensityUnit
 
 /**
  * Generates measurements that can later be used by magnetometer calibrators.
@@ -59,11 +54,6 @@ import com.irurueta.units.MagneticFluxDensityUnit
  * @property generatedMeasurementListener listener to notify when a new calibration measurement is
  * generated.
  * @property resetListener listener to notify when generator is restarted.
- * @property accelerometerMeasurementListener listener to notify when a new accelerometer
- * measurement is received.
- * @property magnetometerMeasurementListener listener to notify when a new magnetometer measurement
- * is received.
- * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  */
 class MagnetometerMeasurementGenerator(
     context: Context,
@@ -81,12 +71,13 @@ class MagnetometerMeasurementGenerator(
     dynamicIntervalSkippedListener: OnDynamicIntervalSkippedListener<MagnetometerMeasurementGenerator>? = null,
     generatedMeasurementListener: OnGeneratedMeasurementListener<MagnetometerMeasurementGenerator, StandardDeviationBodyMagneticFluxDensity>? = null,
     resetListener: OnResetListener<MagnetometerMeasurementGenerator>? = null,
-    accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-    var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
-) : SingleSensorCalibrationMeasurementGenerator<MagnetometerMeasurementGenerator,
-        StandardDeviationBodyMagneticFluxDensity, MagnetometerMeasurementsGenerator,
-        MagnetometerMeasurementsGeneratorListener, BodyKinematicsAndMagneticFluxDensity>(
+) : SingleSensorCalibrationMeasurementGenerator<
+        MagnetometerMeasurementGenerator,
+        MagnetometerMeasurementGeneratorProcessor,
+        StandardDeviationBodyMagneticFluxDensity,
+        MagnetometerMeasurementsGenerator,
+        MagnetometerMeasurementsGeneratorListener,
+        BodyKinematicsAndMagneticFluxDensity>(
     context,
     accelerometerSensorType,
     accelerometerSensorDelay,
@@ -98,153 +89,110 @@ class MagnetometerMeasurementGenerator(
     staticIntervalSkippedListener,
     dynamicIntervalSkippedListener,
     generatedMeasurementListener,
-    resetListener,
-    accelerometerMeasurementListener,
-    accuracyChangedListener
+    resetListener
 ) {
     /**
-     * Triad containing acceleration samples converted from device ENU coordinates to local plane
-     * NED coordinates.
-     * This is reused for performance reasons.
+     * Number of magnetometer measurements that have been processed.
      */
-    private val acceleration = AccelerationTriad()
+    val numberOfProcessedMagnetometerMeasurements: Int
+        get() = processor.numberOfProcessedMagnetometerMeasurements
 
     /**
-     * Triad containing magnetic flux density samples converted from device ENU coordinates to local
-     * plane NED coordinates.
-     * This is reused for performance reasons.
+     * Gets magnetometer measurement base noise level that has been detected during initialization
+     * expressed in Teslas (T).
+     * This is only available once generator completes initialization.
      */
-    private val b = MagneticFluxDensityTriad()
+    val magnetometerBaseNoiseLevel: Double?
+        get() = processor.magnetometerBaseNoiseLevel
 
     /**
-     * Listener for internal measurement generator.
+     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
      */
-    override val measurementsGeneratorListener =
-        object : MagnetometerMeasurementsGeneratorListener {
-            override fun onInitializationStarted(generator: MagnetometerMeasurementsGenerator?) {
-                initializationStartedListener?.onInitializationStarted(
-                    this@MagnetometerMeasurementGenerator
-                )
-            }
-
-            override fun onInitializationCompleted(
-                generator: MagnetometerMeasurementsGenerator?,
-                baseNoiseLevel: Double
-            ) {
-                initializationCompletedListener?.onInitializationCompleted(
-                    this@MagnetometerMeasurementGenerator,
-                    baseNoiseLevel
-                )
-            }
-
-            override fun onError(
-                generator: MagnetometerMeasurementsGenerator?,
-                reason: TriadStaticIntervalDetector.ErrorReason
-            ) {
-                errorListener?.onError(
-                    this@MagnetometerMeasurementGenerator,
-                    mapErrorReason(reason)
-                )
-            }
-
-            override fun onStaticIntervalDetected(generator: MagnetometerMeasurementsGenerator?) {
-                staticIntervalDetectedListener?.onStaticIntervalDetected(
-                    this@MagnetometerMeasurementGenerator
-                )
-            }
-
-            override fun onDynamicIntervalDetected(generator: MagnetometerMeasurementsGenerator?) {
-                dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
-                    this@MagnetometerMeasurementGenerator
-                )
-            }
-
-            override fun onStaticIntervalSkipped(generator: MagnetometerMeasurementsGenerator?) {
-                staticIntervalSkippedListener?.onStaticIntervalSkipped(
-                    this@MagnetometerMeasurementGenerator
-                )
-            }
-
-            override fun onDynamicIntervalSkipped(generator: MagnetometerMeasurementsGenerator?) {
-                dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(
-                    this@MagnetometerMeasurementGenerator
-                )
-            }
-
-            override fun onGeneratedMeasurement(
-                generator: MagnetometerMeasurementsGenerator?,
-                measurement: StandardDeviationBodyMagneticFluxDensity
-            ) {
-                generatedMeasurementListener?.onGeneratedMeasurement(
-                    this@MagnetometerMeasurementGenerator,
-                    measurement
-                )
-            }
-
-            override fun onReset(generator: MagnetometerMeasurementsGenerator?) {
-                resetListener?.onReset(this@MagnetometerMeasurementGenerator)
-            }
-        }
+    val magnetometerBaseNoiseLevelAsMeasurement: MagneticFluxDensity?
+        get() = processor.magnetometerBaseNoiseLevelAsMeasurement
 
     /**
-     * Internal measurements generator for magnetometer calibration.
-     */
-    override val measurementsGenerator =
-        MagnetometerMeasurementsGenerator(measurementsGeneratorListener)
-
-    /**
-     * Processes an accelerometer measurement to generate an instance of type [BodyKinematics] to be
-     * used by the internal measurement generator.
-     * Since [MagnetometerMeasurementsGenerator] only requires acceleration information, no data is
-     * provided for angular rates in processed result.
+     * Gets magnetometer measurement base noise level that has been detected during initialization.
+     * This is only available once generator completes initialization.
      *
-     * @param ax acceleration on device x-axis expressed in meters per squared second (m/s^2).
-     * @param ay acceleration on device y-axis expressed in meters per squared second (m/s^2).
-     * @param az acceleration on device z-axis expressed in meters per squared second (m/s^2).
-     * @param diffSeconds elapsed seconds since accelerometer started.
-     * @param result instance where processed sample result will be stored.
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
      */
-    override fun processSample(
-        ax: Float,
-        ay: Float,
-        az: Float,
-        diffSeconds: Double,
-        result: BodyKinematicsAndMagneticFluxDensity
-    ) {
-        // convert from devic ENU coordinates to local plane NED coordinates
-        ENUtoNEDConverter.convert(ax.toDouble(), ay.toDouble(), az.toDouble(), acceleration)
-
-        // set accelerometer information
-        kinematics.fx = acceleration.valueX
-        kinematics.fy = acceleration.valueY
-        kinematics.fz = acceleration.valueZ
-        result.kinematics = kinematics
-
-        // set magnetometer information
-        result.magneticFluxDensity = magneticFluxDensity
+    fun getMagnetometerBaseNoiseLevelAsMeasurement(result: MagneticFluxDensity): Boolean {
+        return processor.getMagnetometerBaseNoiseLevelAsMeasurement(result)
     }
 
     /**
-     * Body kinematics being reused for efficiency purposes.
-     * For magnetometer calibration purposes, only specific force is required.
+     * Norm of average magnetic flux density obtained during initialization and expressed in
+     * Teslas (T).
+     * This is only available once generator completes initialization.
      */
-    private val kinematics = BodyKinematics()
+    val initialMagneticFluxDensityNorm: Double?
+        get() = processor.initialMagneticFluxDensityNorm
 
     /**
-     * Body magnetic flux density being reused for efficiency purposes.
+     * Gets norm of average magnetic flux density obtained during initialization.
+     * This is only available once generator completes initialization.
      */
-    private val magneticFluxDensity = BodyMagneticFluxDensity()
+    val initialMagneticFluxDensityNormAsMeasurement: MagneticFluxDensity?
+        get() = processor.initialMagneticFluxDensityNormAsMeasurement
 
     /**
-     * Estimates accumulated average and noise of magnetometer values during static periods.
+     * Gets norm of average magnetic flux density obtained during initialization.
+     * This is only available once generator completes initialization.
+     *
+     * @param result instance where result will be stored.
+     * @return true if result is available, false otherwise.
      */
-    private val magnetometerAccumulatedNoiseEstimator =
-        AccumulatedMagneticFluxDensityTriadNoiseEstimator()
+    fun getInitialMagneticFluxDensityNormAsMeasurement(result: MagneticFluxDensity): Boolean {
+        return processor.getInitialMagneticFluxDensityNormAsMeasurement(result)
+    }
 
     /**
-     * Sample used by internal measurement generator.
+     * Internal processor to process accelerometer and magnetometer sensor measurements.
      */
-    override val sample = BodyKinematicsAndMagneticFluxDensity()
+    override val processor = MagnetometerMeasurementGeneratorProcessor(
+        initializationStartedListener = { _ ->
+            initializationStartedListener?.onInitializationStarted(
+                this
+            )
+        },
+        initializationCompletedListener = { _, baseNoiseLevel ->
+            initializationCompletedListener?.onInitializationCompleted(
+                this,
+                baseNoiseLevel
+            )
+        },
+        errorListener = { _, reason -> errorListener?.onError(this, reason) },
+        staticIntervalDetectedListener = { _ ->
+            staticIntervalDetectedListener?.onStaticIntervalDetected(
+                this
+            )
+        },
+        dynamicIntervalDetectedListener = { _ ->
+            dynamicIntervalDetectedListener?.onDynamicIntervalDetected(
+                this
+            )
+        },
+        staticIntervalSkippedListener = { _ ->
+            staticIntervalSkippedListener?.onStaticIntervalSkipped(
+                this
+            )
+        },
+        dynamicIntervalSkippedListener = { _ ->
+            dynamicIntervalSkippedListener?.onDynamicIntervalSkipped(
+                this
+            )
+        },
+        generatedMeasurementListener = { _, measurement ->
+            generatedMeasurementListener?.onGeneratedMeasurement(
+                this,
+                measurement
+            )
+        },
+        resetListener = { _ -> resetListener?.onReset(this) }
+    )
 
     /**
      * Internal listener for magnetometer sensor collector.
@@ -252,40 +200,17 @@ class MagnetometerMeasurementGenerator(
      * by the internal measurement generator.
      */
     private val magnetometerCollectorMeasurementListener =
-        MagnetometerSensorCollector.OnMeasurementListener { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
-            val bxTesla = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
-            val byTesla = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
-            val bzTesla = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        SensorCollector.OnMeasurementListener<MagnetometerSensorMeasurement, MagnetometerSensorCollector> { _, measurement ->
+            processor.processMagnetometerMeasurement(measurement)
+        }
 
-            // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDConverter.convert(bxTesla, byTesla, bzTesla, b)
-
-            magneticFluxDensity.bx = b.valueX
-            magneticFluxDensity.by = b.valueY
-            magneticFluxDensity.bz = b.valueZ
-
-            if (status == Status.INITIALIZING) {
-                magnetometerAccumulatedNoiseEstimator.addTriad(bxTesla, byTesla, bzTesla)
-            }
-
-            numberOfProcessedMagnetometerMeasurements++
-
-            if (magnetometerBaseNoiseLevel == null && (status == Status.INITIALIZATION_COMPLETED || status == Status.STATIC_INTERVAL || status == Status.DYNAMIC_INTERVAL)) {
-                magnetometerBaseNoiseLevel =
-                    magnetometerAccumulatedNoiseEstimator.standardDeviationNorm
-                initialMagneticFluxDensityNorm = magnetometerAccumulatedNoiseEstimator.avgNorm
-            }
-
-            magnetometerMeasurementListener?.onMeasurement(
-                bx,
-                by,
-                bz,
-                hardIronX,
-                hardIronY,
-                hardIronZ,
-                timestamp,
-                accuracy
-            )
+    /**
+     * Listener to detect when accuracy of magnetometer sensor changes.
+     * When sensor becomes unreliable, an error is notified.
+     */
+    private val magnetometerAccuracyChangedListener =
+        SensorCollector.OnAccuracyChangedListener<MagnetometerSensorMeasurement, MagnetometerSensorCollector> { _, accuracy ->
+            processAccuracyChange(accuracy)
         }
 
     /**
@@ -296,8 +221,8 @@ class MagnetometerMeasurementGenerator(
         context,
         magnetometerSensorType,
         magnetometerSensorDelay,
-        magnetometerCollectorMeasurementListener,
-        collectorAccuracyChangedListener
+        magnetometerAccuracyChangedListener,
+        magnetometerCollectorMeasurementListener
     )
 
     /**
@@ -308,76 +233,6 @@ class MagnetometerMeasurementGenerator(
         get() = magnetometerCollector.sensor
 
     /**
-     * Number of magnetometer measurements that have been processed.
-     */
-    var numberOfProcessedMagnetometerMeasurements: Int = 0
-        private set
-
-    /**
-     * Gets magnetometer measurement base noise level that has been detected during initialization
-     * expressed in Teslas (T).
-     * This is only available once generator completes initialization.
-     */
-    var magnetometerBaseNoiseLevel: Double? = null
-        private set
-
-    /**
-     * Gets magnetometer measurement base noise level that has been detected during initialization.
-     * This is only available once generator completes initialization.
-     */
-    val magnetometerBaseNoiseLevelAsMeasurement: MagneticFluxDensity?
-        get() {
-            val value = magnetometerBaseNoiseLevel ?: return null
-            return MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        }
-
-    /**
-     * Gets magnetometer measurement base noise level that has been detected during initialization.
-     * This is only available once generator completes initialization.
-     *
-     * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
-     */
-    fun getMagnetometerBaseNoiseLevelAsMeasurement(result: MagneticFluxDensity): Boolean {
-        val value = magnetometerBaseNoiseLevel ?: return false
-        result.value = value
-        result.unit = MagneticFluxDensityUnit.TESLA
-        return true
-    }
-
-    /**
-     * Norm of average magnetic flux density obtained during initialization and expressed in
-     * Teslas (T).
-     * This is only available once generator completes initialization.
-     */
-    var initialMagneticFluxDensityNorm: Double? = null
-        private set
-
-    /**
-     * Gets norm of average magnetic flux density obtained during initialization.
-     * This is only available once generator completes initialization.
-     */
-    val initialMagneticFluxDensityNormAsMeasurement: MagneticFluxDensity?
-        get() {
-            val value = initialMagneticFluxDensityNorm ?: return null
-            return MagneticFluxDensity(value, MagneticFluxDensityUnit.TESLA)
-        }
-
-    /**
-     * Gets norm of average magnetic flux density obtained during initialization.
-     * This is only available once generator completes initialization.
-     *
-     * @param result instance where result will be stored.
-     * @return true if result is available, false otherwise.
-     */
-    fun getInitialMagneticFluxDensityNormAsMeasurement(result: MagneticFluxDensity): Boolean {
-        val value = initialMagneticFluxDensityNorm ?: return false
-        result.value = value
-        result.unit = MagneticFluxDensityUnit.TESLA
-        return true
-    }
-
-    /**
      * Starts collection of sensor measurements.
      *
      * @throws IllegalStateException if detector is already running or sensor is not available.
@@ -385,8 +240,6 @@ class MagnetometerMeasurementGenerator(
     @Throws(IllegalStateException::class)
     override fun start() {
         super.start()
-
-        reset()
 
         if (!magnetometerCollector.start()) {
             stop()
@@ -400,15 +253,5 @@ class MagnetometerMeasurementGenerator(
     override fun stop() {
         magnetometerCollector.stop()
         super.stop()
-    }
-
-    /**
-     * Resets generator to its initial state.
-     */
-    private fun reset() {
-        numberOfProcessedMagnetometerMeasurements = 0
-        magnetometerBaseNoiseLevel = null
-        initialMagneticFluxDensityNorm = null
-        magnetometerAccumulatedNoiseEstimator.reset()
     }
 }

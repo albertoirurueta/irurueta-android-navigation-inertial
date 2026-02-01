@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2025 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.calibration.intervals
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.calibration.intervals.MagneticFluxDensityTriadStaticIntervalDetector
 import com.irurueta.navigation.inertial.calibration.intervals.MagneticFluxDensityTriadStaticIntervalDetectorListener
 import com.irurueta.navigation.inertial.calibration.intervals.TriadStaticIntervalDetector
 import com.irurueta.units.MagneticFluxDensity
-import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
 import com.irurueta.units.TimeConverter
 
@@ -58,8 +59,6 @@ import com.irurueta.units.TimeConverter
  * @property dynamicIntervalDetectedListener listener to notify when a new dynamic interval is
  * detected.
  * @property resetListener listener to notify when a reset occurs.
- * @property measurementListener listener to notify collected magnetometer measurements.
- * @property accuracyChangedListener listener to notify when magnetometer accuracy changes.
  */
 class MagnetometerIntervalDetector(
     context: Context,
@@ -71,8 +70,6 @@ class MagnetometerIntervalDetector(
     staticIntervalDetectedListener: OnStaticIntervalDetectedListener<MagnetometerIntervalDetector>? = null,
     dynamicIntervalDetectedListener: OnDynamicIntervalDetectedListener<MagnetometerIntervalDetector>? = null,
     resetListener: OnResetListener<MagnetometerIntervalDetector>? = null,
-    var measurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null,
-    accuracyChangedListener: SensorCollector.OnAccuracyChangedListener? = null
 ) : IntervalDetector<MagnetometerIntervalDetector, MagnetometerSensorCollector,
         MagneticFluxDensityUnit, MagneticFluxDensity, MagneticFluxDensityTriad,
         MagneticFluxDensityTriadStaticIntervalDetector,
@@ -84,8 +81,7 @@ class MagnetometerIntervalDetector(
     errorListener,
     staticIntervalDetectedListener,
     dynamicIntervalDetectedListener,
-    resetListener,
-    accuracyChangedListener
+    resetListener
 ) {
 
     /**
@@ -188,65 +184,70 @@ class MagnetometerIntervalDetector(
      * plane NED coordinates.
      * This is reused for performance reasons.
      */
-    private val b = MagneticFluxDensityTriad()
+    private val magneticFluxDensity = MagneticFluxDensityTriad()
 
     /**
-     * Internal listener for magnetometer sensor collector.
+     * Magnetometer sensor measurement expressed in NED coordinates.
+     */
+    private val nedMeasurement = MagnetometerSensorMeasurement()
+
+    /**
+     * Internal listener for accelerometer sensor collector.
      * Handles measurements collected by the sensor collector so that they are processed by
      * the internal interval detector.
      */
-    private val internalMeasurementListener =
-        MagnetometerSensorCollector.OnMeasurementListener { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
-            val status = status
-            if (status == Status.INITIALIZING) {
-                // during initialization phase, also estimate time interval duration.
-                if (numberOfProcessedMeasurements > 0) {
-                    val diff = timestamp - initialTimestamp
-                    val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-                    timeIntervalEstimator.addTimestamp(diffSeconds)
-                } else {
-                    initialTimestamp = timestamp
-                }
+    private val measurementListener = SensorCollector.OnMeasurementListener<
+            MagnetometerSensorMeasurement, MagnetometerSensorCollector> { _, measurement ->
+        val status = status
+        if (status == Status.INITIALIZING) {
+            // during initialization phase, also estimate time interval duration.
+            if (numberOfProcessedMeasurements > 0) {
+                val diff = measurement.timestamp - initialTimestamp
+                val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
+                timeIntervalEstimator.addTimestamp(diffSeconds)
+            } else {
+                initialTimestamp = measurement.timestamp
             }
+        }
 
-            val bxT = MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble())
-            val byT = MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble())
-            val bzT = MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble())
+        // convert from device ENU coordinates to local plane NED coordinates
+        measurement.toNed(nedMeasurement)
+        nedMeasurement.toTriad(magneticFluxDensity)
 
-            // convert from device ENU coordinates to local plane NED coordinates
-            ENUtoNEDConverter.convert(bxT, byT, bzT, b)
+        internalDetector.process(magneticFluxDensity)
+        numberOfProcessedMeasurements++
 
-            internalDetector.process(b.valueX, b.valueY, b.valueZ)
-            numberOfProcessedMeasurements++
+        if (status == Status.INITIALIZATION_COMPLETED) {
+            // once initialized, set time interval into internal detector
+            internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
+            initialized = true
+        }
+    }
 
-            if (status == Status.INITIALIZATION_COMPLETED) {
-                // once initialized, set time interval into internal detector
-                internalDetector.timeInterval = timeIntervalEstimator.averageTimeInterval
-                initialized = true
-            }
-
-            measurementListener?.onMeasurement(
-                bx,
-                by,
-                bz,
-                hardIronX,
-                hardIronY,
-                hardIronZ,
-                timestamp,
-                accuracy
+    /**
+     * Listener to detect when accuracy of accelerometer sensor changes.
+     * When sensor becomes unreliable, an error is notified.
+     */
+    private val accuracyChangedListener = SensorCollector.OnAccuracyChangedListener<MagnetometerSensorMeasurement, MagnetometerSensorCollector> { _, accuracy ->
+        if (accuracy == SensorAccuracy.UNRELIABLE) {
+            stop()
+            unreliable = true
+            errorListener?.onError(
+                this,
+                ErrorReason.UNRELIABLE_SENSOR
             )
         }
+    }
 
     /**
      * Magnetometer sensor collector.
      * Collects magnetometer measurements.
      */
-    override val collector =
-        MagnetometerSensorCollector(
-            context,
-            sensorType,
-            sensorDelay,
-            internalMeasurementListener,
-            internalAccuracyChangedListener
-        )
+    override val collector = MagnetometerSensorCollector(
+        context,
+        sensorType,
+        sensorDelay,
+        accuracyChangedListener,
+        measurementListener
+    )
 }
