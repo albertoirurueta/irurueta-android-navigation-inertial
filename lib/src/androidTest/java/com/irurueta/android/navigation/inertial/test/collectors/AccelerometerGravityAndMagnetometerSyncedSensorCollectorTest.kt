@@ -186,22 +186,10 @@ class AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest {
             accelerometerSensorDelay = SensorDelay.FASTEST,
             gravitySensorDelay = SensorDelay.FASTEST,
             magnetometerSensorDelay = SensorDelay.FASTEST,
-            accelerometerAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            gravityAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gravity accuracy: $accuracy"
-                )
-            },
-            magnetometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - magnetometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->
@@ -302,22 +290,10 @@ class AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest {
             accelerometerSensorDelay = SensorDelay.FASTEST,
             gravitySensorDelay = SensorDelay.FASTEST,
             magnetometerSensorDelay = SensorDelay.FASTEST,
-            accelerometerAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            gravityAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gravity accuracy: $accuracy"
-                )
-            },
-            magnetometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerGravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - magnetometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->

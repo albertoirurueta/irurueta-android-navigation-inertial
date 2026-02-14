@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.hardware.SensorManager
 import android.location.Location
-import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
-import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.navigation.frames.NEDPosition
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
+import com.irurueta.units.Acceleration
 import com.irurueta.units.AccelerationUnit
 import io.mockk.Called
 import io.mockk.every
@@ -35,12 +36,7 @@ import io.mockk.junit4.MockKRule
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 
@@ -79,13 +75,14 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
-        val averagingFilter = MeanAveragingFilter()
+        val averagingFilter =
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
         val location = getLocation()
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             location,
             adjustGravityNorm = false,
-            listener
+            processorListener = listener
         )
 
         assertSame(averagingFilter, processor.averagingFilter)
@@ -167,8 +164,10 @@ class AccelerometerGravityProcessorTest {
     }
 
     @Test
-    fun process_whenNotEnoughMeasurements_doesNotSetsExpectedValuesOrNotifies() {
-        val averagingFilter = spyk(LowPassAveragingFilter())
+    fun process_whenNotEnoughMeasurements_doesNotSetExpectedValuesOrNotify() {
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -188,20 +187,22 @@ class AccelerometerGravityProcessorTest {
 
         assertFalse(processor.process(measurement))
 
-        val slot = slot<DoubleArray>()
+        // check
+        val inputSlot = slot<AccelerationTriad>()
+        val outputSlot = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                capture(slot),
+                capture(inputSlot),
+                capture(outputSlot),
                 timestamp
             )
         }
 
+        assertEquals(measurement.toNed().toTriad(), inputSlot.captured)
+        assertEquals(AccelerationTriad(), outputSlot.captured)
+
         verify { listener wasNot Called }
 
-        // check
         assertEquals(0.0, processor.gx, 0.0)
         assertEquals(0.0, processor.gy, 0.0)
         assertEquals(0.0, processor.gz, 0.0)
@@ -216,7 +217,9 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenEnoughMeasurementsAndBiasAvailable_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -234,53 +237,61 @@ class AccelerometerGravityProcessorTest {
         val measurement1 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp1, SensorAccuracy.HIGH)
 
-        // first measurement returns false because averaging filter need to initialize
+        // first measurement returns false because averaging filter needs to initialize
         assertFalse(processor.process(measurement1))
 
+        // check
+        val inputSlot1 = slot<AccelerationTriad>()
+        val outputSlot1 = slot<AccelerationTriad>()
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                capture(inputSlot1),
+                capture(outputSlot1),
+                timestamp1
+            )
+        }
+
+        assertEquals(measurement1.toNed().toTriad(), inputSlot1.captured)
+        assertEquals(AccelerationTriad(), outputSlot1.captured)
+
         // seconds measurement already has an initialized averaging filter
-        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val timestamp2 = timestamp1 + TIME_INTERVAL_NANOS
         val measurement2 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp2, SensorAccuracy.HIGH)
 
         assertTrue(processor.process(measurement2, timestamp2))
 
+        // check
+        val inputSlot2 = slot<AccelerationTriad>()
+        val outputSlot2 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                any(),
-                timestamp1
-            )
-        }
-
-        val slot = MutableList(size = 2) { DoubleArray(3) }
-        verify(exactly = 1) {
-            averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                capture(slot),
+                capture(inputSlot2),
+                capture(outputSlot2),
                 timestamp2
             )
         }
 
-        val array = slot.last()
+        assertEquals(measurement2.toNed().toTriad(), inputSlot2.captured)
+        assertEquals(
+            AccelerationTriad(processor.gx, processor.gy, processor.gz),
+            outputSlot2.captured
+        )
+
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
-                array[1],
-                array[0],
-                -array[2],
+                outputSlot2.captured.valueX,
+                outputSlot2.captured.valueY,
+                outputSlot2.captured.valueZ,
                 timestamp2,
                 SensorAccuracy.HIGH
             )
         }
 
-        // check
-        assertEquals(array[1], processor.gx, 0.0)
-        assertEquals(array[0], processor.gy, 0.0)
-        assertEquals(-array[2], processor.gz, 0.0)
+        assertEquals(outputSlot2.captured.valueX, processor.gx, 0.0)
+        assertEquals(outputSlot2.captured.valueY, processor.gy, 0.0)
+        assertEquals(outputSlot2.captured.valueZ, processor.gz, 0.0)
         assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
@@ -297,7 +308,9 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenEnoughMeasurementsAndBiasNotAvailable_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -309,72 +322,76 @@ class AccelerometerGravityProcessorTest {
         val ay = randomizer.nextFloat()
         val az = randomizer.nextFloat()
         val timestamp1 = System.nanoTime()
-        val measurement1 = AccelerometerSensorMeasurement(
-            ax,
-            ay,
-            az,
-            null,
-            null,
-            null,
-            timestamp1,
-            SensorAccuracy.HIGH
-        )
+        val measurement1 =
+            AccelerometerSensorMeasurement(
+                ax,
+                ay,
+                az,
+                timestamp = timestamp1,
+                accuracy = SensorAccuracy.HIGH
+            )
 
-        // first measurement returns false because averaging filter need to initialize
+        // first measurement returns false because averaging filter needs to initialize
         assertFalse(processor.process(measurement1))
 
-        // seconds measurement already has an initialized averaging filter
-        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
-        val measurement2 = AccelerometerSensorMeasurement(
-            ax,
-            ay,
-            az,
-            null,
-            null,
-            null,
-            timestamp2,
-            SensorAccuracy.HIGH
-        )
-
-        assertTrue(processor.process(measurement2))
-
+        // check
+        val inputSlot1 = slot<AccelerationTriad>()
+        val outputSlot1 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
-                any(),
+                capture(inputSlot1),
+                capture(outputSlot1),
                 timestamp1
             )
         }
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        assertEquals(measurement1.toNed().toTriad(), inputSlot1.captured)
+        assertEquals(AccelerationTriad(), outputSlot1.captured)
+
+        // seconds measurement already has an initialized averaging filter
+        val timestamp2 = timestamp1 + TIME_INTERVAL_NANOS
+        val measurement2 =
+            AccelerometerSensorMeasurement(
+                ax,
+                ay,
+                az,
+                timestamp = timestamp2,
+                accuracy = SensorAccuracy.HIGH
+            )
+
+        assertTrue(processor.process(measurement2, timestamp2))
+
+        // check
+        val inputSlot2 = slot<AccelerationTriad>()
+        val outputSlot2 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
-                capture(slot),
+                capture(inputSlot2),
+                capture(outputSlot2),
                 timestamp2
             )
         }
 
-        val array = slot.last()
+        assertEquals(measurement2.toNed().toTriad(), inputSlot2.captured)
+        assertEquals(
+            AccelerationTriad(processor.gx, processor.gy, processor.gz),
+            outputSlot2.captured
+        )
+
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
-                array[1],
-                array[0],
-                -array[2],
+                outputSlot2.captured.valueX,
+                outputSlot2.captured.valueY,
+                outputSlot2.captured.valueZ,
                 timestamp2,
                 SensorAccuracy.HIGH
             )
         }
 
-        // check
-        assertEquals(array[1], processor.gx, 0.0)
-        assertEquals(array[0], processor.gy, 0.0)
-        assertEquals(-array[2], processor.gz, 0.0)
+        assertEquals(outputSlot2.captured.valueX, processor.gx, 0.0)
+        assertEquals(outputSlot2.captured.valueY, processor.gy, 0.0)
+        assertEquals(outputSlot2.captured.valueZ, processor.gz, 0.0)
         assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
@@ -391,7 +408,9 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun process_whenGravityNormAdjustedAndNoLocation_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = true,
@@ -409,56 +428,62 @@ class AccelerometerGravityProcessorTest {
         val measurement1 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp1, SensorAccuracy.HIGH)
 
-        // first measurement returns false because averaging filter need to initialize
+        // first measurement returns false because averaging filter needs to initialize
         assertFalse(processor.process(measurement1, timestamp1))
 
+        // check
+        val inputSlot1 = slot<AccelerationTriad>()
+        val outputSlot1 = slot<AccelerationTriad>()
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                capture(inputSlot1),
+                capture(outputSlot1),
+                timestamp1
+            )
+        }
+
+        assertEquals(measurement1.toNed().toTriad(), inputSlot1.captured)
+        assertEquals(AccelerationTriad(), outputSlot1.captured)
+
         // seconds measurement already has an initialized averaging filter
-        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val timestamp2 = timestamp1 + TIME_INTERVAL_NANOS
         val measurement2 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp2, SensorAccuracy.HIGH)
 
         assertTrue(processor.process(measurement2, timestamp2))
 
+        // check
+        val inputSlot2 = slot<AccelerationTriad>()
+        val outputSlot2 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                any(),
-                timestamp1
-            )
-        }
-
-        val slot = MutableList(size = 2) { DoubleArray(3) }
-        verify(exactly = 1) {
-            averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                capture(slot),
+                capture(inputSlot2),
+                capture(outputSlot2),
                 timestamp2
             )
         }
 
-        val array = slot.last()
-        val norm = Utils.normF(array)
-        val factor = SensorManager.GRAVITY_EARTH / norm
+        assertEquals(measurement2.toNed().toTriad(), inputSlot2.captured)
+        assertNotEquals(
+            AccelerationTriad(processor.gx, processor.gy, processor.gz),
+            outputSlot2.captured
+        )
 
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
-                array[1] * factor,
-                array[0] * factor,
-                -array[2] * factor,
+                processor.gx,
+                processor.gy,
+                processor.gz,
                 timestamp2,
                 SensorAccuracy.HIGH
             )
         }
 
-        // check
-        assertEquals(array[1] * factor, processor.gx, 0.0)
-        assertEquals(array[0] * factor, processor.gy, 0.0)
-        assertEquals(-array[2] * factor, processor.gz, 0.0)
+        val factor = SensorManager.GRAVITY_EARTH / outputSlot2.captured.norm
+        assertEquals(outputSlot2.captured.valueX * factor, processor.gx, 0.0)
+        assertEquals(outputSlot2.captured.valueY * factor, processor.gy, 0.0)
+        assertEquals(outputSlot2.captured.valueZ * factor, processor.gz, 0.0)
         assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
@@ -471,12 +496,17 @@ class AccelerometerGravityProcessorTest {
         val gravity2 = AccelerationTriad()
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
+
+        val norm = gravity1.norm
+        assertEquals(norm, processor.gravityNorm, 0.0)
     }
 
     @Test
     fun process_whenGravityNormAdjustedAndLocation_setsExpectedValuesAndNotifies() {
         val location = getLocation()
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             location = location,
@@ -495,57 +525,63 @@ class AccelerometerGravityProcessorTest {
         val measurement1 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp1, SensorAccuracy.HIGH)
 
-        // first measurement returns false because averaging filter need to initialize
+        // first measurement returns false because averaging filter needs to initialize
         assertFalse(processor.process(measurement1, timestamp1))
 
+        // check
+        val inputSlot1 = slot<AccelerationTriad>()
+        val outputSlot1 = slot<AccelerationTriad>()
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                capture(inputSlot1),
+                capture(outputSlot1),
+                timestamp1
+            )
+        }
+
+        assertEquals(measurement1.toNed().toTriad(), inputSlot1.captured)
+        assertEquals(AccelerationTriad(), outputSlot1.captured)
+
         // seconds measurement already has an initialized averaging filter
-        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val timestamp2 = timestamp1 + TIME_INTERVAL_NANOS
         val measurement2 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp2, SensorAccuracy.HIGH)
 
         assertTrue(processor.process(measurement2, timestamp2))
 
+        // check
+        val inputSlot2 = slot<AccelerationTriad>()
+        val outputSlot2 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                any(),
-                timestamp1
-            )
-        }
-
-        val slot = MutableList(size = 2) { DoubleArray(3) }
-        verify(exactly = 1) {
-            averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                capture(slot),
+                capture(inputSlot2),
+                capture(outputSlot2),
                 timestamp2
             )
         }
 
-        val array = slot.last()
-        val norm = Utils.normF(array)
-        val factor =
-            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
+        assertEquals(measurement2.toNed().toTriad(), inputSlot2.captured)
+        assertNotEquals(
+            AccelerationTriad(processor.gx, processor.gy, processor.gz),
+            outputSlot2.captured
+        )
 
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
-                array[1] * factor,
-                array[0] * factor,
-                -array[2] * factor,
+                processor.gx,
+                processor.gy,
+                processor.gz,
                 timestamp2,
                 SensorAccuracy.HIGH
             )
         }
 
-        // check
-        assertEquals(array[1] * factor, processor.gx, 0.0)
-        assertEquals(array[0] * factor, processor.gy, 0.0)
-        assertEquals(-array[2] * factor, processor.gz, 0.0)
+        val factor =
+            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / outputSlot2.captured.norm
+        assertEquals(outputSlot2.captured.valueX * factor, processor.gx, 0.0)
+        assertEquals(outputSlot2.captured.valueY * factor, processor.gy, 0.0)
+        assertEquals(outputSlot2.captured.valueZ * factor, processor.gz, 0.0)
         assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
@@ -558,11 +594,16 @@ class AccelerometerGravityProcessorTest {
         val gravity2 = AccelerationTriad()
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
+
+        val norm = gravity1.norm
+        assertEquals(norm, processor.gravityNorm, 0.0)
     }
 
     @Test
     fun process_whenProvidedTimestamp_setsExpectedValuesAndNotifies() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -580,53 +621,142 @@ class AccelerometerGravityProcessorTest {
         val measurement1 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp1, SensorAccuracy.HIGH)
 
-        // first measurement returns false because averaging filter need to initialize
+        // first measurement returns false because averaging filter needs to initialize
         assertFalse(processor.process(measurement1, timestamp1))
 
+        // check
+        val inputSlot1 = slot<AccelerationTriad>()
+        val outputSlot1 = slot<AccelerationTriad>()
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                capture(inputSlot1),
+                capture(outputSlot1),
+                timestamp1
+            )
+        }
+
+        assertEquals(measurement1.toNed().toTriad(), inputSlot1.captured)
+        assertEquals(AccelerationTriad(), outputSlot1.captured)
+
         // seconds measurement already has an initialized averaging filter
-        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
+        val timestamp2 = timestamp1 + TIME_INTERVAL_NANOS
         val measurement2 =
             AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp2, SensorAccuracy.HIGH)
 
         assertTrue(processor.process(measurement2, timestamp2))
 
+        // check
+        val inputSlot2 = slot<AccelerationTriad>()
+        val outputSlot2 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                any(),
-                timestamp1
-            )
-        }
-
-        val slot = MutableList(size = 2) { DoubleArray(3) }
-        verify(exactly = 1) {
-            averagingFilter.filter(
-                ax.toDouble() - bx.toDouble(),
-                ay.toDouble() - by.toDouble(),
-                az.toDouble() - bz.toDouble(),
-                capture(slot),
+                capture(inputSlot2),
+                capture(outputSlot2),
                 timestamp2
             )
         }
 
-        val array = slot.last()
+        assertEquals(measurement2.toNed().toTriad(), inputSlot2.captured)
+        assertEquals(
+            AccelerationTriad(processor.gx, processor.gy, processor.gz),
+            outputSlot2.captured
+        )
+
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
-                array[1],
-                array[0],
-                -array[2],
+                outputSlot2.captured.valueX,
+                outputSlot2.captured.valueY,
+                outputSlot2.captured.valueZ,
                 timestamp2,
                 SensorAccuracy.HIGH
             )
         }
 
+        assertEquals(outputSlot2.captured.valueX, processor.gx, 0.0)
+        assertEquals(outputSlot2.captured.valueY, processor.gy, 0.0)
+        assertEquals(outputSlot2.captured.valueZ, processor.gz, 0.0)
+        assertEquals(timestamp2, processor.timestamp)
+        assertEquals(SensorAccuracy.HIGH, processor.accuracy)
+
+        val gravity1 = processor.gravity
+        assertEquals(processor.gx, gravity1.valueX, 0.0)
+        assertEquals(processor.gy, gravity1.valueY, 0.0)
+        assertEquals(processor.gz, gravity1.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, gravity1.unit)
+
+        val gravity2 = AccelerationTriad()
+        processor.getGravity(gravity2)
+        assertEquals(gravity1, gravity2)
+    }
+
+    @Test
+    fun process_whenNoListener_setsExpectedValues() {
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
+        val processor = AccelerometerGravityProcessor(
+            averagingFilter,
+            adjustGravityNorm = false
+        )
+
+        val randomizer = UniformRandomizer()
+        val ax = randomizer.nextFloat()
+        val ay = randomizer.nextFloat()
+        val az = randomizer.nextFloat()
+        val bx = randomizer.nextFloat()
+        val by = randomizer.nextFloat()
+        val bz = randomizer.nextFloat()
+        val timestamp1 = System.nanoTime()
+        val measurement1 =
+            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp1, SensorAccuracy.HIGH)
+
+        // first measurement returns false because averaging filter needs to initialize
+        assertFalse(processor.process(measurement1))
+
         // check
-        assertEquals(array[1], processor.gx, 0.0)
-        assertEquals(array[0], processor.gy, 0.0)
-        assertEquals(-array[2], processor.gz, 0.0)
+        val inputSlot1 = slot<AccelerationTriad>()
+        val outputSlot1 = slot<AccelerationTriad>()
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                capture(inputSlot1),
+                capture(outputSlot1),
+                timestamp1
+            )
+        }
+
+        assertEquals(measurement1.toNed().toTriad(), inputSlot1.captured)
+        assertEquals(AccelerationTriad(), outputSlot1.captured)
+
+        // seconds measurement already has an initialized averaging filter
+        val timestamp2 = timestamp1 + TIME_INTERVAL_NANOS
+        val measurement2 =
+            AccelerometerSensorMeasurement(ax, ay, az, bx, by, bz, timestamp2, SensorAccuracy.HIGH)
+
+        assertTrue(processor.process(measurement2, timestamp2))
+
+        // check
+        val inputSlot2 = slot<AccelerationTriad>()
+        val outputSlot2 = slot<AccelerationTriad>()
+        verify(exactly = 1) {
+            averagingFilter.filter(
+                capture(inputSlot2),
+                capture(outputSlot2),
+                timestamp2
+            )
+        }
+
+        assertEquals(measurement2.toNed().toTriad(), inputSlot2.captured)
+        assertEquals(
+            AccelerationTriad(processor.gx, processor.gy, processor.gz),
+            outputSlot2.captured
+        )
+
+        verify { listener wasNot Called }
+
+        assertEquals(outputSlot2.captured.valueX, processor.gx, 0.0)
+        assertEquals(outputSlot2.captured.valueY, processor.gy, 0.0)
+        assertEquals(outputSlot2.captured.valueZ, processor.gz, 0.0)
         assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
 
@@ -643,7 +773,9 @@ class AccelerometerGravityProcessorTest {
 
     @Test
     fun reset_setsInitialValue() {
-        val averagingFilter = spyk(MeanAveragingFilter())
+        val averagingFilter = spyk(
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        )
         val processor = AccelerometerGravityProcessor(
             averagingFilter,
             adjustGravityNorm = false,
@@ -659,80 +791,72 @@ class AccelerometerGravityProcessorTest {
             ax,
             ay,
             az,
-            null,
-            null,
-            null,
-            timestamp1,
-            SensorAccuracy.HIGH
+            timestamp = timestamp1,
+            accuracy = SensorAccuracy.HIGH
         )
 
-        // first measurement returns false because averaging filter need to initialize
-        assertFalse(processor.process(measurement1))
+        // first measurement returns false because averaging filter needs to initialize
+        assertFalse(processor.process(measurement1, timestamp1))
 
-        // seconds measurement already has an initialized averaging filter
-        val timestamp2 = System.nanoTime() + TIME_INTERVAL_NANOS
-        val measurement2 = AccelerometerSensorMeasurement(
-            ax,
-            ay,
-            az,
-            null,
-            null,
-            null,
-            timestamp2,
-            SensorAccuracy.HIGH
-        )
-
-        assertTrue(processor.process(measurement2, timestamp2))
-
+        // check
+        val inputSlot1 = slot<AccelerationTriad>()
+        val outputSlot1 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
-                any(),
+                capture(inputSlot1),
+                capture(outputSlot1),
                 timestamp1
             )
         }
 
-        val slot = MutableList(size = 2) { DoubleArray(3) }
+        assertEquals(measurement1.toNed().toTriad(), inputSlot1.captured)
+        assertEquals(AccelerationTriad(), outputSlot1.captured)
+
+        // seconds measurement already has an initialized averaging filter
+        val timestamp2 = timestamp1 + TIME_INTERVAL_NANOS
+        val measurement2 = AccelerometerSensorMeasurement(
+            ax,
+            ay,
+            az,
+            timestamp = timestamp2,
+            accuracy = SensorAccuracy.HIGH
+        )
+
+        assertTrue(processor.process(measurement2, timestamp2))
+
+        // check
+        val inputSlot2 = slot<AccelerationTriad>()
+        val outputSlot2 = slot<AccelerationTriad>()
         verify(exactly = 1) {
             averagingFilter.filter(
-                ax.toDouble(),
-                ay.toDouble(),
-                az.toDouble(),
-                capture(slot),
+                capture(inputSlot2),
+                capture(outputSlot2),
                 timestamp2
             )
         }
 
-        val array = slot.last()
+        assertEquals(measurement2.toNed().toTriad(), inputSlot2.captured)
+        assertEquals(
+            AccelerationTriad(processor.gx, processor.gy, processor.gz),
+            outputSlot2.captured
+        )
+
         verify(exactly = 1) {
             listener.onProcessed(
                 processor,
-                array[1],
-                array[0],
-                -array[2],
+                outputSlot2.captured.valueX,
+                outputSlot2.captured.valueY,
+                outputSlot2.captured.valueZ,
                 timestamp2,
                 SensorAccuracy.HIGH
             )
         }
 
-        // check
-        assertEquals(array[1], processor.gx, 0.0)
-        assertEquals(array[0], processor.gy, 0.0)
-        assertEquals(-array[2], processor.gz, 0.0)
+        assertEquals(outputSlot2.captured.valueX, processor.gx, 0.0)
+        assertEquals(outputSlot2.captured.valueY, processor.gy, 0.0)
+        assertEquals(outputSlot2.captured.valueZ, processor.gz, 0.0)
         assertEquals(timestamp2, processor.timestamp)
         assertEquals(SensorAccuracy.HIGH, processor.accuracy)
-
-        // reset
-        processor.reset()
-
-        // check
-        assertEquals(0.0, processor.gx, 0.0)
-        assertEquals(0.0, processor.gy, 0.0)
-        assertEquals(0.0, processor.gz, 0.0)
-        assertEquals(0L, processor.timestamp)
-        assertNull(processor.accuracy)
 
         val gravity1 = processor.gravity
         assertEquals(processor.gx, gravity1.valueX, 0.0)
@@ -743,10 +867,32 @@ class AccelerometerGravityProcessorTest {
         val gravity2 = AccelerationTriad()
         processor.getGravity(gravity2)
         assertEquals(gravity1, gravity2)
+
+        // reset
+        processor.reset()
+
+        assertEquals(0.0, processor.gx, 0.0)
+        assertEquals(0.0, processor.gy, 0.0)
+        assertEquals(0.0, processor.gz, 0.0)
+        assertEquals(0L, processor.timestamp)
+        assertNull(processor.accuracy)
+
+        val gravity3 = processor.gravity
+        assertEquals(0.0, gravity3.valueX, 0.0)
+        assertEquals(0.0, gravity3.valueY, 0.0)
+        assertEquals(0.0, gravity3.valueZ, 0.0)
+        assertEquals(AccelerationUnit.METERS_PER_SQUARED_SECOND, gravity1.unit)
+
+        val gravity4 = AccelerationTriad()
+        processor.getGravity(gravity4)
+        assertEquals(gravity3, gravity4)
+
+        assertEquals(0.0, processor.gravityNorm, 0.0)
+
     }
 
     @Test
-    fun expectedGravityNorm_whenNoLocation_returnsExpectedValue() {
+    fun expectedGravityNorm_whenNoLocation_returnsDefaultEarthGravityNorm() {
         val processor = AccelerometerGravityProcessor()
 
         assertNull(processor.location)
@@ -767,18 +913,9 @@ class AccelerometerGravityProcessorTest {
 
     private fun getLocation(): Location {
         val randomizer = UniformRandomizer()
-        val latitudeDegrees = randomizer.nextDouble(
-            MIN_LATITUDE_DEGREES,
-            MAX_LATITUDE_DEGREES
-        )
-        val longitudeDegrees = randomizer.nextDouble(
-            MIN_LONGITUDE_DEGREES,
-            MAX_LONGITUDE_DEGREES
-        )
-        val height = randomizer.nextDouble(
-            MIN_HEIGHT,
-            MAX_HEIGHT
-        )
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees = randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
         every { location.latitude }.returns(latitudeDegrees)
         every { location.longitude }.returns(longitudeDegrees)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
-import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.AveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 
 /**
- * Collects accelerometer measurements based on android coordinates system (ENU) and uses a low-pass
- * filter to assume it is the gravity component of specific force and converts it to NED coordinates
- * system.
+ * Collects accelerometer measurements and uses a low-pass filter to assume it is the gravity
+ * component of specific force and converts it to NED coordinates system.
  *
  * @property averagingFilter an averaging filter for accelerometer samples to obtain
  * sensed gravity component of specific force.
@@ -35,7 +37,7 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  * @property processorListener listener to notify new gravity measurements.
  */
 class AccelerometerGravityProcessor(
-    val averagingFilter: AveragingFilter = LowPassAveragingFilter(),
+    val averagingFilter: AveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad> = LowPassAveragingFilter(),
     location: Location? = null,
     adjustGravityNorm: Boolean = true,
     processorListener: OnProcessedListener<AccelerometerSensorMeasurement>? = null
@@ -44,64 +46,36 @@ class AccelerometerGravityProcessor(
     adjustGravityNorm,
     processorListener
 ) {
+    /**
+     * Accelerometer measurement being reused and containing measurements converted into NED
+     * coordinates system.
+     */
+    private val nedMeasurement = AccelerometerSensorMeasurement()
 
     /**
-     * Array to be reused containing result of averaging filter for accelerometer measurements.
+     * Acceleration triad to be reused containing input values for averaging filter.
      */
-    private val accelerometerAveragingFilterOutput = DoubleArray(AveragingFilter.OUTPUT_LENGTH)
+    private val filterInput = AccelerationTriad()
 
     /**
      * Processes an accelerometer sensor measurement collected by a collector or a syncer.
-     * @param measurement measurement expressed in ENU android coordinates system to be processed.
+     * Notice that this processor will convert provided measurements to NED coordinates system if
+     * needed, and results will always be returned in NED coordinates system.
+     *
+     * @param measurement measurement expressed in ENU or NED coordinates system to be processed.
      * @param timestamp optional timestamp that can be provided to override timestamp associated to
      * accelerometer measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
-     *
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.BufferedAccelerometerSensorCollector
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerSensorCollector
      */
-    override fun process(measurement: AccelerometerSensorMeasurement, timestamp: Long): Boolean {
-        val ax = measurement.ax.toDouble()
-        val ay = measurement.ay.toDouble()
-        val az = measurement.az.toDouble()
-        val bx = measurement.bx?.toDouble()
-        val by = measurement.by?.toDouble()
-        val bz = measurement.bz?.toDouble()
+    override fun process(
+        measurement: AccelerometerSensorMeasurement,
+        timestamp: Long
+    ): Boolean {
+        measurement.toNed(nedMeasurement)
+        nedMeasurement.toTriad(filterInput)
 
-        val currentAx = if (bx != null) ax - bx else ax
-        val currentAy = if (by != null) ay - by else ay
-        val currentAz = if (bz != null) az - bz else az
-
-        return if (averagingFilter.filter(
-                currentAx,
-                currentAy,
-                currentAz,
-                accelerometerAveragingFilterOutput,
-                timestamp
-            )
-        ) {
-            ENUtoNEDConverter.convert(
-                accelerometerAveragingFilterOutput[0],
-                accelerometerAveragingFilterOutput[1],
-                accelerometerAveragingFilterOutput[2],
-                triad
-            )
-
-            gx = triad.valueX
-            gy = triad.valueY
-            gz = triad.valueZ
-
-            adjustNorm()
-
-            this.timestamp = timestamp
-            accuracy = measurement.accuracy
-            processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)
+        return if (averagingFilter.filter(filterInput, triad, timestamp)) {
+            finishProcessingAndNotify(measurement, timestamp)
             true
         } else {
             false

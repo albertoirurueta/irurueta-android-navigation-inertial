@@ -30,6 +30,7 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Attitude
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
 import com.irurueta.android.testutils.callPrivateFunc
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
@@ -62,12 +63,8 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
             SyncedSensorCollector.OnMeasurementListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSyncedSensorCollector>
 
     @MockK(relaxUnitFun = true)
-    private lateinit var attitudeAccuracyChangedListener:
-            AttitudeAndAccelerometerSyncedSensorCollector.OnAttitudeAccuracyChangedListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var accelerometerAccuracyChangedListener:
-            AttitudeAndAccelerometerSyncedSensorCollector.OnAccelerometerAccuracyChangedListener
+    private lateinit var accuracyChangedListener:
+            SyncedSensorCollector.OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSyncedSensorCollector>
 
     @MockK
     private lateinit var attitudeSensor: Sensor
@@ -115,8 +112,7 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         )
         assertTrue(collector.interpolationEnabled)
         assertNull(collector.measurementListener)
-        assertNull(collector.attitudeAccuracyChangedListener)
-        assertNull(collector.accelerometerAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
         assertSame(attitudeSensor, collector.attitudeSensor)
         assertSame(accelerometerSensor, collector.accelerometerSensor)
         assertTrue(collector.attitudeSensorAvailable)
@@ -152,8 +148,7 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
             AttitudeAndAccelerometerSyncedSensorCollector.PrimarySensor.ATTITUDE,
             false,
             measurementListener,
-            attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener
+            accuracyChangedListener
         )
 
         // check values
@@ -175,8 +170,7 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         )
         assertFalse(collector.interpolationEnabled)
         assertSame(measurementListener, collector.measurementListener)
-        assertSame(attitudeAccuracyChangedListener, collector.attitudeAccuracyChangedListener)
-        assertSame(accelerometerAccuracyChangedListener, collector.accelerometerAccuracyChangedListener)
+        assertSame(accuracyChangedListener, collector.accuracyChangedListener)
         assertSame(attitudeSensor, collector.attitudeSensor)
         assertSame(accelerometerSensor, collector.accelerometerSensor)
         assertTrue(collector.attitudeSensorAvailable)
@@ -215,7 +209,7 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
     }
 
     @Test
-    fun attitudeAccuracyChangedListener_setsExpectedValue() {
+    fun accuracyChangedListener_setsExpectedValue() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(AttitudeSensorType.ABSOLUTE_ATTITUDE.value) }.returns(
             attitudeSensor
@@ -227,40 +221,15 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(context)
 
         // check default value
-        assertNull(collector.attitudeAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
 
         // set new value
-        collector.attitudeAccuracyChangedListener = attitudeAccuracyChangedListener
+        collector.accuracyChangedListener = accuracyChangedListener
 
         // check
         assertSame(
-            attitudeAccuracyChangedListener,
-            collector.attitudeAccuracyChangedListener
-        )
-    }
-
-    @Test
-    fun accelerometerAccuracyChangedListener_setsExpectedValue() {
-        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
-        every { sensorManager.getDefaultSensor(AttitudeSensorType.ABSOLUTE_ATTITUDE.value) }.returns(
-            attitudeSensor
-        )
-        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER.value) }.returns(
-            accelerometerSensor
-        )
-
-        val collector = AttitudeAndAccelerometerSyncedSensorCollector(context)
-
-        // check default value
-        assertNull(collector.accelerometerAccuracyChangedListener)
-
-        // set new value
-        collector.accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
-
-        // check
-        assertSame(
-            accelerometerAccuracyChangedListener,
-            collector.accelerometerAccuracyChangedListener
+            accuracyChangedListener,
+            collector.accuracyChangedListener
         )
     }
 
@@ -992,28 +961,36 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
     fun processAccuracyChanges_whenNoSensor_desNotCallAnyListener() {
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(
             context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", null, SensorAccuracy.HIGH.value)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            null,
+            SensorAccuracy.HIGH.value
+        )
 
-        verify { attitudeAccuracyChangedListener wasNot Called }
-        verify { accelerometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenUnsupportedAccuracy_desNotCallAnyListener() {
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(
             context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", accelerometerSensor, -1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            accelerometerSensor,
+            -1
+        )
 
-        verify { attitudeAccuracyChangedListener wasNot Called }
-        verify { accelerometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1028,19 +1005,20 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
 
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(
             context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val unknownSensor = mockk<Sensor>()
-        collector.callPrivateFunc(
+        every { unknownSensor.type }.returns(-1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             unknownSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { attitudeAccuracyChangedListener wasNot Called }
-        verify { accelerometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1049,29 +1027,31 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AttitudeSensorType.ABSOLUTE_ATTITUDE.value) }.returns(
             attitudeSensor
         )
+        every { attitudeSensor.type }.returns(AttitudeSensorType.ABSOLUTE_ATTITUDE.value)
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
 
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(
             context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             attitudeSensor,
             SensorAccuracy.HIGH.value
         )
 
         verify(exactly = 1) {
-            attitudeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ABSOLUTE_ATTITUDE,
                 SensorAccuracy.HIGH
             )
         }
-        verify { accelerometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1080,23 +1060,22 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AttitudeSensorType.ABSOLUTE_ATTITUDE.value) }.returns(
             attitudeSensor
         )
+        every { attitudeSensor.type }.returns(AttitudeSensorType.ABSOLUTE_ATTITUDE.value)
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
 
-        val collector = AttitudeAndAccelerometerSyncedSensorCollector(
-            context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-        )
+        val collector = AttitudeAndAccelerometerSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             attitudeSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { attitudeAccuracyChangedListener wasNot Called }
-        verify { accelerometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1108,23 +1087,25 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
 
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(
             context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             accelerometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { attitudeAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            accelerometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
@@ -1139,20 +1120,19 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
 
-        val collector = AttitudeAndAccelerometerSyncedSensorCollector(
-            context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener
-        )
+        val collector = AttitudeAndAccelerometerSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             accelerometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { attitudeAccuracyChangedListener wasNot Called }
-        verify { accelerometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1475,14 +1455,14 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AttitudeSensorType.ABSOLUTE_ATTITUDE.value) }.returns(
             attitudeSensor
         )
+        every { attitudeSensor.type }.returns(AttitudeSensorType.ABSOLUTE_ATTITUDE.value)
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
 
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(
             context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1492,12 +1472,12 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         sensorEventListener.onAccuracyChanged(attitudeSensor, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
-            attitudeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ABSOLUTE_ATTITUDE,
                 SensorAccuracy.HIGH
             )
         }
-        verify { accelerometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1509,11 +1489,11 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
 
         val collector = AttitudeAndAccelerometerSyncedSensorCollector(
             context,
-            attitudeAccuracyChangedListener = attitudeAccuracyChangedListener,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1522,10 +1502,10 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
 
         sensorEventListener.onAccuracyChanged(accelerometerSensor, SensorAccuracy.HIGH.value)
 
-        verify { attitudeAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            accelerometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }

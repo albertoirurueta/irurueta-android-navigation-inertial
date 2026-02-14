@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
@@ -12,11 +28,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 
@@ -221,15 +233,15 @@ class RelativeGyroscopeAttitudeProcessorTest {
         // check
         verify(exactly = 1) {
             triadSpy.setValueCoordinates(
-                wx.toDouble() - bx.toDouble(),
-                wy.toDouble() - by.toDouble(),
-                wz.toDouble() - bz.toDouble()
+                wx.toDouble() + bx.toDouble(),
+                wy.toDouble() + by.toDouble(),
+                wz.toDouble() + bz.toDouble()
             )
         }
 
-        val expectedRoll = (wx.toDouble() - bx.toDouble()) * INTERVAL_SECONDS
-        val expectedPitch = (wy.toDouble() - by.toDouble()) * INTERVAL_SECONDS
-        val expectedYaw = (wz.toDouble() - bz.toDouble()) * INTERVAL_SECONDS
+        val expectedRoll = (wx.toDouble() + bx.toDouble()) * INTERVAL_SECONDS
+        val expectedPitch = (wy.toDouble() + by.toDouble()) * INTERVAL_SECONDS
+        val expectedYaw = (wz.toDouble() + bz.toDouble()) * INTERVAL_SECONDS
         verify(exactly = 1) {
             deltaAttitudeSpy.setFromEulerAngles(
                 expectedRoll,
@@ -296,15 +308,15 @@ class RelativeGyroscopeAttitudeProcessorTest {
         // check
         verify(exactly = 1) {
             triadSpy.setValueCoordinates(
-                wx.toDouble() - bx.toDouble(),
-                wy.toDouble() - by.toDouble(),
-                wz.toDouble() - bz.toDouble()
+                wx.toDouble() + bx.toDouble(),
+                wy.toDouble() + by.toDouble(),
+                wz.toDouble() + bz.toDouble()
             )
         }
 
-        val expectedRoll = (wx.toDouble() - bx.toDouble()) * INTERVAL_SECONDS
-        val expectedPitch = (wy.toDouble() - by.toDouble()) * INTERVAL_SECONDS
-        val expectedYaw = (wz.toDouble() - bz.toDouble()) * INTERVAL_SECONDS
+        val expectedRoll = (wx.toDouble() + bx.toDouble()) * INTERVAL_SECONDS
+        val expectedPitch = (wy.toDouble() + by.toDouble()) * INTERVAL_SECONDS
+        val expectedYaw = (wz.toDouble() + bz.toDouble()) * INTERVAL_SECONDS
         verify(exactly = 1) {
             deltaAttitudeSpy.setFromEulerAngles(
                 expectedRoll,

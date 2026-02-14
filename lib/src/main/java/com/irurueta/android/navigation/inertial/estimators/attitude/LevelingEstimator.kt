@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
+import android.location.Location
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.processors.attitude.LevelingProcessor
+import com.irurueta.android.navigation.inertial.processors.filters.AveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 
 /**
- * Estimates leveling of device (roll and pitch angle) by estimating gravity vector using
- * accelerometer measurements only.
- * This estimator does not estimate attitude yaw angle, as either a magnetometer or gyroscope would
- * be needed.
+ * Estimates leveling of device (roll and pitch angle ignoring yaw angle) by estimating gravity
+ * vector using accelerometer measurements only, or by using Android's gravity sensor.
+ * This estimator does not estimate attitude yaw angle, as either a magnetometer or very accurate
+ * gyroscope would be needed.
  * When device is placed vertically (pitch values close to 90 degrees), this estimator might become
  * unreliable. If device is expected to be in this orientation, avoid using this estimator and use
  * [AccurateLevelingEstimator] instead.
@@ -44,20 +48,25 @@ import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragi
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property levelingAvailableListener listener to notify when a new leveling measurement is
  * available.
- * @property gravityEstimationListener listener to notify when a new gravity estimation is
- * available.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
+ * @property location Device location.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
-class LevelingEstimator private constructor(
+class LevelingEstimator(
     context: Context,
-    sensorDelay: SensorDelay,
-    useAccelerometer: Boolean,
-    accelerometerSensorType: AccelerometerSensorType,
-    accelerometerAveragingFilter: AveragingFilter,
-    estimateCoordinateTransformation: Boolean,
-    estimateEulerAngles: Boolean,
-    levelingAvailableListener: OnLevelingAvailableListener?,
-    gravityEstimationListener: GravityEstimator.OnEstimationListener?
-) : BaseLevelingEstimator<LevelingEstimator, LevelingEstimator.OnLevelingAvailableListener>(
+    sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    useAccelerometer: Boolean = true,
+    accelerometerSensorType: AccelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+    accelerometerAveragingFilter: AveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad> = LowPassAveragingFilter(),
+    estimateCoordinateTransformation: Boolean = false,
+    estimateEulerAngles: Boolean = true,
+    levelingAvailableListener: OnLevelingAvailableListener<LevelingEstimator>? = null,
+    accuracyChangedListener: OnAccuracyChangedListener<LevelingEstimator>? = null,
+    location: Location? = null,
+    adjustGravityNorm: Boolean = true
+) : BaseLevelingEstimator<LevelingEstimator>(
     context,
     sensorDelay,
     useAccelerometer,
@@ -66,111 +75,32 @@ class LevelingEstimator private constructor(
     estimateCoordinateTransformation,
     estimateEulerAngles,
     levelingAvailableListener,
-    gravityEstimationListener
+    accuracyChangedListener,
+    adjustGravityNorm
 ) {
+    /**
+     * Internal processor to estimate leveled attitude from accelerometer or gravity measurements.
+     */
+    override val levelingProcessor = LevelingProcessor()
 
     /**
-     * Constructor.
-     *
-     * @param context Android context.
-     * @param sensorDelay Delay of accelerometer or gravity sensor between samples.
-     * @param useAccelerometer true to use accelerometer sensor, false to use system gravity sensor.
-     * @param accelerometerSensorType One of the supported accelerometer sensor types.
-     * @param accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
-     * sensed gravity component of specific force.
-     * @param estimateCoordinateTransformation true to estimate coordinate transformation, false
-     * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
-     * @param estimateEulerAngles true to estimate euler angles, false otherwise. If not
-     * needed, it can be disabled to improve performance and decrease cpu load.
-     * @param levelingAvailableListener listener to notify when a new leveling measurement is
-     * available.
-     * @param gravityEstimationListener listener to notify when a new gravity estimation is
-     * available.
-     * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
-     * (Only used if [useAccelerometer] is true).
-     * @param gravityMeasurementListener listener to notify new gravity measurements.
-     * (Only used if [useAccelerometer] is false).
+     * Gets or sets device location.
+     * Location can be updated while this estimator is running to obtain more accurate attitude
+     * estimations.
      */
-    constructor(
-        context: Context,
-        sensorDelay: SensorDelay = SensorDelay.GAME,
-        useAccelerometer: Boolean = true,
-        accelerometerSensorType: AccelerometerSensorType =
-            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
-        accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
-        estimateCoordinateTransformation: Boolean = false,
-        estimateEulerAngles: Boolean = true,
-        levelingAvailableListener: OnLevelingAvailableListener? = null,
-        gravityEstimationListener: GravityEstimator.OnEstimationListener? = null,
-        accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-        gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
-    ) : this(
-        context,
-        sensorDelay,
-        useAccelerometer,
-        accelerometerSensorType,
-        accelerometerAveragingFilter,
-        estimateCoordinateTransformation,
-        estimateEulerAngles,
-        levelingAvailableListener,
-        gravityEstimationListener
-    ) {
-        gravityEstimator = GravityEstimator(
-            context,
-            sensorDelay,
-            useAccelerometer,
-            accelerometerSensorType,
-            estimationListener = { estimator, fx, fy, fz, timestamp ->
-                this.gravityEstimationListener?.onEstimation(estimator, fx, fy, fz, timestamp)
+    var location: Location? = location
+        set(value) {
+            field = value
+            gravityProcessor.location = value
+            accelerometerGravityProcessor.location = value
+        }
 
-                val roll =
-                    com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(fy, fz)
-                val pitch =
-                    com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(
-                        fx,
-                        fy,
-                        fz
-                    )
+    // initializes gravity processor
+    init {
+        gravityProcessor.location = location
+        accelerometerGravityProcessor.location = location
 
-                attitude.setFromEulerAngles(roll, pitch, 0.0)
-
-                postProcessAttitudeAndNotify(timestamp)
-            },
-            accelerometerAveragingFilter,
-            accelerometerMeasurementListener,
-            gravityMeasurementListener
-        )
+        gravityProcessor.adjustGravityNorm = adjustGravityNorm
+        accelerometerGravityProcessor.adjustGravityNorm = adjustGravityNorm
     }
-
-    /**
-     * Internal gravity estimator sensed as a component of specific force.
-     */
-    override lateinit var gravityEstimator: GravityEstimator
-
-    /**
-     * Listener to notify new accelerometer measurements.
-     * (Only used if [useAccelerometer] is true).
-     */
-    override var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener?
-        get() = gravityEstimator.accelerometerMeasurementListener
-        set(value) {
-            gravityEstimator.accelerometerMeasurementListener = value
-        }
-
-    /**
-     * listener to notify new gravity measurements.
-     * (Only used if [useAccelerometer] is false).
-     */
-    override var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener?
-        get() = gravityEstimator.gravityMeasurementListener
-        set(value) {
-            gravityEstimator.gravityMeasurementListener = value
-        }
-
-    /**
-     * Interface to notify when a new leveling measurement is available.
-     */
-    fun interface OnLevelingAvailableListener :
-        BaseLevelingEstimator.OnLevelingAvailableListener<LevelingEstimator,
-                OnLevelingAvailableListener>
 }

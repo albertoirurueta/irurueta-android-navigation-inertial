@@ -221,22 +221,10 @@ class AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest {
             attitudeSensorDelay = SensorDelay.FASTEST,
             accelerometerSensorDelay = SensorDelay.FASTEST,
             gyroscopeSensorDelay = SensorDelay.FASTEST,
-            attitudeAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - attitude accuracy: $accuracy"
-                )
-            },
-            accelerometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            gyroscopeAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gyroscope accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->
@@ -342,22 +330,10 @@ class AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest {
             attitudeSensorDelay = SensorDelay.FASTEST,
             accelerometerSensorDelay = SensorDelay.FASTEST,
             gyroscopeSensorDelay = SensorDelay.FASTEST,
-            attitudeAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - attitude accuracy: $accuracy"
-                )
-            },
-            accelerometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            gyroscopeAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AttitudeAccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gyroscope accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->

@@ -164,16 +164,10 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
             gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE,
             accelerometerSensorDelay = SensorDelay.FASTEST,
             gyroscopeSensorDelay = SensorDelay.FASTEST,
-            accelerometerAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            gyroscopeAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gyroscope accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->
@@ -258,16 +252,10 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
             gyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
             accelerometerSensorDelay = SensorDelay.FASTEST,
             gyroscopeSensorDelay = SensorDelay.FASTEST,
-            accelerometerAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            gyroscopeAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerAndGyroscopeSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gyroscope accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->

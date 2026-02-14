@@ -64,7 +64,7 @@ abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>,
         S : SensorCollector<*, S>,
         U : Enum<*>,
         M : Measurement<U>,
-        T : Triad<U, M>,
+        T : Triad<U, M, T>,
         D : TriadStaticIntervalDetector<U, M, T, D, L>,
         L : TriadStaticIntervalDetectorListener<U, M, T, D>>(
     val context: Context,

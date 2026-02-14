@@ -1,0 +1,84 @@
+package com.irurueta.android.navigation.inertial.old.processors.attitude
+
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegrator
+import com.irurueta.navigation.inertial.calibration.gyroscope.QuaternionStepIntegratorType
+
+/**
+ * Estimates relative attitude of device respect to an arbitrary initial attitude using gyroscope
+ * measurements only.
+ * This processor uses Runge-Kutta integration to obtain greater accuracy than
+ * [RelativeGyroscopeAttitudeProcessor] at the expense of additional cpu usage.
+ *
+ * @property processorListener listener to notify new relative attitudes.
+ */
+class AccurateRelativeGyroscopeAttitudeProcessor(processorListener: OnProcessedListener? = null) :
+    BaseRelativeGyroscopeAttitudeProcessor(processorListener) {
+
+    /**
+     * Previous x-coordinate angular speed expressed in radians per second (rad/s).
+     */
+    private var previousWx = 0.0
+
+    /**
+     * Previous y-coordinate angular speed expressed in radians per second (rad/s).
+     */
+    private var previousWy = 0.0
+
+    /**
+     * Previous z-coordinate angular speed expressed in radians per second (rad/s).
+     */
+    private var previousWz = 0.0
+
+    /**
+     * Integrates new gyroscope measurements into existing attitude.
+     */
+    private val quaternionStepIntegrator = QuaternionStepIntegrator.create(
+        QuaternionStepIntegratorType.RUNGE_KUTTA
+    )
+
+    /**
+     * Processes a gyroscope sensor measurement to integrate angular speed values to obtain
+     * an accumulated attitude from an arbitrary attitude of origin.
+     *
+     * @param measurement gyroscope measurement expressed in ENU android coordinates system to be
+     * processed
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * gyroscope measurement. If null, the timestamp from gyroscope measurement is used.
+     * @return true if a new relative attitude is estimated, false otherwise.
+     */
+    override fun process(measurement: GyroscopeSensorMeasurement, timestamp: Long): Boolean {
+        val isFirst = updateTimeInterval(timestamp)
+
+        val result = if (!isFirst) {
+            updateTriad(measurement)
+
+            val dt = timeIntervalSeconds
+
+            quaternionStepIntegrator.integrate(
+                internalAttitude,
+                previousWx,
+                previousWy,
+                previousWz,
+                triad.valueX,
+                triad.valueY,
+                triad.valueZ,
+                dt,
+                internalAttitude
+            )
+
+            internalAttitude.copyTo(attitude)
+
+            processorListener?.onProcessed(this, attitude, measurement.accuracy)
+            true
+        } else {
+            false
+        }
+
+        previousWx = triad.valueX
+        previousWy = triad.valueY
+        previousWz = triad.valueZ
+
+        return result
+    }
+}

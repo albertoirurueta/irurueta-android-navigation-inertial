@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.geometry.Quaternion
@@ -41,7 +41,12 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
     protected val internalAttitude = Quaternion()
 
     /**
-     * Triad to be reused for ENU to NED coordinates conversion.
+     * Measurement to be reused expressed in NED coordinates system.
+     */
+    protected val nedMeasurement = GyroscopeSensorMeasurement()
+
+    /**
+     * Triad to be reused
      */
     protected val triad = AngularSpeedTriad()
 
@@ -89,29 +94,8 @@ abstract class BaseRelativeGyroscopeAttitudeProcessor(var processorListener: OnP
      * @param measurement a gyroscope measurement.
      */
     protected fun updateTriad(measurement: GyroscopeSensorMeasurement) {
-        val wx = measurement.wx
-        val wy = measurement.wy
-        val wz = measurement.wz
-        val bx = measurement.bx
-        val by = measurement.by
-        val bz = measurement.bz
-
-        val currentWx = if (bx != null)
-            wx.toDouble() - bx.toDouble()
-        else
-            wx.toDouble()
-
-        val currentWy = if (by != null)
-            wy.toDouble() - by.toDouble()
-        else
-            wy.toDouble()
-
-        val currentWz = if (bz != null)
-            wz.toDouble() - bz.toDouble()
-        else
-            wz.toDouble()
-
-        ENUtoNEDConverter.convert(currentWx, currentWy, currentWz, triad)
+        measurement.toNed(nedMeasurement)
+        nedMeasurement.toTriad(triad)
     }
 
     /**

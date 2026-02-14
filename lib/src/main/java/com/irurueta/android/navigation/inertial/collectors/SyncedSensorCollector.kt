@@ -23,7 +23,9 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.SystemClock
 import android.os.SystemClock.elapsedRealtimeNanos
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.SyncedSensorMeasurement
 import java.util.LinkedList
 import java.util.Queue
@@ -38,6 +40,7 @@ import java.util.Queue
  * @property windowNanoseconds amount of time to keep measurements buffered expressed in nanoseconds.
  * @property interpolationEnabled indicates whether measurements interpolation is enabled or not.
  * @property measurementListener listener to notify new measurements.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  *
  * @param M type of synchronized measurement.
  * @param C type of synchronized collector.
@@ -46,7 +49,8 @@ abstract class SyncedSensorCollector<M : SyncedSensorMeasurement<M>, C : SyncedS
     val context: Context,
     val windowNanoseconds: Long = DEFAULT_WINDOW_NANOSECONDS,
     val interpolationEnabled: Boolean = true,
-    var measurementListener: OnMeasurementListener<M, C>? = null
+    var measurementListener: OnMeasurementListener<M, C>? = null,
+    var accuracyChangedListener: OnAccuracyChangedListener<M, C>? = null
 ) {
     /**
      * Buffer of measurements being kept for a specified window of time to allow measurement synchronization
@@ -219,7 +223,16 @@ abstract class SyncedSensorCollector<M : SyncedSensorMeasurement<M>, C : SyncedS
      * @param sensor sensor whose accuracy has changed.
      * @param accuracy new accuracy.
      */
-    protected abstract fun processAccuracyChanged(sensor: Sensor?, accuracy: Int)
+    private fun processAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        if (sensor == null) {
+            return
+        }
+
+        val sensorAccuracy = SensorAccuracy.from(accuracy) ?: return
+        val sensorType = SensorType.from(sensor.type) ?: return
+        @Suppress("UNCHECKED_CAST")
+        accuracyChangedListener?.onAccuracyChanged(this as C, sensorType, sensorAccuracy)
+    }
 
     /**
      * Removes measurements older than configured window from buffer.
@@ -262,6 +275,27 @@ abstract class SyncedSensorCollector<M : SyncedSensorMeasurement<M>, C : SyncedS
         fun onMeasurement(
             collector: C,
             measurement: M
+        )
+    }
+
+    /**
+     * Interface to notify when sensor accuracy changes.
+     *
+     * @param M type of measurement.
+     * @param C type of collector.
+     */
+    fun interface OnAccuracyChangedListener<M : SyncedSensorMeasurement<M>, C : SyncedSensorCollector<M, C>> {
+        /**
+         * Called when accuracy changes.
+         *
+         * @param collector collector that raised this event.
+         * @param sensorType sensor that has changed its accuracy
+         * @param accuracy new accuracy.
+         */
+        fun onAccuracyChanged(
+            collector: C,
+            sensorType: SensorType,
+            accuracy: SensorAccuracy
         )
     }
 }

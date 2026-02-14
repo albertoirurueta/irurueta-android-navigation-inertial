@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
@@ -21,23 +22,14 @@ import com.irurueta.android.navigation.inertial.QuaternionHelper
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
-import com.irurueta.android.navigation.inertial.old.collectors.SyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SyncedSensorMeasurement
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import kotlin.math.abs
 import kotlin.math.min
 
-/**
- * Base class to estimate leveled relative attitude by fusing leveling attitude obtained
- * from accelerometer or gravity sensors, and relative attitude obtained from gyroscope sensor.
- *
- * @property processorListener listener to notify new leveled relative attitudes.
- *
- * @param M type of accelerometer or gravity sensor measurement.
- * @param S type of synced sensor measurement.
- */
 abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
-        S : SyncedSensorMeasurement>(
+        S : SyncedSensorMeasurement<S>>(
     var processorListener: OnProcessedListener<M, S>?
 ) {
     /**
@@ -529,7 +521,7 @@ abstract class BaseLeveledRelativeAttitudeProcessor<M : SensorMeasurement<M>,
      * @param M type of accelerometer or gravity sensor measurement.
      * @param S type of synced sensor measurement.
      */
-    fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement> {
+    fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement<S>> {
         /**
          * Called when a new leveled relative attitude is processed.
          *

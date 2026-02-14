@@ -61,7 +61,7 @@ abstract class AccumulatedTriadEstimator<E, P, C, U, M, T, SM>(
         C : SensorCollector<SM, C>,
         U : Enum<*>,
         M : Measurement<U>,
-        T : Triad<U, M>,
+        T : Triad<U, M, T>,
         SM : SensorMeasurement<SM>,
         SM : TriadConvertible<T> {
 

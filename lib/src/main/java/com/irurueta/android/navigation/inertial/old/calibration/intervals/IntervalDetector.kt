@@ -64,7 +64,7 @@ import com.irurueta.units.Time
  * @property accuracyChangedListener listener to notify when sensor accuracy changes.
  */
 abstract class IntervalDetector<I : IntervalDetector<I, S, U, M, T, D, L>, S : SensorCollector,
-        U : Enum<*>, M : Measurement<U>, T : Triad<U, M>,
+        U : Enum<*>, M : Measurement<U>, T : Triad<U, M, T>,
         D : TriadStaticIntervalDetector<U, M, T, D, L>,
         L : TriadStaticIntervalDetectorListener<U, M, T, D>>(
     val context: Context,

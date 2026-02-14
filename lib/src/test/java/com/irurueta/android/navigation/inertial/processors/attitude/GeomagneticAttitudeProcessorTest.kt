@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.old.collectors.GravityAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravityAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
@@ -31,20 +32,13 @@ import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import java.util.Date
@@ -509,21 +503,21 @@ class GeomagneticAttitudeProcessorTest {
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla((bx - hardIronX).toDouble()),
+            bx.toDouble() + hardIronX.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla((by - hardIronY).toDouble()),
+            by.toDouble() + hardIronY.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla((bz - hardIronZ).toDouble()),
+            bz.toDouble() + hardIronZ.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
@@ -595,8 +589,7 @@ class GeomagneticAttitudeProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val magnetometerMeasurement =
-            MagnetometerSensorMeasurement(bx, by, bz)
+        val magnetometerMeasurement = MagnetometerSensorMeasurement(bx, by, bz)
         val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement(
             GravitySensorMeasurement(),
             magnetometerMeasurement
@@ -609,21 +602,21 @@ class GeomagneticAttitudeProcessorTest {
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble()),
+            bx.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble()),
+            by.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble()),
+            bz.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
@@ -698,8 +691,7 @@ class GeomagneticAttitudeProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val magnetometerMeasurement =
-            MagnetometerSensorMeasurement(bx, by, bz)
+        val magnetometerMeasurement = MagnetometerSensorMeasurement(bx, by, bz)
         val syncedMeasurement = GravityAndMagnetometerSyncedSensorMeasurement(
             GravitySensorMeasurement(),
             magnetometerMeasurement
@@ -712,21 +704,21 @@ class GeomagneticAttitudeProcessorTest {
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble()),
+            bx.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble()),
+            by.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble()),
+            bz.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
@@ -822,21 +814,21 @@ class GeomagneticAttitudeProcessorTest {
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble()),
+            bx.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble()),
+            by.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble()),
+            bz.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.algebra.Matrix
@@ -20,6 +21,7 @@ import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.navigation.inertial.estimators.LevelingEstimator
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
@@ -27,9 +29,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.slot
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 
@@ -126,9 +126,9 @@ class LevelingProcessorTest {
         val fz = f.getElementAtIndex(2)
 
         val expectedRoll =
-            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(fy, fz)
+            LevelingEstimator.getRoll(fy, fz)
         val expectedPitch =
-            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
+            LevelingEstimator.getPitch(fx, fy, fz)
         val expectedAttitude = Quaternion(expectedRoll, expectedPitch, 0.0)
 
         processor.process(fx, fy, fz)
@@ -191,10 +191,8 @@ class LevelingProcessorTest {
         val fy = f.getElementAtIndex(1)
         val fz = f.getElementAtIndex(2)
 
-        val expectedRoll =
-            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(fy, fz)
-        val expectedPitch =
-            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(fx, fy, fz)
+        val expectedRoll = LevelingEstimator.getRoll(fy, fz)
+        val expectedPitch = LevelingEstimator.getPitch(fx, fy, fz)
         val expectedAttitude = Quaternion(expectedRoll, expectedPitch, 0.0)
 
         processor.process(fx, fy, fz)

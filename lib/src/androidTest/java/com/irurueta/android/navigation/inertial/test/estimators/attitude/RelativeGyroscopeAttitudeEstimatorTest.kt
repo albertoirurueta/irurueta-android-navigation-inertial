@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.estimators.attitude
 
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
-import androidx.test.filters.RequiresDevice
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.RelativeGyroscopeAttitudeEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.android.testutils.RequiresRealDevice
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@RequiresDevice
 class RelativeGyroscopeAttitudeEstimatorTest {
 
     private val syncHelper = ThreadSyncHelper()
@@ -42,6 +42,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         completed = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeSensor_estimatesRelativeAttitude() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -56,7 +57,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val estimator = RelativeGyroscopeAttitudeEstimator(
             activity,
             GyroscopeSensorType.GYROSCOPE,
-            estimateDisplayEulerAngles = true,
+            estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
@@ -72,6 +73,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGyroscopeUncalibratedSensor_estimatesRelativeAttitude() {
         val scenario = ActivityScenario.launch(LocationActivity::class.java).use {
@@ -86,7 +88,7 @@ class RelativeGyroscopeAttitudeEstimatorTest {
         val estimator = RelativeGyroscopeAttitudeEstimator(
             activity,
             GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
-            estimateDisplayEulerAngles = true,
+            estimateEulerAngles = true,
             attitudeAvailableListener = { _, _, _, roll, pitch, yaw, _ ->
                 logAttitude(roll, pitch, yaw)
                 syncHelper.notifyAll { completed++ }
@@ -104,8 +106,9 @@ class RelativeGyroscopeAttitudeEstimatorTest {
 
     private fun logAttitude(roll: Double?, pitch: Double?, yaw: Double?) {
         Log.d(
-            "RelativeGyroscopeAttitudeEstimatorTest",
+            "RelativeGyroscopeAttitudeEstimator2Test",
             "onAttitudeAvailable - roll: $roll rad, pitch: $pitch rad, yaw: $yaw rad"
         )
     }
+
 }

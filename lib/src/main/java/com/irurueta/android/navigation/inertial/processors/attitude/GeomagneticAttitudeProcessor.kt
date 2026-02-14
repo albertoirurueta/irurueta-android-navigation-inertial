@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.old.collectors.GravityAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravityAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 
 /**
@@ -24,11 +25,10 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.GravityS
  * Yaw angle is obtained from magnetometer once the leveling is estimated.
  */
 class GeomagneticAttitudeProcessor(
-    processorListener: OnProcessedListener<GravitySensorMeasurement,
-            GravityAndMagnetometerSyncedSensorMeasurement>? = null
-) : BaseGeomagneticAttitudeProcessor<GravitySensorMeasurement,
-        GravityAndMagnetometerSyncedSensorMeasurement>(processorListener) {
-
+    processorListener: OnProcessedListener<GravitySensorMeasurement, GravityAndMagnetometerSyncedSensorMeasurement>? = null
+) : BaseGeomagneticAttitudeProcessor<GravitySensorMeasurement, GravityAndMagnetometerSyncedSensorMeasurement>(
+    processorListener
+) {
     /**
      * Internal processor to estimate gravity from gravity sensor measurements.
      */
@@ -41,7 +41,8 @@ class GeomagneticAttitudeProcessor(
      * @return true if a new leveled absolute attitude is processed, false otherwise.
      */
     override fun process(
-        syncedMeasurement: GravityAndMagnetometerSyncedSensorMeasurement): Boolean {
+        syncedMeasurement: GravityAndMagnetometerSyncedSensorMeasurement
+    ): Boolean {
         val gravityMeasurement = syncedMeasurement.gravityMeasurement
         val magnetometerMeasurement = syncedMeasurement.magnetometerMeasurement
         return if (gravityMeasurement != null && magnetometerMeasurement != null) {

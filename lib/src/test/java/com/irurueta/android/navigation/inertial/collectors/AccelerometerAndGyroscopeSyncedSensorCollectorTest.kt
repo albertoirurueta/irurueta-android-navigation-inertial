@@ -30,6 +30,7 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Gyroscop
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
 import com.irurueta.android.testutils.callPrivateFunc
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
@@ -61,12 +62,8 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
             SyncedSensorCollector.OnMeasurementListener<AccelerometerAndGyroscopeSyncedSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorCollector>
 
     @MockK(relaxUnitFun = true)
-    private lateinit var accelerometerAccuracyChangedListener:
-            AccelerometerAndGyroscopeSyncedSensorCollector.OnAccelerometerAccuracyChangedListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var gyroscopeAccuracyChangedListener:
-            AccelerometerAndGyroscopeSyncedSensorCollector.OnGyroscopeAccuracyChangedListener
+    private lateinit var accuracyChangedListener:
+            SyncedSensorCollector.OnAccuracyChangedListener<AccelerometerAndGyroscopeSyncedSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorCollector>
 
     @MockK
     private lateinit var accelerometerSensor: Sensor
@@ -111,8 +108,7 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         )
         assertTrue(collector.interpolationEnabled)
         assertNull(collector.measurementListener)
-        assertNull(collector.accelerometerAccuracyChangedListener)
-        assertNull(collector.gyroscopeAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
         assertSame(accelerometerSensor, collector.accelerometerSensor)
         assertSame(gyroscopeSensor, collector.gyroscopeSensor)
         assertTrue(collector.accelerometerSensorAvailable)
@@ -148,8 +144,7 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
             AccelerometerAndGyroscopeSyncedSensorCollector.PrimarySensor.ACCELEROMETER,
             false,
             measurementListener,
-            accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener
+            accuracyChangedListener
         )
 
         // check values
@@ -165,11 +160,7 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         )
         assertFalse(collector.interpolationEnabled)
         assertSame(measurementListener, collector.measurementListener)
-        assertSame(
-            accelerometerAccuracyChangedListener,
-            collector.accelerometerAccuracyChangedListener
-        )
-        assertSame(gyroscopeAccuracyChangedListener, collector.gyroscopeAccuracyChangedListener)
+        assertSame(accuracyChangedListener, collector.accuracyChangedListener)
         assertSame(accelerometerSensor, collector.accelerometerSensor)
         assertSame(gyroscopeSensor, collector.gyroscopeSensor)
         assertTrue(collector.accelerometerSensorAvailable)
@@ -208,7 +199,7 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
     }
 
     @Test
-    fun accelerometerAccuracyChangedListener_setsExpectedValue() {
+    fun accuracyChangedListener_setsExpectedValue() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
@@ -220,35 +211,16 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(context)
 
         // check default value
-        assertNull(collector.accelerometerAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
 
         // set new value
-        collector.accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
+        collector.accuracyChangedListener = accuracyChangedListener
 
         // check
         assertSame(
-            accelerometerAccuracyChangedListener,
-            collector.accelerometerAccuracyChangedListener
+            accuracyChangedListener,
+            collector.accuracyChangedListener
         )
-    }
-
-    @Test
-    fun gyroscopeAccuracyChangedListener_setsExpectedValue() {
-        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
-        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
-            accelerometerSensor
-        )
-        every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
-            gyroscopeSensor
-        )
-
-        val collector = AccelerometerAndGyroscopeSyncedSensorCollector(context)
-
-        // check default value
-        assertNull(collector.gyroscopeAccuracyChangedListener)
-
-        // set new value
-        collector.gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
     }
 
     @Test
@@ -975,28 +947,36 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
     fun processAccuracyChanges_whenNoSensor_desNotCallAnyListener() {
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", null, SensorAccuracy.HIGH.value)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            null,
+            SensorAccuracy.HIGH.value
+        )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenUnsupportedAccuracy_desNotCallAnyListener() {
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", accelerometerSensor, -1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            accelerometerSensor,
+            -1
+        )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1011,19 +991,20 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
 
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val unknownSensor = mockk<Sensor>()
-        collector.callPrivateFunc(
+        every { unknownSensor.type }.returns(-1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             unknownSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1032,29 +1013,31 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
 
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             accelerometerSensor,
             SensorAccuracy.HIGH.value
         )
 
         verify(exactly = 1) {
-            accelerometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1063,23 +1046,22 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
 
-        val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
-            context,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
-        )
+        val collector = AccelerometerAndGyroscopeSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             accelerometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1091,23 +1073,25 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
 
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gyroscopeSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            gyroscopeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GYROSCOPE_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
@@ -1122,20 +1106,19 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
 
-        val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
-            context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-        )
+        val collector = AccelerometerAndGyroscopeSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gyroscopeSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1455,14 +1438,14 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
 
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1472,12 +1455,12 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         sensorEventListener.onAccuracyChanged(accelerometerSensor, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
-            accelerometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1489,11 +1472,11 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
 
         val collector = AccelerometerAndGyroscopeSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1502,10 +1485,10 @@ class AccelerometerAndGyroscopeSyncedSensorCollectorTest {
 
         sensorEventListener.onAccuracyChanged(gyroscopeSensor, SensorAccuracy.HIGH.value)
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            gyroscopeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GYROSCOPE_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }

@@ -31,6 +31,7 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Magnetom
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
 import com.irurueta.android.testutils.callPrivateFunc
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
@@ -62,16 +63,8 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
             SyncedSensorCollector.OnMeasurementListener<GravityGyroscopeAndMagnetometerSyncedSensorMeasurement, GravityGyroscopeAndMagnetometerSyncedSensorCollector>
 
     @MockK(relaxUnitFun = true)
-    private lateinit var gravityAccuracyChangedListener:
-            GravityGyroscopeAndMagnetometerSyncedSensorCollector.OnGravityAccuracyChangedListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var gyroscopeAccuracyChangedListener:
-            GravityGyroscopeAndMagnetometerSyncedSensorCollector.OnGyroscopeAccuracyChangedListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var magnetometerAccuracyChangedListener:
-            GravityGyroscopeAndMagnetometerSyncedSensorCollector.OnMagnetometerAccuracyChangedListener
+    private lateinit var accuracyChangedListener:
+            SyncedSensorCollector.OnAccuracyChangedListener<GravityGyroscopeAndMagnetometerSyncedSensorMeasurement, GravityGyroscopeAndMagnetometerSyncedSensorCollector>
 
     @MockK
     private lateinit var gravitySensor: Sensor
@@ -124,9 +117,7 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         )
         assertTrue(collector.interpolationEnabled)
         assertNull(collector.measurementListener)
-        assertNull(collector.gravityAccuracyChangedListener)
-        assertNull(collector.gyroscopeAccuracyChangedListener)
-        assertNull(collector.magnetometerAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
         assertSame(gravitySensor, collector.gravitySensor)
         assertSame(gyroscopeSensor, collector.gyroscopeSensor)
         assertSame(magnetometerSensor, collector.magnetometerSensor)
@@ -167,9 +158,7 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
             GravityGyroscopeAndMagnetometerSyncedSensorCollector.PrimarySensor.GRAVITY,
             false,
             measurementListener,
-            gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener
+            accuracyChangedListener
         )
 
         // check values
@@ -192,12 +181,7 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         )
         assertFalse(collector.interpolationEnabled)
         assertSame(measurementListener, collector.measurementListener)
-        assertSame(gravityAccuracyChangedListener, collector.gravityAccuracyChangedListener)
-        assertSame(gyroscopeAccuracyChangedListener, collector.gyroscopeAccuracyChangedListener)
-        assertSame(
-            magnetometerAccuracyChangedListener,
-            collector.magnetometerAccuracyChangedListener
-        )
+        assertSame(accuracyChangedListener, collector.accuracyChangedListener)
         assertSame(gravitySensor, collector.gravitySensor)
         assertSame(gyroscopeSensor, collector.gyroscopeSensor)
         assertSame(magnetometerSensor, collector.magnetometerSensor)
@@ -240,7 +224,7 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
     }
 
     @Test
-    fun gravityAccuracyChangedListener_setsExpectedValue() {
+    fun accuracyChangedListener_setsExpectedValue() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE.value) }.returns(
@@ -253,67 +237,15 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(context)
 
         // check default value
-        assertNull(collector.gravityAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
 
         // set new value
-        collector.gravityAccuracyChangedListener = gravityAccuracyChangedListener
+        collector.accuracyChangedListener = accuracyChangedListener
 
         // check
         assertSame(
-            gravityAccuracyChangedListener,
-            collector.gravityAccuracyChangedListener
-        )
-    }
-
-    @Test
-    fun gyroscopeAccuracyChangedListener_setsExpectedValue() {
-        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
-        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
-        every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE.value) }.returns(
-            gyroscopeSensor
-        )
-        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER.value) }.returns(
-            magnetometerSensor
-        )
-
-        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(context)
-
-        // check default value
-        assertNull(collector.gyroscopeAccuracyChangedListener)
-
-        // set new value
-        collector.gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
-
-        // check
-        assertSame(
-            gyroscopeAccuracyChangedListener,
-            collector.gyroscopeAccuracyChangedListener
-        )
-    }
-
-    @Test
-    fun magnetometerAccuracyChangedListener_setsExpectedValue() {
-        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
-        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
-        every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE.value) }.returns(
-            gyroscopeSensor
-        )
-        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER.value) }.returns(
-            magnetometerSensor
-        )
-
-        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(context)
-
-        // check default value
-        assertNull(collector.magnetometerAccuracyChangedListener)
-
-        // set new value
-        collector.magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
-
-        // check
-        assertSame(
-            magnetometerAccuracyChangedListener,
-            collector.magnetometerAccuracyChangedListener
+            accuracyChangedListener,
+            collector.accuracyChangedListener
         )
     }
 
@@ -1359,32 +1291,36 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
     fun processAccuracyChanges_whenNoSensor_desNotCallAnyListener() {
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", null, SensorAccuracy.HIGH.value)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            null,
+            SensorAccuracy.HIGH.value
+        )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenUnsupportedAccuracy_desNotCallAnyListener() {
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", gravitySensor, -1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            gravitySensor,
+            -1
+        )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1400,27 +1336,27 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
 
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val unknownSensor = mockk<Sensor>()
-        collector.callPrivateFunc(
+        every { unknownSensor.type }.returns(-1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             unknownSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenGravitySensor_callsExpectedListener() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { gravitySensor.type }.returns(Sensor.TYPE_GRAVITY)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
@@ -1430,31 +1366,31 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
 
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gravitySensor,
             SensorAccuracy.HIGH.value
         )
 
         verify(exactly = 1) {
-            gravityAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
         }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenGravitySensorAndNoListener_noCallIsMade() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { gravitySensor.type }.returns(Sensor.TYPE_GRAVITY)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
@@ -1462,21 +1398,17 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
             magnetometerSensor
         )
 
-        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
-            context,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
-        )
+        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gravitySensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1486,31 +1418,31 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
 
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gyroscopeSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            gyroscopeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GYROSCOPE_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1520,25 +1452,22 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
 
-        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
-            context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
-        )
+        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gyroscopeSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1551,25 +1480,25 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
+        every { magnetometerSensor.type }.returns(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
 
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             magnetometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            magnetometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
@@ -1585,22 +1514,19 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
+        every { magnetometerSensor.type }.returns(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
 
-        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
-            context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-        )
+        val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             magnetometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1955,6 +1881,7 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
     fun onAccuracyChanged_whenGravitySensor_callsExpectedListener() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { gravitySensor.type }.returns(Sensor.TYPE_GRAVITY)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
@@ -1964,9 +1891,7 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
 
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1976,13 +1901,12 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         sensorEventListener.onAccuracyChanged(gravitySensor, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
-            gravityAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
         }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1992,15 +1916,14 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
 
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -2009,14 +1932,13 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
 
         sensorEventListener.onAccuracyChanged(gyroscopeSensor, SensorAccuracy.HIGH.value)
 
-        verify { gravityAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            gyroscopeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GYROSCOPE_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -2029,12 +1951,11 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
+        every { magnetometerSensor.type }.returns(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
 
         val collector = GravityGyroscopeAndMagnetometerSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -2043,11 +1964,10 @@ class GravityGyroscopeAndMagnetometerSyncedSensorCollectorTest {
 
         sensorEventListener.onAccuracyChanged(magnetometerSensor, SensorAccuracy.HIGH.value)
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            magnetometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }

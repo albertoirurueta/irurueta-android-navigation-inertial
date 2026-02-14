@@ -28,7 +28,6 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
-import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import java.util.Queue
 
@@ -47,10 +46,7 @@ import java.util.Queue
  * @property interpolationEnabled indicates whether measurements interpolation is enabled or not.
  * @property measurementListener listener to notify new measurements. It must be noticed that
  * measurements notification might be delayed.
- * @property accelerometerAccuracyChangedListener listener to notify changes in accuracy for
- * accelerometer sensor.
- * @property gyroscopeAccuracyChangedListener listener to notify changes in accuracy for
- * gyroscope sensor.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  */
 class AccelerometerAndGyroscopeSyncedSensorCollector(
     context: Context,
@@ -62,13 +58,13 @@ class AccelerometerAndGyroscopeSyncedSensorCollector(
     val primarySensor: PrimarySensor = PrimarySensor.GYROSCOPE,
     interpolationEnabled: Boolean = true,
     measurementListener: OnMeasurementListener<AccelerometerAndGyroscopeSyncedSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorCollector>? = null,
-    var accelerometerAccuracyChangedListener: OnAccelerometerAccuracyChangedListener? = null,
-    var gyroscopeAccuracyChangedListener: OnGyroscopeAccuracyChangedListener? = null
+    accuracyChangedListener: OnAccuracyChangedListener<AccelerometerAndGyroscopeSyncedSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorCollector>? = null
 ) : SyncedSensorCollector<AccelerometerAndGyroscopeSyncedSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorCollector>(
     context,
     windowNanoseconds,
     interpolationEnabled,
-    measurementListener
+    measurementListener,
+    accuracyChangedListener
 ) {
     /**
      * Accelerometer sensor being used to obtain measurements or null if not available.
@@ -261,25 +257,6 @@ class AccelerometerAndGyroscopeSyncedSensorCollector(
     }
 
     /**
-     * Processes accuracy changed event for proper notification.
-     *
-     * @param sensor sensor whose accuracy has changed.
-     * @param accuracy new accuracy.
-     */
-    override fun processAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        if (sensor == null) {
-            return
-        }
-
-        val sensorAccuracy = SensorAccuracy.from(accuracy) ?: return
-        if (sensor === accelerometerSensor) {
-            accelerometerAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === gyroscopeSensor) {
-            gyroscopeAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        }
-    }
-
-    /**
      * Indicates the sensor type of the primary sensor being used for measurements synchronization.
      */
     enum class PrimarySensor {
@@ -292,39 +269,5 @@ class AccelerometerAndGyroscopeSyncedSensorCollector(
          * Primary sensor is gyroscope.
          */
         GYROSCOPE
-    }
-
-    /**
-     * Interface to notify when accelerometer sensor accuracy changes.
-     */
-    fun interface OnAccelerometerAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerAndGyroscopeSyncedSensorCollector,
-            accuracy: SensorAccuracy
-        )
-    }
-
-    /**
-     * Interface to notify when gyroscope sensor accuracy changes.
-     */
-    fun interface OnGyroscopeAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerAndGyroscopeSyncedSensorCollector,
-            accuracy: SensorAccuracy
-        )
     }
 }

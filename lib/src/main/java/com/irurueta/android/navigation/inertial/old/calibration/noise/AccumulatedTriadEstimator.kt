@@ -52,7 +52,7 @@ import com.irurueta.units.Measurement
  */
 abstract class AccumulatedTriadEstimator<A : AccumulatedTriadEstimator<A, N, C, U, M, T>,
         N : AccumulatedTriadNoiseEstimator<U, M, T, *, *>, C : SensorCollector,
-        U : Enum<*>, M : Measurement<U>, T : Triad<U, M>>(
+        U : Enum<*>, M : Measurement<U>, T : Triad<U, M, T>>(
     val context: Context,
     val sensorDelay: SensorDelay = SensorDelay.FASTEST,
     maxSamples: Int = DEFAULT_MAX_SAMPLES,

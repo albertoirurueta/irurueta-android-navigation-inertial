@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
@@ -62,7 +63,10 @@ class AccurateRelativeGyroscopeAttitudeProcessor(processorListener: OnProcessedL
      * gyroscope measurement. If null, the timestamp from gyroscope measurement is used.
      * @return true if a new relative attitude is estimated, false otherwise.
      */
-    override fun process(measurement: GyroscopeSensorMeasurement, timestamp: Long): Boolean {
+    override fun process(
+        measurement: GyroscopeSensorMeasurement,
+        timestamp: Long
+    ): Boolean {
         val isFirst = updateTimeInterval(timestamp)
 
         val result = if (!isFirst) {

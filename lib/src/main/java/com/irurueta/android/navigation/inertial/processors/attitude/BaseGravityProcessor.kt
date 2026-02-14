@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.hardware.SensorManager
@@ -43,6 +44,7 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
     var adjustGravityNorm: Boolean,
     var processorListener: OnProcessedListener<T>?
 ) {
+
     /**
      * Gravity expressed in NED coordinates.
      */
@@ -54,7 +56,7 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
     private val nedPosition = NEDPosition()
 
     /**
-     * Triad to be reused for ENU to NED coordinates conversion.
+     * Triad to be reused.
      */
     protected val triad = AccelerationTriad()
 
@@ -63,21 +65,21 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
      * and in meters per squared second (m/s^2).
      */
     var gx: Double = 0.0
-        protected set
+        private set
 
     /**
      * Y-coordinate of last sensed gravity component of specific force expressed in NED coordinates
      * and in meters per squared second (m/s^2).
      */
     var gy: Double = 0.0
-        protected set
+        private set
 
     /**
      * Z-coordinate of last sensed gravity component of specific force expressed in NED coordinates
      * and in meters per squared second (m/s^2).
      */
     var gz: Double = 0.0
-        protected set
+        private set
 
     /**
      * Gets a new triad containing gravity component of specific force expressed in NED coordinates
@@ -126,13 +128,13 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
      * increasing using the same time base as [android.os.SystemClock.elapsedRealtimeNanos].
      */
     var timestamp: Long = 0L
-        protected set
+        private set
 
     /**
      * Accuracy of last sensed gravity measurement.
      */
     var accuracy: SensorAccuracy? = null
-        protected set
+        private set
 
     /**
      * Gets expected gravity norm at provided location.
@@ -153,16 +155,13 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
 
     /**
      * Processes a gravity or accelerometer sensor measurement collected by a collector or a syncer.
-     * @param measurement measurement expressed in ENU android coordinates system to be processed.
+     * Notice that this processor will convert provided measurements to NED coordinates system if
+     * needed, and results will always be returned in NED coordinates system.
+     *
+     * @param measurement measurement expressed in ENU or NED coordinates system to be processed.
      * @param timestamp optional timestamp that can be provided to override timestamp associated to
      * accelerometer or gravity measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
-     *
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.BufferedGravitySensorCollector
-     * @see com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
      */
     abstract fun process(measurement: T, timestamp: Long = measurement.timestamp): Boolean
 
@@ -192,9 +191,29 @@ abstract class BaseGravityProcessor<T : SensorMeasurement<T>>(
     }
 
     /**
+     * Finish processing and notify listeners.
+     *
+     * @param measurement measurement expressed in ENU or NED coordinates system to be processed.
+     * @param timestamp optional timestamp that can be provided to override timestamp associated to
+     * accelerometer or gravity measurement. If not set, the timestamp from measurement is used.
+     */
+    protected fun finishProcessingAndNotify(measurement: T, timestamp: Long) {
+        gx = triad.valueX
+        gy = triad.valueY
+        gz = triad.valueZ
+
+        adjustNorm()
+
+        this.timestamp = timestamp
+        accuracy = measurement.accuracy
+        processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)
+    }
+
+    /**
      * Interface to notify when a new gravity measurement has been processed.
      */
     fun interface OnProcessedListener<T : SensorMeasurement<T>> {
+
         /**
          * Called when a new gravity measurement is processed.
          *

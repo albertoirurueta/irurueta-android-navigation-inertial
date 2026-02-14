@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.hardware.SensorManager
@@ -29,11 +30,7 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import kotlin.math.sqrt
@@ -70,9 +67,13 @@ class GravityProcessorTest {
     }
 
     @Test
-    fun constructor_whenAllProperties_returnsExpectedValues() {
+    fun constructor_whenAllParameters_returnsExpectedValues() {
         val location = getLocation()
-        val processor = GravityProcessor(location, adjustGravityNorm = false, listener)
+        val processor = GravityProcessor(
+            location,
+            adjustGravityNorm = false,
+            processorListener = listener
+        )
 
         assertSame(location, processor.location)
         assertFalse(processor.adjustGravityNorm)
@@ -143,7 +144,7 @@ class GravityProcessorTest {
     @Test
     fun getNedPosition_whenLocation_returnsExpectedValue() {
         val location = getLocation()
-        val processor = GravityProcessor(location)
+        val processor = GravityProcessor(location = location)
 
         val nedPosition = NEDPosition()
         assertTrue(processor.getNedPosition(nedPosition))
@@ -398,18 +399,9 @@ class GravityProcessorTest {
 
     private fun getLocation(): Location {
         val randomizer = UniformRandomizer()
-        val latitudeDegrees = randomizer.nextDouble(
-            MIN_LATITUDE_DEGREES,
-            MAX_LATITUDE_DEGREES
-        )
-        val longitudeDegrees = randomizer.nextDouble(
-            MIN_LONGITUDE_DEGREES,
-            MAX_LONGITUDE_DEGREES
-        )
-        val height = randomizer.nextDouble(
-            MIN_HEIGHT,
-            MAX_HEIGHT
-        )
+        val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
+        val longitudeDegrees = randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
         every { location.latitude }.returns(latitudeDegrees)
         every { location.longitude }.returns(longitudeDegrees)

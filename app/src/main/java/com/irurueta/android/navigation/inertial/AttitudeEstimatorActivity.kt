@@ -22,9 +22,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
+import com.irurueta.android.navigation.inertial.app.R
 import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.attitude.AttitudeEstimator2
+import com.irurueta.android.navigation.inertial.old.estimators.attitude.AttitudeEstimator2
 import com.irurueta.geometry.PinholeCamera
 import com.irurueta.geometry.PinholeCameraIntrinsicParameters
 import com.irurueta.geometry.Point3D
@@ -91,20 +92,20 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
                 attitude.toQuaternion(rotation)
 
                 rollView?.text = getString(
-                    com.irurueta.android.navigation.inertial.app.R.string.roll_degrees,
+                    R.string.roll_degrees,
                     Math.toDegrees(roll ?: 0.0)
                 )
                 pitchView?.text = getString(
-                    com.irurueta.android.navigation.inertial.app.R.string.pitch_degrees,
+                    R.string.pitch_degrees,
                     Math.toDegrees(pitch ?: 0.0)
                 )
                 yawView?.text = getString(
-                    com.irurueta.android.navigation.inertial.app.R.string.yaw_degrees,
+                    R.string.yaw_degrees,
                     Math.toDegrees(yaw ?: 0.0)
                 )
                 if (headingAccuracy != null) {
                     headingAccuracyView?.text = getString(
-                        com.irurueta.android.navigation.inertial.app.R.string.heading_accuracy_degrees,
+                        R.string.heading_accuracy_degrees,
                         Math.toDegrees(headingAccuracy.toDouble())
                     )
                     headingAccuracyView?.visibility = View.VISIBLE

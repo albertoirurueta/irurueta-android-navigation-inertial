@@ -129,16 +129,10 @@ class GravityAndMagnetometerSyncedSensorCollectorTest {
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER,
             gravitySensorDelay = SensorDelay.FASTEST,
             magnetometerSensorDelay = SensorDelay.FASTEST,
-            gravityAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "GravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gravity accuracy: $accuracy"
-                )
-            },
-            magnetometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "GravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - magnetometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->
@@ -212,16 +206,10 @@ class GravityAndMagnetometerSyncedSensorCollectorTest {
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             gravitySensorDelay = SensorDelay.FASTEST,
             magnetometerSensorDelay = SensorDelay.FASTEST,
-            gravityAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "GravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - gravity accuracy: $accuracy"
-                )
-            },
-            magnetometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "GravityAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - magnetometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,35 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.estimators.attitude
 
+import android.Manifest
 import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
-import androidx.test.filters.RequiresDevice
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.estimators.attitude.AccurateLevelingEstimator
-import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.android.testutils.RequiresRealDevice
 import io.mockk.spyk
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-@RequiresDevice
 class AccurateLevelingEstimatorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     private val syncHelper = ThreadSyncHelper()
@@ -58,6 +61,7 @@ class AccurateLevelingEstimatorTest {
         completed = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenGravitySensor_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -84,6 +88,7 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -112,6 +117,7 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMeanAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -140,6 +146,7 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerSensorAndMedianAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -168,6 +175,7 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndLowPassAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -196,6 +204,7 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMeanAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()
@@ -224,6 +233,7 @@ class AccurateLevelingEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccelerometerUncalibratedSensorAndMedianAveragingFilter_estimatesLeveling() {
         val location = getCurrentLocation()

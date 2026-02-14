@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,47 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.SystemClock
-import android.view.Display
-import android.view.Surface
-import androidx.test.core.app.ApplicationProvider
 import com.irurueta.algebra.Matrix
-import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GravitySensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGravityProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseLevelingProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.GravityProcessor
+import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.estimators.NEDGravityEstimator
 import com.irurueta.statistics.UniformRandomizer
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.justRun
+import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
+import kotlin.math.sqrt
 
-@RunWith(RobolectricTestRunner::class)
 class AccurateLevelingEstimatorTest {
 
     @get:Rule
@@ -61,34 +65,40 @@ class AccurateLevelingEstimatorTest {
 
     @MockK(relaxUnitFun = true)
     private lateinit var levelingAvailableListener:
-            AccurateLevelingEstimator.OnLevelingAvailableListener
-
-    @MockK
-    private lateinit var accelerometerMeasurementListener:
-            AccelerometerSensorCollector.OnMeasurementListener
-
-    @MockK
-    private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
+            BaseLevelingEstimator.OnLevelingAvailableListener<AccurateLevelingEstimator>
 
     @MockK(relaxUnitFun = true)
-    private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
-
-    @MockK
-    private lateinit var display: Display
+    private lateinit var accuracyChangedListener:
+            BaseLevelingEstimator.OnAccuracyChangedListener<AccurateLevelingEstimator>
 
     @MockK
     private lateinit var location: Location
 
+    @MockK
+    private lateinit var accelerometerSensor: Sensor
+
+    @MockK
+    private lateinit var gravitySensor: Sensor
+
+    @MockK
+    private lateinit var context: Context
+
+    @MockK
+    private lateinit var sensorManager: SensorManager
+
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(context, location)
 
         // check
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
-        assertEquals(SensorDelay.GAME, estimator.sensorDelay)
+        assertEquals(SensorDelay.FASTEST, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertEquals(
             AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
@@ -98,14 +108,34 @@ class AccurateLevelingEstimatorTest {
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.levelingAvailableListener)
-        assertNull(estimator.gravityEstimationListener)
+        assertNull(estimator.accuracyChangedListener)
+        assertTrue(estimator.adjustGravityNorm)
         assertFalse(estimator.running)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location, accelerometerGravityProcessor.location)
+        assertTrue(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
-        val accelerometerAveragingFilter = MeanAveragingFilter()
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER.value) }
+            .returns(accelerometerSensor)
+
+        val accelerometerAveragingFilter = MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(
             context,
@@ -117,9 +147,8 @@ class AccurateLevelingEstimatorTest {
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
             levelingAvailableListener,
-            gravityEstimationListener,
-            accelerometerMeasurementListener,
-            gravityMeasurementListener
+            accuracyChangedListener,
+            adjustGravityNorm = false
         )
 
         // check
@@ -135,15 +164,33 @@ class AccurateLevelingEstimatorTest {
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateEulerAngles)
         assertSame(levelingAvailableListener, estimator.levelingAvailableListener)
-        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
-        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
-        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
+        assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
+        assertFalse(estimator.adjustGravityNorm)
         assertFalse(estimator.running)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location, gravityProcessor.location)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location, accelerometerGravityProcessor.location)
+        assertFalse(accelerometerGravityProcessor.adjustGravityNorm)
     }
 
     @Test
     fun levelingAvailableListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(context, location)
 
@@ -158,115 +205,417 @@ class AccurateLevelingEstimatorTest {
     }
 
     @Test
-    fun gravityEstimationListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun accuracyChangedListener_setsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(context, location)
 
         // check default value
-        assertNull(estimator.gravityEstimationListener)
+        assertNull(estimator.accuracyChangedListener)
 
         // set new value
-        estimator.gravityEstimationListener = gravityEstimationListener
+        estimator.accuracyChangedListener = accuracyChangedListener
+
+        // check
+        assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
     }
 
     @Test
-    fun accelerometerMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val estimator = AccurateLevelingEstimator(context, location)
+    fun location_setsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
 
-        val gravityEstimator: GravityEstimator? =
-            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityEstimator")
-        requireNotNull(gravityEstimator)
+        val location1 = getLocation()
+        val estimator = AccurateLevelingEstimator(context, location1)
 
-        // check default value
-        assertNull(estimator.accelerometerMeasurementListener)
-        assertNull(gravityEstimator.accelerometerMeasurementListener)
+        // check initial value
+        assertSame(location1, estimator.location)
 
         // set new value
-        estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
+        val location2 = getLocation()
+        estimator.location = location2
 
         // check
-        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
-        assertSame(
-            accelerometerMeasurementListener,
-            gravityEstimator.accelerometerMeasurementListener
+        assertSame(location2, estimator.location)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertSame(location2, gravityProcessor.location)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertSame(location2, accelerometerGravityProcessor.location)
+    }
+
+    @Test
+    fun adjustGravityNorm_setsExpectedValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
+        val location1 = getLocation()
+        val estimator = AccurateLevelingEstimator(context, location1)
+
+        // check default value
+        assertTrue(estimator.adjustGravityNorm)
+
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        assertTrue(accelerometerGravityProcessor.adjustGravityNorm)
+
+        // set new value
+        estimator.adjustGravityNorm = false
+
+        // check
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(accelerometerGravityProcessor.adjustGravityNorm)
+    }
+
+    @Test
+    fun running_whenAccelerometerUsed_getsAccelerometerCollectorValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
+        val location = getLocation()
+        val estimator = AccurateLevelingEstimator(context, location, useAccelerometer = true)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector"
+            )
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        every { accelerometerSensorCollectorSpy.running }.returns(true)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
         )
-    }
 
-    @Test
-    fun gravityMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val estimator = AccurateLevelingEstimator(context, location)
-
-        // check default value
-        assertNull(estimator.gravityMeasurementListener)
-
-        // set new value
-        estimator.gravityMeasurementListener = gravityMeasurementListener
-
-        // check
-        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
-    }
-
-    @Test
-    fun running_getsGravityEstimatorValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val location = getLocation()
-        val estimator = AccurateLevelingEstimator(context, location)
-
-        val gravityEstimator: GravityEstimator? =
-            estimator.getPrivateProperty("gravityEstimator")
-        requireNotNull(gravityEstimator)
-        val gravityEstimatorSpy = spyk(gravityEstimator)
-        every { gravityEstimatorSpy.running }.returns(true)
-        estimator.setPrivateProperty("gravityEstimator", gravityEstimatorSpy)
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
 
         assertTrue(estimator.running)
-        verify(exactly = 1) { gravityEstimatorSpy.running }
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+        verify { gravitySensorCollectorSpy wasNot Called }
     }
 
     @Test
-    fun start_startsGravityEstimator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun running_whenAccelerometerNotUsed_getsGravityCollectorValue() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
+
         val location = getLocation()
-        val estimator = AccurateLevelingEstimator(context, location)
+        val estimator = AccurateLevelingEstimator(context, location, useAccelerometer = false)
 
-        val gravityEstimator: GravityEstimator? =
-            estimator.getPrivateProperty("gravityEstimator")
-        requireNotNull(gravityEstimator)
-        val gravityEstimatorSpy = spyk(gravityEstimator)
-        every { gravityEstimatorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("gravityEstimator", gravityEstimatorSpy)
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector"
+            )
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
 
-        assertTrue(estimator.start())
-        verify(exactly = 1) { gravityEstimatorSpy.start() }
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        every { gravitySensorCollectorSpy.running }.returns(true)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
+
+        assertTrue(estimator.running)
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+        verify(exactly = 1) { gravitySensorCollectorSpy.running }
     }
 
     @Test
-    fun stop_stopsGravityEstimator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun start_whenAccelerometerUsed_startsAccelerometerSensorCollector() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+                .returns(accelerometerSensor)
+            every { sensorManager.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+
+            val location = getLocation()
+            val estimator = AccurateLevelingEstimator(context, location, useAccelerometer = true)
+
+            val accelerometerSensorCollector: AccelerometerSensorCollector? =
+                getPrivateProperty(
+                    BaseLevelingEstimator::class,
+                    estimator,
+                    "accelerometerSensorCollector"
+                )
+            requireNotNull(accelerometerSensorCollector)
+            val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+            every { accelerometerSensorCollectorSpy.start() }.returns(true)
+            setPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector",
+                accelerometerSensorCollectorSpy
+            )
+
+            val gravitySensorCollector: GravitySensorCollector? =
+                getPrivateProperty(
+                    BaseLevelingEstimator::class,
+                    estimator,
+                    "gravitySensorCollector"
+                )
+            requireNotNull(gravitySensorCollector)
+            val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+            setPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "gravitySensorCollector",
+                gravitySensorCollectorSpy
+            )
+
+            assertTrue(estimator.start())
+
+            verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+            verify(exactly = 1) { gravitySensorCollectorSpy.running }
+            verify(exactly = 1) { accelerometerSensorCollectorSpy.start(startTimestamp) }
+            verify(exactly = 0) { gravitySensorCollectorSpy.start(startTimestamp) }
+        }
+    }
+
+    @Test
+    fun start_whenAccelerometerNotUsed_startsGravitySensorCollector() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+                .returns(gravitySensor)
+            every { sensorManager.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+
+            val location = getLocation()
+            val estimator = AccurateLevelingEstimator(context, location, useAccelerometer = false)
+
+            val accelerometerSensorCollector: AccelerometerSensorCollector? =
+                getPrivateProperty(
+                    BaseLevelingEstimator::class,
+                    estimator,
+                    "accelerometerSensorCollector"
+                )
+            requireNotNull(accelerometerSensorCollector)
+            val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+            setPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector",
+                accelerometerSensorCollectorSpy
+            )
+
+            val gravitySensorCollector: GravitySensorCollector? =
+                getPrivateProperty(
+                    BaseLevelingEstimator::class,
+                    estimator,
+                    "gravitySensorCollector"
+                )
+            requireNotNull(gravitySensorCollector)
+            val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+            every { gravitySensorCollectorSpy.start() }.returns(true)
+            setPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "gravitySensorCollector",
+                gravitySensorCollectorSpy
+            )
+
+            assertTrue(estimator.start())
+
+            verify(exactly = 1) { accelerometerSensorCollectorSpy.running }
+            verify(exactly = 1) { gravitySensorCollectorSpy.running }
+            verify(exactly = 1) { gravitySensorCollectorSpy.start(startTimestamp) }
+            verify(exactly = 0) { accelerometerSensorCollectorSpy.start(startTimestamp) }
+        }
+    }
+
+    @Test
+    fun start_whenRunning_throwsIllegalStateException() {
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+            every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+                .returns(accelerometerSensor)
+
+            val location = getLocation()
+            val estimator = AccurateLevelingEstimator(context, location, useAccelerometer = true)
+
+            val accelerometerSensorCollector: AccelerometerSensorCollector? =
+                getPrivateProperty(
+                    BaseLevelingEstimator::class,
+                    estimator,
+                    "accelerometerSensorCollector"
+                )
+            requireNotNull(accelerometerSensorCollector)
+            val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+            every { accelerometerSensorCollectorSpy.running }.returns(true)
+            setPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector",
+                accelerometerSensorCollectorSpy
+            )
+
+            assertTrue(estimator.running)
+            assertThrows(IllegalStateException::class.java) {
+                estimator.start()
+            }
+        }
+    }
+
+    @Test
+    fun stop_stopsCollectors() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
+        justRun { sensorManager.unregisterListener(any(), any<Sensor>()) }
+
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(context, location)
 
-        val gravityEstimator: GravityEstimator? =
-            estimator.getPrivateProperty("gravityEstimator")
-        requireNotNull(gravityEstimator)
-        val gravityEstimatorSpy = spyk(gravityEstimator)
-        justRun { gravityEstimatorSpy.stop() }
-        estimator.setPrivateProperty("gravityEstimator", gravityEstimatorSpy)
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector"
+            )
+        requireNotNull(accelerometerSensorCollector)
+        val accelerometerSensorCollectorSpy = spyk(accelerometerSensorCollector)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "accelerometerSensorCollector",
+            accelerometerSensorCollectorSpy
+        )
+
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val gravitySensorCollectorSpy = spyk(gravitySensorCollector)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "gravitySensorCollector",
+            gravitySensorCollectorSpy
+        )
 
         estimator.stop()
-        verify(exactly = 1) { gravityEstimatorSpy.stop() }
+
+        verify(exactly = 1) { accelerometerSensorCollectorSpy.stop() }
+        verify(exactly = 1) { gravitySensorCollectorSpy.stop() }
+    }
+
+    @Test
+    fun onGravityAccuracyChanged_whenNoListener_makesNoAction() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
+
+        val location = getLocation()
+        val estimator = AccurateLevelingEstimator(context, location)
+
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+
+        val listener = gravitySensorCollector.accuracyChangedListener
+        requireNotNull(listener)
+        listener.onAccuracyChanged(gravitySensorCollector, SensorAccuracy.HIGH)
+    }
+
+    @Test
+    fun onGravityAccuracyChanged_whenListenerAvailable_notifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
+
+        val location = getLocation()
+        val estimator = AccurateLevelingEstimator(
+            context,
+            location,
+            useAccelerometer = false,
+            accuracyChangedListener = accuracyChangedListener
+        )
+
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+
+        val listener = gravitySensorCollector.accuracyChangedListener
+        requireNotNull(listener)
+        listener.onAccuracyChanged(gravitySensorCollector, SensorAccuracy.HIGH)
+
+        verify(exactly = 1) {
+            accuracyChangedListener.onAccuracyChanged(
+                estimator,
+                SensorType.GRAVITY,
+                SensorAccuracy.HIGH
+            )
+        }
     }
 
     @Test
     fun onGravityEstimation_whenNoListenerNotEstimateCoordinateTransformationAndNotEstimateEulerAngles_updatesAttitude() {
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
 
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(
@@ -289,6 +638,11 @@ class AccurateLevelingEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.LOCAL_NAVIGATION_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseLevelingEstimator::class,
@@ -298,8 +652,9 @@ class AccurateLevelingEstimatorTest {
         )
 
         val randomizer = UniformRandomizer()
-        val latitude = Math.toRadians(location.latitude)
-        val height = location.altitude
+        val latitude =
+            Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
         // body attitude
         val roll1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -327,23 +682,66 @@ class AccurateLevelingEstimatorTest {
         val fy = f.getElementAtIndex(1)
         val fz = f.getElementAtIndex(2)
 
-        val gravityEstimator: GravityEstimator? = estimator.getPrivateProperty("gravityEstimator")
-        requireNotNull(gravityEstimator)
-        val gravityEstimatorListener: GravityEstimator.OnEstimationListener? =
-            gravityEstimator.estimationListener
-        requireNotNull(gravityEstimatorListener)
+        val floatFx = fx.toFloat()
+        val floatFy = fy.toFloat()
+        val floatFz = fz.toFloat()
 
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimatorListener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val listener = gravitySensorCollector.measurementListener
+        requireNotNull(listener)
 
-        verify(exactly = 1) { attitudeSpy.setFromAxisAndRotation(any(), any()) }
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "gravityProcessor",
+            gravityProcessorSpy
+        )
+
+        val levelingProcessor: BaseLevelingProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "levelingProcessor")
+        requireNotNull(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
+        estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
+
+        val timestamp = System.nanoTime()
+        val measurement = GravitySensorMeasurement(
+            floatFy,
+            floatFx,
+            -floatFz,
+            timestamp,
+            SensorAccuracy.MEDIUM
+        )
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble()
+                    + floatFz.toDouble() * floatFz.toDouble()
+        )
+        val factor =
+            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
+        listener.onMeasurement(gravitySensorCollector, measurement)
+
+        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
+        verify(exactly = 1) {
+            levelingProcessorSpy.process(
+                floatFx.toDouble() * factor,
+                floatFy.toDouble() * factor,
+                floatFz.toDouble() * factor
+            )
+        }
+        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
 
         val attitude2 = Quaternion()
         bodyC.asRotation(attitude2)
+        attitude2.normalize()
         attitude2.inverse()
         attitude2.normalize()
-        attitudeSpy.normalize()
-        assertTrue(attitudeSpy.equals(attitude2, 2e-1))
+        assertTrue(attitudeSpy.equals(attitude2, ABSOLUTE_ERROR))
 
         verify { coordinateTransformationSpy wasNot Called }
 
@@ -352,9 +750,9 @@ class AccurateLevelingEstimatorTest {
 
     @Test
     fun onGravityEstimation_whenListenerNotEstimateCoordinateTransformationAndNotEstimateEulerAngles_updatesAttitude() {
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
 
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(
@@ -362,8 +760,7 @@ class AccurateLevelingEstimatorTest {
             location,
             estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
-            levelingAvailableListener = levelingAvailableListener,
-            gravityEstimationListener = gravityEstimationListener
+            levelingAvailableListener = levelingAvailableListener
         )
 
         val attitude: Quaternion? =
@@ -379,6 +776,11 @@ class AccurateLevelingEstimatorTest {
         val coordinateTransformation: CoordinateTransformation? =
             getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
         requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.LOCAL_NAVIGATION_FRAME,
+            coordinateTransformation.destinationType
+        )
         val coordinateTransformationSpy = spyk(coordinateTransformation)
         setPrivateProperty(
             BaseLevelingEstimator::class,
@@ -388,8 +790,9 @@ class AccurateLevelingEstimatorTest {
         )
 
         val randomizer = UniformRandomizer()
-        val latitude = Math.toRadians(location.latitude)
-        val height = location.altitude
+        val latitude =
+            Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
         // body attitude
         val roll1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -417,30 +820,64 @@ class AccurateLevelingEstimatorTest {
         val fy = f.getElementAtIndex(1)
         val fz = f.getElementAtIndex(2)
 
-        val gravityEstimator: GravityEstimator? = estimator.getPrivateProperty("gravityEstimator")
-        requireNotNull(gravityEstimator)
-        val gravityEstimatorListener: GravityEstimator.OnEstimationListener? =
-            gravityEstimator.estimationListener
-        requireNotNull(gravityEstimatorListener)
+        val floatFx = fx.toFloat()
+        val floatFy = fy.toFloat()
+        val floatFz = fz.toFloat()
 
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimatorListener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val listener = gravitySensorCollector.measurementListener
+        requireNotNull(listener)
 
-        verify(exactly = 1) { attitudeSpy.setFromAxisAndRotation(any(), any()) }
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "gravityProcessor",
+            gravityProcessorSpy
+        )
+
+        val levelingProcessor: BaseLevelingProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "levelingProcessor")
+        requireNotNull(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
+        estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
+
+        val timestamp = System.nanoTime()
+        val measurement = GravitySensorMeasurement(
+            floatFy,
+            floatFx,
+            -floatFz,
+            timestamp,
+            SensorAccuracy.MEDIUM
+        )
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble()
+                    + floatFz.toDouble() * floatFz.toDouble()
+        )
+        val factor =
+            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
+        listener.onMeasurement(gravitySensorCollector, measurement)
+
+        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
+        verify(exactly = 1) {
+            levelingProcessorSpy.process(
+                floatFx.toDouble() * factor,
+                floatFy.toDouble() * factor,
+                floatFz.toDouble() * factor
+            )
+        }
+        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
 
         verify { coordinateTransformationSpy wasNot Called }
 
         assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
 
-        verify(exactly = 1) {
-            gravityEstimationListener.onEstimation(
-                gravityEstimator,
-                fx,
-                fy,
-                fz,
-                timestamp
-            )
-        }
         verify(exactly = 1) {
             levelingAvailableListener.onLevelingAvailable(
                 estimator,
@@ -455,9 +892,9 @@ class AccurateLevelingEstimatorTest {
 
     @Test
     fun onGravityEstimation_whenListenerEstimateCoordinateTransformationAndEstimateEulerAngles_updatesAttitude() {
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
 
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(
@@ -495,8 +932,9 @@ class AccurateLevelingEstimatorTest {
         )
 
         val randomizer = UniformRandomizer()
-        val latitude = Math.toRadians(location.latitude)
-        val height = location.altitude
+        val latitude =
+            Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
         // body attitude
         val roll1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
@@ -524,16 +962,59 @@ class AccurateLevelingEstimatorTest {
         val fy = f.getElementAtIndex(1)
         val fz = f.getElementAtIndex(2)
 
-        val gravityEstimator: GravityEstimator? = estimator.getPrivateProperty("gravityEstimator")
-        requireNotNull(gravityEstimator)
-        val gravityEstimatorListener: GravityEstimator.OnEstimationListener? =
-            gravityEstimator.estimationListener
-        requireNotNull(gravityEstimatorListener)
+        val floatFx = fx.toFloat()
+        val floatFy = fy.toFloat()
+        val floatFz = fz.toFloat()
 
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimatorListener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
+        val gravitySensorCollector: GravitySensorCollector? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravitySensorCollector")
+        requireNotNull(gravitySensorCollector)
+        val listener = gravitySensorCollector.measurementListener
+        requireNotNull(listener)
 
-        verify(exactly = 1) { attitudeSpy.setFromAxisAndRotation(any(), any()) }
+        val gravityProcessor: GravityProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "gravityProcessor",
+            gravityProcessorSpy
+        )
+
+        val levelingProcessor: BaseLevelingProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "levelingProcessor")
+        requireNotNull(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
+        estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
+
+        val timestamp = System.nanoTime()
+        val measurement = GravitySensorMeasurement(
+            floatFy,
+            floatFx,
+            -floatFz,
+            timestamp,
+            SensorAccuracy.MEDIUM
+        )
+        val norm = sqrt(
+            floatFx.toDouble() * floatFx.toDouble()
+                    + floatFy.toDouble() * floatFy.toDouble()
+                    + floatFz.toDouble() * floatFz.toDouble()
+        )
+        val factor =
+            NEDGravityEstimator.estimateGravityAndReturnNew(location.toNEDPosition()).norm / norm
+        listener.onMeasurement(gravitySensorCollector, measurement)
+
+        verify(exactly = 1) { gravityProcessorSpy.process(measurement) }
+        verify(exactly = 1) {
+            levelingProcessorSpy.process(
+                floatFx.toDouble() * factor,
+                floatFy.toDouble() * factor,
+                floatFz.toDouble() * factor
+            )
+        }
+        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
         verify(exactly = 1) { coordinateTransformationSpy.fromRotation(attitudeSpy) }
         verify(exactly = 1) { attitudeSpy.toEulerAngles(eulerAngles) }
 
@@ -553,10 +1034,67 @@ class AccurateLevelingEstimatorTest {
     }
 
     @Test
-    fun onGravityEstimation_whenListenerAndIgnoreDisplayOrientation_updatesAttitude() {
-        every { display.rotation }.returns(Surface.ROTATION_0)
-        val context = spyk(ApplicationProvider.getApplicationContext())
-        every { context.display }.returns(display)
+    fun onAccelerometerAccuracyChanged_whenNoListener_makesNoAction() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
+        val location = getLocation()
+        val estimator = AccurateLevelingEstimator(context, location)
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector"
+            )
+        requireNotNull(accelerometerSensorCollector)
+
+        val listener = accelerometerSensorCollector.accuracyChangedListener
+        requireNotNull(listener)
+        listener.onAccuracyChanged(accelerometerSensorCollector, SensorAccuracy.HIGH)
+    }
+
+    @Test
+    fun onAccelerometerAccuracyChanged_whenListenerAvailable_notifies() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
+        val location = getLocation()
+        val estimator = AccurateLevelingEstimator(
+            context,
+            location,
+            useAccelerometer = true,
+            accuracyChangedListener = accuracyChangedListener
+        )
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector"
+            )
+        requireNotNull(accelerometerSensorCollector)
+
+        val listener = accelerometerSensorCollector.accuracyChangedListener
+        requireNotNull(listener)
+        listener.onAccuracyChanged(accelerometerSensorCollector, SensorAccuracy.HIGH)
+
+        verify(exactly = 1) {
+            accuracyChangedListener.onAccuracyChanged(
+                estimator,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
+                SensorAccuracy.HIGH
+            )
+        }
+    }
+
+    @Test
+    fun onAccelerometerEstimation_whenNoProcessedGravity_makesNoAction() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
 
         val location = getLocation()
         val estimator = AccurateLevelingEstimator(
@@ -594,13 +1132,14 @@ class AccurateLevelingEstimatorTest {
         )
 
         val randomizer = UniformRandomizer()
-        val latitude = Math.toRadians(location.latitude)
-        val height = location.altitude
+        val latitude =
+            Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
         // body attitude
         val roll1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
         val pitch1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
-        val yaw1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+        val yaw1 = 0.0
 
         // attitude is expressed as rotation from local navigation frame
         // to body frame, since angles are measured on the device body
@@ -609,7 +1148,7 @@ class AccurateLevelingEstimatorTest {
             pitch1,
             yaw1,
             FrameType.BODY_FRAME,
-            FrameType.EARTH_CENTERED_EARTH_FIXED_FRAME
+            FrameType.LOCAL_NAVIGATION_FRAME
         )
 
         // obtain specific force neglecting north component of gravity
@@ -623,31 +1162,206 @@ class AccurateLevelingEstimatorTest {
         val fy = f.getElementAtIndex(1)
         val fz = f.getElementAtIndex(2)
 
-        val gravityEstimator: GravityEstimator? = estimator.getPrivateProperty("gravityEstimator")
-        requireNotNull(gravityEstimator)
-        val gravityEstimatorListener: GravityEstimator.OnEstimationListener? =
-            gravityEstimator.estimationListener
-        requireNotNull(gravityEstimatorListener)
+        val floatFx = fx.toFloat()
+        val floatFy = fy.toFloat()
+        val floatFz = fz.toFloat()
 
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        gravityEstimatorListener.onEstimation(gravityEstimator, fx, fy, fz, timestamp)
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector"
+            )
+        requireNotNull(accelerometerSensorCollector)
+        val listener = accelerometerSensorCollector.measurementListener
+        requireNotNull(listener)
 
-        verify(exactly = 1) { attitudeSpy.setFromAxisAndRotation(any(), any()) }
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        val accelerometerGravityProcessorSpy = spyk(accelerometerGravityProcessor)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "accelerometerGravityProcessor",
+            accelerometerGravityProcessorSpy
+        )
+
+        val levelingProcessor: BaseLevelingProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "levelingProcessor")
+        requireNotNull(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
+        estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
+
+        val timestamp = System.nanoTime()
+        val measurement = AccelerometerSensorMeasurement(
+            floatFy,
+            floatFx,
+            -floatFz,
+            null,
+            null,
+            null,
+            timestamp,
+            SensorAccuracy.MEDIUM
+        )
+        listener.onMeasurement(accelerometerSensorCollector, measurement)
+
+        verify(exactly = 1) { accelerometerGravityProcessorSpy.process(measurement) }
+        verify { levelingProcessorSpy wasNot Called }
+        verify { attitudeSpy wasNot Called }
+        verify { coordinateTransformationSpy wasNot Called }
+        verify { levelingAvailableListener wasNot Called }
+
+        assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
+    }
+
+    @Test
+    fun onAccelerometerEstimation_whenProcessedGravity_updatesAttitude() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+
+        val location = getLocation()
+        val estimator = AccurateLevelingEstimator(
+            context,
+            location,
+            estimateCoordinateTransformation = false,
+            estimateEulerAngles = false
+        )
+
+        val attitude: Quaternion? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude")
+        requireNotNull(attitude)
+        val attitudeSpy = spyk(attitude)
+        setPrivateProperty(BaseLevelingEstimator::class, estimator, "attitude", attitudeSpy)
+
+        val eulerAngles: DoubleArray? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "eulerAngles")
+        requireNotNull(eulerAngles)
+
+        val coordinateTransformation: CoordinateTransformation? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        assertEquals(FrameType.BODY_FRAME, coordinateTransformation.sourceType)
+        assertEquals(
+            FrameType.LOCAL_NAVIGATION_FRAME,
+            coordinateTransformation.destinationType
+        )
+        val coordinateTransformationSpy = spyk(coordinateTransformation)
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "coordinateTransformation",
+            coordinateTransformationSpy
+        )
+
+        val randomizer = UniformRandomizer()
+        val latitude =
+            Math.toRadians(randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES))
+        val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
+
+        // body attitude
+        val roll1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+        val pitch1 = Math.toRadians(randomizer.nextDouble(MIN_ANGLE_DEGREES, MAX_ANGLE_DEGREES))
+        val yaw1 = 0.0
+
+        // attitude is expressed as rotation from local navigation frame
+        // to body frame, since angles are measured on the device body
+        val bodyC = CoordinateTransformation(
+            roll1,
+            pitch1,
+            yaw1,
+            FrameType.BODY_FRAME,
+            FrameType.LOCAL_NAVIGATION_FRAME
+        )
+
+        // obtain specific force neglecting north component of gravity
+        val cnb = bodyC.matrix
+        val nedGravity = NEDGravityEstimator.estimateGravityAndReturnNew(latitude, height)
+        val g = Matrix.newFromArray(nedGravity.asArray())
+        g.multiplyByScalar(-1.0)
+        val f = cnb.multiplyAndReturnNew(g)
+
+        val fx = f.getElementAtIndex(0)
+        val fy = f.getElementAtIndex(1)
+        val fz = f.getElementAtIndex(2)
+
+        val floatFx = fx.toFloat()
+        val floatFy = fy.toFloat()
+        val floatFz = fz.toFloat()
+
+        val accelerometerSensorCollector: AccelerometerSensorCollector? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerSensorCollector"
+            )
+        requireNotNull(accelerometerSensorCollector)
+        val listener = accelerometerSensorCollector.measurementListener
+        requireNotNull(listener)
+
+        val accelerometerGravityProcessor: AccelerometerGravityProcessor? =
+            getPrivateProperty(
+                BaseLevelingEstimator::class,
+                estimator,
+                "accelerometerGravityProcessor"
+            )
+        requireNotNull(accelerometerGravityProcessor)
+        val accelerometerGravityProcessorSpy = spyk(accelerometerGravityProcessor)
+        every { accelerometerGravityProcessorSpy.process(any(), any()) }.returns(true)
+        every { accelerometerGravityProcessorSpy.gx }.returns(floatFx.toDouble())
+        every { accelerometerGravityProcessorSpy.gy }.returns(floatFy.toDouble())
+        every { accelerometerGravityProcessorSpy.gz }.returns(floatFz.toDouble())
+        setPrivateProperty(
+            BaseLevelingEstimator::class,
+            estimator,
+            "accelerometerGravityProcessor",
+            accelerometerGravityProcessorSpy
+        )
+
+        val levelingProcessor: BaseLevelingProcessor? =
+            getPrivateProperty(BaseLevelingEstimator::class, estimator, "levelingProcessor")
+        requireNotNull(levelingProcessor)
+        val levelingProcessorSpy = spyk(levelingProcessor)
+        estimator.setPrivateProperty("levelingProcessor", levelingProcessorSpy)
+
+        val timestamp = System.nanoTime()
+        val measurement = AccelerometerSensorMeasurement(
+            floatFy,
+            floatFx,
+            -floatFz,
+            null,
+            null,
+            null,
+            timestamp,
+            SensorAccuracy.MEDIUM
+        )
+        listener.onMeasurement(accelerometerSensorCollector, measurement)
+
+        verify(exactly = 1) { accelerometerGravityProcessorSpy.process(measurement) }
+        verify(exactly = 1) {
+            levelingProcessorSpy.process(
+                floatFx.toDouble(),
+                floatFy.toDouble(),
+                floatFz.toDouble()
+            )
+        }
+        verify(exactly = 1) { attitudeSpy.fromQuaternion(levelingProcessor.attitude) }
+
+        val attitude2 = Quaternion()
+        bodyC.asRotation(attitude2)
+        attitude2.normalize()
+        attitude2.inverse()
+        attitude2.normalize()
+        assertTrue(attitudeSpy.equals(attitude2, ABSOLUTE_ERROR))
 
         verify { coordinateTransformationSpy wasNot Called }
 
         assertArrayEquals(eulerAngles, doubleArrayOf(0.0, 0.0, 0.0), 0.0)
-
-        verify(exactly = 1) {
-            levelingAvailableListener.onLevelingAvailable(
-                estimator,
-                attitudeSpy,
-                timestamp,
-                null,
-                null,
-                null
-            )
-        }
     }
 
     private fun getLocation(): Location {
@@ -673,6 +1387,8 @@ class AccurateLevelingEstimatorTest {
     }
 
     private companion object {
+        const val ABSOLUTE_ERROR = 5e-1
+
         const val MIN_LATITUDE_DEGREES = -90.0
         const val MAX_LATITUDE_DEGREES = 90.0
 

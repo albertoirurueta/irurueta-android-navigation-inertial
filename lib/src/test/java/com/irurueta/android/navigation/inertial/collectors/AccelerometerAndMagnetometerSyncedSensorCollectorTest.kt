@@ -30,6 +30,7 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Magnetom
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
 import com.irurueta.android.testutils.callPrivateFunc
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
@@ -68,12 +69,8 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
             SyncedSensorCollector.OnMeasurementListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSyncedSensorCollector>
 
     @MockK(relaxUnitFun = true)
-    private lateinit var accelerometerAccuracyChangedListener:
-            AccelerometerAndMagnetometerSyncedSensorCollector.OnAccelerometerAccuracyChangedListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var magnetometerAccuracyChangedListener:
-            AccelerometerAndMagnetometerSyncedSensorCollector.OnMagnetometerAccuracyChangedListener
+    private lateinit var accuracyChangedListener:
+            SyncedSensorCollector.OnAccuracyChangedListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSyncedSensorCollector>
 
     @MockK
     private lateinit var accelerometerSensor: Sensor
@@ -121,8 +118,7 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         )
         assertTrue(collector.interpolationEnabled)
         assertNull(collector.measurementListener)
-        assertNull(collector.accelerometerAccuracyChangedListener)
-        assertNull(collector.magnetometerAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
         assertSame(accelerometerSensor, collector.accelerometerSensor)
         assertSame(magnetometerSensor, collector.magnetometerSensor)
         assertTrue(collector.accelerometerSensorAvailable)
@@ -158,8 +154,7 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
             AccelerometerAndMagnetometerSyncedSensorCollector.PrimarySensor.MAGNETOMETER,
             false,
             measurementListener,
-            accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener
+            accuracyChangedListener
         )
 
         // check values
@@ -181,14 +176,7 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         )
         assertFalse(collector.interpolationEnabled)
         assertSame(measurementListener, collector.measurementListener)
-        assertSame(
-            accelerometerAccuracyChangedListener,
-            collector.accelerometerAccuracyChangedListener
-        )
-        assertSame(
-            magnetometerAccuracyChangedListener,
-            collector.magnetometerAccuracyChangedListener
-        )
+        assertSame(accuracyChangedListener, collector.accuracyChangedListener)
         assertSame(accelerometerSensor, collector.accelerometerSensor)
         assertSame(magnetometerSensor, collector.magnetometerSensor)
         assertTrue(collector.accelerometerSensorAvailable)
@@ -227,7 +215,7 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
     }
 
     @Test
-    fun accelerometerAccuracyChangedListener_setsExpectedValue() {
+    fun accuracyChangedListener_setsExpectedValue() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
@@ -239,40 +227,15 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(context)
 
         // check default value
-        assertNull(collector.accelerometerAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
 
         // set new value
-        collector.accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener
+        collector.accuracyChangedListener = accuracyChangedListener
 
         // check
         assertSame(
-            accelerometerAccuracyChangedListener,
-            collector.accelerometerAccuracyChangedListener
-        )
-    }
-
-    @Test
-    fun magnetometerAccuracyChangedListener_setsExpectedValue() {
-        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
-        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
-            accelerometerSensor
-        )
-        every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
-            magnetometerSensor
-        )
-
-        val collector = AccelerometerAndMagnetometerSyncedSensorCollector(context)
-
-        // check default value
-        assertNull(collector.magnetometerAccuracyChangedListener)
-
-        // set new value
-        collector.magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
-
-        // check
-        assertSame(
-            magnetometerAccuracyChangedListener,
-            collector.magnetometerAccuracyChangedListener
+            accuracyChangedListener,
+            collector.accuracyChangedListener
         )
     }
 
@@ -1009,14 +972,18 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
     fun processAccuracyChanges_whenNoSensor_desNotCallAnyListener() {
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", null, SensorAccuracy.HIGH.value)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            null,
+            SensorAccuracy.HIGH.value
+        )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1031,14 +998,18 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
 
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", accelerometerSensor, -1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            accelerometerSensor,
+            -1
+        )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1053,19 +1024,20 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
 
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val unknownSensor = mockk<Sensor>()
-        collector.callPrivateFunc(
+        every { unknownSensor.type }.returns(-1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             unknownSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1074,29 +1046,31 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
 
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             accelerometerSensor,
             SensorAccuracy.HIGH.value
         )
 
         verify(exactly = 1) {
-            accelerometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1105,23 +1079,22 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
 
-        val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
-            context,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
-        )
+        val collector = AccelerometerAndMagnetometerSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             accelerometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1133,23 +1106,25 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
+        every { magnetometerSensor.type }.returns(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
 
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             magnetometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            magnetometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
@@ -1164,20 +1139,19 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
+        every { magnetometerSensor.type }.returns(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
 
-        val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
-            context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-        )
+        val collector = AccelerometerAndMagnetometerSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             magnetometerSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1505,14 +1479,14 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }.returns(
             accelerometerSensor
         )
+        every { accelerometerSensor.type }.returns(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value)
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
 
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1522,12 +1496,12 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         sensorEventListener.onAccuracyChanged(accelerometerSensor, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
-            accelerometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.ACCELEROMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
-        verify { magnetometerAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1539,11 +1513,11 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value) }.returns(
             magnetometerSensor
         )
+        every { magnetometerSensor.type }.returns(MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED.value)
 
         val collector = AccelerometerAndMagnetometerSyncedSensorCollector(
             context,
-            accelerometerAccuracyChangedListener = accelerometerAccuracyChangedListener,
-            magnetometerAccuracyChangedListener = magnetometerAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1552,10 +1526,10 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
 
         sensorEventListener.onAccuracyChanged(magnetometerSensor, SensorAccuracy.HIGH.value)
 
-        verify { accelerometerAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            magnetometerAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.MAGNETOMETER_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }

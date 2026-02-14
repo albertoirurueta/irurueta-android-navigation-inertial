@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 
 /**
@@ -33,37 +33,34 @@ class GravityProcessor(
     location: Location? = null,
     adjustGravityNorm: Boolean = true,
     processorListener: OnProcessedListener<GravitySensorMeasurement>? = null
-) : BaseGravityProcessor<GravitySensorMeasurement>(location, adjustGravityNorm, processorListener) {
+) : BaseGravityProcessor<GravitySensorMeasurement>(
+    location,
+    adjustGravityNorm,
+    processorListener
+) {
+    /**
+     * Gravity measurement being reused and containing measurements converted into NED coordinates
+     * system.
+     */
+    private val nedMeasurement = GravitySensorMeasurement()
 
     /**
      * Processes a gravity sensor measurement collected by a collector or a syncer.
-     * @param measurement measurement expressed in ENU android coordinates system to be processed.
+     * Notice that this processor will convert provided measurements to NED coordinates system if
+     * needed, and results will always be returned in NED coordinates system.
+     *
+     * @param measurement measurement expressed in ENU or NED coordinates system to be processed.
      * @param timestamp optional timestamp that can be provided to override timestamp associated to
      * gravity measurement. If not set, the timestamp from measurement is used.
      * @return true if a new gravity is estimated, false otherwise.
-     *
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndGyroscopeSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGravityGyroscopeAndMagnetometerSensorMeasurementSyncer
-     * @see com.irurueta.android.navigation.inertial.old.collectors.BufferedGravitySensorCollector
-     * @see com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
      */
-    override fun process(measurement: GravitySensorMeasurement, timestamp: Long): Boolean {
-        ENUtoNEDConverter.convert(
-            measurement.gx.toDouble(),
-            measurement.gy.toDouble(),
-            measurement.gz.toDouble(),
-            triad
-        )
-        gx = triad.valueX
-        gy = triad.valueY
-        gz = triad.valueZ
-
-        adjustNorm()
-
-        this.timestamp = timestamp
-        accuracy = measurement.accuracy
-        processorListener?.onProcessed(this, gx, gy, gz, this.timestamp, accuracy)
+    override fun process(
+        measurement: GravitySensorMeasurement,
+        timestamp: Long
+    ): Boolean {
+        measurement.toNed(nedMeasurement)
+        nedMeasurement.toTriad(triad)
+        finishProcessingAndNotify(measurement, timestamp)
         return true
     }
 }

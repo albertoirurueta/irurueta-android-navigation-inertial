@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
+import com.irurueta.navigation.inertial.estimators.LevelingEstimator
+
 /**
- * Estimates leveling of device (roll and pitch angle) by using estimated gravity vector.
+ * Estimates leveling of device (roll and pitch angle) in NED coordinates by using estimated gravity
+ * vector.
  * This processor does not estimate attitude yaw angle, as either a magnetometer or gyroscope would
  * be needed.
  *
@@ -27,16 +31,21 @@ class LevelingProcessor(processorListener: OnProcessedListener? = null) :
 
     /**
      * Processes provided gravity components estimated using a [BaseGravityProcessor].
+     *
+     * @param gx x-coordinate of sensed specific force containing gravity component expressed in
+     * NED coordinates and meters per squared second (m/s^2).
+     * @param gy y-coordinate of sensed specific force containing gravity component expressed in
+     * NED coordinates and meters per squared second (m/s^2).
+     * @param gz z-coordinate of sensed specific force containing gravity component expressed in
+     * NED coordinates and meters per squared second (m/s^2).
      */
     override fun process(gx: Double, gy: Double, gz: Double) {
-        val roll =
-            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getRoll(gy, gz)
-        val pitch =
-            com.irurueta.navigation.inertial.estimators.LevelingEstimator.getPitch(
-                gx,
-                gy,
-                gz
-            )
+        val roll = LevelingEstimator.getRoll(gy, gz)
+        val pitch = LevelingEstimator.getPitch(
+            gx,
+            gy,
+            gz
+        )
 
         attitude.setFromEulerAngles(roll, pitch, 0.0)
 

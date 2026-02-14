@@ -35,7 +35,6 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Gyroscop
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import java.util.Queue
 
@@ -56,14 +55,7 @@ import java.util.Queue
  * measurements synchronization.
  * @property interpolationEnabled indicates whether measurements interpolation is enabled or not.
  * @property measurementListener listener to notify new measurements.
- * @property accelerometerAccuracyChangedListener listener to notify changes in accuracy for
- * accelerometer sensor.
- * @property gravityAccuracyChangedListener listener to notify changes in accuracy for
- * gravity sensor.
- * @property gyroscopeAccuracyChangedListener listener to notify changes in accuracy for
- * gyroscope sensor.
- * @property magnetometerAccuracyChangedListener listener to notify changes in accuracy for
- * magnetometer sensor.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  */
 class AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector(
     context: Context,
@@ -78,15 +70,13 @@ class AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector(
     val primarySensor: PrimarySensor = PrimarySensor.GYROSCOPE,
     interpolationEnabled: Boolean = true,
     measurementListener: OnMeasurementListener<AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector>? = null,
-    var accelerometerAccuracyChangedListener: OnAccelerometerAccuracyChangedListener? = null,
-    var gravityAccuracyChangedListener: OnGravityAccuracyChangedListener? = null,
-    var gyroscopeAccuracyChangedListener: OnGyroscopeAccuracyChangedListener? = null,
-    var magnetometerAccuracyChangedListener: OnMagnetometerAccuracyChangedListener? = null,
+    accuracyChangedListener: OnAccuracyChangedListener<AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector>? = null
 ) : SyncedSensorCollector<AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement, AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector>(
     context,
     windowNanoseconds,
     interpolationEnabled,
-    measurementListener
+    measurementListener,
+    accuracyChangedListener
 ) {
 
     /**
@@ -373,29 +363,6 @@ class AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector(
     }
 
     /**
-     * Processes accuracy changed event for proper notification.
-     *
-     * @param sensor sensor whose accuracy has changed.
-     * @param accuracy new accuracy.
-     */
-    override fun processAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        if (sensor == null) {
-            return
-        }
-
-        val sensorAccuracy = SensorAccuracy.from(accuracy) ?: return
-        if (sensor === accelerometerSensor) {
-            accelerometerAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === gravitySensor) {
-            gravityAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === gyroscopeSensor) {
-            gyroscopeAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === magnetometerSensor) {
-            magnetometerAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        }
-    }
-
-    /**
      * Indicates the sensor type of the primary sensor being used for measurements synchronization.
      */
     enum class PrimarySensor {
@@ -418,71 +385,5 @@ class AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector(
          * Primary sensor is magnetometer.
          */
         MAGNETOMETER
-    }
-
-    /**
-     * Interface to notify when accelerometer sensor accuracy changes.
-     */
-    fun interface OnAccelerometerAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
-    /**
-     * Interface to notify when gravity sensor accuracy changes.
-     */
-    fun interface OnGravityAccuracyChangedListener {
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
-    /**
-     * Interface to notify when gyroscope sensor accuracy changes.
-     */
-    fun interface OnGyroscopeAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
-    /**
-     * Interface to notify when magnetometer sensor accuracy changes.
-     */
-    fun interface OnMagnetometerAccuracyChangedListener {
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
     }
 }

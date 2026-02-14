@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
@@ -22,24 +23,17 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Gyroscop
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
-import com.irurueta.android.navigation.inertial.old.collectors.SyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SyncedSensorMeasurement
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
-import java.util.*
+import java.util.Date
 import kotlin.math.abs
 import kotlin.math.min
 
-/**
- * Base class to estimate absolute attitude by fusing absolute leveled geomagnetic attitude and
- * relative attitude.
- *
- * @property processorListener listener to notify new fused absolute attitudes.
- */
-abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement>(
+abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement<S>>(
     var processorListener: OnProcessedListener<M, S>?
 ) {
-
     /**
      * Internal processor to estimate leveled absolute attitude.
      */
@@ -514,7 +508,7 @@ abstract class BaseFusedGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S
     /**
      * Interface to notify when a new relative attitude has been processed.
      */
-    fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement> {
+    fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement<S>> {
 
         /**
          * Called when a new fused attitude is processed.

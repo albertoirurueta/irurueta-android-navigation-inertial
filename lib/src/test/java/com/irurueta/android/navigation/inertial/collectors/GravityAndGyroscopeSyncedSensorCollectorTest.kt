@@ -29,6 +29,7 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Gyroscop
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorCoordinateSystem
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
 import com.irurueta.android.testutils.callPrivateFunc
 import com.irurueta.android.testutils.callPrivateFuncWithResult
 import com.irurueta.android.testutils.getPrivateProperty
@@ -60,12 +61,8 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
             SyncedSensorCollector.OnMeasurementListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSyncedSensorCollector>
 
     @MockK(relaxUnitFun = true)
-    private lateinit var gravityAccuracyChangedListener:
-            GravityAndGyroscopeSyncedSensorCollector.OnGravityAccuracyChangedListener
-
-    @MockK(relaxUnitFun = true)
-    private lateinit var gyroscopeAccuracyChangedListener:
-            GravityAndGyroscopeSyncedSensorCollector.OnGyroscopeAccuracyChangedListener
+    private lateinit var accuracyChangedListener:
+            SyncedSensorCollector.OnAccuracyChangedListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSyncedSensorCollector>
 
     @MockK
     private lateinit var gravitySensor: Sensor
@@ -107,8 +104,7 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
         )
         assertTrue(collector.interpolationEnabled)
         assertNull(collector.measurementListener)
-        assertNull(collector.gravityAccuracyChangedListener)
-        assertNull(collector.gyroscopeAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
         assertSame(gravitySensor, collector.gravitySensor)
         assertSame(gyroscopeSensor, collector.gyroscopeSensor)
         assertTrue(collector.gravitySensorAvailable)
@@ -141,8 +137,7 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
             GravityAndGyroscopeSyncedSensorCollector.PrimarySensor.GRAVITY,
             false,
             measurementListener,
-            gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener
+            accuracyChangedListener
         )
 
         // check values
@@ -160,8 +155,7 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
         )
         assertFalse(collector.interpolationEnabled)
         assertSame(measurementListener, collector.measurementListener)
-        assertSame(gravityAccuracyChangedListener, collector.gravityAccuracyChangedListener)
-        assertSame(gyroscopeAccuracyChangedListener, collector.gyroscopeAccuracyChangedListener)
+        assertSame(accuracyChangedListener, collector.accuracyChangedListener)
         assertSame(gravitySensor, collector.gravitySensor)
         assertSame(gyroscopeSensor, collector.gyroscopeSensor)
         assertTrue(collector.gravitySensorAvailable)
@@ -198,7 +192,7 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
     }
 
     @Test
-    fun gravityAccuracyChangedListener_setsExpectedValue() {
+    fun accuracyChangedListener_setsExpectedValue() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE.value) }.returns(
@@ -208,38 +202,15 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
         val collector = GravityAndGyroscopeSyncedSensorCollector(context)
 
         // check default value
-        assertNull(collector.gravityAccuracyChangedListener)
+        assertNull(collector.accuracyChangedListener)
 
         // set new value
-        collector.gravityAccuracyChangedListener = gravityAccuracyChangedListener
+        collector.accuracyChangedListener = accuracyChangedListener
 
         // check
         assertSame(
-            gravityAccuracyChangedListener,
-            collector.gravityAccuracyChangedListener
-        )
-    }
-
-    @Test
-    fun gyroscopeAccuracyChangedListener_setsExpectedValue() {
-        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
-        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
-        every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE.value) }.returns(
-            gyroscopeSensor
-        )
-
-        val collector = GravityAndGyroscopeSyncedSensorCollector(context)
-
-        // check default value
-        assertNull(collector.gyroscopeAccuracyChangedListener)
-
-        // set new value
-        collector.gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
-
-        // check
-        assertSame(
-            gyroscopeAccuracyChangedListener,
-            collector.gyroscopeAccuracyChangedListener
+            accuracyChangedListener,
+            collector.accuracyChangedListener
         )
     }
 
@@ -907,28 +878,36 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
     fun processAccuracyChanges_whenNoSensor_desNotCallAnyListener() {
         val collector = GravityAndGyroscopeSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", null, SensorAccuracy.HIGH.value)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            null,
+            SensorAccuracy.HIGH.value
+        )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenUnsupportedAccuracy_desNotCallAnyListener() {
         val collector = GravityAndGyroscopeSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc("processAccuracyChanged", gravitySensor, -1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
+            "processAccuracyChanged",
+            gravitySensor,
+            -1
+        )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -941,71 +920,73 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
 
         val collector = GravityAndGyroscopeSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val unknownSensor = mockk<Sensor>()
-        collector.callPrivateFunc(
+        every { unknownSensor.type }.returns(-1)
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             unknownSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenGravitySensor_callsExpectedListener() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { gravitySensor.type }.returns(Sensor.TYPE_GRAVITY)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
 
         val collector = GravityAndGyroscopeSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener,
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gravitySensor,
             SensorAccuracy.HIGH.value
         )
 
         verify(exactly = 1) {
-            gravityAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
         }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
     }
 
     @Test
     fun processAccuracyChanges_whenGravitySensorAndNoListener_noCallIsMade() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { gravitySensor.type }.returns(Sensor.TYPE_GRAVITY)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
 
-        val collector = GravityAndGyroscopeSyncedSensorCollector(
-            context,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
-        )
+        val collector = GravityAndGyroscopeSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gravitySensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1015,23 +996,25 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
 
         val collector = GravityAndGyroscopeSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gyroscopeSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            gyroscopeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GYROSCOPE_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }
@@ -1044,20 +1027,19 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
 
-        val collector = GravityAndGyroscopeSyncedSensorCollector(
-            context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener
-        )
+        val collector = GravityAndGyroscopeSyncedSensorCollector(context)
 
-        collector.callPrivateFunc(
+        callPrivateFunc(
+            SyncedSensorCollector::class,
+            collector,
             "processAccuracyChanged",
             gyroscopeSensor,
             SensorAccuracy.HIGH.value
         )
 
-        verify { gravityAccuracyChangedListener wasNot Called }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
+        verify { accuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1357,14 +1339,14 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
     fun onAccuracyChanged_whenGravitySensor_callsExpectedListener() {
         every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
         every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }.returns(gravitySensor)
+        every { gravitySensor.type }.returns(Sensor.TYPE_GRAVITY)
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
 
         val collector = GravityAndGyroscopeSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1374,12 +1356,12 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
         sensorEventListener.onAccuracyChanged(gravitySensor, SensorAccuracy.HIGH.value)
 
         verify(exactly = 1) {
-            gravityAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GRAVITY,
                 SensorAccuracy.HIGH
             )
         }
-        verify { gyroscopeAccuracyChangedListener wasNot Called }
     }
 
     @Test
@@ -1389,11 +1371,11 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
         every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }.returns(
             gyroscopeSensor
         )
+        every { gyroscopeSensor.type }.returns(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value)
 
         val collector = GravityAndGyroscopeSyncedSensorCollector(
             context,
-            gravityAccuracyChangedListener = gravityAccuracyChangedListener,
-            gyroscopeAccuracyChangedListener = gyroscopeAccuracyChangedListener
+            accuracyChangedListener = accuracyChangedListener
         )
 
         val sensorEventListener: SensorEventListener? =
@@ -1402,10 +1384,10 @@ class GravityAndGyroscopeSyncedSensorCollectorTest {
 
         sensorEventListener.onAccuracyChanged(gyroscopeSensor, SensorAccuracy.HIGH.value)
 
-        verify { gravityAccuracyChangedListener wasNot Called }
         verify(exactly = 1) {
-            gyroscopeAccuracyChangedListener.onAccuracyChanged(
+            accuracyChangedListener.onAccuracyChanged(
                 collector,
+                SensorType.GYROSCOPE_UNCALIBRATED,
                 SensorAccuracy.HIGH
             )
         }

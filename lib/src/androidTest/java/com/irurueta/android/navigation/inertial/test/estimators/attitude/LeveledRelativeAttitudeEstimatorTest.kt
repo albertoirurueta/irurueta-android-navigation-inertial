@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,32 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.test.estimators.attitude
 
+import android.Manifest
 import android.location.Location
 import android.util.Log
 import androidx.test.core.app.ActivityScenario
-import androidx.test.filters.RequiresDevice
 import androidx.test.rule.GrantPermissionRule
 import com.irurueta.android.navigation.inertial.LocationService
 import com.irurueta.android.navigation.inertial.ThreadSyncHelper
 import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
 import com.irurueta.android.navigation.inertial.test.LocationActivity
+import com.irurueta.android.testutils.RequiresRealDevice
 import io.mockk.spyk
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-@RequiresDevice
 class LeveledRelativeAttitudeEstimatorTest {
 
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.ACCESS_COARSE_LOCATION,
-        android.Manifest.permission.ACCESS_FINE_LOCATION,
-        android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_BACKGROUND_LOCATION
     )
 
     private val syncHelper = ThreadSyncHelper()
@@ -55,6 +57,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         completed = 0
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenNonAccurateLevelingAndNonAccurateRelativeAttitude_estimatesRelativeAttitude() {
         val location = getCurrentLocation()
@@ -82,6 +85,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccurateLevelingAndNonAccurateRelativeAttitude_estimatesRelativeAttitude() {
         val location = getCurrentLocation()
@@ -109,6 +113,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenNonAccurateLevelingAndAccurateRelativeAttitude_estimatesRelativeAttitude() {
         val location = getCurrentLocation()
@@ -136,6 +141,7 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertTrue(completed > 0)
     }
 
+    @RequiresRealDevice
     @Test
     fun startAndStop_whenAccurateLevelingAndAccurateRelativeAttitude_estimatesRelativeAttitude() {
         val location = getCurrentLocation()
@@ -185,10 +191,10 @@ class LeveledRelativeAttitudeEstimatorTest {
                 service.getCurrentLocation(currentLocationListener)
             }
         }
-        Assert.assertNotNull(scenario)
+        assertNotNull(scenario)
 
         syncHelper.waitOnCondition({ completed < 1 })
-        Assert.assertEquals(1, completed)
+        assertEquals(1, completed)
         completed = 0
 
         val currentLocation = this.currentLocation

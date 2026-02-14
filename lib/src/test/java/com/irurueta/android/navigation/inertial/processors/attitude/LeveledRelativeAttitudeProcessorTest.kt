@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
+import android.util.Log
 import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.old.collectors.GravityAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravityAndGyroscopeSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
@@ -31,23 +33,16 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-@RunWith(RobolectricTestRunner::class)
 class LeveledRelativeAttitudeProcessorTest {
 
     @get:Rule
@@ -286,7 +281,7 @@ class LeveledRelativeAttitudeProcessorTest {
         assertFalse(gravityProcessor.adjustGravityNorm)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun useAccurateLevelingProcessor_whenTrueAndNoLocation_throwsIllegalStateException() {
         val processor = LeveledRelativeAttitudeProcessor()
 
@@ -303,7 +298,9 @@ class LeveledRelativeAttitudeProcessorTest {
         assertTrue(levelingProcessor is LevelingProcessor)
 
         // set new value
-        processor.useAccurateLevelingProcessor = true
+        assertThrows(IllegalStateException::class.java) {
+            processor.useAccurateLevelingProcessor = true
+        }
     }
 
     @Test
@@ -376,7 +373,6 @@ class LeveledRelativeAttitudeProcessorTest {
         assertTrue(relativeAttitudeProcessor2 is RelativeGyroscopeAttitudeProcessor)
     }
 
-    @Suppress("KotlinConstantConditions")
     @Test
     fun useIndirectInterpolation_setsExpectedValue() {
         val processor = LeveledRelativeAttitudeProcessor()
@@ -387,6 +383,7 @@ class LeveledRelativeAttitudeProcessorTest {
         processor.useIndirectInterpolation = false
 
         // check
+        @Suppress("KotlinConstantConditions")
         assertFalse(processor.useIndirectInterpolation)
     }
 
@@ -426,11 +423,13 @@ class LeveledRelativeAttitudeProcessorTest {
         assertEquals(value, processor.interpolationValue, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun indirectInterpolationWeight_whenInvalid_throwsIllegalArgumentException() {
         val processor = LeveledRelativeAttitudeProcessor()
 
-        processor.indirectInterpolationWeight = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            processor.indirectInterpolationWeight = 0.0
+        }
     }
 
     @Test
@@ -464,7 +463,9 @@ class LeveledRelativeAttitudeProcessorTest {
         )
         requireNotNull(relativeAttitudeProcessor)
         val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
-        every { relativeAttitudeProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        every { relativeAttitudeProcessorSpy.timeIntervalSeconds }.returns(
+            TIME_INTERVAL
+        )
         setPrivateProperty(
             BaseLeveledRelativeAttitudeProcessor::class,
             processor,
@@ -557,7 +558,7 @@ class LeveledRelativeAttitudeProcessorTest {
         assertEquals(outlierPanicThreshold, processor.outlierPanicThreshold, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun panicCounterThreshold_whenInvalid_throwsIllegalArgumentException() {
         val processor = LeveledRelativeAttitudeProcessor()
 
@@ -568,7 +569,9 @@ class LeveledRelativeAttitudeProcessorTest {
         )
 
         // set invalid value
-        processor.panicCounterThreshold = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            processor.panicCounterThreshold = 0
+        }
     }
 
     @Test
@@ -882,506 +885,310 @@ class LeveledRelativeAttitudeProcessorTest {
 
     @Test
     fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoListener_updatesFusedAttitudeAndReturnsTrue() {
-        val processor = LeveledRelativeAttitudeProcessor()
+        mockkStatic(Log::class) {
+            every { Log.d(any(), any()) }.returns(1)
 
-        // setup spies
-        val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor"
-        )
-        requireNotNull(relativeAttitudeProcessor)
-        val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
-        every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
-        val relativeAttitude = getAttitude()
-        every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor",
-            relativeAttitudeProcessorSpy
-        )
+            val processor = LeveledRelativeAttitudeProcessor()
 
-        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
-        requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(any(), any()) }.returns(true)
-        val randomizer = UniformRandomizer()
-        val gx = randomizer.nextDouble()
-        val gy = randomizer.nextDouble()
-        val gz = randomizer.nextDouble()
-        every { gravityProcessorSpy.gx }.returns(gx)
-        every { gravityProcessorSpy.gy }.returns(gy)
-        every { gravityProcessorSpy.gz }.returns(gz)
-        processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+            // setup spies
+            val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "relativeAttitudeProcessor"
+                )
+            requireNotNull(relativeAttitudeProcessor)
+            val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
+            every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
+            val relativeAttitude = getAttitude()
+            every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitudeProcessor",
+                relativeAttitudeProcessorSpy
+            )
 
-        val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor"
-        )
-        requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
-        val levelingAttitude = getAttitude()
-        every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor",
-            levelingProcessorSpy
-        )
+            val gravityProcessor: GravityProcessor? =
+                processor.getPrivateProperty("gravityProcessor")
+            requireNotNull(gravityProcessor)
+            val gravityProcessorSpy = spyk(gravityProcessor)
+            every { gravityProcessorSpy.process(any(), any()) }.returns(true)
+            val randomizer = UniformRandomizer()
+            val gx = randomizer.nextDouble()
+            val gy = randomizer.nextDouble()
+            val gz = randomizer.nextDouble()
+            every { gravityProcessorSpy.gx }.returns(gx)
+            every { gravityProcessorSpy.gy }.returns(gy)
+            every { gravityProcessorSpy.gz }.returns(gz)
+            processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
-        val previousRelativeAttitude1 = getAttitude()
-        val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "previousRelativeAttitude",
-            previousRelativeAttitude1
-        )
+            val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor"
+            )
+            requireNotNull(levelingProcessor)
+            val levelingProcessorSpy = spyk(levelingProcessor)
+            val levelingAttitude = getAttitude()
+            every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor",
+                levelingProcessorSpy
+            )
 
-        // check initial values
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
+            val previousRelativeAttitude1 = getAttitude()
+            val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "previousRelativeAttitude",
+                previousRelativeAttitude1
+            )
 
-        val timestamp1: Long? =
-            getPrivateProperty(BaseLeveledRelativeAttitudeProcessor::class, processor, "timestamp")
-        requireNotNull(timestamp1)
-        assertEquals(0L, timestamp1)
+            // check initial values
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude1)
+            assertEquals(Quaternion(), relativeAttitude1)
 
-        val panicCounter1: Int? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter1)
-        assertEquals(processor.panicCounterThreshold, panicCounter1)
+            val timestamp1: Long? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "timestamp"
+                )
+            requireNotNull(timestamp1)
+            assertEquals(0L, timestamp1)
 
-        val resetToLeveling1: Boolean? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "resetToLeveling"
-        )
-        requireNotNull(resetToLeveling1)
-        assertTrue(resetToLeveling1)
+            val panicCounter1: Int? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "panicCounter"
+            )
+            requireNotNull(panicCounter1)
+            assertEquals(processor.panicCounterThreshold, panicCounter1)
 
-        // process
-        val gravityMeasurement = GravitySensorMeasurement()
-        val gyroscopeMeasurement = GyroscopeSensorMeasurement()
-        val timestamp = System.nanoTime()
-        val syncedMeasurement = GravityAndGyroscopeSyncedSensorMeasurement(
-            gravityMeasurement,
-            gyroscopeMeasurement,
-            timestamp
-        )
-        assertTrue(processor.process(syncedMeasurement))
+            val resetToLeveling1: Boolean? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "resetToLeveling"
+            )
+            requireNotNull(resetToLeveling1)
+            assertTrue(resetToLeveling1)
 
-        // check
-        val relativeAttitude2: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude2)
-        assertEquals(relativeAttitude, relativeAttitude2)
-
-        val previousRelativeAttitude2: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "previousRelativeAttitude"
-        )
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(relativeAttitude, previousRelativeAttitude2)
-
-        val inversePreviousRelativeAttitude: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "inversePreviousRelativeAttitude"
-        )
-        requireNotNull(inversePreviousRelativeAttitude)
-        assertEquals(
-            previousRelativeAttitudeCopy.inverseAndReturnNew(),
-            inversePreviousRelativeAttitude
-        )
-
-        val deltaRelativeAttitude: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "deltaRelativeAttitude"
-        )
-        requireNotNull(deltaRelativeAttitude)
-        assertEquals(
-            relativeAttitude2.multiplyAndReturnNew(inversePreviousRelativeAttitude),
-            deltaRelativeAttitude
-        )
-
-        val timestamp2: Long? =
-            getPrivateProperty(BaseLeveledRelativeAttitudeProcessor::class, processor, "timestamp")
-        requireNotNull(timestamp2)
-        assertEquals(timestamp, timestamp2)
-
-        val levelingAttitude1: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingAttitude"
-        )
-        requireNotNull(levelingAttitude1)
-
-        val eulerAngles1 = levelingAttitude.toEulerAngles()
-        val levelingRoll = eulerAngles1[0]
-        val levelingPitch = eulerAngles1[1]
-
-        val eulerAngles2 = relativeAttitude.toEulerAngles()
-        val yaw = eulerAngles2[2]
-        val levelingAttitude2 = Quaternion(levelingRoll, levelingPitch, yaw)
-        assertEquals(levelingAttitude2, levelingAttitude1)
-
-        assertEquals(levelingAttitude2, processor.fusedAttitude)
-
-        val panicCounter2: Int? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter2)
-        assertEquals(0, panicCounter2)
-
-        val resetToLeveling2: Boolean? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "resetToLeveling"
-        )
-        requireNotNull(resetToLeveling2)
-        assertFalse(resetToLeveling2)
-
-        verify(exactly = 1) {
-            relativeAttitudeProcessorSpy.process(
+            // process
+            val gravityMeasurement = GravitySensorMeasurement()
+            val gyroscopeMeasurement = GyroscopeSensorMeasurement()
+            val timestamp = System.nanoTime()
+            val syncedMeasurement = GravityAndGyroscopeSyncedSensorMeasurement(
+                gravityMeasurement,
                 gyroscopeMeasurement,
                 timestamp
             )
+            assertTrue(processor.process(syncedMeasurement))
+
+            // check
+            val relativeAttitude2: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude2)
+            assertEquals(relativeAttitude, relativeAttitude2)
+
+            val previousRelativeAttitude2: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "previousRelativeAttitude"
+            )
+            requireNotNull(previousRelativeAttitude2)
+            assertEquals(relativeAttitude, previousRelativeAttitude2)
+
+            val inversePreviousRelativeAttitude: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "inversePreviousRelativeAttitude"
+            )
+            requireNotNull(inversePreviousRelativeAttitude)
+            assertEquals(
+                previousRelativeAttitudeCopy.inverseAndReturnNew(),
+                inversePreviousRelativeAttitude
+            )
+
+            val deltaRelativeAttitude: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "deltaRelativeAttitude"
+            )
+            requireNotNull(deltaRelativeAttitude)
+            assertEquals(
+                relativeAttitude2.multiplyAndReturnNew(inversePreviousRelativeAttitude),
+                deltaRelativeAttitude
+            )
+
+            val timestamp2: Long? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "timestamp"
+                )
+            requireNotNull(timestamp2)
+            assertEquals(timestamp, timestamp2)
+
+            val levelingAttitude1: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingAttitude"
+            )
+            requireNotNull(levelingAttitude1)
+
+            val eulerAngles1 = levelingAttitude.toEulerAngles()
+            val levelingRoll = eulerAngles1[0]
+            val levelingPitch = eulerAngles1[1]
+
+            val eulerAngles2 = relativeAttitude.toEulerAngles()
+            val yaw = eulerAngles2[2]
+            val levelingAttitude2 = Quaternion(levelingRoll, levelingPitch, yaw)
+            assertEquals(levelingAttitude2, levelingAttitude1)
+
+            assertEquals(levelingAttitude2, processor.fusedAttitude)
+
+            val panicCounter2: Int? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "panicCounter"
+            )
+            requireNotNull(panicCounter2)
+            assertEquals(0, panicCounter2)
+
+            val resetToLeveling2: Boolean? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "resetToLeveling"
+            )
+            requireNotNull(resetToLeveling2)
+            assertFalse(resetToLeveling2)
+
+            verify(exactly = 1) {
+                relativeAttitudeProcessorSpy.process(
+                    gyroscopeMeasurement,
+                    timestamp
+                )
+            }
+            verify(exactly = 1) { relativeAttitudeProcessorSpy.attitude }
+            verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement, timestamp) }
+            verify(exactly = 1) { gravityProcessorSpy.gx }
+            verify(exactly = 1) { gravityProcessorSpy.gy }
+            verify(exactly = 1) { gravityProcessorSpy.gz }
+            verify(exactly = 1) { levelingProcessorSpy.process(gx, gy, gz) }
+            verify(exactly = 2) { levelingProcessorSpy.attitude }
         }
-        verify(exactly = 1) { relativeAttitudeProcessorSpy.attitude }
-        verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement, timestamp) }
-        verify(exactly = 1) { gravityProcessorSpy.gx }
-        verify(exactly = 1) { gravityProcessorSpy.gy }
-        verify(exactly = 1) { gravityProcessorSpy.gz }
-        verify(exactly = 1) { levelingProcessorSpy.process(gx, gy, gz) }
-        verify(exactly = 2) { levelingProcessorSpy.attitude }
     }
 
     @Test
     fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndListener_updatesFusedAttitudeAndReturnsTrue() {
-        val processor = LeveledRelativeAttitudeProcessor(processorListener)
+        mockkStatic(Log::class) {
+            every { Log.d(any(), any()) }.returns(1)
 
-        // setup spies
-        val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor"
-        )
-        requireNotNull(relativeAttitudeProcessor)
-        val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
-        every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
-        val relativeAttitude = getAttitude()
-        every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor",
-            relativeAttitudeProcessorSpy
-        )
+            val processor = LeveledRelativeAttitudeProcessor(processorListener)
 
-        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
-        requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(any(), any()) }.returns(true)
-        val randomizer = UniformRandomizer()
-        val gx = randomizer.nextDouble()
-        val gy = randomizer.nextDouble()
-        val gz = randomizer.nextDouble()
-        every { gravityProcessorSpy.gx }.returns(gx)
-        every { gravityProcessorSpy.gy }.returns(gy)
-        every { gravityProcessorSpy.gz }.returns(gz)
-        processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
-
-        val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor"
-        )
-        requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
-        val levelingAttitude = getAttitude()
-        every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor",
-            levelingProcessorSpy
-        )
-
-        val previousRelativeAttitude1 = getAttitude()
-        val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "previousRelativeAttitude",
-            previousRelativeAttitude1
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-
-        val timestamp1: Long? =
-            getPrivateProperty(BaseLeveledRelativeAttitudeProcessor::class, processor, "timestamp")
-        requireNotNull(timestamp1)
-        assertEquals(0L, timestamp1)
-
-        val panicCounter1: Int? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter1)
-        assertEquals(processor.panicCounterThreshold, panicCounter1)
-
-        val resetToLeveling1: Boolean? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "resetToLeveling"
-        )
-        requireNotNull(resetToLeveling1)
-        assertTrue(resetToLeveling1)
-
-        // process
-        val gravityMeasurement = GravitySensorMeasurement(accuracy = SensorAccuracy.MEDIUM)
-        val gyroscopeMeasurement = GyroscopeSensorMeasurement(accuracy = SensorAccuracy.HIGH)
-        val timestamp = System.nanoTime()
-        val syncedMeasurement = GravityAndGyroscopeSyncedSensorMeasurement(
-            gravityMeasurement,
-            gyroscopeMeasurement,
-            timestamp
-        )
-        assertTrue(processor.process(syncedMeasurement))
-
-        // check
-        val relativeAttitude2: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude2)
-        assertEquals(relativeAttitude, relativeAttitude2)
-
-        val previousRelativeAttitude2: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "previousRelativeAttitude"
-        )
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(relativeAttitude, previousRelativeAttitude2)
-
-        val inversePreviousRelativeAttitude: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "inversePreviousRelativeAttitude"
-        )
-        requireNotNull(inversePreviousRelativeAttitude)
-        assertEquals(
-            previousRelativeAttitudeCopy.inverseAndReturnNew(),
-            inversePreviousRelativeAttitude
-        )
-
-        val deltaRelativeAttitude: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "deltaRelativeAttitude"
-        )
-        requireNotNull(deltaRelativeAttitude)
-        assertEquals(
-            relativeAttitude2.multiplyAndReturnNew(inversePreviousRelativeAttitude),
-            deltaRelativeAttitude
-        )
-
-        val timestamp2: Long? =
-            getPrivateProperty(BaseLeveledRelativeAttitudeProcessor::class, processor, "timestamp")
-        requireNotNull(timestamp2)
-        assertEquals(timestamp, timestamp2)
-
-        val levelingAttitude1: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingAttitude"
-        )
-        requireNotNull(levelingAttitude1)
-
-        val eulerAngles1 = levelingAttitude.toEulerAngles()
-        val levelingRoll = eulerAngles1[0]
-        val levelingPitch = eulerAngles1[1]
-
-        val eulerAngles2 = relativeAttitude.toEulerAngles()
-        val yaw = eulerAngles2[2]
-        val levelingAttitude2 = Quaternion(levelingRoll, levelingPitch, yaw)
-        assertEquals(levelingAttitude2, levelingAttitude1)
-
-        assertEquals(levelingAttitude2, processor.fusedAttitude)
-
-        val panicCounter2: Int? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "panicCounter"
-        )
-        requireNotNull(panicCounter2)
-        assertEquals(0, panicCounter2)
-
-        val resetToLeveling2: Boolean? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "resetToLeveling"
-        )
-        requireNotNull(resetToLeveling2)
-        assertFalse(resetToLeveling2)
-
-        verify(exactly = 1) {
-            relativeAttitudeProcessorSpy.process(
-                gyroscopeMeasurement,
-                timestamp
-            )
-        }
-        verify(exactly = 1) { relativeAttitudeProcessorSpy.attitude }
-        verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement, timestamp) }
-        verify(exactly = 1) { gravityProcessorSpy.gx }
-        verify(exactly = 1) { gravityProcessorSpy.gy }
-        verify(exactly = 1) { gravityProcessorSpy.gz }
-        verify(exactly = 1) { levelingProcessorSpy.process(gx, gy, gz) }
-        verify(exactly = 2) { levelingProcessorSpy.attitude }
-
-        verify(exactly = 1) {
-            processorListener.onProcessed(
-                processor,
-                processor.fusedAttitude,
-                SensorAccuracy.MEDIUM,
-                SensorAccuracy.HIGH
-            )
-        }
-    }
-
-    @Test
-    fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingAndMediumDivergence_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
-        val processor = LeveledRelativeAttitudeProcessor(processorListener)
-
-        // setup spies
-        val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor"
-        )
-        requireNotNull(relativeAttitudeProcessor)
-        val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
-        every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
-        val relativeAttitude = getAttitude()
-        every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor",
-            relativeAttitudeProcessorSpy
-        )
-
-        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
-        requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(any(), any()) }.returns(true)
-        val randomizer = UniformRandomizer()
-        val gx = randomizer.nextDouble()
-        val gy = randomizer.nextDouble()
-        val gz = randomizer.nextDouble()
-        every { gravityProcessorSpy.gx }.returns(gx)
-        every { gravityProcessorSpy.gy }.returns(gy)
-        every { gravityProcessorSpy.gz }.returns(gz)
-        processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
-
-        val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor"
-        )
-        requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
-        val levelingAttitude = getAttitude()
-        every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor",
-            levelingProcessorSpy
-        )
-
-        val previousRelativeAttitude1 = getAttitude()
-        val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "previousRelativeAttitude",
-            previousRelativeAttitude1
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-
-        val timestamp1: Long? =
-            getPrivateProperty(BaseLeveledRelativeAttitudeProcessor::class, processor, "timestamp")
-        requireNotNull(timestamp1)
-        assertEquals(0L, timestamp1)
-
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "panicCounter",
-            0
-        )
-
-        val resetToLeveling1: Boolean? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "resetToLeveling"
-        )
-        requireNotNull(resetToLeveling1)
-        assertFalse(resetToLeveling1)
-
-        val fusedAttitude1 = getAttitude()
-        val fusedAttitudeCopy = Quaternion(fusedAttitude1)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "fusedAttitude",
-            fusedAttitude1
-        )
-
-        mockkObject(QuaternionHelper) {
-            every {
-                QuaternionHelper.dotProduct(
-                    any(),
-                    any()
+            // setup spies
+            val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "relativeAttitudeProcessor"
                 )
-            }.returns(processor.outlierPanicThreshold)
+            requireNotNull(relativeAttitudeProcessor)
+            val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
+            every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
+            val relativeAttitude = getAttitude()
+            every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitudeProcessor",
+                relativeAttitudeProcessorSpy
+            )
+
+            val gravityProcessor: GravityProcessor? =
+                processor.getPrivateProperty("gravityProcessor")
+            requireNotNull(gravityProcessor)
+            val gravityProcessorSpy = spyk(gravityProcessor)
+            every { gravityProcessorSpy.process(any(), any()) }.returns(true)
+            val randomizer = UniformRandomizer()
+            val gx = randomizer.nextDouble()
+            val gy = randomizer.nextDouble()
+            val gz = randomizer.nextDouble()
+            every { gravityProcessorSpy.gx }.returns(gx)
+            every { gravityProcessorSpy.gy }.returns(gy)
+            every { gravityProcessorSpy.gz }.returns(gz)
+            processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+            val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor"
+            )
+            requireNotNull(levelingProcessor)
+            val levelingProcessorSpy = spyk(levelingProcessor)
+            val levelingAttitude = getAttitude()
+            every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor",
+                levelingProcessorSpy
+            )
+
+            val previousRelativeAttitude1 = getAttitude()
+            val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "previousRelativeAttitude",
+                previousRelativeAttitude1
+            )
+
+            // check initial values
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude1)
+            assertEquals(Quaternion(), relativeAttitude1)
+
+            val timestamp1: Long? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "timestamp"
+                )
+            requireNotNull(timestamp1)
+            assertEquals(0L, timestamp1)
+
+            val panicCounter1: Int? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "panicCounter"
+            )
+            requireNotNull(panicCounter1)
+            assertEquals(processor.panicCounterThreshold, panicCounter1)
+
+            val resetToLeveling1: Boolean? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "resetToLeveling"
+            )
+            requireNotNull(resetToLeveling1)
+            assertTrue(resetToLeveling1)
 
             // process
             val gravityMeasurement = GravitySensorMeasurement(accuracy = SensorAccuracy.MEDIUM)
@@ -1458,8 +1265,7 @@ class LeveledRelativeAttitudeProcessorTest {
             val levelingAttitude2 = Quaternion(levelingRoll, levelingPitch, yaw)
             assertEquals(levelingAttitude2, levelingAttitude1)
 
-            val fusedAttitude2 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitudeCopy)
-            assertEquals(fusedAttitude2, processor.fusedAttitude)
+            assertEquals(levelingAttitude2, processor.fusedAttitude)
 
             val panicCounter2: Int? = getPrivateProperty(
                 BaseLeveledRelativeAttitudeProcessor::class,
@@ -1503,221 +1309,468 @@ class LeveledRelativeAttitudeProcessorTest {
     }
 
     @Test
-    fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingAndLargeDivergence_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
-        val processor = LeveledRelativeAttitudeProcessor(processorListener)
+    fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingAndMediumDivergence_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
+        mockkStatic(Log::class) {
+            every { Log.i(any(), any()) }.returns(1)
 
-        // setup spies
-        val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor"
-        )
-        requireNotNull(relativeAttitudeProcessor)
-        val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
-        every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
-        val relativeAttitude = getAttitude()
-        every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitudeProcessor",
-            relativeAttitudeProcessorSpy
-        )
+            val processor = LeveledRelativeAttitudeProcessor(processorListener)
 
-        val gravityProcessor: GravityProcessor? = processor.getPrivateProperty("gravityProcessor")
-        requireNotNull(gravityProcessor)
-        val gravityProcessorSpy = spyk(gravityProcessor)
-        every { gravityProcessorSpy.process(any(), any()) }.returns(true)
-        val randomizer = UniformRandomizer()
-        val gx = randomizer.nextDouble()
-        val gy = randomizer.nextDouble()
-        val gz = randomizer.nextDouble()
-        every { gravityProcessorSpy.gx }.returns(gx)
-        every { gravityProcessorSpy.gy }.returns(gy)
-        every { gravityProcessorSpy.gz }.returns(gz)
-        processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
-
-        val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor"
-        )
-        requireNotNull(levelingProcessor)
-        val levelingProcessorSpy = spyk(levelingProcessor)
-        val levelingAttitude = getAttitude()
-        every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "levelingProcessor",
-            levelingProcessorSpy
-        )
-
-        val previousRelativeAttitude1 = getAttitude()
-        val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "previousRelativeAttitude",
-            previousRelativeAttitude1
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "relativeAttitude"
-        )
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-
-        val timestamp1: Long? =
-            getPrivateProperty(BaseLeveledRelativeAttitudeProcessor::class, processor, "timestamp")
-        requireNotNull(timestamp1)
-        assertEquals(0L, timestamp1)
-
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "panicCounter",
-            0
-        )
-
-        val resetToLeveling1: Boolean? = getPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "resetToLeveling"
-        )
-        requireNotNull(resetToLeveling1)
-        assertFalse(resetToLeveling1)
-
-        val fusedAttitude1 = getAttitude()
-        val fusedAttitudeCopy = Quaternion(fusedAttitude1)
-        setPrivateProperty(
-            BaseLeveledRelativeAttitudeProcessor::class,
-            processor,
-            "fusedAttitude",
-            fusedAttitude1
-        )
-
-        mockkObject(QuaternionHelper) {
-            every { QuaternionHelper.dotProduct(any(), any()) }.returns(0.0)
-
-            // process
-            val gravityMeasurement = GravitySensorMeasurement(accuracy = SensorAccuracy.MEDIUM)
-            val gyroscopeMeasurement = GyroscopeSensorMeasurement(accuracy = SensorAccuracy.HIGH)
-            val timestamp = System.nanoTime()
-            val syncedMeasurement = GravityAndGyroscopeSyncedSensorMeasurement(
-                gravityMeasurement,
-                gyroscopeMeasurement,
-                timestamp
+            // setup spies
+            val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "relativeAttitudeProcessor"
+                )
+            requireNotNull(relativeAttitudeProcessor)
+            val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
+            every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
+            val relativeAttitude = getAttitude()
+            every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitudeProcessor",
+                relativeAttitudeProcessorSpy
             )
-            assertTrue(processor.process(syncedMeasurement))
 
-            // check
-            val relativeAttitude2: Quaternion? = getPrivateProperty(
+            val gravityProcessor: GravityProcessor? =
+                processor.getPrivateProperty("gravityProcessor")
+            requireNotNull(gravityProcessor)
+            val gravityProcessorSpy = spyk(gravityProcessor)
+            every { gravityProcessorSpy.process(any(), any()) }.returns(true)
+            val randomizer = UniformRandomizer()
+            val gx = randomizer.nextDouble()
+            val gy = randomizer.nextDouble()
+            val gz = randomizer.nextDouble()
+            every { gravityProcessorSpy.gx }.returns(gx)
+            every { gravityProcessorSpy.gy }.returns(gy)
+            every { gravityProcessorSpy.gz }.returns(gz)
+            processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+            val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor"
+            )
+            requireNotNull(levelingProcessor)
+            val levelingProcessorSpy = spyk(levelingProcessor)
+            val levelingAttitude = getAttitude()
+            every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor",
+                levelingProcessorSpy
+            )
+
+            val previousRelativeAttitude1 = getAttitude()
+            val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "previousRelativeAttitude",
+                previousRelativeAttitude1
+            )
+
+            // check initial values
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
                 BaseLeveledRelativeAttitudeProcessor::class,
                 processor,
                 "relativeAttitude"
             )
-            requireNotNull(relativeAttitude2)
-            assertEquals(relativeAttitude, relativeAttitude2)
+            requireNotNull(relativeAttitude1)
+            assertEquals(Quaternion(), relativeAttitude1)
 
-            val previousRelativeAttitude2: Quaternion? = getPrivateProperty(
-                BaseLeveledRelativeAttitudeProcessor::class,
-                processor,
-                "previousRelativeAttitude"
-            )
-            requireNotNull(previousRelativeAttitude2)
-            assertEquals(relativeAttitude, previousRelativeAttitude2)
-
-            val inversePreviousRelativeAttitude: Quaternion? = getPrivateProperty(
-                BaseLeveledRelativeAttitudeProcessor::class,
-                processor,
-                "inversePreviousRelativeAttitude"
-            )
-            requireNotNull(inversePreviousRelativeAttitude)
-            assertEquals(
-                previousRelativeAttitudeCopy.inverseAndReturnNew(),
-                inversePreviousRelativeAttitude
-            )
-
-            val deltaRelativeAttitude: Quaternion? = getPrivateProperty(
-                BaseLeveledRelativeAttitudeProcessor::class,
-                processor,
-                "deltaRelativeAttitude"
-            )
-            requireNotNull(deltaRelativeAttitude)
-            assertEquals(
-                relativeAttitude2.multiplyAndReturnNew(inversePreviousRelativeAttitude),
-                deltaRelativeAttitude
-            )
-
-            val timestamp2: Long? =
+            val timestamp1: Long? =
                 getPrivateProperty(
                     BaseLeveledRelativeAttitudeProcessor::class,
                     processor,
                     "timestamp"
                 )
-            requireNotNull(timestamp2)
-            assertEquals(timestamp, timestamp2)
+            requireNotNull(timestamp1)
+            assertEquals(0L, timestamp1)
 
-            val levelingAttitude1: Quaternion? = getPrivateProperty(
+            setPrivateProperty(
                 BaseLeveledRelativeAttitudeProcessor::class,
                 processor,
-                "levelingAttitude"
+                "panicCounter",
+                0
             )
-            requireNotNull(levelingAttitude1)
 
-            val eulerAngles1 = levelingAttitude.toEulerAngles()
-            val levelingRoll = eulerAngles1[0]
-            val levelingPitch = eulerAngles1[1]
-
-            val eulerAngles2 = relativeAttitude.toEulerAngles()
-            val yaw = eulerAngles2[2]
-            val levelingAttitude2 = Quaternion(levelingRoll, levelingPitch, yaw)
-            assertEquals(levelingAttitude2, levelingAttitude1)
-
-            val fusedAttitude2 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitudeCopy)
-            assertEquals(fusedAttitude2, processor.fusedAttitude)
-
-            val panicCounter2: Int? = getPrivateProperty(
-                BaseLeveledRelativeAttitudeProcessor::class,
-                processor,
-                "panicCounter"
-            )
-            requireNotNull(panicCounter2)
-            assertEquals(1, panicCounter2)
-
-            val resetToLeveling2: Boolean? = getPrivateProperty(
+            val resetToLeveling1: Boolean? = getPrivateProperty(
                 BaseLeveledRelativeAttitudeProcessor::class,
                 processor,
                 "resetToLeveling"
             )
-            requireNotNull(resetToLeveling2)
-            assertFalse(resetToLeveling2)
+            requireNotNull(resetToLeveling1)
+            assertFalse(resetToLeveling1)
 
-            verify(exactly = 1) {
-                relativeAttitudeProcessorSpy.process(
+            val fusedAttitude1 = getAttitude()
+            val fusedAttitudeCopy = Quaternion(fusedAttitude1)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "fusedAttitude",
+                fusedAttitude1
+            )
+
+            mockkObject(QuaternionHelper) {
+                every {
+                    QuaternionHelper.dotProduct(
+                        any(),
+                        any()
+                    )
+                }.returns(processor.outlierPanicThreshold)
+
+                // process
+                val gravityMeasurement = GravitySensorMeasurement(accuracy = SensorAccuracy.MEDIUM)
+                val gyroscopeMeasurement =
+                    GyroscopeSensorMeasurement(accuracy = SensorAccuracy.HIGH)
+                val timestamp = System.nanoTime()
+                val syncedMeasurement = GravityAndGyroscopeSyncedSensorMeasurement(
+                    gravityMeasurement,
                     gyroscopeMeasurement,
                     timestamp
                 )
-            }
-            verify(exactly = 1) { relativeAttitudeProcessorSpy.attitude }
-            verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement, timestamp) }
-            verify(exactly = 1) { gravityProcessorSpy.gx }
-            verify(exactly = 1) { gravityProcessorSpy.gy }
-            verify(exactly = 1) { gravityProcessorSpy.gz }
-            verify(exactly = 1) { levelingProcessorSpy.process(gx, gy, gz) }
-            verify(exactly = 2) { levelingProcessorSpy.attitude }
+                assertTrue(processor.process(syncedMeasurement))
 
-            verify(exactly = 1) {
-                processorListener.onProcessed(
+                // check
+                val relativeAttitude2: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
                     processor,
-                    processor.fusedAttitude,
-                    SensorAccuracy.MEDIUM,
-                    SensorAccuracy.HIGH
+                    "relativeAttitude"
                 )
+                requireNotNull(relativeAttitude2)
+                assertEquals(relativeAttitude, relativeAttitude2)
+
+                val previousRelativeAttitude2: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "previousRelativeAttitude"
+                )
+                requireNotNull(previousRelativeAttitude2)
+                assertEquals(relativeAttitude, previousRelativeAttitude2)
+
+                val inversePreviousRelativeAttitude: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "inversePreviousRelativeAttitude"
+                )
+                requireNotNull(inversePreviousRelativeAttitude)
+                assertEquals(
+                    previousRelativeAttitudeCopy.inverseAndReturnNew(),
+                    inversePreviousRelativeAttitude
+                )
+
+                val deltaRelativeAttitude: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "deltaRelativeAttitude"
+                )
+                requireNotNull(deltaRelativeAttitude)
+                assertEquals(
+                    relativeAttitude2.multiplyAndReturnNew(inversePreviousRelativeAttitude),
+                    deltaRelativeAttitude
+                )
+
+                val timestamp2: Long? =
+                    getPrivateProperty(
+                        BaseLeveledRelativeAttitudeProcessor::class,
+                        processor,
+                        "timestamp"
+                    )
+                requireNotNull(timestamp2)
+                assertEquals(timestamp, timestamp2)
+
+                val levelingAttitude1: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "levelingAttitude"
+                )
+                requireNotNull(levelingAttitude1)
+
+                val eulerAngles1 = levelingAttitude.toEulerAngles()
+                val levelingRoll = eulerAngles1[0]
+                val levelingPitch = eulerAngles1[1]
+
+                val eulerAngles2 = relativeAttitude.toEulerAngles()
+                val yaw = eulerAngles2[2]
+                val levelingAttitude2 = Quaternion(levelingRoll, levelingPitch, yaw)
+                assertEquals(levelingAttitude2, levelingAttitude1)
+
+                val fusedAttitude2 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitudeCopy)
+                assertEquals(fusedAttitude2, processor.fusedAttitude)
+
+                val panicCounter2: Int? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "panicCounter"
+                )
+                requireNotNull(panicCounter2)
+                assertEquals(0, panicCounter2)
+
+                val resetToLeveling2: Boolean? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "resetToLeveling"
+                )
+                requireNotNull(resetToLeveling2)
+                assertFalse(resetToLeveling2)
+
+                verify(exactly = 1) {
+                    relativeAttitudeProcessorSpy.process(
+                        gyroscopeMeasurement,
+                        timestamp
+                    )
+                }
+                verify(exactly = 1) { relativeAttitudeProcessorSpy.attitude }
+                verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement, timestamp) }
+                verify(exactly = 1) { gravityProcessorSpy.gx }
+                verify(exactly = 1) { gravityProcessorSpy.gy }
+                verify(exactly = 1) { gravityProcessorSpy.gz }
+                verify(exactly = 1) { levelingProcessorSpy.process(gx, gy, gz) }
+                verify(exactly = 2) { levelingProcessorSpy.attitude }
+
+                verify(exactly = 1) {
+                    processorListener.onProcessed(
+                        processor,
+                        processor.fusedAttitude,
+                        SensorAccuracy.MEDIUM,
+                        SensorAccuracy.HIGH
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun process_whenRelativeAttitudeProcessedPreviousRelativeGravityProcessedAndNoResetToLevelingAndLargeDivergence_fusesAttitudeIncreasesPanicCounterAndReturnsTrue() {
+        mockkStatic(Log::class) {
+            every { Log.i(any(), any()) }.returns(1)
+
+            val processor = LeveledRelativeAttitudeProcessor(processorListener)
+
+            // setup spies
+            val relativeAttitudeProcessor: BaseRelativeGyroscopeAttitudeProcessor? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "relativeAttitudeProcessor"
+                )
+            requireNotNull(relativeAttitudeProcessor)
+            val relativeAttitudeProcessorSpy = spyk(relativeAttitudeProcessor)
+            every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
+            val relativeAttitude = getAttitude()
+            every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitudeProcessor",
+                relativeAttitudeProcessorSpy
+            )
+
+            val gravityProcessor: GravityProcessor? =
+                processor.getPrivateProperty("gravityProcessor")
+            requireNotNull(gravityProcessor)
+            val gravityProcessorSpy = spyk(gravityProcessor)
+            every { gravityProcessorSpy.process(any(), any()) }.returns(true)
+            val randomizer = UniformRandomizer()
+            val gx = randomizer.nextDouble()
+            val gy = randomizer.nextDouble()
+            val gz = randomizer.nextDouble()
+            every { gravityProcessorSpy.gx }.returns(gx)
+            every { gravityProcessorSpy.gy }.returns(gy)
+            every { gravityProcessorSpy.gz }.returns(gz)
+            processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+            val levelingProcessor: BaseLevelingProcessor? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor"
+            )
+            requireNotNull(levelingProcessor)
+            val levelingProcessorSpy = spyk(levelingProcessor)
+            val levelingAttitude = getAttitude()
+            every { levelingProcessorSpy.attitude }.returns(levelingAttitude)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "levelingProcessor",
+                levelingProcessorSpy
+            )
+
+            val previousRelativeAttitude1 = getAttitude()
+            val previousRelativeAttitudeCopy = Quaternion(previousRelativeAttitude1)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "previousRelativeAttitude",
+                previousRelativeAttitude1
+            )
+
+            // check initial values
+            val relativeAttitude1: Quaternion? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "relativeAttitude"
+            )
+            requireNotNull(relativeAttitude1)
+            assertEquals(Quaternion(), relativeAttitude1)
+
+            val timestamp1: Long? =
+                getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "timestamp"
+                )
+            requireNotNull(timestamp1)
+            assertEquals(0L, timestamp1)
+
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "panicCounter",
+                0
+            )
+
+            val resetToLeveling1: Boolean? = getPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "resetToLeveling"
+            )
+            requireNotNull(resetToLeveling1)
+            assertFalse(resetToLeveling1)
+
+            val fusedAttitude1 = getAttitude()
+            val fusedAttitudeCopy = Quaternion(fusedAttitude1)
+            setPrivateProperty(
+                BaseLeveledRelativeAttitudeProcessor::class,
+                processor,
+                "fusedAttitude",
+                fusedAttitude1
+            )
+
+            mockkObject(QuaternionHelper) {
+                every { QuaternionHelper.dotProduct(any(), any()) }.returns(0.0)
+
+                // process
+                val gravityMeasurement = GravitySensorMeasurement(accuracy = SensorAccuracy.MEDIUM)
+                val gyroscopeMeasurement =
+                    GyroscopeSensorMeasurement(accuracy = SensorAccuracy.HIGH)
+                val timestamp = System.nanoTime()
+                val syncedMeasurement = GravityAndGyroscopeSyncedSensorMeasurement(
+                    gravityMeasurement,
+                    gyroscopeMeasurement,
+                    timestamp
+                )
+                assertTrue(processor.process(syncedMeasurement))
+
+                // check
+                val relativeAttitude2: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "relativeAttitude"
+                )
+                requireNotNull(relativeAttitude2)
+                assertEquals(relativeAttitude, relativeAttitude2)
+
+                val previousRelativeAttitude2: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "previousRelativeAttitude"
+                )
+                requireNotNull(previousRelativeAttitude2)
+                assertEquals(relativeAttitude, previousRelativeAttitude2)
+
+                val inversePreviousRelativeAttitude: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "inversePreviousRelativeAttitude"
+                )
+                requireNotNull(inversePreviousRelativeAttitude)
+                assertEquals(
+                    previousRelativeAttitudeCopy.inverseAndReturnNew(),
+                    inversePreviousRelativeAttitude
+                )
+
+                val deltaRelativeAttitude: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "deltaRelativeAttitude"
+                )
+                requireNotNull(deltaRelativeAttitude)
+                assertEquals(
+                    relativeAttitude2.multiplyAndReturnNew(inversePreviousRelativeAttitude),
+                    deltaRelativeAttitude
+                )
+
+                val timestamp2: Long? =
+                    getPrivateProperty(
+                        BaseLeveledRelativeAttitudeProcessor::class,
+                        processor,
+                        "timestamp"
+                    )
+                requireNotNull(timestamp2)
+                assertEquals(timestamp, timestamp2)
+
+                val levelingAttitude1: Quaternion? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "levelingAttitude"
+                )
+                requireNotNull(levelingAttitude1)
+
+                val eulerAngles1 = levelingAttitude.toEulerAngles()
+                val levelingRoll = eulerAngles1[0]
+                val levelingPitch = eulerAngles1[1]
+
+                val eulerAngles2 = relativeAttitude.toEulerAngles()
+                val yaw = eulerAngles2[2]
+                val levelingAttitude2 = Quaternion(levelingRoll, levelingPitch, yaw)
+                assertEquals(levelingAttitude2, levelingAttitude1)
+
+                val fusedAttitude2 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitudeCopy)
+                assertEquals(fusedAttitude2, processor.fusedAttitude)
+
+                val panicCounter2: Int? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "panicCounter"
+                )
+                requireNotNull(panicCounter2)
+                assertEquals(1, panicCounter2)
+
+                val resetToLeveling2: Boolean? = getPrivateProperty(
+                    BaseLeveledRelativeAttitudeProcessor::class,
+                    processor,
+                    "resetToLeveling"
+                )
+                requireNotNull(resetToLeveling2)
+                assertFalse(resetToLeveling2)
+
+                verify(exactly = 1) {
+                    relativeAttitudeProcessorSpy.process(
+                        gyroscopeMeasurement,
+                        timestamp
+                    )
+                }
+                verify(exactly = 1) { relativeAttitudeProcessorSpy.attitude }
+                verify(exactly = 1) { gravityProcessorSpy.process(gravityMeasurement, timestamp) }
+                verify(exactly = 1) { gravityProcessorSpy.gx }
+                verify(exactly = 1) { gravityProcessorSpy.gy }
+                verify(exactly = 1) { gravityProcessorSpy.gz }
+                verify(exactly = 1) { levelingProcessorSpy.process(gx, gy, gz) }
+                verify(exactly = 2) { levelingProcessorSpy.attitude }
+
+                verify(exactly = 1) {
+                    processorListener.onProcessed(
+                        processor,
+                        processor.fusedAttitude,
+                        SensorAccuracy.MEDIUM,
+                        SensorAccuracy.HIGH
+                    )
+                }
             }
         }
     }
@@ -1738,7 +1791,9 @@ class LeveledRelativeAttitudeProcessorTest {
         every { relativeAttitudeProcessorSpy.process(any(), any()) }.returns(true)
         val relativeAttitude = getAttitude()
         every { relativeAttitudeProcessorSpy.attitude }.returns(relativeAttitude)
-        every { relativeAttitudeProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        every { relativeAttitudeProcessorSpy.timeIntervalSeconds }.returns(
+            TIME_INTERVAL
+        )
         setPrivateProperty(
             BaseLeveledRelativeAttitudeProcessor::class,
             processor,

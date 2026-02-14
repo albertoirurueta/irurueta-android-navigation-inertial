@@ -23,11 +23,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
-import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.pose.EcefAbsolutePoseEstimator2
+import com.irurueta.android.navigation.inertial.app.R
+import com.irurueta.android.navigation.inertial.old.estimators.filter.AveragingFilter
+import com.irurueta.android.navigation.inertial.old.estimators.filter.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.old.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.old.estimators.filter.MedianAveragingFilter
+import com.irurueta.android.navigation.inertial.old.estimators.pose.EcefAbsolutePoseEstimator2
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
@@ -243,17 +244,17 @@ class PoseEstimatorActivity : AppCompatActivity() {
                     nedRotation.toEulerAngles(eulerAngles)
                     rollView?.text =
                         getString(
-                            com.irurueta.android.navigation.inertial.app.R.string.roll_degrees,
+                            R.string.roll_degrees,
                             Math.toDegrees(eulerAngles[0])
                         )
                     pitchView?.text =
                         getString(
-                            com.irurueta.android.navigation.inertial.app.R.string.pitch_degrees,
+                            R.string.pitch_degrees,
                             Math.toDegrees(eulerAngles[1])
                         )
                     yawView?.text =
                         getString(
-                            com.irurueta.android.navigation.inertial.app.R.string.yaw_degrees,
+                            R.string.yaw_degrees,
                             Math.toDegrees(eulerAngles[2])
                         )
 

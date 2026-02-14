@@ -27,7 +27,6 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.GravityA
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
-import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import java.util.Queue
 
@@ -44,10 +43,7 @@ import java.util.Queue
  * measurements synchronization.
  * @property interpolationEnabled indicates whether measurements interpolation is enabled or not.
  * @property measurementListener listener to notify new measurements.
- * @property gravityAccuracyChangedListener listener to notify changes in accuracy for
- * gravity sensor.
- * @property gyroscopeAccuracyChangedListener listener to notify changes in accuracy for
- * gyroscope sensor.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  */
 class GravityAndGyroscopeSyncedSensorCollector(
     context: Context,
@@ -58,13 +54,13 @@ class GravityAndGyroscopeSyncedSensorCollector(
     val primarySensor: PrimarySensor = PrimarySensor.GYROSCOPE,
     interpolationEnabled: Boolean = true,
     measurementListener: OnMeasurementListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSyncedSensorCollector>? = null,
-    var gravityAccuracyChangedListener: OnGravityAccuracyChangedListener? = null,
-    var gyroscopeAccuracyChangedListener: OnGyroscopeAccuracyChangedListener? = null
+    accuracyChangedListener: OnAccuracyChangedListener<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSyncedSensorCollector>? = null
 ) : SyncedSensorCollector<GravityAndGyroscopeSyncedSensorMeasurement, GravityAndGyroscopeSyncedSensorCollector>(
     context,
     windowNanoseconds,
     interpolationEnabled,
-    measurementListener
+    measurementListener,
+    accuracyChangedListener
 ) {
 
     /**
@@ -253,25 +249,6 @@ class GravityAndGyroscopeSyncedSensorCollector(
     }
 
     /**
-     * Processes accuracy changed event for proper notification.
-     *
-     * @param sensor sensor whose accuracy has changed.
-     * @param accuracy new accuracy.
-     */
-    override fun processAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        if (sensor == null) {
-            return
-        }
-
-        val sensorAccuracy = SensorAccuracy.from(accuracy) ?: return
-        if (sensor === gravitySensor) {
-            gravityAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === gyroscopeSensor) {
-            gyroscopeAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        }
-    }
-
-    /**
      * Indicates the sensor type of the primary sensor being used for measurements synchronization.
      */
     enum class PrimarySensor {
@@ -284,38 +261,5 @@ class GravityAndGyroscopeSyncedSensorCollector(
          * Primary sensor is gyroscope.
          */
         GYROSCOPE
-    }
-
-    /**
-     * Interface to notify when gravity sensor accuracy changes.
-     */
-    fun interface OnGravityAccuracyChangedListener {
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: GravityAndGyroscopeSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
-    /**
-     * Interface to notify when gyroscope sensor accuracy changes.
-     */
-    fun interface OnGyroscopeAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: GravityAndGyroscopeSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
     }
 }

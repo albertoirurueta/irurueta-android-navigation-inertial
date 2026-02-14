@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
 
 /**
@@ -24,9 +25,11 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
  *
  * @property processorListener listener to notify new fused absolute attitude.
  */
-class AccelerometerDoubleFusedGeomagneticAttitudeProcessor(processorListener: OnProcessedListener<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>? = null
-) : BaseDoubleFusedGeomagneticAttitudeProcessor<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>(processorListener) {
-
+class AccelerometerDoubleFusedGeomagneticAttitudeProcessor(
+    processorListener: OnProcessedListener<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>? = null
+) : BaseDoubleFusedGeomagneticAttitudeProcessor<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>(
+    processorListener
+) {
     /**
      * Internal processor to estimate leveled absolute attitude.
      */

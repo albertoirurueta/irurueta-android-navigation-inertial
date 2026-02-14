@@ -58,7 +58,7 @@ object ENUtoNEDConverter {
      * @param input input triad to be converted.
      * @param output instance where result of conversion will be stored.
      */
-    fun <T : Triad<U, M>, U : Enum<*>, M : Measurement<U>> convert(input: T, output: T) {
+    fun <T : Triad<U, M, T>, U : Enum<*>, M : Measurement<U>> convert(input: T, output: T) {
         convert(input.valueX, input.valueY, input.valueZ, output)
         output.unit = input.unit
     }
@@ -71,7 +71,7 @@ object ENUtoNEDConverter {
      * @param valueZ z-coordinate of input triad to be converted.
      * @param output instance where result of conversion will be stored.
      */
-    fun <T : Triad<U, M>, U : Enum<*>, M : Measurement<U>> convert(
+    fun <T : Triad<U, M, T>, U : Enum<*>, M : Measurement<U>> convert(
         valueX: Double,
         valueY: Double,
         valueZ: Double,

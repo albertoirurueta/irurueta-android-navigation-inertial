@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import com.irurueta.geometry.Quaternion
@@ -20,15 +21,14 @@ import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.units.AccelerationUnit
 
 /**
- * Base class to estimate leveling of device (roll and pitch angle) by using estimated gravity
- * vector.
+ * Base class to estimate leveling of device (roll and pitch angle) in NED coordinates by using
+ * estimated gravity vector.
  *
  * @property processorListener listener to notify new leveling measurements.
  */
 abstract class BaseLevelingProcessor(var processorListener: OnProcessedListener?) {
 
     /**
-     *
      * Instance to be reused containing estimated leveling attitude (roll and pitch angles) in NED
      * coordinates.
      */
@@ -36,7 +36,7 @@ abstract class BaseLevelingProcessor(var processorListener: OnProcessedListener?
         protected set
 
     /**
-     * X-coordinates of last sensed gravity component of specific force expressed in NED coordinates
+     * X-coordinate of last sensed gravity component of specific force expressed in NED coordinates
      * and in meters per squared second (m/s^2).
      */
     var gx: Double = 0.0
@@ -73,6 +73,13 @@ abstract class BaseLevelingProcessor(var processorListener: OnProcessedListener?
 
     /**
      * Processes provided gravity components estimated using a [BaseGravityProcessor].
+     *
+     * @param gx x-coordinate of sensed specific force containing gravity component expressed in
+     * NED coordinates and meters per squared second (m/s^2).
+     * @param gy y-coordinate of sensed specific force containing gravity component expressed in
+     * NED coordinates and meters per squared second (m/s^2).
+     * @param gz z-coordinate of sensed specific force containing gravity component expressed in
+     * NED coordinates and meters per squared second (m/s^2).
      */
     abstract fun process(gx: Double, gy: Double, gz: Double)
 

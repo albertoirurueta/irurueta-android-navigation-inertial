@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerAndGyroscopeSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
 
 /**
@@ -25,11 +26,10 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
  * @property processorListener listener to notify new leveled relative attitudes.
  */
 class AccelerometerLeveledRelativeAttitudeProcessor(
-    processorListener: OnProcessedListener<AccelerometerSensorMeasurement,
-            AccelerometerAndGyroscopeSyncedSensorMeasurement>? = null
-) : BaseLeveledRelativeAttitudeProcessor<AccelerometerSensorMeasurement,
-        AccelerometerAndGyroscopeSyncedSensorMeasurement>(processorListener) {
-
+    processorListener: OnProcessedListener<AccelerometerSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorMeasurement>? = null
+) : BaseLeveledRelativeAttitudeProcessor<AccelerometerSensorMeasurement, AccelerometerAndGyroscopeSyncedSensorMeasurement>(
+    processorListener
+) {
     /**
      * Internal processor to estimate gravity from accelerometer sensor measurements.
      */

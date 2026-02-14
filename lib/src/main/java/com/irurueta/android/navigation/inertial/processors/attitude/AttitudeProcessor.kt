@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.geometry.Quaternion
@@ -27,6 +27,11 @@ import com.irurueta.geometry.Quaternion
  * @property processorListener listener to notify new attitudes.
  */
 class AttitudeProcessor(var processorListener: OnProcessedListener? = null) {
+
+    /**
+     * Measurement in NED coordinates to be reused.
+     */
+    private val nedMeasurement = AttitudeSensorMeasurement()
 
     /**
      * Converted absolute or relative attitude in NED coordinates.
@@ -42,9 +47,8 @@ class AttitudeProcessor(var processorListener: OnProcessedListener? = null) {
      * @return converted attitude in NED coordinates.
      */
     fun process(measurement: AttitudeSensorMeasurement): Quaternion {
-        val enuAttitude = measurement.attitude
-
-        ENUtoNEDConverter.convert(enuAttitude, nedAttitude)
+        measurement.toNed(nedMeasurement)
+        nedAttitude = nedMeasurement.attitude
 
         processorListener?.onProcessed(
             this,

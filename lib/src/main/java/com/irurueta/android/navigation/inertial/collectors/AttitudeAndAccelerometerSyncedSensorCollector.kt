@@ -28,7 +28,6 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
 import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeAndAccelerometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorType
-import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import java.util.Queue
 
@@ -46,10 +45,7 @@ import java.util.Queue
  * measurements synchronization.
  * @property interpolationEnabled indicates whether measurements interpolation is enabled or not.
  * @property measurementListener listener to notify new measurements.
- * @property attitudeAccuracyChangedListener listener to notify changes in accuracy for
- * attitude sensor.
- * @property accelerometerAccuracyChangedListener listener to notify changes in accuracy for
- * accelerometer sensor.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  */
 class AttitudeAndAccelerometerSyncedSensorCollector(
     context: Context,
@@ -61,13 +57,13 @@ class AttitudeAndAccelerometerSyncedSensorCollector(
     val primarySensor: PrimarySensor = PrimarySensor.ACCELEROMETER,
     interpolationEnabled: Boolean = true,
     measurementListener: OnMeasurementListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSyncedSensorCollector>? = null,
-    var attitudeAccuracyChangedListener: OnAttitudeAccuracyChangedListener? = null,
-    var accelerometerAccuracyChangedListener: OnAccelerometerAccuracyChangedListener? = null,
+    accuracyChangedListener: OnAccuracyChangedListener<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSyncedSensorCollector>? = null
 ) : SyncedSensorCollector<AttitudeAndAccelerometerSyncedSensorMeasurement, AttitudeAndAccelerometerSyncedSensorCollector>(
     context,
     windowNanoseconds,
     interpolationEnabled,
-    measurementListener
+    measurementListener,
+    accuracyChangedListener
 ) {
 
     /**
@@ -259,25 +255,6 @@ class AttitudeAndAccelerometerSyncedSensorCollector(
     }
 
     /**
-     * Processes accuracy changed event for proper notification.
-     *
-     * @param sensor sensor whose accuracy has changed.
-     * @param accuracy new accuracy.
-     */
-    override fun processAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        if (sensor == null) {
-            return
-        }
-
-        val sensorAccuracy = SensorAccuracy.from(accuracy) ?: return
-        if (sensor === attitudeSensor) {
-            attitudeAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === accelerometerSensor) {
-            accelerometerAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        }
-    }
-
-    /**
      * Indicates the sensor type of the primary sensor being used for measurements synchronization.
      */
     enum class PrimarySensor {
@@ -290,38 +267,5 @@ class AttitudeAndAccelerometerSyncedSensorCollector(
          * Primary sensor is accelerometer.
          */
         ACCELEROMETER
-    }
-
-    /**
-     * Interface to notify when attitude sensor accuracy changes.
-     */
-    fun interface OnAttitudeAccuracyChangedListener {
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AttitudeAndAccelerometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
-    /**
-     * Interface to notify when accelerometer sensor accuracy changes.
-     */
-    fun interface OnAccelerometerAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AttitudeAndAccelerometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
     }
 }

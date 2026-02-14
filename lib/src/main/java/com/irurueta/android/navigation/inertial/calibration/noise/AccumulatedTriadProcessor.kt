@@ -57,7 +57,7 @@ abstract class AccumulatedTriadProcessor<P, N, U, M, T, SM>(
               N : AccumulatedTriadNoiseEstimator<U, M, T, *, *>,
               U : Enum<*>,
               M : Measurement<U>,
-              T : Triad<U, M>,
+              T : Triad<U, M, T>,
               SM : SensorMeasurement<SM>,
               SM : TriadConvertible<T> {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.old.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.geometry.Quaternion
-import com.irurueta.navigation.frames.CoordinateTransformation
-import com.irurueta.units.TimeConverter
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.processors.attitude.RelativeGyroscopeAttitudeProcessor
 
 /**
  * Estimates relative attitude respect to start attitude by integrating gyroscope sensor data
@@ -37,115 +34,27 @@ import com.irurueta.units.TimeConverter
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
- * @property gyroscopeMeasurementListener listener to notify new gyroscope measurements.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  */
 class RelativeGyroscopeAttitudeEstimator(
     context: Context,
     sensorType: GyroscopeSensorType = GyroscopeSensorType.GYROSCOPE_UNCALIBRATED,
-    sensorDelay: SensorDelay = SensorDelay.GAME,
+    sensorDelay: SensorDelay = SensorDelay.FASTEST,
     estimateCoordinateTransformation: Boolean = false,
-    estimateDisplayEulerAngles: Boolean = true,
-    attitudeAvailableListener: OnAttitudeAvailableListener? = null,
-    gyroscopeMeasurementListener: GyroscopeSensorCollector.OnMeasurementListener? = null
-) : BaseRelativeGyroscopeAttitudeEstimator<RelativeGyroscopeAttitudeEstimator,
-        RelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener>(
+    estimateEulerAngles: Boolean = true,
+    attitudeAvailableListener: OnAttitudeAvailableListener<RelativeGyroscopeAttitudeEstimator>? = null,
+    accuracyChangedListener: OnAccuracyChangedListener<RelativeGyroscopeAttitudeEstimator>? = null
+) : BaseRelativeGyroscopeAttitudeEstimator<RelativeGyroscopeAttitudeEstimator>(
     context,
     sensorType,
     sensorDelay,
     estimateCoordinateTransformation,
-    estimateDisplayEulerAngles,
+    estimateEulerAngles,
     attitudeAvailableListener,
-    gyroscopeMeasurementListener
+    accuracyChangedListener
 ) {
     /**
-     * Instance to be reused which contains variation of attitude between gyroscope samples.
+     * Internal processor in charge of estimating attitude based on gyroscope measurements.
      */
-    private val deltaAttitude = Quaternion()
-
-    /**
-     * Internal gyroscope sensor collector.
-     */
-    override val gyroscopeSensorCollector = GyroscopeSensorCollector(
-        context,
-        sensorType,
-        sensorDelay,
-        { wx, wy, wz, bx, by, bz, timestamp, accuracy ->
-            gyroscopeMeasurementListener?.onMeasurement(wx, wy, wz, bx, by, bz, timestamp, accuracy)
-
-            if (timeIntervalEstimator.numberOfProcessedSamples == 0) {
-                initialTimestamp = timestamp
-            }
-            val diff = timestamp - initialTimestamp
-            val diffSeconds = TimeConverter.nanosecondToSecond(diff.toDouble())
-            timeIntervalEstimator.addTimestamp(diffSeconds)
-
-            val dt = timeIntervalEstimator.averageTimeInterval
-
-            val currentWx = if (bx != null)
-                wx.toDouble() - bx.toDouble()
-            else
-                wx.toDouble()
-
-            val currentWy = if (by != null)
-                wy.toDouble() - by.toDouble()
-            else
-                wy.toDouble()
-
-            val currentWz = if (bz != null)
-                wz.toDouble() - bz.toDouble()
-            else
-                wz.toDouble()
-
-            ENUtoNEDConverter.convert(currentWx, currentWy, currentWz, triad)
-
-            val roll = triad.valueX * dt
-            val pitch = triad.valueY * dt
-            val yaw = triad.valueZ * dt
-            deltaAttitude.setFromEulerAngles(roll, pitch, yaw)
-
-            internalAttitude.combine(deltaAttitude)
-            internalAttitude.normalize()
-
-            internalAttitude.copyTo(attitude)
-
-            val c: CoordinateTransformation? =
-                if (estimateCoordinateTransformation) {
-                    coordinateTransformation.fromRotation(attitude)
-                    coordinateTransformation
-                } else {
-                    null
-                }
-
-            val roll2: Double?
-            val pitch2: Double?
-            val yaw2: Double?
-            if (estimateDisplayEulerAngles) {
-                attitude.toEulerAngles(eulerAngles)
-                roll2 = eulerAngles[0]
-                pitch2 = eulerAngles[1]
-                yaw2 = eulerAngles[2]
-            } else {
-                roll2 = null
-                pitch2 = null
-                yaw2 = null
-            }
-
-            // notify
-            attitudeAvailableListener?.onAttitudeAvailable(
-                this@RelativeGyroscopeAttitudeEstimator,
-                attitude,
-                timestamp,
-                roll2,
-                pitch2,
-                yaw2,
-                c
-            )
-        })
-
-    /**
-     * Interface to notify when a new attitude measurement is available.
-     */
-    fun interface OnAttitudeAvailableListener :
-        BaseRelativeGyroscopeAttitudeEstimator.OnAttitudeAvailableListener<RelativeGyroscopeAttitudeEstimator,
-                OnAttitudeAvailableListener>
+    override val processor = RelativeGyroscopeAttitudeProcessor()
 }

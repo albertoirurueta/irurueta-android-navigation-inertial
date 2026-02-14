@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
-import com.irurueta.android.navigation.inertial.old.collectors.GravityGyroscopeAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravityGyroscopeAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 
 /**
@@ -28,7 +29,6 @@ class FusedGeomagneticAttitudeProcessor(
 ) : BaseFusedGeomagneticAttitudeProcessor<GravitySensorMeasurement, GravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(
     processorListener
 ) {
-
     /**
      * Internal processor to estimate leveled absolute attitude.
      */

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
 import android.location.Location
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
-import com.irurueta.android.navigation.inertial.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
-import com.irurueta.android.navigation.inertial.old.collectors.MagnetometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
+import android.os.SystemClock
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndMagnetometerSyncedSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GravityAndMagnetometerSyncedSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.toNEDPosition
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.GeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.filters.AveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
-import com.irurueta.navigation.frames.NEDPosition
-import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
-import com.irurueta.navigation.inertial.estimators.AttitudeEstimator
-import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
-import com.irurueta.units.MagneticFluxDensityConverter
-import java.util.*
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
+import java.util.Date
 
 /**
  * Estimates a leveled absolute attitude using accelerometer (or gravity) and magnetometer sensors.
@@ -45,6 +46,7 @@ import java.util.*
  * Yaw angle is obtained from magnetometer once the leveling is estimated.
  *
  * @property context Android context.
+ * @param location Device location.
  * @property sensorDelay Delay of sensors between samples.
  * @property useAccelerometer true to use accelerometer sensor, false to use system gravity sensor
  * for leveling purposes.
@@ -53,174 +55,61 @@ import java.util.*
  * @property magnetometerSensorType One of the supported magnetometer sensor types.
  * @property accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
  * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
- * @property timestamp Timestamp when World Magnetic Model will be evaluated to obtain current
- * magnetic declination. Only taken into account if [useWorldMagneticModel] is true.
+ * @param worldMagneticModel Earth's magnetic model. Null to use default model
+ * when [useWorldMagneticModel] is true. If [useWorldMagneticModel] is false, this is ignored.
+ * @param timestamp Timestamp when World Magnetic Model will be evaluated to obtain current magnetic
+ * declination. Only taken into account if [useWorldMagneticModel] is true.
+ * @param useWorldMagneticModel true so that world magnetic model is taken into account to
+ * adjust attitude yaw angle by current magnetic declination based on current World Magnetic
+ * Model, location and timestamp, false to ignore declination.
+ * @param useAccurateLevelingEstimation true to use accurate leveling, false to use a normal one.
  * @property estimateCoordinateTransformation true to estimate coordinate transformation, false
  * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
  * @property estimateEulerAngles true to estimate euler angles, false otherwise. If not
  * needed, it can be disabled to improve performance and decrease cpu load.
  * @property attitudeAvailableListener listener to notify when a new attitude measurement is
  * available.
- * @property magnetometerMeasurementListener listener to notify new magnetometer measurements.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
+ * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
+ * standard norm, or norm at provided location. If no location is provided, this should only be
+ * enabled when device is close to sea level.
  */
-class GeomagneticAttitudeEstimator private constructor(
+class GeomagneticAttitudeEstimator(
     val context: Context,
-    val sensorDelay: SensorDelay,
-    val useAccelerometer: Boolean,
-    val accelerometerSensorType: AccelerometerSensorType,
-    val magnetometerSensorType: MagnetometerSensorType,
-    val accelerometerAveragingFilter: AveragingFilter,
-    var timestamp: Date,
-    val estimateCoordinateTransformation: Boolean,
-    val estimateEulerAngles: Boolean,
-    var attitudeAvailableListener: OnAttitudeAvailableListener?,
-    var magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener?
+    location: Location? = null,
+    val sensorDelay: SensorDelay = SensorDelay.FASTEST,
+    val useAccelerometer: Boolean = true,
+    val accelerometerSensorType: AccelerometerSensorType =
+        AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+    val magnetometerSensorType: MagnetometerSensorType =
+        MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
+    val accelerometerAveragingFilter: AveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad> =
+        LowPassAveragingFilter(),
+    worldMagneticModel: WorldMagneticModel? = null,
+    timestamp: Date? = null,
+    useWorldMagneticModel: Boolean = false,
+    useAccurateLevelingEstimation: Boolean = false,
+    val estimateCoordinateTransformation: Boolean = false,
+    val estimateEulerAngles: Boolean = true,
+    var attitudeAvailableListener: OnAttitudeAvailableListener? = null,
+    var accuracyChangedListener: OnAccuracyChangedListener? = null,
+    adjustGravityNorm: Boolean = true
 ) {
-
     /**
-     * Constructor.
-     *
-     * @param context Android context.
-     * @param location Device location.
-     * @param sensorDelay Delay of sensors between samples.
-     * @param useAccelerometer true to use accelerometer sensor, false to use system gravity sensor
-     * for leveling purposes.
-     * @param accelerometerSensorType One of the supported accelerometer sensor types.
-     * (Only used if [useAccelerometer] is true).
-     * @param magnetometerSensorType One of the supported magnetometer sensor types.
-     * @param accelerometerAveragingFilter an averaging filter for accelerometer samples to obtain
-     * sensed gravity component of specific force. (Only used if [useAccelerometer] is true).
-     * @param worldMagneticModel Earth's magnetic model. Null to use default model
-     * when [useWorldMagneticModel] is true. If [useWorldMagneticModel] is false, this is ignored.
-     * @param timestamp Timestamp when World Magnetic Model will be evaluated to obtain current.
-     * Only taken into account if [useWorldMagneticModel] is true.
-     * @param useWorldMagneticModel true so that world magnetic model is taken into account to
-     * adjust attitude yaw angle by current magnetic declination based on current World Magnetic
-     * Model, location and timestamp, false to ignore declination.
-     * @param useAccurateLevelingEstimator true to use accurate leveling, false to use a normal one.
-     * @param estimateCoordinateTransformation true to estimate coordinate transformation, false
-     * otherwise. If not needed, it can be disabled to improve performance and decrease cpu load.
-     * @param estimateEulerAngles true to estimate euler angles, false otherwise. If not
-     * needed, it can be disabled to improve performance and decrease cpu load.
-     * @param attitudeAvailableListener listener to notify when a new attitude measurement is
-     * available.
-     * @param accelerometerMeasurementListener listener to notify new accelerometer measurements.
-     * (Only used if [useAccelerometer] is true).
-     * @param gravityMeasurementListener listener to notify new gravity measurements.
-     * (Only used if [useAccelerometer] is false).
-     * @param magnetometerMeasurementListener listener to notify new magnetometer measurements.
-     * @param gravityEstimationListener listener to notify when a new gravity estimation is
-     * available.
+     * Processes accelerometer + magnetometer measurements.
      */
-    constructor(
-        context: Context,
-        location: Location? = null,
-        sensorDelay: SensorDelay = SensorDelay.GAME,
-        useAccelerometer: Boolean = true,
-        accelerometerSensorType: AccelerometerSensorType =
-            AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
-        magnetometerSensorType: MagnetometerSensorType =
-            MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
-        accelerometerAveragingFilter: AveragingFilter = LowPassAveragingFilter(),
-        worldMagneticModel: WorldMagneticModel? = null,
-        timestamp: Date = Date(),
-        useWorldMagneticModel: Boolean = false,
-        useAccurateLevelingEstimator: Boolean = false,
-        estimateCoordinateTransformation: Boolean = false,
-        estimateEulerAngles: Boolean = true,
-        attitudeAvailableListener: OnAttitudeAvailableListener? = null,
-        accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null,
-        gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null,
-        magnetometerMeasurementListener: MagnetometerSensorCollector.OnMeasurementListener? = null,
-        gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
-    ) : this(
-        context,
-        sensorDelay,
-        useAccelerometer,
-        accelerometerSensorType,
-        magnetometerSensorType,
-        accelerometerAveragingFilter,
-        timestamp,
-        estimateCoordinateTransformation,
-        estimateEulerAngles,
-        attitudeAvailableListener,
-        magnetometerMeasurementListener
-    ) {
-        this.location = location
-        this.useAccurateLevelingEstimator = useAccurateLevelingEstimator
-        this.worldMagneticModel = worldMagneticModel
-        this.useWorldMagneticModel = useWorldMagneticModel
-        this.accelerometerMeasurementListener = accelerometerMeasurementListener
-        this.gravityMeasurementListener = gravityMeasurementListener
-        this.gravityEstimationListener = gravityEstimationListener
-    }
-
+    private val accelerometerProcessor = AccelerometerGeomagneticAttitudeProcessor()
 
     /**
-     * Internal leveling estimator.
+     * Processes gravity + magnetometer measurements.
      */
-    private lateinit var levelingEstimator: BaseLevelingEstimator<*, *>
+    private val gravityProcessor = GeomagneticAttitudeProcessor()
 
     /**
-     * Estimator of magnetic declination of attitude yaw angle if world magnetic model is taken
-     * into account.
-     */
-    private var wmmEstimator: WMMEarthMagneticFluxDensityEstimator? = null
-
-    /**
-     * Position expressed in NED coordinates being reused.
-     */
-    private val position = NEDPosition()
-
-    /**
-     * Instance to be reused which contains attitude of internal leveling estimator.
-     */
-    private val levelingAttitude = Quaternion()
-
-    /**
-     * Instance to be reused containing estimated attitude in NED coordinates by merging leveled
-     * attitude with magnetometer measurements.
+     * Instance being reused to externally notify attitudes so that it does not have additional
+     * effects if it is modified.
      */
     private val fusedAttitude = Quaternion()
-
-    /**
-     * Triad to be reused for ENU to NED coordinates conversion.
-     */
-    private val triad = MagneticFluxDensityTriad()
-
-    /**
-     * Internal magnetometer sensor collector.
-     */
-    private val magnetometerSensorCollector = MagnetometerSensorCollector(
-        context,
-        magnetometerSensorType,
-        sensorDelay,
-        { bx, by, bz, hardIronX, hardIronY, hardIronZ, timestamp, accuracy ->
-            magnetometerMeasurementListener?.onMeasurement(
-                bx,
-                by,
-                bz,
-                hardIronX,
-                hardIronY,
-                hardIronZ,
-                timestamp,
-                accuracy
-            )
-
-            val sensorBx = MagneticFluxDensityConverter.microTeslaToTesla(
-                (bx - (hardIronX ?: 0.0f)).toDouble()
-            )
-            val sensorBy = MagneticFluxDensityConverter.microTeslaToTesla(
-                (by - (hardIronY ?: 0.0f)).toDouble()
-            )
-            val sensorBz = MagneticFluxDensityConverter.microTeslaToTesla(
-                (bz - (hardIronZ ?: 0.0f)).toDouble()
-            )
-
-            ENUtoNEDConverter.convert(sensorBx, sensorBy, sensorBz, triad)
-
-            hasMagnetometerValues = true
-        })
 
     /**
      * Array to be reused containing euler angles of leveling attitude.
@@ -234,20 +123,70 @@ class GeomagneticAttitudeEstimator private constructor(
         CoordinateTransformation(FrameType.BODY_FRAME, FrameType.LOCAL_NAVIGATION_FRAME)
 
     /**
-     * Indicates whether magnetometer sensor values have been received or not.
+     * Internal syncer to collect and sync gravity and magnetometer measurements.
      */
-    private var hasMagnetometerValues = false
+    private val gravityAndMagnetometerCollector = GravityAndMagnetometerSyncedSensorCollector(
+        context,
+        magnetometerSensorType = magnetometerSensorType,
+        gravitySensorDelay = sensorDelay,
+        magnetometerSensorDelay = sensorDelay,
+        measurementListener = { _, measurement ->
+            if (gravityProcessor.process(measurement)) {
+                gravityProcessor.fusedAttitude.copyTo(fusedAttitude)
+                postProcessAttitudeAndNotify(measurement.timestamp)
+            }
+        },
+        accuracyChangedListener = { _, sensorType, accuracy ->
+            notifyAccuracyChanged(sensorType, accuracy)
+        }
+    )
+
+    /**
+     * Internal syncer to collect and sync accelerometer and magnetometer measurements.
+     */
+    private val accelerometerAndMagnetometerCollector =
+        AccelerometerAndMagnetometerSyncedSensorCollector(
+            context,
+            accelerometerSensorType = accelerometerSensorType,
+            magnetometerSensorType = magnetometerSensorType,
+            accelerometerSensorDelay = sensorDelay,
+            magnetometerSensorDelay = sensorDelay,
+            measurementListener = { _, measurement ->
+                if (accelerometerProcessor.process(measurement)) {
+                    accelerometerProcessor.fusedAttitude.copyTo(fusedAttitude)
+                    postProcessAttitudeAndNotify(measurement.timestamp)
+                }
+            },
+            accuracyChangedListener = { _, sensorType, accuracy ->
+                notifyAccuracyChanged(sensorType, accuracy)
+            }
+        )
 
     /**
      * Gets or sets device location
      *
      * @throws IllegalStateException if estimator is running and a null value is set.
      */
-    var location: Location? = null
+    var location: Location? = location
         @Throws(IllegalStateException::class)
         set(value) {
             check(value != null || !running)
+
+            accelerometerProcessor.location = value
+            gravityProcessor.location = value
             field = value
+        }
+
+    /**
+     * Indicates whether gravity norm must be adjusted to either Earth standard norm, or norm at
+     * provided location. If no location is provided, this should only be enabled when device is
+     * close to sea level.
+     */
+    var adjustGravityNorm: Boolean = adjustGravityNorm
+        set(value) {
+            field = value
+            gravityProcessor.adjustGravityNorm = value
+            accelerometerProcessor.adjustGravityNorm = value
         }
 
     /**
@@ -255,7 +194,7 @@ class GeomagneticAttitudeEstimator private constructor(
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var useAccurateLevelingEstimator: Boolean = false
+    var useAccurateLevelingEstimation: Boolean = useAccurateLevelingEstimation
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
@@ -263,8 +202,9 @@ class GeomagneticAttitudeEstimator private constructor(
                 checkNotNull(location)
             }
 
+            accelerometerProcessor.useAccurateLevelingProcessor = value
+            gravityProcessor.useAccurateLevelingProcessor = value
             field = value
-            buildLevelingEstimator()
         }
 
     /**
@@ -273,13 +213,25 @@ class GeomagneticAttitudeEstimator private constructor(
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var worldMagneticModel: WorldMagneticModel? = null
+    var worldMagneticModel: WorldMagneticModel? = worldMagneticModel
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
 
+            accelerometerProcessor.worldMagneticModel = value
+            gravityProcessor.worldMagneticModel = value
             field = value
-            buildWMMEstimator()
+        }
+
+    /**
+     * Gets or sets timestamp when World Magnetic Model will be evaluated to obtain current
+     * magnetic declination. Only taken into account if [useWorldMagneticModel] is true.
+     */
+    var timestamp: Date? = timestamp
+        set(value) {
+            accelerometerProcessor.currentDate = value
+            gravityProcessor.currentDate = value
+            field = value
         }
 
     /**
@@ -288,43 +240,14 @@ class GeomagneticAttitudeEstimator private constructor(
      *
      * @throws IllegalStateException if estimator is running.
      */
-    var useWorldMagneticModel: Boolean = false
+    var useWorldMagneticModel: Boolean = useWorldMagneticModel
         @Throws(IllegalStateException::class)
         set(value) {
             check(!running)
 
+            accelerometerProcessor.useWorldMagneticModel = value
+            gravityProcessor.useWorldMagneticModel = value
             field = value
-            buildWMMEstimator()
-        }
-
-    /**
-     * Listener to notify new accelerometer measurements.
-     * (Only used if [useAccelerometer] is true).
-     */
-    var accelerometerMeasurementListener: AccelerometerSensorCollector.OnMeasurementListener? = null
-        set(value) {
-            field = value
-            levelingEstimator.accelerometerMeasurementListener = value
-        }
-
-    /**
-     * Listener to notify new gravity measurements.
-     * (Only used if [useAccelerometer] is false).
-     */
-    var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener? = null
-        set(value) {
-            field = value
-            levelingEstimator.gravityMeasurementListener = value
-        }
-
-    /**
-     * Listener to notify when a new gravity estimation is
-     * available.
-     */
-    var gravityEstimationListener: GravityEstimator.OnEstimationListener? = null
-        set(value) {
-            field = value
-            levelingEstimator.gravityEstimationListener = value
         }
 
     /**
@@ -336,18 +259,24 @@ class GeomagneticAttitudeEstimator private constructor(
     /**
      * Starts this estimator.
      *
+     * @param startTimestamp monotonically increasing timestamp when collector starts. If not
+     * provided, system clock is used by default, otherwise, the value can be provided to sync
+     * multiple sensor collector instances.
      * @return true if estimator successfully started, false otherwise.
      * @throws IllegalStateException if estimator is already running.
      */
     @Throws(IllegalStateException::class)
-    fun start(): Boolean {
+    fun start(startTimestamp: Long = SystemClock.elapsedRealtimeNanos()): Boolean {
         check(!running)
 
-        reset()
-        running = levelingEstimator.start() && magnetometerSensorCollector.start()
-        if (!running) {
-            stop()
+        running = if (useAccelerometer) {
+            accelerometerProcessor.reset()
+            accelerometerAndMagnetometerCollector.start(startTimestamp)
+        } else {
+            gravityProcessor.reset()
+            gravityAndMagnetometerCollector.start(startTimestamp)
         }
+
         return running
     }
 
@@ -355,102 +284,30 @@ class GeomagneticAttitudeEstimator private constructor(
      * Stops this estimator.
      */
     fun stop() {
-        levelingEstimator.stop()
-        magnetometerSensorCollector.stop()
+        accelerometerAndMagnetometerCollector.stop()
+        gravityAndMagnetometerCollector.stop()
         running = false
     }
 
     /**
-     * Resets internal parameters.
+     * Notifies changes in sensor accuracy.
      */
-    private fun reset() {
-        hasMagnetometerValues = false
+    private fun notifyAccuracyChanged(
+        sensorType: SensorType,
+        accuracy: SensorAccuracy?
+    ) {
+        accuracyChangedListener?.onAccuracyChanged(this, sensorType, accuracy)
     }
 
     /**
-     * Builds the internal leveling estimator.
-     */
-    private fun buildLevelingEstimator() {
-        levelingEstimator = if (useAccurateLevelingEstimator) {
-
-            val location = this.location
-            checkNotNull(location)
-            AccurateLevelingEstimator(
-                context,
-                location,
-                sensorDelay,
-                useAccelerometer,
-                accelerometerSensorType,
-                accelerometerAveragingFilter,
-                estimateCoordinateTransformation = false,
-                estimateEulerAngles = false,
-                levelingAvailableListener = { _, attitude, timestamp, _, _, _ ->
-                    processLeveling(attitude, timestamp)
-                },
-                gravityEstimationListener = gravityEstimationListener,
-                accelerometerMeasurementListener = accelerometerMeasurementListener,
-                gravityMeasurementListener = gravityMeasurementListener
-            )
-        } else {
-            LevelingEstimator(
-                context,
-                sensorDelay,
-                useAccelerometer,
-                accelerometerSensorType,
-                accelerometerAveragingFilter,
-                estimateCoordinateTransformation = false,
-                estimateEulerAngles = false,
-                levelingAvailableListener = { _, attitude, timestamp, _, _, _ ->
-                    processLeveling(attitude, timestamp)
-                },
-                gravityEstimationListener = gravityEstimationListener,
-                accelerometerMeasurementListener = accelerometerMeasurementListener,
-                gravityMeasurementListener = gravityMeasurementListener
-            )
-        }
-    }
-
-    /**
-     * Builds World Magnetic Model if needed.
-     */
-    private fun buildWMMEstimator() {
-        wmmEstimator = if (useWorldMagneticModel) {
-            val model = worldMagneticModel
-            if (model != null) {
-                WMMEarthMagneticFluxDensityEstimator(model)
-            } else {
-                WMMEarthMagneticFluxDensityEstimator()
-            }
-        } else {
-            null
-        }
-    }
-
-    /**
-     * Processes last received leveling attitude to obtain an updated absolute attitude taking
-     * into account last magnetometer measurement.
+     * Processes current attitude and computes (if needed) a coordinate transformation or
+     * Euler angles.
      *
-     * @param attitude estimated absolute attitude respect NED coordinate system.
      * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
      * wil be monotonically increasing using the same time base as
-     * [android.os.SystemClock.elapsedRealtimeNanos].
+     * [SystemClock.elapsedRealtimeNanos].
      */
-    private fun processLeveling(attitude: Quaternion, timestamp: Long) {
-        if (!hasMagnetometerValues) {
-            return
-        }
-
-        attitude.copyTo(levelingAttitude)
-
-        // obtain roll and pitch euler angles from leveling
-        levelingAttitude.toEulerAngles(eulerAngles)
-        val roll = eulerAngles[0]
-        val pitch = eulerAngles[1]
-        val declination = getDeclination()
-        val yaw = AttitudeEstimator.getYaw(triad.valueX, triad.valueY, triad.valueZ, declination, roll, pitch)
-
-        fusedAttitude.setFromEulerAngles(roll, pitch, yaw)
-
+    private fun postProcessAttitudeAndNotify(timestamp: Long) {
         val c: CoordinateTransformation? =
             if (estimateCoordinateTransformation) {
                 coordinateTransformation.fromRotation(fusedAttitude)
@@ -459,51 +316,47 @@ class GeomagneticAttitudeEstimator private constructor(
                 null
             }
 
-        val roll2: Double?
-        val pitch2: Double?
-        val yaw2: Double?
+        val roll: Double?
+        val pitch: Double?
+        val yaw: Double?
         if (estimateEulerAngles) {
             fusedAttitude.toEulerAngles(eulerAngles)
-            roll2 = eulerAngles[0]
-            pitch2 = eulerAngles[1]
-            yaw2 = eulerAngles[2]
+            roll = eulerAngles[0]
+            pitch = eulerAngles[1]
+            yaw = eulerAngles[2]
         } else {
-            roll2 = null
-            pitch2 = null
-            yaw2 = null
+            roll = null
+            pitch = null
+            yaw = null
         }
 
         // notify
         attitudeAvailableListener?.onAttitudeAvailable(
-            this@GeomagneticAttitudeEstimator,
+            this,
             fusedAttitude,
             timestamp,
-            roll2,
-            pitch2,
-            yaw2,
+            roll,
+            pitch,
+            yaw,
             c
         )
     }
 
-    /**
-     * Obtains magnetic declination expressed in radians if World Magnetic Model is used,
-     * otherwise zero is returned.
-     */
-    private fun getDeclination(): Double {
-        val wmmEstimator = this.wmmEstimator ?: return 0.0
-        val location = this.location ?: return 0.0
+    init {
+        this.location = location
+        this.worldMagneticModel = worldMagneticModel
+        this.timestamp = timestamp
+        this.useWorldMagneticModel = useWorldMagneticModel
+        this.useAccurateLevelingEstimation = useAccurateLevelingEstimation
 
-        location.toNEDPosition(position)
-        return wmmEstimator.getDeclination(
-            position.latitude, position.longitude, position.height, timestamp
-        )
+        accelerometerProcessor.adjustGravityNorm = adjustGravityNorm
+        gravityProcessor.adjustGravityNorm = adjustGravityNorm
     }
 
     /**
      * Interface to notify when a new attitude measurement is available.
      */
     fun interface OnAttitudeAvailableListener {
-
         /**
          * Called when a new attitude measurement is available.
          *
@@ -511,7 +364,7 @@ class GeomagneticAttitudeEstimator private constructor(
          * @param attitude attitude expressed in NED coordinates.
          * @param timestamp time in nanoseconds at which the measurement was made. Each measurement
          * wil be monotonically increasing using the same time base as
-         * [android.os.SystemClock.elapsedRealtimeNanos].
+         * [SystemClock.elapsedRealtimeNanos].
          * @param roll roll angle expressed in radians respect to NED coordinate system. Only
          * available if [estimateEulerAngles] is true.
          * @param pitch pitch angle expressed in radians respect to NED coordinate system. Only
@@ -529,6 +382,25 @@ class GeomagneticAttitudeEstimator private constructor(
             pitch: Double?,
             yaw: Double?,
             coordinateTransformation: CoordinateTransformation?
+        )
+    }
+
+    /**
+     * Interface to notify when sensor (either accelerometer, gravity or magnetometer) accuracy
+     * changes.
+     */
+    fun interface OnAccuracyChangedListener {
+        /**
+         * Called when accuracy changes.
+         *
+         * @param estimator leveled absolute attitude estimator that raised this event.
+         * @param sensorType sensor that has changed its accuracy.
+         * @param accuracy new accuracy.
+         */
+        fun onAccuracyChanged(
+            estimator: GeomagneticAttitudeEstimator,
+            sensorType: SensorType,
+            accuracy: SensorAccuracy?
         )
     }
 }

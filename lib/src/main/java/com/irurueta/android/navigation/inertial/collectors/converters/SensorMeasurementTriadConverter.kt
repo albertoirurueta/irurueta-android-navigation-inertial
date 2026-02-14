@@ -11,7 +11,7 @@ import com.irurueta.navigation.inertial.calibration.Triad
  * @param T a triad type.
  */
 interface SensorMeasurementTriadConverter<SM : SensorMeasurement<SM>,
-        T : Triad<*, *>> {
+        T : Triad<*, *, T>> {
 
     /**
      * Converts provided sensor measurement into a triad and stores the result

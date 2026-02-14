@@ -65,7 +65,7 @@ abstract class SingleSensorStaticIntervalCalibrator<
         I : IntervalDetector<I, *, U, M, T, *, *>,
         U : Enum<*>,
         M : Measurement<U>,
-        T : Triad<U, M>>(
+        T : Triad<U, M, T>>(
     val context: Context,
     val sensorDelay: SensorDelay,
     val solveCalibrationWhenEnoughMeasurements: Boolean,

@@ -23,7 +23,7 @@ import com.irurueta.navigation.inertial.calibration.Triad
  * This is useful when dealing with sensor measurements that can be represented as a triad of
  * values, such as accelerometer, gyroscope, or magnetometer measurements.
  */
-interface TriadConvertible<T : Triad<*, *>> {
+interface TriadConvertible<T : Triad<*, *, T>> {
 
     /**
      * Converts the implementing class to a [Triad] instance and stores the result in the provided

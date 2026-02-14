@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,87 +13,88 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.estimators.attitude
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.SystemClock
-import androidx.test.core.app.ApplicationProvider
-import com.irurueta.android.navigation.inertial.QuaternionHelper
-import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
-import com.irurueta.android.navigation.inertial.old.collectors.GravitySensorCollector
-import com.irurueta.android.navigation.inertial.old.collectors.GyroscopeSensorCollector
-import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.AccelerometerAndGyroscopeSyncedSensorCollector
+import com.irurueta.android.navigation.inertial.collectors.GravityAndGyroscopeSyncedSensorCollector
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.estimators.filter.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.GravityAndGyroscopeSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
+import com.irurueta.android.navigation.inertial.collectors.measurements.SensorType
+import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerLeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.BaseLeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.attitude.LeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.CoordinateTransformation
 import com.irurueta.navigation.frames.FrameType
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.statistics.UniformRandomizer
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.justRun
-import io.mockk.mockkObject
-import io.mockk.slot
+import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import kotlin.math.abs
 
-@RunWith(RobolectricTestRunner::class)
 class LeveledRelativeAttitudeEstimatorTest {
 
     @get:Rule
     val mockkRule = MockKRule(this)
 
-    @MockK
-    private lateinit var listener: LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener
-
-    @MockK
-    private lateinit var accelerometerMeasurementListener:
-            AccelerometerSensorCollector.OnMeasurementListener
-
-    @MockK
-    private lateinit var gravityMeasurementListener: GravitySensorCollector.OnMeasurementListener
-
-    @MockK
-    private lateinit var gyroscopeMeasurementListener:
-            GyroscopeSensorCollector.OnMeasurementListener
-
-    @MockK
-    private lateinit var gravityEstimationListener: GravityEstimator.OnEstimationListener
-
     @MockK(relaxUnitFun = true)
     private lateinit var attitudeAvailableListener:
             LeveledRelativeAttitudeEstimator.OnAttitudeAvailableListener
 
+    @MockK(relaxUnitFun = true)
+    private lateinit var accuracyChangedListener:
+            LeveledRelativeAttitudeEstimator.OnAccuracyChangedListener
+
     @MockK
     private lateinit var location: Location
 
+    @MockK
+    private lateinit var context: Context
+
+    @MockK
+    private lateinit var sensorManager: SensorManager
+
+    @MockK
+    private lateinit var accelerometerSensor: Sensor
+
+    @MockK
+    private lateinit var gravitySensor: Sensor
+
+    @MockK
+    private lateinit var gyroscopeSensor: Sensor
+
     @Test
     fun constructor_whenRequiredProperties_setsDefaultValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         // check
         assertSame(context, estimator.context)
         assertNull(estimator.location)
+        assertTrue(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.GAME, estimator.sensorDelay)
         assertTrue(estimator.useAccelerometer)
         assertEquals(
@@ -111,44 +112,69 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertFalse(estimator.estimateCoordinateTransformation)
         assertTrue(estimator.estimateEulerAngles)
         assertNull(estimator.attitudeAvailableListener)
-        assertNull(estimator.accelerometerMeasurementListener)
-        assertNull(estimator.gravityMeasurementListener)
-        assertNull(estimator.gyroscopeMeasurementListener)
-        assertNull(estimator.gravityEstimationListener)
-        assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
+        assertNull(estimator.accuracyChangedListener)
+        assertEquals(0.0, estimator.gyroscopeTimeIntervalSeconds, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             estimator.indirectInterpolationWeight,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             estimator.panicCounterThreshold
         )
+
+        // check internal properties
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
+
+        assertSame(context, gravityAndGyroscopeCollector.context)
+        assertEquals(estimator.gyroscopeSensorType, gravityAndGyroscopeCollector.gyroscopeSensorType)
+        assertEquals(estimator.sensorDelay, gravityAndGyroscopeCollector.gravitySensorDelay)
+        assertEquals(estimator.sensorDelay, gravityAndGyroscopeCollector.gyroscopeSensorDelay)
+        assertNotNull(gravityAndGyroscopeCollector.accuracyChangedListener)
+        assertNotNull(gravityAndGyroscopeCollector.measurementListener)
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+
+        assertSame(context, accelerometerAndGyroscopeCollector.context)
+        assertEquals(
+            estimator.gyroscopeSensorType,
+            accelerometerAndGyroscopeCollector.gyroscopeSensorType
+        )
+        assertEquals(
+            estimator.sensorDelay,
+            accelerometerAndGyroscopeCollector.accelerometerSensorDelay
+        )
+        assertEquals(estimator.sensorDelay, accelerometerAndGyroscopeCollector.gyroscopeSensorDelay)
+        assertNotNull(accelerometerAndGyroscopeCollector.accuracyChangedListener)
+        assertNotNull(accelerometerAndGyroscopeCollector.measurementListener)
     }
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
-        val accelerometerAveragingFilter = MeanAveragingFilter()
+        val accelerometerAveragingFilter = MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
             location,
@@ -161,16 +187,15 @@ class LeveledRelativeAttitudeEstimatorTest {
             useAccurateRelativeGyroscopeAttitudeEstimator = false,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = false,
-            listener,
-            accelerometerMeasurementListener,
-            gravityMeasurementListener,
-            gyroscopeMeasurementListener,
-            gravityEstimationListener
+            attitudeAvailableListener,
+            accuracyChangedListener,
+            adjustGravityNorm = false
         )
 
         // check
         assertSame(context, estimator.context)
         assertSame(location, estimator.location)
+        assertFalse(estimator.adjustGravityNorm)
         assertEquals(SensorDelay.NORMAL, estimator.sensorDelay)
         assertFalse(estimator.useAccelerometer)
         assertEquals(
@@ -186,47 +211,73 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
         assertTrue(estimator.estimateCoordinateTransformation)
         assertFalse(estimator.estimateEulerAngles)
-        assertSame(listener, estimator.attitudeAvailableListener)
-        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
-        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
-        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
-        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
-        assertEquals(0.0, estimator.gyroscopeAverageTimeInterval, 0.0)
+        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+        assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
+        assertEquals(0.0, estimator.gyroscopeTimeIntervalSeconds, 0.0)
         assertFalse(estimator.running)
         assertTrue(estimator.useIndirectInterpolation)
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             estimator.indirectInterpolationWeight,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
             0.0
         )
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             estimator.panicCounterThreshold
         )
+
+        // check internal properties
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
+
+        assertSame(context, gravityAndGyroscopeCollector.context)
+        assertEquals(estimator.gyroscopeSensorType, gravityAndGyroscopeCollector.gyroscopeSensorType)
+        assertEquals(estimator.sensorDelay, gravityAndGyroscopeCollector.gravitySensorDelay)
+        assertEquals(estimator.sensorDelay, gravityAndGyroscopeCollector.gyroscopeSensorDelay)
+        assertNotNull(gravityAndGyroscopeCollector.accuracyChangedListener)
+        assertNotNull(gravityAndGyroscopeCollector.measurementListener)
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+
+        assertSame(context, accelerometerAndGyroscopeCollector.context)
+        assertEquals(
+            estimator.gyroscopeSensorType,
+            accelerometerAndGyroscopeCollector.gyroscopeSensorType
+        )
+        assertEquals(
+            estimator.sensorDelay,
+            accelerometerAndGyroscopeCollector.accelerometerSensorDelay
+        )
+        assertEquals(estimator.sensorDelay, accelerometerAndGyroscopeCollector.gyroscopeSensorDelay)
+        assertNotNull(accelerometerAndGyroscopeCollector.accuracyChangedListener)
+        assertNotNull(accelerometerAndGyroscopeCollector.measurementListener)
     }
 
     @Test
     fun location_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
-        assertFalse(estimator.running)
+        // check default value
         assertNull(estimator.location)
+        assertFalse(estimator.running)
 
         // set new value
         val location = getLocation()
@@ -244,7 +295,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun location_whenRunningAndNotNull_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertFalse(estimator.running)
@@ -262,9 +312,8 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertSame(location, estimator.location)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun location_whenRunningAndNull_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val location = getLocation()
         val estimator = LeveledRelativeAttitudeEstimator(context, location)
 
@@ -277,105 +326,39 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertTrue(estimator.running)
 
         // set new value
-        estimator.location = null
+        assertThrows(IllegalStateException::class.java) {
+            estimator.location = null
+        }
     }
 
     @Test
-    fun attitudeAvailableListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun adjustGravityNorm_setsExpectedValue() {
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         // check default value
-        assertNull(estimator.attitudeAvailableListener)
+        assertTrue(estimator.adjustGravityNorm)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        assertTrue(gravityProcessor.adjustGravityNorm)
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        assertTrue(accelerometerProcessor.adjustGravityNorm)
 
         // set new value
-        estimator.attitudeAvailableListener = attitudeAvailableListener
+        estimator.adjustGravityNorm = false
 
         // check
-        assertSame(attitudeAvailableListener, estimator.attitudeAvailableListener)
+        assertFalse(estimator.adjustGravityNorm)
+        assertFalse(gravityProcessor.adjustGravityNorm)
+        assertFalse(accelerometerProcessor.adjustGravityNorm)
     }
 
     @Test
-    fun accelerometerMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        // check default value
-        assertNull(estimator.accelerometerMeasurementListener)
-
-        // set new value
-        estimator.accelerometerMeasurementListener = accelerometerMeasurementListener
-
-        // check
-        assertSame(accelerometerMeasurementListener, estimator.accelerometerMeasurementListener)
-
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        assertSame(
-            levelingEstimator.accelerometerMeasurementListener,
-            accelerometerMeasurementListener
-        )
-    }
-
-    @Test
-    fun gravityMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        // check default value
-        assertNull(estimator.gravityMeasurementListener)
-
-        // set new value
-        estimator.gravityMeasurementListener = gravityMeasurementListener
-
-        // check
-        assertSame(gravityMeasurementListener, estimator.gravityMeasurementListener)
-
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        assertSame(levelingEstimator.gravityMeasurementListener, gravityMeasurementListener)
-    }
-
-    @Test
-    fun gyroscopeMeasurementListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        // check default value
-        assertNull(estimator.gyroscopeMeasurementListener)
-
-        // set new value
-        estimator.gyroscopeMeasurementListener = gyroscopeMeasurementListener
-
-        // check
-        assertSame(gyroscopeMeasurementListener, estimator.gyroscopeMeasurementListener)
-    }
-
-    @Test
-    fun gravityEstimationListener_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        // check default value
-        assertNull(estimator.gravityEstimationListener)
-
-        // set new value
-        estimator.gravityEstimationListener = gravityEstimationListener
-
-        // check
-        assertSame(gravityEstimationListener, estimator.gravityEstimationListener)
-
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        assertEquals(levelingEstimator.gravityEstimationListener, gravityEstimationListener)
-    }
-
-    @Test(expected = IllegalStateException::class)
     fun useAccurateLevelingEstimator_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
@@ -386,12 +369,13 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         assertTrue(estimator.running)
 
-        estimator.useAccurateLevelingEstimator = true
+        assertThrows(IllegalStateException::class.java) {
+            estimator.useAccurateLevelingEstimator = true
+        }
     }
 
     @Test
     fun useAccurateLevelingEstimator_whenNotRunningNoLocationAndSetToFalse_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
@@ -404,27 +388,31 @@ class LeveledRelativeAttitudeEstimatorTest {
         assertFalse(estimator.useAccurateLevelingEstimator)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun useAccurateLevelingEstimator_whenNotRunningNoLocationAndSetToTrue_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertNull(estimator.location)
         assertFalse(estimator.running)
 
-        estimator.useAccurateLevelingEstimator = true
+        assertThrows(IllegalStateException::class.java) {
+            estimator.useAccurateLevelingEstimator = true
+        }
     }
 
     @Test
-    fun useAccurateLevelingEstimator_whenNotRunningAndLocationAndSetToTrue_setsExpectedValueAndBuildsEstimator() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun useAccurateLevelingEstimator_whenNotRunningAndLocationAndSetToTrue_setsExpectedValueAndUpdatesProcessors() {
         val location = getLocation()
         val estimator = LeveledRelativeAttitudeEstimator(context, location)
 
-        val levelingEstimator1: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        assertNotNull(levelingEstimator1)
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
 
         assertFalse(estimator.useAccurateLevelingEstimator)
         assertFalse(estimator.running)
@@ -435,55 +423,20 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertTrue(estimator.useAccurateLevelingEstimator)
-
-        val levelingEstimator2: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator2)
-        assertTrue(levelingEstimator2 is AccurateLevelingEstimator)
-        val accurateLevelingEstimator = levelingEstimator2 as AccurateLevelingEstimator
-        assertSame(context, accurateLevelingEstimator.context)
-        assertSame(location, accurateLevelingEstimator.location)
-        assertEquals(estimator.sensorDelay, accurateLevelingEstimator.sensorDelay)
-        assertEquals(estimator.useAccelerometer, accurateLevelingEstimator.useAccelerometer)
-        assertEquals(
-            estimator.accelerometerSensorType,
-            accurateLevelingEstimator.accelerometerSensorType
-        )
-        assertSame(
-            estimator.accelerometerAveragingFilter,
-            accurateLevelingEstimator.accelerometerAveragingFilter
-        )
-        assertFalse(accurateLevelingEstimator.estimateCoordinateTransformation)
-        assertFalse(accurateLevelingEstimator.estimateEulerAngles)
-        assertNotNull(accurateLevelingEstimator.levelingAvailableListener)
+        assertTrue(accelerometerProcessor.useAccurateLevelingProcessor)
+        assertTrue(gravityProcessor.useAccurateLevelingProcessor)
 
         // set to false
         estimator.useAccurateLevelingEstimator = false
 
         // check
         assertFalse(estimator.useAccurateLevelingEstimator)
-
-        val levelingEstimator3: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator3)
-        assertTrue(levelingEstimator3 is LevelingEstimator)
-        val levelingEstimator = levelingEstimator3 as LevelingEstimator
-        assertSame(context, levelingEstimator.context)
-        assertEquals(estimator.sensorDelay, levelingEstimator.sensorDelay)
-        assertEquals(estimator.useAccelerometer, levelingEstimator.useAccelerometer)
-        assertEquals(estimator.accelerometerSensorType, levelingEstimator.accelerometerSensorType)
-        assertSame(
-            estimator.accelerometerAveragingFilter,
-            levelingEstimator.accelerometerAveragingFilter
-        )
-        assertFalse(levelingEstimator.estimateCoordinateTransformation)
-        assertFalse(levelingEstimator.estimateEulerAngles)
-        assertNotNull(levelingEstimator.levelingAvailableListener)
+        assertFalse(accelerometerProcessor.useAccurateLevelingProcessor)
+        assertFalse(gravityProcessor.useAccurateLevelingProcessor)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun useAccurateRelativeGyroscopeAttitudeEstimator_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertFalse(estimator.running)
@@ -493,47 +446,69 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         assertTrue(estimator.running)
 
-        estimator.useAccurateRelativeGyroscopeAttitudeEstimator = true
+        assertThrows(IllegalStateException::class.java) {
+            estimator.useAccurateRelativeGyroscopeAttitudeEstimator = true
+        }
     }
 
     @Test
-    fun useAccurateRelativeGyroscopeAttitudeEstimator_whenNotRunning_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun useAccurateRelativeGyroscopeAttitudeEstimator_whenNotRunning_setsExpectedValueAndUpdatesProcessors() {
         val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
 
         assertFalse(estimator.running)
         assertTrue(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertTrue(accelerometerProcessor.useAccurateRelativeGyroscopeAttitudeProcessor)
+        assertTrue(gravityProcessor.useAccurateRelativeGyroscopeAttitudeProcessor)
 
         // set new value
         estimator.useAccurateRelativeGyroscopeAttitudeEstimator = false
 
         // check
         assertFalse(estimator.useAccurateRelativeGyroscopeAttitudeEstimator)
+        assertFalse(accelerometerProcessor.useAccurateRelativeGyroscopeAttitudeProcessor)
+        assertFalse(gravityProcessor.useAccurateRelativeGyroscopeAttitudeProcessor)
     }
 
     @Test
-    fun useIndirectInterpolation_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun useIndirectInterpolation_setsExpectedValueAndUpdatesProcessors() {
         val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
 
         // check default value
         assertTrue(estimator.useIndirectInterpolation)
+        assertTrue(accelerometerProcessor.useIndirectInterpolation)
+        assertTrue(gravityProcessor.useIndirectInterpolation)
 
         // set new value
         estimator.useIndirectInterpolation = false
 
         // check
-        @Suppress("KotlinConstantConditions")
         assertFalse(estimator.useIndirectInterpolation)
+        assertFalse(accelerometerProcessor.useIndirectInterpolation)
+        assertFalse(gravityProcessor.useIndirectInterpolation)
     }
 
     @Test
     fun interpolationValue_whenOutOfRange_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
             0.0
         )
@@ -547,13 +522,30 @@ class LeveledRelativeAttitudeEstimatorTest {
     }
 
     @Test
-    fun interpolationValue_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun interpolationValue_whenValid_setsExpectedValueAndUpdatesProcessors() {
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INTERPOLATION_VALUE,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
             estimator.interpolationValue,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
+            accelerometerProcessor.interpolationValue,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INTERPOLATION_VALUE,
+            gravityProcessor.interpolationValue,
             0.0
         )
 
@@ -563,25 +555,45 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertEquals(value, estimator.interpolationValue, 0.0)
+        assertEquals(value, accelerometerProcessor.interpolationValue, 0.0)
+        assertEquals(value, gravityProcessor.interpolationValue, 0.0)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun indirectInterpolationWeight_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
-        estimator.indirectInterpolationWeight = 0.0
+        assertThrows(IllegalArgumentException::class.java) {
+            estimator.indirectInterpolationWeight = 0.0
+        }
     }
 
     @Test
     fun indirectInterpolationWeight_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
             estimator.indirectInterpolationWeight,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            accelerometerProcessor.indirectInterpolationWeight,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_INDIRECT_INTERPOLATION_WEIGHT,
+            gravityProcessor.indirectInterpolationWeight,
             0.0
         )
 
@@ -592,48 +604,46 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertEquals(indirectInterpolationWeight, estimator.indirectInterpolationWeight, 0.0)
+        assertEquals(
+            indirectInterpolationWeight,
+            accelerometerProcessor.indirectInterpolationWeight,
+            0.0
+        )
+        assertEquals(indirectInterpolationWeight, gravityProcessor.indirectInterpolationWeight, 0.0)
     }
 
     @Test
-    fun gyroscopeAverageTimeInterval_returnsInternalAttitudeEstimatorAverageTimeInterval() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+    fun gyroscopeAverageTimeInterval_whenUseAccelerometer_returnsProcessorValue() {
+        val estimator = LeveledRelativeAttitudeEstimator(context, useAccelerometer = true)
 
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
-        assertEquals(TIME_INTERVAL, estimator.gyroscopeAverageTimeInterval, 0.0)
-        verify(exactly = 1) { attitudeEstimatorSpy.averageTimeInterval }
+        assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
+        verify(exactly = 1) { accelerometerProcessorSpy.timeIntervalSeconds }
     }
 
     @Test
-    fun running_whenInternalEstimatorsAreNotRunning_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+    fun gyroscopeAverageTimeInterval_whenAccelerometerNotUsed_returnsProcessorValue() {
+        val estimator = LeveledRelativeAttitudeEstimator(context, useAccelerometer = false)
 
-        assertFalse(estimator.running)
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.timeIntervalSeconds }.returns(TIME_INTERVAL)
+        estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+        assertEquals(TIME_INTERVAL, estimator.gyroscopeTimeIntervalSeconds, 0.0)
+        verify(exactly = 1) { gravityProcessorSpy.timeIntervalSeconds }
     }
 
     @Test
-    fun running_returnsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        assertFalse(estimator.running)
-
-        // set as running
-        estimator.setPrivateProperty("running", true)
-
-        assertTrue(estimator.running)
-    }
-
-    @Test(expected = IllegalStateException::class)
     fun outlierThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         // set as running
@@ -642,17 +652,18 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val randomizer = UniformRandomizer()
         val outlierThreshold = randomizer.nextDouble()
-        estimator.outlierThreshold = outlierThreshold
+        assertThrows(IllegalStateException::class.java) {
+            estimator.outlierThreshold = outlierThreshold
+        }
     }
 
     @Test
     fun outlierThreshold_whenOutOfRange_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
             0.0
         )
@@ -665,13 +676,30 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun outlierThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
             estimator.outlierThreshold,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
+            accelerometerProcessor.outlierThreshold,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_THRESHOLD,
+            gravityProcessor.outlierThreshold,
             0.0
         )
         assertFalse(estimator.running)
@@ -684,11 +712,12 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertEquals(outlierThreshold, estimator.outlierThreshold, 0.0)
+        assertEquals(outlierThreshold, accelerometerProcessor.outlierThreshold, 0.0)
+        assertEquals(outlierThreshold, gravityProcessor.outlierThreshold, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun outlierPanicThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         // set as running
@@ -697,17 +726,18 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         val randomizer = UniformRandomizer()
         val outlierPanicThreshold = randomizer.nextDouble()
-        estimator.outlierPanicThreshold = outlierPanicThreshold
+        assertThrows(IllegalStateException::class.java) {
+            estimator.outlierPanicThreshold = outlierPanicThreshold
+        }
     }
 
     @Test
     fun outlierPanicThreshold_whenOutOfRange_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
             0.0
         )
@@ -722,13 +752,30 @@ class LeveledRelativeAttitudeEstimatorTest {
 
     @Test
     fun outlierPanicThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
 
         // check default value
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
             estimator.outlierPanicThreshold,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            accelerometerProcessor.outlierPanicThreshold,
+            0.0
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_OUTLIER_PANIC_THRESHOLD,
+            gravityProcessor.outlierPanicThreshold,
             0.0
         )
         assertFalse(estimator.running)
@@ -740,1638 +787,642 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         // check
         assertEquals(outlierPanicThreshold, estimator.outlierPanicThreshold, 0.0)
+        assertEquals(outlierPanicThreshold, accelerometerProcessor.outlierPanicThreshold, 0.0)
+        assertEquals(outlierPanicThreshold, gravityProcessor.outlierPanicThreshold, 0.0)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun panicCounterThreshold_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         // set as running
         estimator.setPrivateProperty("running", true)
         assertTrue(estimator.running)
 
-        estimator.panicCounterThreshold = 1
+        assertThrows(IllegalStateException::class.java) {
+            estimator.panicCounterThreshold = 1
+        }
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun panicCounterThreshold_whenInvalid_throwsIllegalArgumentException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
         assertFalse(estimator.running)
 
-        estimator.panicCounterThreshold = 0
+        assertThrows(IllegalArgumentException::class.java) {
+            estimator.panicCounterThreshold = 0
+        }
     }
 
     @Test
     fun panicCounterThreshold_whenValid_setsExpectedValue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         val estimator = LeveledRelativeAttitudeEstimator(context)
 
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+
+        // check default value
         assertFalse(estimator.running)
         assertEquals(
-            LeveledRelativeAttitudeEstimator.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
             estimator.panicCounterThreshold
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            accelerometerProcessor.panicCounterThreshold
+        )
+        assertEquals(
+            BaseLeveledRelativeAttitudeProcessor.DEFAULT_PANIC_COUNTER_THRESHOLD,
+            gravityProcessor.panicCounterThreshold
         )
 
         estimator.panicCounterThreshold = 2
 
         // check
         assertEquals(2, estimator.panicCounterThreshold)
+        assertEquals(2, accelerometerProcessor.panicCounterThreshold)
+        assertEquals(2, gravityProcessor.panicCounterThreshold)
     }
 
-    @Test(expected = IllegalStateException::class)
+    @Test
     fun start_whenRunning_throwsIllegalStateException() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
+        mockkStatic(SystemClock::class) {
+            val startTimestamp = System.nanoTime()
+            every { SystemClock.elapsedRealtimeNanos() }.returns(startTimestamp)
+
+            val estimator = LeveledRelativeAttitudeEstimator(context)
+
+            assertFalse(estimator.running)
+
+            // set as running
+            estimator.setPrivateProperty("running", true)
+
+            assertTrue(estimator.running)
+
+            assertThrows(IllegalStateException::class.java) {
+                estimator.start()
+            }
+        }
+    }
+
+    @Test
+    fun start_whenNotRunningAndUseAccelerometer_resetsAndStartsCollector() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+        every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }
+            .returns(gyroscopeSensor)
+        every { sensorManager.registerListener(any(), any<Sensor>(), any()) }.returns(true)
+
+        val timestamp = System.nanoTime()
+        val estimator = LeveledRelativeAttitudeEstimator(context, useAccelerometer = true)
+
+        // setup spies
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+        val accelerometerAndGyroscopeCollectorSpy = spyk(accelerometerAndGyroscopeCollector)
+        every { accelerometerAndGyroscopeCollectorSpy.start(timestamp) }.returns(true)
+        estimator.setPrivateProperty(
+            "accelerometerAndGyroscopeCollector",
+            accelerometerAndGyroscopeCollectorSpy
+        )
+
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
+        val gravityAndGyroscopeCollectorSpy = spyk(gravityAndGyroscopeCollector)
+        estimator.setPrivateProperty("gravityAndGyroscopeCollector", gravityAndGyroscopeCollectorSpy)
 
         assertFalse(estimator.running)
+
+        assertTrue(estimator.start(timestamp))
+
+        verify(exactly = 1) { accelerometerProcessorSpy.reset() }
+        verify(exactly = 1) { accelerometerAndGyroscopeCollectorSpy.start(timestamp) }
+        verify { gravityProcessorSpy wasNot Called }
+        verify { gravityAndGyroscopeCollectorSpy wasNot Called }
+    }
+
+    @Test
+    fun start_whenNotRunningAndAccelerometerNotUsed_resetsAndStartsSyncer() {
+        val timestamp = System.nanoTime()
+        val estimator = LeveledRelativeAttitudeEstimator(context, useAccelerometer = false)
+
+        // setup spies
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+        val accelerometerAndGyroscopeCollectorSpy = spyk(accelerometerAndGyroscopeCollector)
+        estimator.setPrivateProperty(
+            "accelerometerAndGyroscopeCollector",
+            accelerometerAndGyroscopeCollectorSpy
+        )
+
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
+        val gravityAndGyroscopeCollectorSpy = spyk(gravityAndGyroscopeCollector)
+        every { gravityAndGyroscopeCollectorSpy.start(timestamp) }.returns(true)
+        estimator.setPrivateProperty("gravityAndGyroscopeCollector", gravityAndGyroscopeCollectorSpy)
+
+        assertFalse(estimator.running)
+
+        assertTrue(estimator.start(timestamp))
+
+        verify(exactly = 1) { gravityProcessorSpy.reset() }
+        verify(exactly = 1) { gravityAndGyroscopeCollectorSpy.start(timestamp) }
+        verify { accelerometerProcessorSpy wasNot Called }
+        verify { accelerometerAndGyroscopeCollectorSpy wasNot Called }
+    }
+
+    @Test
+    fun stop_stopsInternalSyncers() {
+        every { context.getSystemService(Context.SENSOR_SERVICE) }.returns(sensorManager)
+        every { sensorManager.getDefaultSensor(AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED.value) }
+            .returns(accelerometerSensor)
+        every { sensorManager.getDefaultSensor(GyroscopeSensorType.GYROSCOPE_UNCALIBRATED.value) }
+            .returns(gyroscopeSensor)
+        every { sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY) }
+            .returns(gravitySensor)
+        justRun { sensorManager.unregisterListener(any(), any<Sensor>()) }
+
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        // setup spies
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+        val accelerometerAndGyroscopeCollectorSpy = spyk(accelerometerAndGyroscopeCollector)
+        estimator.setPrivateProperty(
+            "accelerometerAndGyroscopeCollector",
+            accelerometerAndGyroscopeCollectorSpy
+        )
+
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
+        val gravityAndGyroscopeCollectorSpy = spyk(gravityAndGyroscopeCollector)
+        estimator.setPrivateProperty("gravityAndGyroscopeCollector", gravityAndGyroscopeCollectorSpy)
 
         // set as running
         estimator.setPrivateProperty("running", true)
-
         assertTrue(estimator.running)
 
-        estimator.start()
-    }
-
-    @Test
-    fun start_whenNotRunningAndInternalLevelingEstimatorFails_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        assertFalse(estimator.running)
-
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        every { levelingEstimatorSpy.start() }.returns(false)
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
-
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
-
-        assertFalse(estimator.start())
-
-        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(exactly = 0) { attitudeEstimatorSpy.start() }
-        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
-    }
-
-    @Test
-    fun start_whenNotRunningAndInternalAttitudeEstimatorFails_returnsFalse() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        assertFalse(estimator.running)
-
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        every { levelingEstimatorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
-
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        every { attitudeEstimatorSpy.start() }.returns(false)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
-
-        assertFalse(estimator.start())
-
-        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(exactly = 1) { attitudeEstimatorSpy.start() }
-    }
-
-    @Test
-    fun start_whenNotRunningAndInternalEstimatorSucceeds_returnsTrue() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        assertFalse(estimator.running)
-
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        every { levelingEstimatorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
-
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        every { attitudeEstimatorSpy.start() }.returns(true)
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
-
-        assertTrue(estimator.start())
-
-        verify(exactly = 1) { levelingEstimatorSpy.start() }
-        verify(exactly = 1) { attitudeEstimatorSpy.start() }
-    }
-
-    @Test
-    fun stop_stopsInternalEstimators() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(context)
-
-        // set as running
-        estimator.setPrivateProperty("running", true)
-        assertTrue(estimator.running)
-
-        val levelingEstimator: BaseLevelingEstimator<*, *>? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-        val levelingEstimatorSpy = spyk(levelingEstimator)
-        justRun { levelingEstimatorSpy.stop() }
-        estimator.setPrivateProperty("levelingEstimator", levelingEstimatorSpy)
-
-        val attitudeEstimator: BaseRelativeGyroscopeAttitudeEstimator<*, *>? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-        val attitudeEstimatorSpy = spyk(attitudeEstimator)
-        justRun { attitudeEstimatorSpy.stop() }
-        estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
-
+        // stop
         estimator.stop()
 
-        verify(exactly = 1) { levelingEstimatorSpy.stop() }
-        verify(exactly = 1) { attitudeEstimatorSpy.stop() }
+        // check
         assertFalse(estimator.running)
+        verify(exactly = 1) { accelerometerAndGyroscopeCollectorSpy.stop() }
+        verify(exactly = 1) { gravityAndGyroscopeCollectorSpy.stop() }
     }
 
     @Test
-    fun processRelativeAttitude_whenFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false
-        )
+    fun gravityCollector_whenAccuracyChangedAndNoListener_makesNoAction() {
+        val estimator = LeveledRelativeAttitudeEstimator(context)
 
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
 
-        val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
+        val listener = gravityAndGyroscopeCollector.accuracyChangedListener
         requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            attitudeEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
+        listener.onAccuracyChanged(
+            gravityAndGyroscopeCollector,
+            SensorType.GRAVITY,
+            SensorAccuracy.MEDIUM
         )
-
-        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude, previousRelativeAttitude2)
     }
 
     @Test
-    fun processRelativeAttitude_whenFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun gravityCollector_whenAccuracyChangedAndListener_notifies() {
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true
+            accuracyChangedListener = accuracyChangedListener
         )
 
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
 
-        val attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
+        val listener = gravityAndGyroscopeCollector.accuracyChangedListener
         requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            attitudeEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null,
-            null
+        listener.onAccuracyChanged(
+            gravityAndGyroscopeCollector,
+            SensorType.GRAVITY,
+            SensorAccuracy.MEDIUM
         )
 
-        verify(exactly = 1) { internalAttitude.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude, previousRelativeAttitude2)
-    }
-
-    @Test
-    fun processRelativeAttitude_whenNotFirstAndNonAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
-
-        val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-
-        // call listener for the 1st time
-        val internalAttitude1 = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            attitudeEstimator,
-            internalAttitude1,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude1, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude1, previousRelativeAttitude2)
-
-        // call listener a 2nd time
-        val deltaRelativeAttitude1 = getAttitude()
-        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(
-            attitudeEstimator,
-            internalAttitude2,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude2, relativeAttitude1)
-        val hasRelativeAttitude3: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude3)
-        assertTrue(hasRelativeAttitude3)
-        val hasDeltaRelativeAttitude3: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude3)
-        assertTrue(hasDeltaRelativeAttitude3)
-        val previousRelativeAttitude3: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude3)
-        assertEquals(internalAttitude1, previousRelativeAttitude3)
-        val inversePreviousRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("inversePreviousRelativeAttitude")
-        requireNotNull(inversePreviousRelativeAttitude)
-        assertEquals(
-            previousRelativeAttitude2.inverseAndReturnNew(),
-            inversePreviousRelativeAttitude
-        )
-        val deltaRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude2)
-        assertEquals(deltaRelativeAttitude1, deltaRelativeAttitude2)
-    }
-
-    @Test
-    fun processRelativeAttitude_whenNotFirstAndAccurateRelativeAttitudeEstimator_copiesAttitudeAndSetsPreviousRelativeAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = true
-        )
-
-        // check initial values
-        val relativeAttitude1: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude1)
-        assertEquals(Quaternion(), relativeAttitude1)
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-        val previousRelativeAttitude1: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        assertNull(previousRelativeAttitude1)
-
-        val attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? =
-            estimator.getPrivateProperty("attitudeEstimator")
-        requireNotNull(attitudeEstimator)
-
-        // call listener for the 1st time
-        val internalAttitude1 = spyk(getAttitude())
-        val listener = attitudeEstimator.attitudeAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onAttitudeAvailable(
-            attitudeEstimator,
-            internalAttitude1,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude1.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude1, relativeAttitude1)
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
-        val hasDeltaRelativeAttitude2: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude2)
-        assertFalse(hasDeltaRelativeAttitude2)
-        val previousRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude2)
-        assertEquals(internalAttitude1, previousRelativeAttitude2)
-
-        // call listener a 2nd time
-        val deltaRelativeAttitude1 = getAttitude()
-        val internalAttitude2 = spyk(deltaRelativeAttitude1.combineAndReturnNew(internalAttitude1))
-        listener.onAttitudeAvailable(
-            attitudeEstimator,
-            internalAttitude2,
-            timestamp,
-            null,
-            null,
-            null,
-            null
-        )
-
-        verify(exactly = 1) { internalAttitude2.copyTo(relativeAttitude1) }
-        assertEquals(internalAttitude2, relativeAttitude1)
-        val hasRelativeAttitude3: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude3)
-        assertTrue(hasRelativeAttitude3)
-        val hasDeltaRelativeAttitude3: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude3)
-        assertTrue(hasDeltaRelativeAttitude3)
-        val previousRelativeAttitude3: Quaternion? =
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        requireNotNull(previousRelativeAttitude3)
-        assertEquals(internalAttitude1, previousRelativeAttitude3)
-        val inversePreviousRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("inversePreviousRelativeAttitude")
-        requireNotNull(inversePreviousRelativeAttitude)
-        assertEquals(
-            previousRelativeAttitude2.inverseAndReturnNew(),
-            inversePreviousRelativeAttitude
-        )
-        val deltaRelativeAttitude2: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude2)
-        assertEquals(deltaRelativeAttitude1, deltaRelativeAttitude2)
-    }
-
-    @Test
-    fun processLeveling_whenNoRelativeAttitudeAndNonAccurateLeveling_makesNoAction() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateLevelingEstimator = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(Quaternion(), levelingAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify { internalAttitude wasNot Called }
-    }
-
-    @Test
-    fun processLeveling_whenNoRelativeAttitudeAndAccurateLeveling_makesNoAction() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            location,
-            useAccurateLevelingEstimator = true,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertFalse(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val levelingEstimator: AccurateLevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(Quaternion(), levelingAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify { internalAttitude wasNot Called }
-    }
-
-    @Test
-    fun processLeveling_whenRelativeAttitudeAndNonAccurateLeveling_copiesAttitude() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateLevelingEstimator = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(internalAttitude, levelingAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-    }
-
-    @Test
-    fun processLeveling_whenRelativeAttitudeAndAccurateLeveling_copiesAttitude() {
-        val location = getLocation()
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            location,
-            useAccurateLevelingEstimator = true,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertFalse(hasDeltaRelativeAttitude1)
-
-        val levelingEstimator: AccurateLevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-        assertEquals(internalAttitude, levelingAttitude2)
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-    }
-
-    @Test
-    fun processLeveling_whenDeltaRelativeAttitudeAndResetLeveling_resets() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateLevelingEstimator = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
-
-        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spyk(relativeAttitude)
-        estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
-
-        val internalFusedAttitude: Quaternion? =
-            estimator.getPrivateProperty("internalFusedAttitude")
-        requireNotNull(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
-        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
-
-        estimator.setPrivateProperty("panicCounter", estimator.panicCounterThreshold)
-        val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter1)
-        assertEquals(estimator.panicCounterThreshold, panicCounter1)
-
-        val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-        requireNotNull(resetToLeveling)
-        assertTrue(resetToLeveling)
-
-        val levelingEstimator: LevelingEstimator? =
-            estimator.getPrivateProperty("levelingEstimator")
-        requireNotNull(levelingEstimator)
-
-        val internalAttitude = spyk(getAttitude())
-        val listener = levelingEstimator.levelingAvailableListener
-        requireNotNull(listener)
-        val timestamp = SystemClock.elapsedRealtimeNanos()
-        listener.onLevelingAvailable(
-            levelingEstimator,
-            internalAttitude,
-            timestamp,
-            null,
-            null,
-            null
-        )
-
-        val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude2)
-
-        val angles = DoubleArray(3)
-        internalAttitude.toEulerAngles(angles)
-        val levelingRoll = angles[0]
-        val levelingPitch = angles[1]
-        attitude.toEulerAngles(angles)
-        val relativeYaw = angles[2]
-
-        verify { attitudeAvailableListener wasNot Called }
-        verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-        val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-        requireNotNull(eulerAngles)
-        verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-        verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
+        // check
         verify(exactly = 1) {
-            levelingAttitudeSpy.setFromEulerAngles(
-                levelingRoll,
-                levelingPitch,
-                relativeYaw
+            accuracyChangedListener.onAccuracyChanged(
+                estimator,
+                SensorType.GRAVITY,
+                SensorAccuracy.MEDIUM
             )
         }
-        verify { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-        val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-        requireNotNull(panicCounter2)
-        assertEquals(0, panicCounter2)
-
-        val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude2)
-        assertTrue(hasRelativeAttitude2)
     }
 
     @Test
-    fun processLeveling_whenDeltaRelativeAttitudeSmallDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun gravityCollector_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
-            useAccurateLevelingEstimator = false,
+            attitudeAvailableListener = attitudeAvailableListener
+        )
+
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
+
+        val measurement = GravityAndGyroscopeSyncedSensorMeasurement()
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(measurement) }.returns(false)
+        estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+        val listener = gravityAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(gravityAndGyroscopeCollector, measurement)
+
+        verify { attitudeAvailableListener wasNot Called }
+    }
+
+    @Test
+    fun gravityCollector_whenSyncedMeasurementProcessedAndNoListener_updatesFusedAttitude() {
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
+
+        val measurement = GravityAndGyroscopeSyncedSensorMeasurement()
+        val fusedAttitude1 = getAttitude()
+
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(measurement) }.returns(true)
+        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
+
+        val listener = gravityAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(gravityAndGyroscopeCollector, measurement)
+
+        val fusedAttitude2: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude2)
+        assertEquals(fusedAttitude1, fusedAttitude2)
+    }
+
+    @Test
+    fun gravityCollector_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesDisableAndListener_updatesFusedAttitudeAndNotifies() {
+        val estimator = LeveledRelativeAttitudeEstimator(
+            context,
             estimateCoordinateTransformation = false,
             estimateEulerAngles = false,
             attitudeAvailableListener = attitudeAvailableListener
         )
-        estimator.useIndirectInterpolation = false
 
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
 
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
+        val timestamp = System.nanoTime()
+        val measurement = GravityAndGyroscopeSyncedSensorMeasurement(timestamp = timestamp)
+        val fusedAttitude1 = getAttitude()
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(measurement) }.returns(true)
+        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
+        val listener = gravityAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(gravityAndGyroscopeCollector, measurement)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val fusedAttitude2: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude2)
+        assertEquals(fusedAttitude1, fusedAttitude2)
 
-        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spyk(relativeAttitude)
-        estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
-
-        val internalFusedAttitude: Quaternion? =
-            estimator.getPrivateProperty("internalFusedAttitude")
-        requireNotNull(internalFusedAttitude)
-        getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
-        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
-
-        val previousRelativeAttitude1 = Quaternion()
-        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
-        assertSame(
-            previousRelativeAttitude1,
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        )
-
-        val deltaRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude)
-        val randomizer = UniformRandomizer()
-        val deltaRoll = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaPitch = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
-
-        mockkObject(QuaternionHelper) {
-            every {
-                QuaternionHelper.dotProduct(
-                    any(),
-                    any()
-                )
-            }.returns(estimator.outlierThreshold)
-
-            val fusedAttitude2 = Quaternion(internalFusedAttitude)
-            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
-            estimator.setPrivateProperty("panicCounter", 1)
-            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter1)
-            assertEquals(1, panicCounter1)
-
-            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-            requireNotNull(resetToLeveling)
-            assertFalse(resetToLeveling)
-
-            val levelingEstimator: LevelingEstimator? =
-                estimator.getPrivateProperty("levelingEstimator")
-            requireNotNull(levelingEstimator)
-
-            val internalAttitude = spyk(getAttitude())
-            val listener = levelingEstimator.levelingAvailableListener
-            requireNotNull(listener)
-            val timestamp = SystemClock.elapsedRealtimeNanos()
-            estimator.setPrivateProperty("timestamp", timestamp)
-            listener.onLevelingAvailable(
-                levelingEstimator,
-                internalAttitude,
+        verify(exactly = 1) {
+            attitudeAvailableListener.onAttitudeAvailable(
+                estimator,
+                fusedAttitude2,
                 timestamp,
+                null,
                 null,
                 null,
                 null
             )
-
-            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-            requireNotNull(levelingAttitude2)
-
-            val angles = DoubleArray(3)
-            internalAttitude.toEulerAngles(angles)
-            val levelingRoll = angles[0]
-            val levelingPitch = angles[1]
-            attitude.toEulerAngles(angles)
-            val relativeYaw = angles[2]
-
-            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-            requireNotNull(eulerAngles)
-            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) {
-                levelingAttitudeSpy.setFromEulerAngles(
-                    levelingRoll,
-                    levelingPitch,
-                    relativeYaw
-                )
-            }
-            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter2)
-            assertEquals(0, panicCounter2)
-
-            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-            requireNotNull(hasRelativeAttitude2)
-            assertTrue(hasRelativeAttitude2)
-
-            val fusedAttitude4 = Quaternion()
-            Quaternion.slerp(
-                fusedAttitude3,
-                levelingAttitudeSpy,
-                estimator.interpolationValue,
-                fusedAttitude4
-            )
-
-            assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
-
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-            assertTrue(absDot >= estimator.outlierThreshold)
-
-            val previousRelativeAttitude2: Quaternion? =
-                estimator.getPrivateProperty("previousRelativeAttitude")
-            requireNotNull(previousRelativeAttitude2)
-            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-            requireNotNull(fusedAttitude)
-
-            verify(exactly = 1) {
-                attitudeAvailableListener.onAttitudeAvailable(
-                    estimator,
-                    fusedAttitude,
-                    timestamp,
-                    null,
-                    null,
-                    null,
-                    null
-                )
-            }
         }
     }
 
     @Test
-    fun processLeveling_whenDeltaRelativeAttitudeMediumDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+    fun gravityCollector_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesEnableAndListener_updatesFusedAttitudeAndNotifies() {
         val estimator = LeveledRelativeAttitudeEstimator(
             context,
-            useAccurateLevelingEstimator = false,
-            estimateCoordinateTransformation = false,
-            estimateEulerAngles = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-        estimator.useIndirectInterpolation = false
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
-
-        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spyk(relativeAttitude)
-        estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
-
-        val internalFusedAttitude: Quaternion? =
-            estimator.getPrivateProperty("internalFusedAttitude")
-        requireNotNull(internalFusedAttitude)
-        getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
-        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
-
-        val previousRelativeAttitude1 = Quaternion()
-        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
-        assertSame(
-            previousRelativeAttitude1,
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        )
-
-        val deltaRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude)
-        val randomizer = UniformRandomizer()
-        val deltaRoll = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaPitch = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
-
-        mockkObject(QuaternionHelper) {
-            every {
-                QuaternionHelper.dotProduct(
-                    any(),
-                    any()
-                )
-            }.returns(0.5 * (estimator.outlierThreshold + estimator.outlierPanicThreshold))
-
-            val fusedAttitude2 = Quaternion(internalFusedAttitude)
-            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
-            estimator.setPrivateProperty("panicCounter", 1)
-            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter1)
-            assertEquals(1, panicCounter1)
-
-            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-            requireNotNull(resetToLeveling)
-            assertFalse(resetToLeveling)
-
-            val levelingEstimator: LevelingEstimator? =
-                estimator.getPrivateProperty("levelingEstimator")
-            requireNotNull(levelingEstimator)
-
-            val internalAttitude = spyk(getAttitude())
-            val listener = levelingEstimator.levelingAvailableListener
-            requireNotNull(listener)
-            val timestamp = SystemClock.elapsedRealtimeNanos()
-            estimator.setPrivateProperty("timestamp", timestamp)
-            listener.onLevelingAvailable(
-                levelingEstimator,
-                internalAttitude,
-                timestamp,
-                null,
-                null,
-                null
-            )
-
-            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-            requireNotNull(levelingAttitude2)
-
-            val angles = DoubleArray(3)
-            internalAttitude.toEulerAngles(angles)
-            val levelingRoll = angles[0]
-            val levelingPitch = angles[1]
-            attitude.toEulerAngles(angles)
-            val relativeYaw = angles[2]
-
-            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-            requireNotNull(eulerAngles)
-            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) {
-                levelingAttitudeSpy.setFromEulerAngles(
-                    levelingRoll,
-                    levelingPitch,
-                    relativeYaw
-                )
-            }
-            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter2)
-            assertEquals(1, panicCounter2)
-
-            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-            requireNotNull(hasRelativeAttitude2)
-            assertTrue(hasRelativeAttitude2)
-
-            assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
-
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-            assertTrue(absDot < estimator.outlierThreshold)
-            assertTrue(absDot > estimator.outlierPanicThreshold)
-
-            val previousRelativeAttitude2: Quaternion? =
-                estimator.getPrivateProperty("previousRelativeAttitude")
-            requireNotNull(previousRelativeAttitude2)
-            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-            requireNotNull(fusedAttitude)
-
-            verify(exactly = 1) {
-                attitudeAvailableListener.onAttitudeAvailable(
-                    estimator,
-                    fusedAttitude,
-                    timestamp,
-                    null,
-                    null,
-                    null,
-                    null
-                )
-            }
-        }
-    }
-
-    @Test
-    fun processLeveling_whenDeltaRelativeAttitudeLargeDivergenceAndDirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateLevelingEstimator = false,
-            estimateCoordinateTransformation = false,
-            estimateEulerAngles = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-        estimator.useIndirectInterpolation = false
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
-
-        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spyk(relativeAttitude)
-        estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
-
-        val internalFusedAttitude: Quaternion? =
-            estimator.getPrivateProperty("internalFusedAttitude")
-        requireNotNull(internalFusedAttitude)
-        getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
-        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
-
-        val previousRelativeAttitude1 = Quaternion()
-        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
-        assertSame(
-            previousRelativeAttitude1,
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        )
-
-        val deltaRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude)
-        val randomizer = UniformRandomizer()
-        val deltaRoll = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaPitch = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
-
-        mockkObject(QuaternionHelper) {
-            every {
-                QuaternionHelper.dotProduct(
-                    any(),
-                    any()
-                )
-            }.returns(0.0)
-
-            val fusedAttitude2 = Quaternion(internalFusedAttitude)
-            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
-            estimator.setPrivateProperty("panicCounter", 1)
-            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter1)
-            assertEquals(1, panicCounter1)
-
-            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-            requireNotNull(resetToLeveling)
-            assertFalse(resetToLeveling)
-
-            val levelingEstimator: LevelingEstimator? =
-                estimator.getPrivateProperty("levelingEstimator")
-            requireNotNull(levelingEstimator)
-
-            val internalAttitude = spyk(getAttitude())
-            val listener = levelingEstimator.levelingAvailableListener
-            requireNotNull(listener)
-            val timestamp = SystemClock.elapsedRealtimeNanos()
-            estimator.setPrivateProperty("timestamp", timestamp)
-            listener.onLevelingAvailable(
-                levelingEstimator,
-                internalAttitude,
-                timestamp,
-                null,
-                null,
-                null
-            )
-
-            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-            requireNotNull(levelingAttitude2)
-
-            val angles = DoubleArray(3)
-            internalAttitude.toEulerAngles(angles)
-            val levelingRoll = angles[0]
-            val levelingPitch = angles[1]
-            attitude.toEulerAngles(angles)
-            val relativeYaw = angles[2]
-
-            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-            requireNotNull(eulerAngles)
-            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) {
-                levelingAttitudeSpy.setFromEulerAngles(
-                    levelingRoll,
-                    levelingPitch,
-                    relativeYaw
-                )
-            }
-            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter2)
-            assertEquals(2, panicCounter2)
-
-            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-            requireNotNull(hasRelativeAttitude2)
-            assertTrue(hasRelativeAttitude2)
-
-            assertEquals(fusedAttitude3, internalFusedAttitudeSpy)
-
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-            assertTrue(absDot < estimator.outlierThreshold)
-            assertTrue(absDot < estimator.outlierPanicThreshold)
-
-            val previousRelativeAttitude2: Quaternion? =
-                estimator.getPrivateProperty("previousRelativeAttitude")
-            requireNotNull(previousRelativeAttitude2)
-            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-            requireNotNull(fusedAttitude)
-
-            verify(exactly = 1) {
-                attitudeAvailableListener.onAttitudeAvailable(
-                    estimator,
-                    fusedAttitude,
-                    timestamp,
-                    null,
-                    null,
-                    null,
-                    null
-                )
-            }
-        }
-    }
-
-    @Test
-    fun processLeveling_whenIndirectInterpolation_updatesFusedAttitudeAndNotifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateRelativeGyroscopeAttitudeEstimator = false,
-            useAccurateLevelingEstimator = false,
-            estimateCoordinateTransformation = false,
-            estimateEulerAngles = false,
-            attitudeAvailableListener = attitudeAvailableListener
-        )
-        estimator.useIndirectInterpolation = true
-
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
-
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
-
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
-
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
-
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
-
-        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spyk(relativeAttitude)
-        estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
-
-        val internalFusedAttitude: Quaternion? =
-            estimator.getPrivateProperty("internalFusedAttitude")
-        requireNotNull(internalFusedAttitude)
-        getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
-        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
-
-        val previousRelativeAttitude1 = Quaternion()
-        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
-        assertSame(
-            previousRelativeAttitude1,
-            estimator.getPrivateProperty("previousRelativeAttitude")
-        )
-
-        val deltaRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude)
-        val randomizer = UniformRandomizer()
-        val deltaRoll = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaPitch = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
-
-        mockkObject(QuaternionHelper) {
-            every {
-                QuaternionHelper.dotProduct(
-                    any(),
-                    any()
-                )
-            }.returns(estimator.outlierThreshold)
-
-            val fusedAttitude2 = Quaternion(internalFusedAttitude)
-            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
-            estimator.setPrivateProperty("panicCounter", 1)
-            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter1)
-            assertEquals(1, panicCounter1)
-
-            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-            requireNotNull(resetToLeveling)
-            assertFalse(resetToLeveling)
-
-            val attitudeEstimator: RelativeGyroscopeAttitudeEstimator? =
-                estimator.getPrivateProperty("attitudeEstimator")
-            requireNotNull(attitudeEstimator)
-            val attitudeEstimatorSpy = spyk(attitudeEstimator)
-            every { attitudeEstimatorSpy.averageTimeInterval }.returns(TIME_INTERVAL)
-            estimator.setPrivateProperty("attitudeEstimator", attitudeEstimatorSpy)
-
-            val levelingEstimator: LevelingEstimator? =
-                estimator.getPrivateProperty("levelingEstimator")
-            requireNotNull(levelingEstimator)
-
-            val internalAttitude = spyk(getAttitude())
-            val listener = levelingEstimator.levelingAvailableListener
-            requireNotNull(listener)
-            val timestamp = SystemClock.elapsedRealtimeNanos()
-            estimator.setPrivateProperty("timestamp", timestamp)
-            listener.onLevelingAvailable(
-                levelingEstimator,
-                internalAttitude,
-                timestamp,
-                null,
-                null,
-                null
-            )
-
-            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-            requireNotNull(levelingAttitude2)
-
-            val angles = DoubleArray(3)
-            internalAttitude.toEulerAngles(angles)
-            val levelingRoll = angles[0]
-            val levelingPitch = angles[1]
-            attitude.toEulerAngles(angles)
-            val relativeYaw = angles[2]
-
-            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
-
-            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-            requireNotNull(eulerAngles)
-            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) {
-                levelingAttitudeSpy.setFromEulerAngles(
-                    levelingRoll,
-                    levelingPitch,
-                    relativeYaw
-                )
-            }
-            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
-
-            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter2)
-            assertEquals(0, panicCounter2)
-
-            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-            requireNotNull(hasRelativeAttitude2)
-            assertTrue(hasRelativeAttitude2)
-
-            val fusedAttitude4 = Quaternion()
-            val t = estimator.interpolationValue + estimator.indirectInterpolationWeight *
-                    abs(deltaRelativeAttitude.rotationAngle / TIME_INTERVAL)
-            Quaternion.slerp(
-                fusedAttitude3,
-                levelingAttitudeSpy,
-                t,
-                fusedAttitude4
-            )
-
-            assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
-
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-            assertTrue(absDot >= estimator.outlierThreshold)
-
-            val previousRelativeAttitude2: Quaternion? =
-                estimator.getPrivateProperty("previousRelativeAttitude")
-            requireNotNull(previousRelativeAttitude2)
-            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-            requireNotNull(fusedAttitude)
-
-            verify(exactly = 1) {
-                attitudeAvailableListener.onAttitudeAvailable(
-                    estimator,
-                    fusedAttitude,
-                    timestamp,
-                    null,
-                    null,
-                    null,
-                    null
-                )
-            }
-        }
-    }
-
-    @Test
-    fun processLeveling_whenEstimateEulerAnglesAndCoordinateTransformationEnabled_notifies() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val estimator = LeveledRelativeAttitudeEstimator(
-            context,
-            useAccurateLevelingEstimator = false,
             estimateCoordinateTransformation = true,
             estimateEulerAngles = true,
             attitudeAvailableListener = attitudeAvailableListener
         )
-        estimator.useIndirectInterpolation = false
 
-        estimator.setPrivateProperty("hasRelativeAttitude", true)
-        estimator.setPrivateProperty("hasDeltaRelativeAttitude", true)
+        val gravityAndGyroscopeCollector: GravityAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("gravityAndGyroscopeCollector")
+        requireNotNull(gravityAndGyroscopeCollector)
 
-        val hasRelativeAttitude1: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-        requireNotNull(hasRelativeAttitude1)
-        assertTrue(hasRelativeAttitude1)
+        val timestamp = System.nanoTime()
+        val measurement = GravityAndGyroscopeSyncedSensorMeasurement(timestamp = timestamp)
+        val fusedAttitude1 = getAttitude()
 
-        val levelingAttitude1: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude1)
-        assertEquals(Quaternion(), levelingAttitude1)
+        val gravityProcessor: LeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("gravityProcessor")
+        requireNotNull(gravityProcessor)
+        val gravityProcessorSpy = spyk(gravityProcessor)
+        every { gravityProcessorSpy.process(measurement) }.returns(true)
+        every { gravityProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        estimator.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
-        val hasDeltaRelativeAttitude1: Boolean? =
-            estimator.getPrivateProperty("hasDeltaRelativeAttitude")
-        requireNotNull(hasDeltaRelativeAttitude1)
-        assertTrue(hasDeltaRelativeAttitude1)
+        val listener = gravityAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(gravityAndGyroscopeCollector, measurement)
 
-        val levelingAttitude: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-        requireNotNull(levelingAttitude)
-        val levelingAttitudeSpy = spyk(levelingAttitude)
-        estimator.setPrivateProperty("levelingAttitude", levelingAttitudeSpy)
+        val fusedAttitude2: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude2)
+        assertEquals(fusedAttitude1, fusedAttitude2)
 
-        val relativeAttitude: Quaternion? = estimator.getPrivateProperty("relativeAttitude")
-        requireNotNull(relativeAttitude)
-        val attitude = getAttitude()
-        attitude.copyTo(relativeAttitude)
-        val relativeAttitudeSpy = spyk(relativeAttitude)
-        estimator.setPrivateProperty("relativeAttitude", relativeAttitudeSpy)
-
-        val internalFusedAttitude: Quaternion? =
-            estimator.getPrivateProperty("internalFusedAttitude")
-        requireNotNull(internalFusedAttitude)
-        getAttitude().copyTo(internalFusedAttitude)
-        val internalFusedAttitudeSpy = spyk(internalFusedAttitude)
-        estimator.setPrivateProperty("internalFusedAttitude", internalFusedAttitudeSpy)
-
-        val previousRelativeAttitude1 = Quaternion()
-        estimator.setPrivateProperty("previousRelativeAttitude", previousRelativeAttitude1)
-        assertSame(
-            previousRelativeAttitude1,
-            estimator.getPrivateProperty("previousRelativeAttitude")
+        val coordinateTransformation: CoordinateTransformation? =
+            estimator.getPrivateProperty("coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        assertEquals(
+            CoordinateTransformation(
+                fusedAttitude1,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            ), coordinateTransformation
         )
 
-        val deltaRelativeAttitude: Quaternion? =
-            estimator.getPrivateProperty("deltaRelativeAttitude")
-        requireNotNull(deltaRelativeAttitude)
-        val randomizer = UniformRandomizer()
-        val deltaRoll = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaPitch = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        val deltaYaw = Math.toRadians(randomizer.nextDouble(-DELTA_DEGREES, DELTA_DEGREES))
-        deltaRelativeAttitude.setFromEulerAngles(deltaRoll, deltaPitch, deltaYaw)
+        val eulerAngles1: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
+        requireNotNull(eulerAngles1)
+        val eulerAngles2 = fusedAttitude1.toEulerAngles()
+        assertArrayEquals(eulerAngles1, eulerAngles2, 0.0)
 
-        mockkObject(QuaternionHelper) {
-            every {
-                QuaternionHelper.dotProduct(
-                    any(),
-                    any()
-                )
-            }.returns(estimator.outlierThreshold)
-
-            val fusedAttitude2 = Quaternion(internalFusedAttitude)
-            val fusedAttitude3 = deltaRelativeAttitude.multiplyAndReturnNew(fusedAttitude2)
-
-            estimator.setPrivateProperty("panicCounter", 1)
-            val panicCounter1: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter1)
-            assertEquals(1, panicCounter1)
-
-            val resetToLeveling: Boolean? = estimator.getPrivateProperty("resetToLeveling")
-            requireNotNull(resetToLeveling)
-            assertFalse(resetToLeveling)
-
-            val levelingEstimator: LevelingEstimator? =
-                estimator.getPrivateProperty("levelingEstimator")
-            requireNotNull(levelingEstimator)
-
-            val internalAttitude = spyk(getAttitude())
-            val listener = levelingEstimator.levelingAvailableListener
-            requireNotNull(listener)
-            val timestamp = SystemClock.elapsedRealtimeNanos()
-            estimator.setPrivateProperty("timestamp", timestamp)
-            listener.onLevelingAvailable(
-                levelingEstimator,
-                internalAttitude,
+        verify(exactly = 1) {
+            attitudeAvailableListener.onAttitudeAvailable(
+                estimator,
+                fusedAttitude2,
                 timestamp,
+                eulerAngles2[0],
+                eulerAngles2[1],
+                eulerAngles2[2],
+                coordinateTransformation
+            )
+        }
+    }
+
+    @Test
+    fun accelerometerCollector_whenAccuracyChangedAndNoListener_makesNoAction() {
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+
+        val listener = accelerometerAndGyroscopeCollector.accuracyChangedListener
+        requireNotNull(listener)
+        listener.onAccuracyChanged(
+            accelerometerAndGyroscopeCollector,
+            SensorType.GRAVITY,
+            SensorAccuracy.MEDIUM
+        )
+    }
+
+    @Test
+    fun accelerometerCollector_whenAccuracyChangedAndListener_notifies() {
+        val estimator = LeveledRelativeAttitudeEstimator(
+            context,
+            accuracyChangedListener = accuracyChangedListener
+        )
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+
+        val listener = accelerometerAndGyroscopeCollector.accuracyChangedListener
+        requireNotNull(listener)
+        listener.onAccuracyChanged(
+            accelerometerAndGyroscopeCollector,
+            SensorType.GRAVITY,
+            SensorAccuracy.MEDIUM
+        )
+
+        // check
+        verify(exactly = 1) {
+            accuracyChangedListener.onAccuracyChanged(
+                estimator,
+                SensorType.GRAVITY,
+                SensorAccuracy.MEDIUM
+            )
+        }
+    }
+
+    @Test
+    fun accelerometerCollector_whenSyncedMeasurementAndNotProcessed_makesNoAction() {
+        val estimator = LeveledRelativeAttitudeEstimator(
+            context,
+            attitudeAvailableListener = attitudeAvailableListener
+        )
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+
+        val measurement = AccelerometerAndGyroscopeSyncedSensorMeasurement()
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(measurement) }.returns(false)
+        estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
+
+        val listener = accelerometerAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(accelerometerAndGyroscopeCollector, measurement)
+
+        verify { attitudeAvailableListener wasNot Called }
+    }
+
+    @Test
+    fun accelerometerCollector_whenSyncedMeasurementProcessedAndNoListener_updatesFusedAttitude() {
+        val estimator = LeveledRelativeAttitudeEstimator(context)
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+
+        val measurement = AccelerometerAndGyroscopeSyncedSensorMeasurement()
+        val fusedAttitude1 = getAttitude()
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
+        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
+
+        val listener = accelerometerAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(accelerometerAndGyroscopeCollector, measurement)
+
+        val fusedAttitude2: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude2)
+        assertEquals(fusedAttitude1, fusedAttitude2)
+    }
+
+    @Test
+    fun accelerometerCollector_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesDisableAndListener_updatesFusedAttitudeAndNotifies() {
+        val estimator = LeveledRelativeAttitudeEstimator(
+            context,
+            estimateCoordinateTransformation = false,
+            estimateEulerAngles = false,
+            attitudeAvailableListener = attitudeAvailableListener
+        )
+
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
+
+        val timestamp = System.nanoTime()
+        val measurement = AccelerometerAndGyroscopeSyncedSensorMeasurement(timestamp = timestamp)
+        val fusedAttitude1 = getAttitude()
+
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
+        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
+
+        val listener = accelerometerAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(accelerometerAndGyroscopeCollector, measurement)
+
+        val fusedAttitude2: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude2)
+        assertEquals(fusedAttitude1, fusedAttitude2)
+
+        verify(exactly = 1) {
+            attitudeAvailableListener.onAttitudeAvailable(
+                estimator,
+                fusedAttitude2,
+                timestamp,
+                null,
                 null,
                 null,
                 null
             )
+        }
+    }
 
-            val levelingAttitude2: Quaternion? = estimator.getPrivateProperty("levelingAttitude")
-            requireNotNull(levelingAttitude2)
+    @Test
+    fun accelerometerSyncer_whenSyncedMeasurementProcessedEstimateCoordinateTransformationAndEulerAnglesEnableAndListener_updatesFusedAttitudeAndNotifies() {
+        val estimator = LeveledRelativeAttitudeEstimator(
+            context,
+            estimateCoordinateTransformation = true,
+            estimateEulerAngles = true,
+            attitudeAvailableListener = attitudeAvailableListener
+        )
 
-            val angles = DoubleArray(3)
-            internalAttitude.toEulerAngles(angles)
-            val levelingRoll = angles[0]
-            val levelingPitch = angles[1]
-            attitude.toEulerAngles(angles)
-            val relativeYaw = angles[2]
+        val accelerometerAndGyroscopeCollector: AccelerometerAndGyroscopeSyncedSensorCollector? =
+            estimator.getPrivateProperty("accelerometerAndGyroscopeCollector")
+        requireNotNull(accelerometerAndGyroscopeCollector)
 
-            verify(exactly = 1) { internalAttitude.copyTo(levelingAttitude2) }
+        val timestamp = System.nanoTime()
+        val measurement = AccelerometerAndGyroscopeSyncedSensorMeasurement(timestamp = timestamp)
+        val fusedAttitude1 = getAttitude()
 
-            val eulerAngles: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
-            requireNotNull(eulerAngles)
-            verify(exactly = 1) { levelingAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) { relativeAttitudeSpy.toEulerAngles(eulerAngles) }
-            verify(exactly = 1) {
-                levelingAttitudeSpy.setFromEulerAngles(
-                    levelingRoll,
-                    levelingPitch,
-                    relativeYaw
-                )
-            }
-            verify(exactly = 0) { levelingAttitudeSpy.copyTo(internalFusedAttitudeSpy) }
+        val accelerometerProcessor: AccelerometerLeveledRelativeAttitudeProcessor? =
+            estimator.getPrivateProperty("accelerometerProcessor")
+        requireNotNull(accelerometerProcessor)
+        val accelerometerProcessorSpy = spyk(accelerometerProcessor)
+        every { accelerometerProcessorSpy.process(measurement) }.returns(true)
+        every { accelerometerProcessorSpy.fusedAttitude }.returns(fusedAttitude1)
+        estimator.setPrivateProperty("accelerometerProcessor", accelerometerProcessorSpy)
 
-            val panicCounter2: Int? = estimator.getPrivateProperty("panicCounter")
-            requireNotNull(panicCounter2)
-            assertEquals(0, panicCounter2)
+        val listener = accelerometerAndGyroscopeCollector.measurementListener
+        requireNotNull(listener)
+        listener.onMeasurement(accelerometerAndGyroscopeCollector, measurement)
 
-            val hasRelativeAttitude2: Boolean? = estimator.getPrivateProperty("hasRelativeAttitude")
-            requireNotNull(hasRelativeAttitude2)
-            assertTrue(hasRelativeAttitude2)
+        val fusedAttitude2: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
+        requireNotNull(fusedAttitude2)
+        assertEquals(fusedAttitude1, fusedAttitude2)
 
-            val fusedAttitude4 = Quaternion()
-            Quaternion.slerp(
-                fusedAttitude3,
-                levelingAttitudeSpy,
-                estimator.interpolationValue,
-                fusedAttitude4
+        val coordinateTransformation: CoordinateTransformation? =
+            estimator.getPrivateProperty("coordinateTransformation")
+        requireNotNull(coordinateTransformation)
+        assertEquals(
+            CoordinateTransformation(
+                fusedAttitude1,
+                FrameType.BODY_FRAME,
+                FrameType.LOCAL_NAVIGATION_FRAME
+            ), coordinateTransformation
+        )
+
+        val eulerAngles1: DoubleArray? = estimator.getPrivateProperty("eulerAngles")
+        requireNotNull(eulerAngles1)
+        val eulerAngles2 = fusedAttitude1.toEulerAngles()
+        assertArrayEquals(eulerAngles1, eulerAngles2, 0.0)
+
+        verify(exactly = 1) {
+            attitudeAvailableListener.onAttitudeAvailable(
+                estimator,
+                fusedAttitude2,
+                timestamp,
+                eulerAngles2[0],
+                eulerAngles2[1],
+                eulerAngles2[2],
+                coordinateTransformation
             )
-
-            assertEquals(fusedAttitude4, internalFusedAttitudeSpy)
-
-            val absDot = abs(QuaternionHelper.dotProduct(fusedAttitude3, levelingAttitudeSpy))
-            assertTrue(absDot >= estimator.outlierThreshold)
-
-            val previousRelativeAttitude2: Quaternion? =
-                estimator.getPrivateProperty("previousRelativeAttitude")
-            requireNotNull(previousRelativeAttitude2)
-            assertEquals(relativeAttitudeSpy, previousRelativeAttitude2)
-
-            val rollSlot = slot<Double>()
-            val pitchSlot = slot<Double>()
-            val yawSlot = slot<Double>()
-            val coordinateTransformationSlot = slot<CoordinateTransformation>()
-
-            val fusedAttitude: Quaternion? = estimator.getPrivateProperty("fusedAttitude")
-            requireNotNull(fusedAttitude)
-
-            verify(exactly = 1) {
-                attitudeAvailableListener.onAttitudeAvailable(
-                    estimator,
-                    fusedAttitude,
-                    timestamp,
-                    capture(rollSlot),
-                    capture(pitchSlot),
-                    capture(yawSlot),
-                    capture(coordinateTransformationSlot)
-                )
-            }
-
-            assertTrue(rollSlot.isCaptured)
-            assertFalse(rollSlot.isNull)
-            assertNotNull(rollSlot.captured)
-
-            assertTrue(pitchSlot.isCaptured)
-            assertFalse(pitchSlot.isNull)
-            assertNotNull(pitchSlot.captured)
-
-            assertTrue(yawSlot.isCaptured)
-            assertFalse(yawSlot.isNull)
-            assertNotNull(yawSlot.captured)
-
-            assertTrue(coordinateTransformationSlot.isCaptured)
-            assertFalse(coordinateTransformationSlot.isNull)
-            val c = coordinateTransformationSlot.captured
-            assertNotNull(c)
-            assertEquals(FrameType.BODY_FRAME, c.sourceType)
-            assertEquals(FrameType.LOCAL_NAVIGATION_FRAME, c.destinationType)
         }
     }
 
@@ -2409,8 +1460,6 @@ class LeveledRelativeAttitudeEstimatorTest {
 
         const val MIN_ANGLE_DEGREES = -45.0
         const val MAX_ANGLE_DEGREES = 45.0
-
-        const val DELTA_DEGREES = 1e-6
 
         const val TIME_INTERVAL = 0.02
 

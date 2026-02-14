@@ -164,16 +164,10 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER,
             accelerometerSensorDelay = SensorDelay.FASTEST,
             magnetometerSensorDelay = SensorDelay.FASTEST,
-            accelerometerAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AccelerometerAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            magnetometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - magnetometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->
@@ -258,16 +252,10 @@ class AccelerometerAndMagnetometerSyncedSensorCollectorTest {
             magnetometerSensorType = MagnetometerSensorType.MAGNETOMETER_UNCALIBRATED,
             accelerometerSensorDelay = SensorDelay.FASTEST,
             magnetometerSensorDelay = SensorDelay.FASTEST,
-            accelerometerAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AccelerometerAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
-                )
-            },
-            magnetometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AccelerometerAndMagnetometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - magnetometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->

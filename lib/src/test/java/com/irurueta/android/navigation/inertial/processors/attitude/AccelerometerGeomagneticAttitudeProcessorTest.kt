@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.old.collectors.AccelerometerAndMagnetometerSyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
@@ -31,20 +32,13 @@ import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
 import com.irurueta.statistics.UniformRandomizer
 import com.irurueta.units.AccelerationUnit
-import com.irurueta.units.MagneticFluxDensityConverter
 import com.irurueta.units.MagneticFluxDensityUnit
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit4.MockKRule
 import io.mockk.spyk
 import io.mockk.verify
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
 import java.util.Date
@@ -149,9 +143,7 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
         val gravityProcessorSpy = spyk(gravityProcessor)
         val randomizer = UniformRandomizer()
         val gy = randomizer.nextDouble()
-        val gz = randomizer.nextDouble()
         every { gravityProcessorSpy.gy }.returns(gy)
-        every { gravityProcessorSpy.gz }.returns(gz)
         processor.setPrivateProperty("gravityProcessor", gravityProcessorSpy)
 
         assertEquals(gy, processor.gy, 0.0)
@@ -521,25 +513,26 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
 
         every { levelingProcessorSpy.process(gx, gy, gz) }
 
-        val triad: MagneticFluxDensityTriad? =
-            getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
+        val triad: MagneticFluxDensityTriad? = getPrivateProperty(
+            BaseGeomagneticAttitudeProcessor::class, processor, "triad"
+        )
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla((bx - hardIronX).toDouble()),
+            bx.toDouble() + hardIronX.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla((by - hardIronY).toDouble()),
+            by.toDouble() + hardIronY.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla((bz - hardIronZ).toDouble()),
+            bz.toDouble() + hardIronZ.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
@@ -552,7 +545,11 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
         val eulerAngles1 = levelingAttitude1.toEulerAngles()
 
         val eulerAngles2: DoubleArray? =
-            getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "eulerAngles")
+            getPrivateProperty(
+                BaseGeomagneticAttitudeProcessor::class,
+                processor,
+                "eulerAngles"
+            )
         requireNotNull(eulerAngles2)
         assertArrayEquals(eulerAngles1, eulerAngles2, 0.0)
 
@@ -627,21 +624,21 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble()),
+            bx.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble()),
+            by.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble()),
+            bz.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
@@ -718,8 +715,7 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
         val bx = randomizer.nextFloat()
         val by = randomizer.nextFloat()
         val bz = randomizer.nextFloat()
-        val magnetometerMeasurement =
-            MagnetometerSensorMeasurement(bx, by, bz)
+        val magnetometerMeasurement = MagnetometerSensorMeasurement(bx, by, bz)
         val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement(
             AccelerometerSensorMeasurement(),
             magnetometerMeasurement
@@ -732,21 +728,21 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble()),
+            bx.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble()),
+            by.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble()),
+            bz.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
@@ -844,21 +840,21 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
             getPrivateProperty(BaseGeomagneticAttitudeProcessor::class, processor, "triad")
         requireNotNull(triad)
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bx.toDouble()),
+            bx.toDouble(),
             triad.valueY,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(by.toDouble()),
+            by.toDouble(),
             triad.valueX,
             0.0
         )
         assertEquals(
-            MagneticFluxDensityConverter.microTeslaToTesla(bz.toDouble()),
+            bz.toDouble(),
             -triad.valueZ,
             0.0
         )
-        assertEquals(MagneticFluxDensityUnit.TESLA, triad.unit)
+        assertEquals(MagneticFluxDensityUnit.MICROTESLA, triad.unit)
 
         val levelingAttitude2: Quaternion? = getPrivateProperty(
             BaseGeomagneticAttitudeProcessor::class,
@@ -946,8 +942,7 @@ class AccelerometerGeomagneticAttitudeProcessorTest {
     private fun getLocation(): Location {
         val randomizer = UniformRandomizer()
         val latitudeDegrees = randomizer.nextDouble(MIN_LATITUDE_DEGREES, MAX_LATITUDE_DEGREES)
-        val longitudeDegrees =
-            randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
+        val longitudeDegrees = randomizer.nextDouble(MIN_LONGITUDE_DEGREES, MAX_LONGITUDE_DEGREES)
         val height = randomizer.nextDouble(MIN_HEIGHT, MAX_HEIGHT)
 
         every { location.latitude }.returns(latitudeDegrees)

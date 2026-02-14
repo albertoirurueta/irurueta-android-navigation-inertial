@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.irurueta.android.navigation.inertial.processors.attitude
 
 import android.location.Location
-import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
-import com.irurueta.android.navigation.inertial.old.collectors.SyncedSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.SyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.geometry.Quaternion
 import com.irurueta.navigation.frames.NEDPosition
@@ -29,8 +29,7 @@ import com.irurueta.navigation.inertial.calibration.MagneticFluxDensityTriad
 import com.irurueta.navigation.inertial.estimators.AttitudeEstimator
 import com.irurueta.navigation.inertial.wmm.WMMEarthMagneticFluxDensityEstimator
 import com.irurueta.navigation.inertial.wmm.WorldMagneticModel
-import com.irurueta.units.MagneticFluxDensityConverter
-import java.util.*
+import java.util.Date
 
 /**
  * Base class to estimate leveled absolute attitude using accelerometer (or gravity) and
@@ -43,9 +42,10 @@ import java.util.*
  * @param M type of accelerometer or gravity sensor measurement.
  * @param S type of synced sensor measurement.
  */
-abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : SyncedSensorMeasurement>(
+abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S: SyncedSensorMeasurement<S>>(
     var processorListener: OnProcessedListener<M, S>?
 ) {
+
     /**
      * Internal processor to estimate gravity from accelerometer or gravity sensor measurements.
      */
@@ -71,6 +71,12 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
      * Instance to be reused which contains attitude of internal leveling estimator.
      */
     private val levelingAttitude = Quaternion()
+
+    /**
+     * Instance to be reused containing magnetometer measurement converted to NED coordinates
+     * system.
+     */
+    private val nedMagnetometerMeasurement = MagnetometerSensorMeasurement()
 
     /**
      * Triad to be reused for ENU to NED coordinates conversion.
@@ -222,7 +228,7 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
             val gz = gravityProcessor.gz
             levelingProcessor.process(gx, gy, gz)
 
-            // convert magnetometer measurement to NED coordinates
+            // convert magnetometer measurement to NED coordinates and into a triad
             processMagnetometerMeasurement(magnetometerMeasurement)
 
             // process leveling with current leveling attitude and converted magnetometer
@@ -249,24 +255,11 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
      * @param measurement magnetometer measurement.
      */
     private fun processMagnetometerMeasurement(measurement: MagnetometerSensorMeasurement) {
-        val bx = measurement.bx
-        val by = measurement.by
-        val bz = measurement.bz
-        val hardIronX = measurement.hardIronX
-        val hardIronY = measurement.hardIronY
-        val hardIronZ = measurement.hardIronZ
+        // convert to NED coordinates system
+        measurement.toNed(nedMagnetometerMeasurement)
 
-        val sensorBx = MagneticFluxDensityConverter.microTeslaToTesla(
-            (bx - (hardIronX ?: 0.0f)).toDouble()
-        )
-        val sensorBy = MagneticFluxDensityConverter.microTeslaToTesla(
-            (by - (hardIronY ?: 0.0f)).toDouble()
-        )
-        val sensorBz = MagneticFluxDensityConverter.microTeslaToTesla(
-            (bz - (hardIronZ ?: 0.0f)).toDouble()
-        )
-
-        ENUtoNEDConverter.convert(sensorBx, sensorBy, sensorBz, triad)
+        // convert to triad preserving original measurement unit (micro teslas)
+        nedMagnetometerMeasurement.toTriad(triad)
     }
 
     /**
@@ -283,6 +276,11 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
         val roll = eulerAngles[0]
         val pitch = eulerAngles[1]
         val declination = getDeclination()
+
+        // NOTE: actually implementation of AttitudeEstimator.getYaw does not require conversion
+        // to any specific magnetic flux density unit, since only takes into account the relative
+        // scale values. So for performance reasons, original measurement unit will be used (micro
+        // teslas).
         val yaw = AttitudeEstimator.getYaw(
             triad.valueX,
             triad.valueY,
@@ -299,7 +297,7 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
      * Obtains magnetic declination expressed in radians if World Magnetic Model is used,
      * otherwise zero is returned.
      *
-     * @return magnetic declination.
+     * @return magnetic declination expressed in radians.
      */
     private fun getDeclination(): Double {
         val wmmEstimator = this.wmmEstimator ?: return 0.0
@@ -313,7 +311,9 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
 
     /**
      * Builds the internal leveling processor.
+     * @throws IllegalStateException if set to true and no location is available.
      */
+    @Throws(IllegalStateException::class)
     private fun buildLevelingProcessor() {
         levelingProcessor = if (useAccurateLevelingProcessor) {
             val location = this.location
@@ -332,8 +332,10 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
         wmmEstimator = if (useWorldMagneticModel) {
             val model = worldMagneticModel
             if (model != null) {
+                // use provided model
                 WMMEarthMagneticFluxDensityEstimator(model)
             } else {
+                // use default model
                 WMMEarthMagneticFluxDensityEstimator()
             }
         } else {
@@ -352,7 +354,15 @@ abstract class BaseGeomagneticAttitudeProcessor<M : SensorMeasurement<M>, S : Sy
      * @param M type of accelerometer or gravity sensor measurement.
      * @param S type of synced sensor measurement.
      */
-    fun interface OnProcessedListener<M : SensorMeasurement<M>, S : SyncedSensorMeasurement> {
+    fun interface OnProcessedListener<M : SensorMeasurement<M>, S: SyncedSensorMeasurement<S>> {
+        /**
+         * Called when a new leveled absolute attitude has been processed.
+         *
+         * @param processor the processor that processed the attitude.
+         * @param fusedAttitude the fused leveled absolute attitude.
+         * @param accelerometerOrGravityAccuracy the accuracy of the accelerometer or gravity sensor.
+         * @param magnetometerAccuracy the accuracy of the magnetometer sensor.
+         */
         fun onProcessed(
             processor: BaseGeomagneticAttitudeProcessor<M, S>,
             fusedAttitude: Quaternion,

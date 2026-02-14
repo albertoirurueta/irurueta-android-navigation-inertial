@@ -27,7 +27,6 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.GravityA
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import java.util.Queue
 
@@ -44,10 +43,7 @@ import java.util.Queue
  * measurements synchronization.
  * @property interpolationEnabled indicates whether measurements interpolation is enabled or not.
  * @property measurementListener listener to notify new measurements.
- * @property gravityAccuracyChangedListener listener to notify changes in accuracy for
- * gravity sensor.
- * @property magnetometerAccuracyChangedListener listener to notify changes in accuracy for
- * magnetometer sensor.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  */
 class GravityAndMagnetometerSyncedSensorCollector(
     context: Context,
@@ -58,13 +54,13 @@ class GravityAndMagnetometerSyncedSensorCollector(
     val primarySensor: PrimarySensor = PrimarySensor.MAGNETOMETER,
     interpolationEnabled: Boolean = true,
     measurementListener: OnMeasurementListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSyncedSensorCollector>? = null,
-    var gravityAccuracyChangedListener: OnGravityAccuracyChangedListener? = null,
-    var magnetometerAccuracyChangedListener: OnMagnetometerAccuracyChangedListener? = null
+    accuracyChangedListener: OnAccuracyChangedListener<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSyncedSensorCollector>? = null
 ) : SyncedSensorCollector<GravityAndMagnetometerSyncedSensorMeasurement, GravityAndMagnetometerSyncedSensorCollector>(
     context,
     windowNanoseconds,
     interpolationEnabled,
-    measurementListener
+    measurementListener,
+    accuracyChangedListener
 ) {
 
     /**
@@ -254,25 +250,6 @@ class GravityAndMagnetometerSyncedSensorCollector(
     }
 
     /**
-     * Processes accuracy changed event for proper notification.
-     *
-     * @param sensor sensor whose accuracy has changed.
-     * @param accuracy new accuracy.
-     */
-    override fun processAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        if (sensor == null) {
-            return
-        }
-
-        val sensorAccuracy = SensorAccuracy.from(accuracy) ?: return
-        if (sensor === gravitySensor) {
-            gravityAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === magnetometerSensor) {
-            magnetometerAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        }
-    }
-
-    /**
      * Indicates the sensor type of the primary sensor being used for measurements synchronization.
      */
     enum class PrimarySensor {
@@ -285,37 +262,5 @@ class GravityAndMagnetometerSyncedSensorCollector(
          * Primary sensor is magnetometer.
          */
         MAGNETOMETER
-    }
-
-    /**
-     * Interface to notify when gravity sensor accuracy changes.
-     */
-    fun interface OnGravityAccuracyChangedListener {
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: GravityAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
-    /**
-     * Interface to notify when magnetometer sensor accuracy changes.
-     */
-    fun interface OnMagnetometerAccuracyChangedListener {
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: GravityAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
     }
 }

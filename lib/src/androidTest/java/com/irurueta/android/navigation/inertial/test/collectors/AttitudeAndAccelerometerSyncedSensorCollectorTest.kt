@@ -164,16 +164,10 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER,
             attitudeSensorDelay = SensorDelay.FASTEST,
             accelerometerSensorDelay = SensorDelay.FASTEST,
-            attitudeAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AttitudeAndAccelerometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - attitude accuracy: $accuracy"
-                )
-            },
-            accelerometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AttitudeAndAccelerometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->
@@ -252,16 +246,10 @@ class AttitudeAndAccelerometerSyncedSensorCollectorTest {
             accelerometerSensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
             attitudeSensorDelay = SensorDelay.FASTEST,
             accelerometerSensorDelay = SensorDelay.FASTEST,
-            attitudeAccuracyChangedListener = { _, accuracy ->
+            accuracyChangedListener = { _, sensorType, accuracy ->
                 Log.d(
                     "AttitudeAndAccelerometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - attitude accuracy: $accuracy"
-                )
-            },
-            accelerometerAccuracyChangedListener = { _, accuracy ->
-                Log.d(
-                    "AttitudeAndAccelerometerSyncedSensorCollectorTest",
-                    "onAccuracyChanged - accelerometer accuracy: $accuracy"
+                    "onAccuracyChanged - sensorType: $sensorType, accuracy: $accuracy"
                 )
             },
             measurementListener = { _, measurement ->

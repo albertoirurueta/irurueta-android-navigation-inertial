@@ -28,7 +28,6 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
-import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAccuracy
 import com.irurueta.android.navigation.inertial.collectors.measurements.SensorMeasurement
 import java.util.Queue
 
@@ -47,10 +46,7 @@ import java.util.Queue
  * @property interpolationEnabled indicates whether measurements interpolation is enabled or not.
  * @property measurementListener listener to notify new measurements. It must be noticed that
  * measurements notification might be delayed.
- * @property accelerometerAccuracyChangedListener listener to notify changes in accuracy for
- * accelerometer sensor.
- * @property magnetometerAccuracyChangedListener listener to notify changes in accuracy for
- * magnetometer sensor.
+ * @property accuracyChangedListener listener to notify changes in accuracy.
  */
 class AccelerometerAndMagnetometerSyncedSensorCollector(
     context: Context,
@@ -62,13 +58,13 @@ class AccelerometerAndMagnetometerSyncedSensorCollector(
     val primarySensor: PrimarySensor = PrimarySensor.ACCELEROMETER,
     interpolationEnabled: Boolean = true,
     measurementListener: OnMeasurementListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSyncedSensorCollector>? = null,
-    var accelerometerAccuracyChangedListener: OnAccelerometerAccuracyChangedListener? = null,
-    var magnetometerAccuracyChangedListener: OnMagnetometerAccuracyChangedListener? = null
+    accuracyChangedListener: OnAccuracyChangedListener<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSyncedSensorCollector>? = null
 ) : SyncedSensorCollector<AccelerometerAndMagnetometerSyncedSensorMeasurement, AccelerometerAndMagnetometerSyncedSensorCollector>(
     context,
     windowNanoseconds,
     interpolationEnabled,
-    measurementListener
+    measurementListener,
+    accuracyChangedListener
 ) {
     /**
      * Accelerometer sensor being used to obtain measurements or null if not available.
@@ -261,25 +257,6 @@ class AccelerometerAndMagnetometerSyncedSensorCollector(
     }
 
     /**
-     * Processes accuracy changed event for proper notification.
-     *
-     * @param sensor sensor whose accuracy has changed.
-     * @param accuracy new accuracy.
-     */
-    override fun processAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        if (sensor == null) {
-            return
-        }
-
-        val sensorAccuracy = SensorAccuracy.from(accuracy) ?: return
-        if (sensor === accelerometerSensor) {
-            accelerometerAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        } else if (sensor === magnetometerSensor) {
-            magnetometerAccuracyChangedListener?.onAccuracyChanged(this, sensorAccuracy)
-        }
-    }
-
-    /**
      * Indicates the sensor type of the primary sensor being used for measurements synchronization.
      */
     enum class PrimarySensor {
@@ -293,39 +270,4 @@ class AccelerometerAndMagnetometerSyncedSensorCollector(
          */
         MAGNETOMETER
     }
-
-    /**
-     * Interface to notify when accelerometer sensor accuracy changes.
-     */
-    fun interface OnAccelerometerAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
-    /**
-     * Interface to notify when magnetometer sensor accuracy changes.
-     */
-    fun interface OnMagnetometerAccuracyChangedListener {
-
-        /**
-         * Called when accuracy changes.
-         *
-         * @param collector collector that raised this event.
-         * @param accuracy new accuracy.
-         */
-        fun onAccuracyChanged(
-            collector: AccelerometerAndMagnetometerSyncedSensorCollector,
-            accuracy: SensorAccuracy?
-        )
-    }
-
 }

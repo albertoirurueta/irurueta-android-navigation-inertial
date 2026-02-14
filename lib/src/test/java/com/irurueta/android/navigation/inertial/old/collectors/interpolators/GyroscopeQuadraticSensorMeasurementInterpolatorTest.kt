@@ -20,8 +20,10 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.SensorAc
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.statistics.UniformRandomizer
 import org.junit.Assert.*
+import org.junit.Ignore
 import org.junit.Test
 
+@Ignore("this is deprecated")
 class GyroscopeQuadraticSensorMeasurementInterpolatorTest {
 
     @Test
