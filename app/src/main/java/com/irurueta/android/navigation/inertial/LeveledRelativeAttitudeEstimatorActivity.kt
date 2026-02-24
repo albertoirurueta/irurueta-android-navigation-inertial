@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,15 @@ import com.irurueta.android.navigation.inertial.app.R
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.old.estimators.attitude.LeveledRelativeAttitudeEstimator2
-import com.irurueta.android.navigation.inertial.old.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.MedianAveragingFilter
+import com.irurueta.android.navigation.inertial.estimators.attitude.LeveledRelativeAttitudeEstimator
+import com.irurueta.android.navigation.inertial.processors.filters.AveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MedianAveragingFilter
 import com.irurueta.geometry.*
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 
 class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
 
@@ -48,7 +51,7 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var leveledAttitudeEstimator: LeveledRelativeAttitudeEstimator2? = null
+    private var leveledAttitudeEstimator: LeveledRelativeAttitudeEstimator? = null
 
     private val displayOrientation = Quaternion()
 
@@ -108,11 +111,11 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
         useAccurateRelativeGyroscopeAttitudeEstimator =
             extras?.getBoolean(USE_ACCURATE_RELATIVE_GYROSCOPE_ATTITUDE_ESTIMATOR, false) ?: false
 
-        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_leveled_relative_attitude_estimator)
-        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
-        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
-        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
-        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
+        setContentView(R.layout.activity_leveled_relative_attitude_estimator)
+        cubeView = findViewById(R.id.cube)
+        rollView = findViewById(R.id.roll)
+        pitchView = findViewById(R.id.pitch)
+        yawView = findViewById(R.id.yaw)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -178,7 +181,7 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
 
-            leveledAttitudeEstimator = LeveledRelativeAttitudeEstimator2(
+            leveledAttitudeEstimator = LeveledRelativeAttitudeEstimator(
                 this,
                 location,
                 SensorDelay.GAME,
@@ -227,7 +230,7 @@ class LeveledRelativeAttitudeEstimatorActivity : AppCompatActivity() {
         leveledAttitudeEstimator?.start()
     }
 
-    private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter {
+    private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad> {
         return when (averagingFilterType) {
             MEAN_AVERAGING_FILTER -> MeanAveragingFilter()
             MEDIAN_AVERAGING_FILTER -> MedianAveragingFilter()

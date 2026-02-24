@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,19 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.app.R
-import com.irurueta.android.navigation.inertial.old.estimators.attitude.FusedGeomagneticAttitudeEstimator2
-import com.irurueta.android.navigation.inertial.old.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.MedianAveragingFilter
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.estimators.attitude.FusedGeomagneticAttitudeEstimator
+import com.irurueta.android.navigation.inertial.processors.filters.AveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MedianAveragingFilter
 import com.irurueta.geometry.*
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 
 class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
@@ -49,7 +52,7 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: FusedGeomagneticAttitudeEstimator2? = null
+    private var attitudeEstimator: FusedGeomagneticAttitudeEstimator? = null
 
     private val displayOrientation = Quaternion()
 
@@ -125,11 +128,11 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
             extras?.getBoolean(GeomagneticAttitudeEstimatorActivity.USE_WORLD_MAGNETIC_MODEL, false)
                 ?: false
 
-        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_fused_geomagnetic_attitude_estimator)
-        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
-        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
-        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
-        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
+        setContentView(R.layout.activity_fused_geomagnetic_attitude_estimator)
+        cubeView = findViewById(R.id.cube)
+        rollView = findViewById(R.id.roll)
+        pitchView = findViewById(R.id.pitch)
+        yawView = findViewById(R.id.yaw)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -195,7 +198,7 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
             val accelerometerAveragingFilter =
                 buildAveragingFilter(accelerometerAveragingFilterType)
 
-            attitudeEstimator = FusedGeomagneticAttitudeEstimator2(
+            attitudeEstimator = FusedGeomagneticAttitudeEstimator(
                 this,
                 location,
                 SensorDelay.GAME,
@@ -246,7 +249,7 @@ class FusedGeomagneticAttitudeEstimatorActivity : AppCompatActivity() {
         attitudeEstimator?.start()
     }
 
-    private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter {
+    private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad> {
         return when (averagingFilterType) {
             MEAN_AVERAGING_FILTER -> MeanAveragingFilter()
             MEDIAN_AVERAGING_FILTER -> MedianAveragingFilter()

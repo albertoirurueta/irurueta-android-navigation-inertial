@@ -24,16 +24,19 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.irurueta.android.gl.cube.CubeRenderer
 import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.app.R
-import com.irurueta.android.navigation.inertial.old.estimators.filter.AveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.LowPassAveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.MeanAveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.filter.MedianAveragingFilter
-import com.irurueta.android.navigation.inertial.old.estimators.pose.LocalPoseEstimator2
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
+import com.irurueta.android.navigation.inertial.estimators.pose.LocalPoseEstimator
+import com.irurueta.android.navigation.inertial.processors.filters.AveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.filters.MedianAveragingFilter
 import com.irurueta.geometry.*
+import com.irurueta.navigation.inertial.calibration.AccelerationTriad
+import com.irurueta.units.Acceleration
+import com.irurueta.units.AccelerationUnit
 
 class LocalPoseEstimatorActivity : AppCompatActivity() {
 
@@ -59,7 +62,7 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var poseEstimator: LocalPoseEstimator2? = null
+    private var poseEstimator: LocalPoseEstimator? = null
 
     private var hasLocationPermission = false
 
@@ -126,14 +129,14 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
             extras?.getBoolean(USE_WORLD_MAGNETIC_MODEL, false)
                 ?: false
 
-        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_local_pose_estimator)
-        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
-        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
-        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
-        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
-        xPosView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.x_pos)
-        yPosView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.y_pos)
-        zPosView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.z_pos)
+        setContentView(R.layout.activity_local_pose_estimator)
+        cubeView = findViewById(R.id.cube)
+        rollView = findViewById(R.id.roll)
+        pitchView = findViewById(R.id.pitch)
+        yawView = findViewById(R.id.yaw)
+        xPosView = findViewById(R.id.x_pos)
+        yPosView = findViewById(R.id.y_pos)
+        zPosView = findViewById(R.id.z_pos)
 
         val cubeSize = 0.25f
         val cubeDistance = 0.5
@@ -209,13 +212,12 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
         }
         val refreshIntervalNanos = (1.0f / refreshRate * 1e9).toLong()
 
-        poseEstimator = LocalPoseEstimator2(
+        poseEstimator = LocalPoseEstimator(
             this,
-            location,
+            initialLocation = location,
             sensorDelay = SensorDelay.FASTEST,
             useAttitudeSensor = true,
             useAccelerometerForAttitudeEstimation = false,
-            startOffsetEnabled = false,
             accelerometerSensorType = accelerometerSensorType,
             gyroscopeSensorType = gyroscopeSensorType,
             magnetometerSensorType = magnetometerSensorType,
@@ -267,7 +269,7 @@ class LocalPoseEstimatorActivity : AppCompatActivity() {
         poseEstimator?.start()
     }
 
-    private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter {
+    private fun buildAveragingFilter(averagingFilterType: String?): AveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad> {
         return when (averagingFilterType) {
             MEAN_AVERAGING_FILTER -> MeanAveragingFilter()
             MEDIAN_AVERAGING_FILTER -> MedianAveragingFilter()

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.app.R
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.old.estimators.attitude.AccurateRelativeGyroscopeAttitudeEstimator2
+import com.irurueta.android.navigation.inertial.estimators.attitude.AccurateRelativeGyroscopeAttitudeEstimator
 import com.irurueta.geometry.*
 
 class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
@@ -41,7 +41,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator2? = null
+    private var attitudeEstimator: AccurateRelativeGyroscopeAttitudeEstimator? = null
 
     private val displayOrientation = Quaternion()
 
@@ -59,12 +59,12 @@ class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
         }
 
         setContentView(
-            com.irurueta.android.navigation.inertial.app.R.layout.activity_relative_gyroscope_attitude_estimator
+            R.layout.activity_relative_gyroscope_attitude_estimator
         )
-        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
-        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
-        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
-        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
+        cubeView = findViewById(R.id.cube)
+        rollView = findViewById(R.id.roll)
+        pitchView = findViewById(R.id.pitch)
+        yawView = findViewById(R.id.yaw)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -76,7 +76,7 @@ class AccurateRelativeGyroscopeAttitudeEstimatorActivity : AppCompatActivity() {
             }
         }
 
-        attitudeEstimator = AccurateRelativeGyroscopeAttitudeEstimator2(
+        attitudeEstimator = AccurateRelativeGyroscopeAttitudeEstimator(
             this,
             gyroscopeSensorType,
             SensorDelay.GAME,

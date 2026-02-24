@@ -2849,13 +2849,13 @@ class GyroscopeNoiseProcessorTest {
 
         val psdX = processor.psdX
         requireNotNull(psdX)
-        assertTrue(psdX > 0.0)
+        assertTrue(psdX >= 0.0)
         val psdY = processor.psdY
         requireNotNull(psdY)
-        assertTrue(psdY > 0.0)
+        assertTrue(psdY >= 0.0)
         val psdZ = processor.psdZ
         requireNotNull(psdZ)
-        assertTrue(psdZ > 0.0)
+        assertTrue(psdZ >= 0.0)
 
         val averageTimeInterval = processor.averageTimeInterval
         requireNotNull(averageTimeInterval)

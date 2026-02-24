@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Alberto Irurueta Carro (alberto@irurueta.com)
+ * Copyright (C) 2026 Alberto Irurueta Carro (alberto@irurueta.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import com.irurueta.android.gl.cube.CubeTextureView
 import com.irurueta.android.navigation.inertial.app.R
 import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.old.estimators.attitude.AttitudeEstimator2
+import com.irurueta.android.navigation.inertial.estimators.attitude.AttitudeEstimator
 import com.irurueta.geometry.PinholeCamera
 import com.irurueta.geometry.PinholeCameraIntrinsicParameters
 import com.irurueta.geometry.Point3D
@@ -48,7 +48,7 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
 
     private var camera: PinholeCamera? = null
 
-    private var attitudeEstimator: AttitudeEstimator2? = null
+    private var attitudeEstimator: AttitudeEstimator? = null
 
     private val displayOrientation = Quaternion()
 
@@ -64,13 +64,13 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
             (extras?.getSerializable(ATTITUDE_SENSOR_TYPE) as AttitudeSensorType?)
                 ?: AttitudeSensorType.ABSOLUTE_ATTITUDE
         }
-        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_attitude_estimator)
-        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
-        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
-        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
-        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
+        setContentView(R.layout.activity_attitude_estimator)
+        cubeView = findViewById(R.id.cube)
+        rollView = findViewById(R.id.roll)
+        pitchView = findViewById(R.id.pitch)
+        yawView = findViewById(R.id.yaw)
         headingAccuracyView =
-            findViewById(com.irurueta.android.navigation.inertial.app.R.id.heading_accuracy)
+            findViewById(R.id.heading_accuracy)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -82,7 +82,7 @@ class AttitudeEstimatorActivity : AppCompatActivity() {
             }
         }
 
-        attitudeEstimator = AttitudeEstimator2(
+        attitudeEstimator = AttitudeEstimator(
             this,
             SensorDelay.GAME,
             attitudeSensorType = attitudeSensorType,
