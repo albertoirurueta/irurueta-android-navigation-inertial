@@ -33,6 +33,8 @@ import com.irurueta.android.navigation.inertial.processors.filters.AveragingFilt
 import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
 import com.irurueta.android.navigation.inertial.processors.filters.MedianAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessorType
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.geometry.*
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.units.Acceleration
@@ -265,7 +267,8 @@ class PoseEstimatorActivity : AppCompatActivity() {
 
                     cubeView?.camera = camera
                 }
-            }
+            },
+            zuptSettings = ZuptSettings(processorType = ZuptProcessorType.SOFT)
         )
         poseEstimator?.start()
     }

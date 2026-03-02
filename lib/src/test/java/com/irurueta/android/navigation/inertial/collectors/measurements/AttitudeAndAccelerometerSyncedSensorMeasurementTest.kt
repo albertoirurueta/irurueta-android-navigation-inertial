@@ -104,6 +104,15 @@ class AttitudeAndAccelerometerSyncedSensorMeasurementTest {
     }
 
     @Test
+    fun class_implementsRequiredInstances() {
+        val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement()
+
+        assertTrue(SyncedSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithAttitudeSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithAccelerometerSensorMeasurement::class.isInstance(syncedMeasurement))
+    }
+
+    @Test
     fun attitudeMeasurement_setsExpectedValue() {
         val syncedMeasurement = AttitudeAndAccelerometerSyncedSensorMeasurement()
 

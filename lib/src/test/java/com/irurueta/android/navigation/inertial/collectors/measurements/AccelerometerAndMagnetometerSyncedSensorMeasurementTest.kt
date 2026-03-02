@@ -108,6 +108,15 @@ class AccelerometerAndMagnetometerSyncedSensorMeasurementTest {
     }
 
     @Test
+    fun class_implementsRequiredInterfaces() {
+        val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement()
+
+        assertTrue(SyncedSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithAccelerometerSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithMagnetometerSensorMeasurement::class.isInstance(syncedMeasurement))
+    }
+
+    @Test
     fun accelerometerMeasurement_setsExpectedValue() {
         val syncedMeasurement = AccelerometerAndMagnetometerSyncedSensorMeasurement()
 

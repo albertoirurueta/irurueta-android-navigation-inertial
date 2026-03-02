@@ -43,6 +43,7 @@ import com.irurueta.android.navigation.inertial.processors.pose.AccelerometerFus
 import com.irurueta.android.navigation.inertial.processors.pose.AttitudeECEFAbsolutePoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.DoubleFusedECEFAbsolutePoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.FusedECEFAbsolutePoseProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
@@ -135,6 +136,7 @@ class EcefAbsolutePoseEstimatorTest {
         assertNull(estimator.poseAvailableListener)
         assertNull(estimator.accuracyChangedListener)
         assertTrue(estimator.adjustGravityNorm)
+        assertNotNull(estimator.zuptSettings)
     }
 
     @Test
@@ -145,6 +147,7 @@ class EcefAbsolutePoseEstimatorTest {
             MedianAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
+        val zuptSettings = ZuptSettings()
         val estimator = EcefAbsolutePoseEstimator(
             context,
             initialLocation,
@@ -165,7 +168,8 @@ class EcefAbsolutePoseEstimatorTest {
             estimatePoseTransformation = true,
             poseAvailableListener,
             accuracyChangedListener,
-            adjustGravityNorm = false
+            adjustGravityNorm = false,
+            zuptSettings
         )
 
         // check
@@ -195,6 +199,32 @@ class EcefAbsolutePoseEstimatorTest {
         assertSame(poseAvailableListener, estimator.poseAvailableListener)
         assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
         assertFalse(estimator.adjustGravityNorm)
+        assertSame(zuptSettings, estimator.zuptSettings)
+
+        val fusedProcessor: FusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("fusedProcessor")
+        requireNotNull(fusedProcessor)
+        assertSame(zuptSettings, fusedProcessor.zuptSettings)
+
+        val accelerometerFusedProcessor: AccelerometerFusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("accelerometerFusedProcessor")
+        requireNotNull(accelerometerFusedProcessor)
+        assertSame(zuptSettings, fusedProcessor.zuptSettings)
+
+        val doubleFusedProcessor: DoubleFusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("doubleFusedProcessor")
+        requireNotNull(doubleFusedProcessor)
+        assertSame(zuptSettings, doubleFusedProcessor.zuptSettings)
+
+        val accelerometerDoubleFusedProcessor: AccelerometerDoubleFusedECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("accelerometerDoubleFusedProcessor")
+        requireNotNull(accelerometerDoubleFusedProcessor)
+        assertSame(zuptSettings, accelerometerDoubleFusedProcessor.zuptSettings)
+
+        val attitudeProcessor: AttitudeECEFAbsolutePoseProcessor? =
+            estimator.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+        assertSame(zuptSettings, attitudeProcessor.zuptSettings)
     }
 
     @Test
@@ -2642,7 +2672,11 @@ class EcefAbsolutePoseEstimatorTest {
         requireNotNull(listener)
 
         // notify
-        listener.onAccuracyChanged(fusedCollector, SensorType.ABSOLUTE_ATTITUDE, SensorAccuracy.HIGH)
+        listener.onAccuracyChanged(
+            fusedCollector,
+            SensorType.ABSOLUTE_ATTITUDE,
+            SensorAccuracy.HIGH
+        )
     }
 
     @Test
@@ -2661,7 +2695,11 @@ class EcefAbsolutePoseEstimatorTest {
         requireNotNull(listener)
 
         // notify
-        listener.onAccuracyChanged(fusedCollector, SensorType.ABSOLUTE_ATTITUDE, SensorAccuracy.HIGH)
+        listener.onAccuracyChanged(
+            fusedCollector,
+            SensorType.ABSOLUTE_ATTITUDE,
+            SensorAccuracy.HIGH
+        )
 
         // check
         verify(exactly = 1) {

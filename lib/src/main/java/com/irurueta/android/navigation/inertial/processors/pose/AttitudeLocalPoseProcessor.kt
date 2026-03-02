@@ -22,6 +22,8 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Attitude
 import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessorBuilder
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.navigation.frames.NEDVelocity
 
 /**
@@ -33,12 +35,14 @@ import com.irurueta.navigation.frames.NEDVelocity
  * @property initialVelocity initial velocity of device expressed in NED coordinates.
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
+ * @property zuptSettings settings for ZUPT (Zero Velocity Update) evaluation.
  */
 class AttitudeLocalPoseProcessor(
     initialLocation: Location,
     initialVelocity: NEDVelocity = NEDVelocity(),
     estimatePoseTransformation: Boolean = false,
-    processorListener: OnProcessedListener? = null
+    processorListener: OnProcessedListener? = null,
+    val zuptSettings: ZuptSettings = ZuptSettings()
 ) : BaseLocalPoseProcessor(
     initialLocation,
     initialVelocity,
@@ -49,6 +53,15 @@ class AttitudeLocalPoseProcessor(
      * Absolute attitude processor.
      */
     private val attitudeProcessor = AttitudeProcessor()
+
+    /**
+     * Computes scores to determine whether ZUPT (Zero Velocity Update) must be performed to reset
+     * velocity.
+     */
+    private val zuptProcessor =
+        ZuptProcessorBuilder<AttitudeAccelerometerAndGyroscopeSyncedSensorMeasurement>(
+            zuptSettings
+        ).build()
 
     /**
      * Processes provided synced measurement to estimate current attitude and position.
@@ -66,7 +79,13 @@ class AttitudeLocalPoseProcessor(
         return if (attitudeMeasurement != null && accelerometerMeasurement != null
             && gyroscopeMeasurement != null
         ) {
-            process(attitudeMeasurement, accelerometerMeasurement, gyroscopeMeasurement, timestamp)
+            process(
+                attitudeMeasurement,
+                accelerometerMeasurement,
+                gyroscopeMeasurement,
+                timestamp,
+                zuptProcessor.process(syncedMeasurement)
+            )
         } else {
             false
         }
@@ -79,15 +98,20 @@ class AttitudeLocalPoseProcessor(
      * @param accelerometerMeasurement accelerometer measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
+     * @param zuptScore Value between 0.0 and 1.0 that indicates the likeliness to apply a Zero
+     * Velocity Update, where 0.0 indicates no likeliness and 1.0 indicates full likeliness of a
+     * ZUPT. Likeliness, is used to weight velocity updates where a score of 1.0 resets velocity to
+     * zero and a score of 0.0 keeps expected velocity update.
      * @return true if new pose is estimated, false otherwise.
      */
     private fun process(
         attitudeMeasurement: AttitudeSensorMeasurement,
         accelerometerMeasurement: AccelerometerSensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
-        timestamp: Long
+        timestamp: Long,
+        zuptScore: Double
     ): Boolean {
         attitudeProcessor.process(attitudeMeasurement).copyTo(currentAttitude)
-        return processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp)
+        return processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp, zuptScore)
     }
 }

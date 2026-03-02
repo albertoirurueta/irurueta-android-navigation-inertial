@@ -215,12 +215,17 @@ abstract class BaseECEFAbsolutePoseProcessor(
      * @param accelerometerMeasurement accelerometer measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
+     * @param zuptScore Value between 0.0 and 1.0 that indicates the likeliness to apply a Zero
+     * Velocity Update, where 0.0 indicates no likeliness and 1.0 indicates full likeliness of a
+     * ZUPT. Likeliness, is used to weight velocity updates where a score of 1.0 resets velocity to
+     * zero and a score of 0.0 keeps expected velocity update.
      * @return true if new pose is processed, false otherwise.
      */
     protected open fun processPose(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
-        timestamp: Long
+        timestamp: Long,
+        zuptScore: Double = 0.0
     ): Boolean {
         if (!processTimeInterval(timestamp)) {
             return false
@@ -252,6 +257,10 @@ abstract class BaseECEFAbsolutePoseProcessor(
         // coordinates and converting back to ECEF coordinates
         ECEFtoNEDFrameConverter.convertECEFtoNED(currentEcefFrame, currentNedFrame)
         currentNedFrame.coordinateTransformationRotation = currentAttitude
+        val score = 1.0 - zuptScore
+        currentNedFrame.vn *= score
+        currentNedFrame.ve *= score
+        currentNedFrame.vd *= score
         NEDtoECEFFrameConverter.convertNEDtoECEF(currentNedFrame, currentEcefFrame)
 
         // compute transformation between initial and current frame and previous and current frame

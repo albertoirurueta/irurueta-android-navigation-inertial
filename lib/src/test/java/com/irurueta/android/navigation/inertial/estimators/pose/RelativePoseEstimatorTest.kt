@@ -39,6 +39,7 @@ import com.irurueta.android.navigation.inertial.processors.filters.MedianAveragi
 import com.irurueta.android.navigation.inertial.processors.pose.AccelerometerFusedRelativePoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.AttitudeRelativePoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.FusedRelativePoseProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
@@ -140,12 +141,14 @@ class RelativePoseEstimatorTest {
         assertFalse(estimator.running)
         assertNull(estimator.location)
         assertTrue(estimator.adjustGravityNorm)
+        assertNotNull(estimator.zuptSettings)
     }
 
     @Test
     fun constructor_whenAllProperties_setsExpectedValues() {
         val initialSpeed = SpeedTriad()
         val accelerometerAveragingFilter = MedianAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        val zuptSettings = ZuptSettings()
         val estimator = RelativePoseEstimator(
             context,
             initialSpeed,
@@ -157,7 +160,8 @@ class RelativePoseEstimatorTest {
             GyroscopeSensorType.GYROSCOPE,
             useAccurateRelativeGyroscopeAttitudeProcessor = false,
             poseAvailableListener,
-            accuracyChangedListener
+            accuracyChangedListener,
+            zuptSettings = zuptSettings
         )
 
         // check
@@ -206,6 +210,22 @@ class RelativePoseEstimatorTest {
         assertFalse(estimator.running)
         assertNull(estimator.location)
         assertTrue(estimator.adjustGravityNorm)
+        assertSame(zuptSettings, estimator.zuptSettings)
+
+        val fusedProcessor: FusedRelativePoseProcessor? =
+            estimator.getPrivateProperty("fusedProcessor")
+        requireNotNull(fusedProcessor)
+        assertSame(zuptSettings, fusedProcessor.zuptSettings)
+
+        val accelerometerFusedProcessor: AccelerometerFusedRelativePoseProcessor? =
+            estimator.getPrivateProperty("accelerometerFusedProcessor")
+        requireNotNull(accelerometerFusedProcessor)
+        assertSame(zuptSettings, accelerometerFusedProcessor.zuptSettings)
+
+        val attitudeProcessor: AttitudeRelativePoseProcessor? =
+            estimator.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+        assertSame(zuptSettings, attitudeProcessor.zuptSettings)
     }
 
     @Test

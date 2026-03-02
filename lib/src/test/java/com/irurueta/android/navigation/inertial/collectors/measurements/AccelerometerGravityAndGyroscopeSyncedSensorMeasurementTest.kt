@@ -124,6 +124,16 @@ class AccelerometerGravityAndGyroscopeSyncedSensorMeasurementTest {
     }
 
     @Test
+    fun class_implementsRequiredInstances() {
+        val syncedMeasurement = AccelerometerGravityAndGyroscopeSyncedSensorMeasurement()
+
+        assertTrue(SyncedSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithAccelerometerSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithGravitySensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithGyroscopeSensorMeasurement::class.isInstance(syncedMeasurement))
+    }
+
+    @Test
     fun accelerometerMeasurement_setsExpectedValue() {
         val syncedMeasurement = AccelerometerGravityAndGyroscopeSyncedSensorMeasurement()
 
@@ -1267,7 +1277,7 @@ class AccelerometerGravityAndGyroscopeSyncedSensorMeasurementTest {
     @Test
     fun equals_whenDifferentType_returnsFalse() {
         val syncedMeasurement = AccelerometerGravityAndGyroscopeSyncedSensorMeasurement()
-        assertFalse(syncedMeasurement.equals(Any()))
+        assertFalse(syncedMeasurement == Any())
     }
 
     @Test

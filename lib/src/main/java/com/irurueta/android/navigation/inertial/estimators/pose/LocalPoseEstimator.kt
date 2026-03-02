@@ -36,6 +36,7 @@ import com.irurueta.android.navigation.inertial.processors.pose.AccelerometerFus
 import com.irurueta.android.navigation.inertial.processors.pose.AttitudeLocalPoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.DoubleFusedLocalPoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.FusedLocalPoseProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.navigation.frames.ECEFFrame
 import com.irurueta.navigation.frames.NEDVelocity
@@ -90,6 +91,7 @@ import java.util.Date
  * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
  * standard norm, or norm at provided location. If no location is provided, this should only be
  * enabled when device is close to sea level.
+ * @property zuptSettings settings for ZUPT (Zero Velocity Update) evaluation.
  */
 class LocalPoseEstimator(
     val context: Context,
@@ -113,13 +115,17 @@ class LocalPoseEstimator(
     estimatePoseTransformation: Boolean = false,
     var poseAvailableListener: OnPoseAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
-    adjustGravityNorm: Boolean = true
+    adjustGravityNorm: Boolean = true,
+    val zuptSettings: ZuptSettings = ZuptSettings()
 ) {
     /**
      * Internal processor using fused attitude estimation with gravity + pose estimation.
      */
     private val fusedProcessor =
-        FusedLocalPoseProcessor(initialLocation, initialVelocity, estimatePoseTransformation)
+        FusedLocalPoseProcessor(
+            initialLocation, initialVelocity, estimatePoseTransformation,
+            zuptSettings = zuptSettings
+        )
 
     /**
      * Internal processor using fused attitude estimation with accelerometer + pose estimation.
@@ -127,14 +133,20 @@ class LocalPoseEstimator(
     private val accelerometerFusedProcessor = AccelerometerFusedLocalPoseProcessor(
         initialLocation,
         initialVelocity,
-        estimatePoseTransformation
+        estimatePoseTransformation,
+        zuptSettings = zuptSettings
     )
 
     /**
      * Internal processor using double fused attitude estimation with gravity + pose estimation.
      */
     private val doubleFusedProcessor =
-        DoubleFusedLocalPoseProcessor(initialLocation, initialVelocity, estimatePoseTransformation)
+        DoubleFusedLocalPoseProcessor(
+            initialLocation,
+            initialVelocity,
+            estimatePoseTransformation,
+            zuptSettings = zuptSettings
+        )
 
     /**
      * Internal processor using double fused attitude estimation with accelerometer + pose
@@ -143,14 +155,20 @@ class LocalPoseEstimator(
     private val accelerometerDoubleFusedProcessor = AccelerometerDoubleFusedLocalPoseProcessor(
         initialLocation,
         initialVelocity,
-        estimatePoseTransformation
+        estimatePoseTransformation,
+        zuptSettings = zuptSettings
     )
 
     /**
      * Internal processor using attitude sensor + pose estimation.
      */
     private val attitudeProcessor =
-        AttitudeLocalPoseProcessor(initialLocation, initialVelocity, estimatePoseTransformation)
+        AttitudeLocalPoseProcessor(
+            initialLocation,
+            initialVelocity,
+            estimatePoseTransformation,
+            zuptSettings = zuptSettings
+        )
 
     /**
      * Measurement syncer for internal [fusedProcessor].

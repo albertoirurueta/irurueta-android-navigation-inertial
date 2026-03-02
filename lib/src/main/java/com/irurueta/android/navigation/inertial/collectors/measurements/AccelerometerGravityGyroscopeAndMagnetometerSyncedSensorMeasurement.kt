@@ -43,14 +43,15 @@ import java.util.Objects
  * assumed to occur.
  */
 class AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement(
-    var accelerometerMeasurement: AccelerometerSensorMeasurement? = null,
-    var gravityMeasurement: GravitySensorMeasurement? = null,
-    var gyroscopeMeasurement: GyroscopeSensorMeasurement? = null,
-    var magnetometerMeasurement: MagnetometerSensorMeasurement? = null,
+    override var accelerometerMeasurement: AccelerometerSensorMeasurement? = null,
+    override var gravityMeasurement: GravitySensorMeasurement? = null,
+    override var gyroscopeMeasurement: GyroscopeSensorMeasurement? = null,
+    override var magnetometerMeasurement: MagnetometerSensorMeasurement? = null,
     timestamp: Long = 0L
 ) : SyncedSensorMeasurement<AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement>(
     timestamp
-) {
+), WithAccelerometerSensorMeasurement, WithGravitySensorMeasurement, WithGyroscopeSensorMeasurement,
+    WithMagnetometerSensorMeasurement {
     /**
      * Copy constructor.
      *

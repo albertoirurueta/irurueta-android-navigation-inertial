@@ -24,6 +24,9 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.GravityS
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.LeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.NoneZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
@@ -108,11 +111,13 @@ class FusedRelativePoseProcessorTest {
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialSpeed = getSpeed()
-        val processor = FusedRelativePoseProcessor(initialSpeed, processorListener)
+        val zuptSettings = ZuptSettings()
+        val processor = FusedRelativePoseProcessor(initialSpeed, processorListener, zuptSettings)
 
         // check
         assertSame(initialSpeed, processor.initialSpeed)
         assertSame(processorListener, processor.processorListener)
+        assertSame(zuptSettings, processor.zuptSettings)
         assertNotNull(processor.poseTransformation)
         assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
         assertEquals(0.0, processor.gx, 0.0)
@@ -150,6 +155,11 @@ class FusedRelativePoseProcessorTest {
         )
         assertNull(processor.location)
         assertTrue(processor.adjustGravityNorm)
+
+        val zuptProcessor: ZuptProcessor<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement>? =
+            processor.getPrivateProperty("zuptProcessor")
+        requireNotNull(zuptProcessor)
+        assertTrue(zuptProcessor is NoneZuptProcessor)
     }
 
     @Test

@@ -25,6 +25,9 @@ import com.irurueta.android.navigation.inertial.processors.attitude.Acceleromete
 import com.irurueta.android.navigation.inertial.processors.attitude.AttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.filters.LowPassAveragingFilter
 import com.irurueta.android.navigation.inertial.processors.filters.MeanAveragingFilter
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.NoneZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
@@ -79,18 +82,31 @@ class AttitudeRelativePoseProcessorTest {
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialSpeed = getSpeed()
-        val averagingFilter = MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        val averagingFilter =
+            MeanAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
+        val zuptSettings = ZuptSettings()
         val processor =
-            AttitudeRelativePoseProcessor(initialSpeed, averagingFilter, processorListener)
+            AttitudeRelativePoseProcessor(
+                initialSpeed,
+                averagingFilter,
+                processorListener,
+                zuptSettings
+            )
 
         // check
         assertSame(initialSpeed, processor.initialSpeed)
         assertSame(processorListener, processor.processorListener)
+        assertSame(zuptSettings, processor.zuptSettings)
         assertNotNull(processor.poseTransformation)
         assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
         assertSame(averagingFilter, processor.averagingFilter)
         assertNull(processor.location)
         assertTrue(processor.adjustGravityNorm)
+
+        val zuptProcessor: ZuptProcessor<AttitudeAndAccelerometerSyncedSensorMeasurement>? =
+            processor.getPrivateProperty("zuptProcessor")
+        requireNotNull(zuptProcessor)
+        assertTrue(zuptProcessor is NoneZuptProcessor)
     }
 
     @Test
@@ -575,7 +591,8 @@ class AttitudeRelativePoseProcessorTest {
         transformationRotation.normalize()
         val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
-        assertArrayEquals(DoubleArray(3), transformation.translation,
+        assertArrayEquals(
+            DoubleArray(3), transformation.translation,
             VERY_LARGE_ABSOLUTE_ERROR
         )
     }
@@ -720,7 +737,8 @@ class AttitudeRelativePoseProcessorTest {
         transformationRotation.normalize()
         val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
-        assertArrayEquals(DoubleArray(3), transformation.translation,
+        assertArrayEquals(
+            DoubleArray(3), transformation.translation,
             VERY_LARGE_ABSOLUTE_ERROR
         )
 

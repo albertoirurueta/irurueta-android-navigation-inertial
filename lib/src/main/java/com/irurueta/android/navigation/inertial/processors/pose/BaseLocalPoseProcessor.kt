@@ -326,12 +326,17 @@ abstract class BaseLocalPoseProcessor(
      * @param accelerometerMeasurement accelerometer measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
+     * @param zuptScore Value between 0.0 and 1.0 that indicates the likeliness to apply a Zero
+     * Velocity Update, where 0.0 indicates no likeliness and 1.0 indicates full likeliness of a
+     * ZUPT. Likeliness, is used to weight velocity updates where a score of 1.0 resets velocity to
+     * zero and a score of 0.0 keeps expected velocity update.
      * @return true if new pose is processed, false otherwise.
      */
     protected open fun processPose(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
-        timestamp: Long
+        timestamp: Long,
+        zuptScore: Double = 0.0
     ): Boolean {
         // NOTE: References in comments refer to formulas in Paul D. Groves. Principles of GNSS,
         // Intertial and multisensor integrated navigation systems
@@ -407,10 +412,10 @@ abstract class BaseLocalPoseProcessor(
         deltaVebn.multiplyByScalar(timeIntervalSeconds)
 
         oldVebn.add(deltaVebn, vEbn)
-
-        val vn = vEbn.getElementAtIndex(0)
-        val ve = vEbn.getElementAtIndex(1)
-        val vd = vEbn.getElementAtIndex(2)
+        val score = 1.0 - zuptScore
+        val vn = score * vEbn.getElementAtIndex(0)
+        val ve = score * vEbn.getElementAtIndex(1)
+        val vd = score * vEbn.getElementAtIndex(2)
 
         // Update curvilinear position
         // Update height using (5.56)

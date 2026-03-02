@@ -23,6 +23,9 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerLeveledRelativeAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.NoneZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.Quaternion
@@ -107,11 +110,14 @@ class AccelerometerFusedRelativePoseProcessorTest {
     @Test
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialSpeed = getSpeed()
-        val processor = AccelerometerFusedRelativePoseProcessor(initialSpeed, processorListener)
+        val zuptSettings = ZuptSettings()
+        val processor =
+            AccelerometerFusedRelativePoseProcessor(initialSpeed, processorListener, zuptSettings)
 
         // check
         assertSame(initialSpeed, processor.initialSpeed)
         assertSame(processorListener, processor.processorListener)
+        assertSame(zuptSettings, processor.zuptSettings)
         assertNotNull(processor.poseTransformation)
         assertEquals(0.0, processor.timeIntervalSeconds, 0.0)
         assertEquals(0.0, processor.gx, 0.0)
@@ -149,6 +155,11 @@ class AccelerometerFusedRelativePoseProcessorTest {
         )
         assertNull(processor.location)
         assertTrue(processor.adjustGravityNorm)
+
+        val zuptProcessor: ZuptProcessor<AccelerometerAndGyroscopeSyncedSensorMeasurement>? =
+            processor.getPrivateProperty("zuptProcessor")
+        requireNotNull(zuptProcessor)
+        assertTrue(zuptProcessor is NoneZuptProcessor)
     }
 
     @Test
@@ -622,7 +633,7 @@ class AccelerometerFusedRelativePoseProcessorTest {
         )
         val nedFrame = NEDFrame(position, NEDVelocity(), c)
         val kinematics = NEDKinematicsEstimator.estimateKinematicsAndReturnNew(
-            AccelerometerFusedRelativePoseProcessorTest.Companion.TIME_INTERVAL_SECONDS,
+            TIME_INTERVAL_SECONDS,
             nedFrame,
             nedFrame
         )
@@ -973,7 +984,8 @@ class AccelerometerFusedRelativePoseProcessorTest {
         transformationRotation.normalize()
         val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
-        assertArrayEquals(DoubleArray(3), transformation.translation,
+        assertArrayEquals(
+            DoubleArray(3), transformation.translation,
             VERY_LARGE_ABSOLUTE_ERROR
         )
     }
@@ -1122,7 +1134,8 @@ class AccelerometerFusedRelativePoseProcessorTest {
         transformationRotation.normalize()
         val transformationRotation2 = ENUtoNEDConverter.convertAndReturnNew(nedAttitude)
         assertTrue(transformationRotation.equals(transformationRotation2))
-        assertArrayEquals(DoubleArray(3), transformation.translation,
+        assertArrayEquals(
+            DoubleArray(3), transformation.translation,
             VERY_LARGE_ABSOLUTE_ERROR
         )
 

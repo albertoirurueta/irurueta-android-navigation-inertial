@@ -35,12 +35,12 @@ import java.util.Objects
  * assumed to occur.
  */
 class GravityAndMagnetometerSyncedSensorMeasurement(
-    var gravityMeasurement: GravitySensorMeasurement? = null,
-    var magnetometerMeasurement: MagnetometerSensorMeasurement? = null,
+    override var gravityMeasurement: GravitySensorMeasurement? = null,
+    override var magnetometerMeasurement: MagnetometerSensorMeasurement? = null,
     timestamp: Long = 0L
 ) : SyncedSensorMeasurement<GravityAndMagnetometerSyncedSensorMeasurement>(
     timestamp
-) {
+), WithGravitySensorMeasurement, WithMagnetometerSensorMeasurement {
     /**
      * Copy constructor.
      *

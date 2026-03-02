@@ -21,12 +21,16 @@ import com.irurueta.algebra.Utils
 import com.irurueta.android.navigation.inertial.ENUtoNEDConverter
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorMeasurement
+import com.irurueta.android.navigation.inertial.collectors.measurements.AttitudeAndAccelerometerSyncedSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.DoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.NoneZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
@@ -132,11 +136,13 @@ class DoubleFusedECEFAbsolutePoseProcessorTest {
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
+        val zuptSettings = ZuptSettings()
         val processor = DoubleFusedECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = true,
-            processorListener = processorListener
+            processorListener = processorListener,
+            zuptSettings
         )
 
         // check
@@ -144,6 +150,7 @@ class DoubleFusedECEFAbsolutePoseProcessorTest {
         assertSame(initialVelocity, processor.initialVelocity)
         assertTrue(processor.estimatePoseTransformation)
         assertSame(processorListener, processor.processorListener)
+        assertSame(zuptSettings, processor.zuptSettings)
         assertNotNull(processor.initialEcefFrame)
         assertNotNull(processor.initialNedFrame)
         assertNotNull(processor.previousEcefFrame)
@@ -192,6 +199,11 @@ class DoubleFusedECEFAbsolutePoseProcessorTest {
             processor.attitudePanicCounterThreshold
         )
         assertTrue(processor.adjustGravityNorm)
+
+        val zuptProcessor: ZuptProcessor<AttitudeAndAccelerometerSyncedSensorMeasurement>? =
+            processor.getPrivateProperty("zuptProcessor")
+        requireNotNull(zuptProcessor)
+        assertTrue(zuptProcessor is NoneZuptProcessor)
     }
 
     @Test

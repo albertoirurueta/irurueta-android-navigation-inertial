@@ -22,6 +22,8 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerDoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessorBuilder
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.navigation.frames.NEDVelocity
 
 /**
@@ -34,12 +36,14 @@ import com.irurueta.navigation.frames.NEDVelocity
  * @property initialVelocity initial velocity of device expressed in NED coordinates.
  * @property estimatePoseTransformation true to estimate 3D metric pose transformation.
  * @property processorListener listener to notify new poses.
+ * @property zuptSettings settings for ZUPT (Zero Velocity Update) evaluation.
  */
 class AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
     initialLocation: Location,
     initialVelocity: NEDVelocity = NEDVelocity(),
     estimatePoseTransformation: Boolean = false,
-    processorListener: OnProcessedListener? = null
+    processorListener: OnProcessedListener? = null,
+    val zuptSettings: ZuptSettings = ZuptSettings()
 ) : BaseDoubleFusedECEFAbsolutePoseProcessor<AccelerometerSensorMeasurement, AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>(
     initialLocation,
     initialVelocity,
@@ -51,6 +55,15 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
      * measurements to estimate current device attitude.
      */
     override val attitudeProcessor = AccelerometerDoubleFusedGeomagneticAttitudeProcessor()
+
+    /**
+     * Computes scores to determine whether ZUPT (Zero Velocity Update) must be performed to reset
+     * velocity.
+     */
+    private val zuptProcessor =
+        ZuptProcessorBuilder<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>(
+            zuptSettings
+        ).build()
 
     /**
      * Processes provided synced measurement to estimate current attitude and position.
@@ -70,7 +83,8 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
                 accelerometerMeasurement,
                 gyroscopeMeasurement,
                 magnetometerMeasurement,
-                timestamp
+                timestamp,
+                zuptProcessor.process(syncedMeasurement)
             )
         } else {
             false
@@ -84,13 +98,18 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
      * @param gyroscopeMeasurement gyroscope measurement.
      * @param magnetometerMeasurement magnetometer measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
+     * @param zuptScore Value between 0.0 and 1.0 that indicates the likeliness to apply a Zero
+     * Velocity Update, where 0.0 indicates no likeliness and 1.0 indicates full likeliness of a
+     * ZUPT. Likeliness, is used to weight velocity updates where a score of 1.0 resets velocity to
+     * zero and a score of 0.0 keeps expected velocity update.
      * @return true if new pose is estimated, false otherwise.
      */
     private fun process(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
         magnetometerMeasurement: MagnetometerSensorMeasurement,
-        timestamp: Long
+        timestamp: Long,
+        zuptScore: Double
     ): Boolean {
         return if (processAttitude(
                 accelerometerMeasurement,
@@ -99,7 +118,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
                 timestamp
             )
         ) {
-            processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp)
+            processPose(accelerometerMeasurement, gyroscopeMeasurement, timestamp, zuptScore)
         } else {
             false
         }

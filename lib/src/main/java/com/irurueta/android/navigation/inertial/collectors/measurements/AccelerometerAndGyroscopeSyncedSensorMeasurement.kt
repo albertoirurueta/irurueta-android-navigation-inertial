@@ -34,10 +34,11 @@ import java.util.Objects
  * assumed to occur.
  */
 class AccelerometerAndGyroscopeSyncedSensorMeasurement(
-    var accelerometerMeasurement: AccelerometerSensorMeasurement? = null,
-    var gyroscopeMeasurement: GyroscopeSensorMeasurement? = null,
+    override var accelerometerMeasurement: AccelerometerSensorMeasurement? = null,
+    override var gyroscopeMeasurement: GyroscopeSensorMeasurement? = null,
     timestamp: Long = 0L
-) : SyncedSensorMeasurement<AccelerometerAndGyroscopeSyncedSensorMeasurement>(timestamp) {
+) : SyncedSensorMeasurement<AccelerometerAndGyroscopeSyncedSensorMeasurement>(timestamp),
+    WithAccelerometerSensorMeasurement, WithGyroscopeSensorMeasurement {
 
     /**
      * Copy constructor.
@@ -270,6 +271,6 @@ class AccelerometerAndGyroscopeSyncedSensorMeasurement(
      * @return a hash code value for this object.
      */
     override fun hashCode(): Int {
-        return Objects.hash(super.hashCode(),accelerometerMeasurement, gyroscopeMeasurement)
+        return Objects.hash(super.hashCode(), accelerometerMeasurement, gyroscopeMeasurement)
     }
 }

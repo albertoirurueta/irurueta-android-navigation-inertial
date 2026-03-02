@@ -33,6 +33,7 @@ import com.irurueta.android.navigation.inertial.processors.filters.LowPassAverag
 import com.irurueta.android.navigation.inertial.processors.pose.AccelerometerFusedRelativePoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.AttitudeRelativePoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.FusedRelativePoseProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.geometry.EuclideanTransformation3D
 import com.irurueta.navigation.inertial.calibration.AccelerationTriad
 import com.irurueta.navigation.inertial.calibration.SpeedTriad
@@ -64,6 +65,7 @@ import com.irurueta.units.AccelerationUnit
  * @property adjustGravityNorm indicates whether gravity norm must be adjusted to either Earth
  * standard norm, or norm at provided location. If no location is provided, this should only be
  * enabled when device is close to sea level.
+ * @property zuptSettings settings for ZUPT (Zero Velocity Update) evaluation.
  */
 class RelativePoseEstimator(
     val context: Context,
@@ -79,23 +81,30 @@ class RelativePoseEstimator(
     var poseAvailableListener: OnPoseAvailableListener? = null,
     var accuracyChangedListener: OnAccuracyChangedListener? = null,
     location: Location? = null,
-    adjustGravityNorm: Boolean = true
+    adjustGravityNorm: Boolean = true,
+    val zuptSettings: ZuptSettings = ZuptSettings()
 ) {
     /**
      * Internal processor using fused attitude estimation with gravity + pose estimation.
      */
-    private val fusedProcessor = FusedRelativePoseProcessor(initialSpeed)
+    private val fusedProcessor =
+        FusedRelativePoseProcessor(initialSpeed, zuptSettings = zuptSettings)
 
     /**
      * Internal processor using fused attitude estimation with accelerometer + pose estimation.
      */
-    private val accelerometerFusedProcessor = AccelerometerFusedRelativePoseProcessor(initialSpeed)
+    private val accelerometerFusedProcessor =
+        AccelerometerFusedRelativePoseProcessor(initialSpeed, zuptSettings = zuptSettings)
 
     /**
      * Internal processor using attitude sensor + pose estimation.
      */
     private val attitudeProcessor =
-        AttitudeRelativePoseProcessor(initialSpeed, accelerometerAveragingFilter)
+        AttitudeRelativePoseProcessor(
+            initialSpeed,
+            accelerometerAveragingFilter,
+            zuptSettings = zuptSettings
+        )
 
     /**
      * Measurement syncer for internal [fusedProcessor].
@@ -126,25 +135,25 @@ class RelativePoseEstimator(
      * Measurement syncer for internal [accelerometerFusedProcessor].
      */
     private val accelerometerFusedCollector = AccelerometerAndGyroscopeSyncedSensorCollector(
-            context,
-            accelerometerSensorType = accelerometerSensorType,
-            gyroscopeSensorType = gyroscopeSensorType,
-            accelerometerSensorDelay = sensorDelay,
-            gyroscopeSensorDelay = sensorDelay,
-            accuracyChangedListener = { _, sensorType, accuracy ->
-                notifyAccuracyChanged(sensorType, accuracy)
-            },
-            measurementListener = { _, measurement ->
+        context,
+        accelerometerSensorType = accelerometerSensorType,
+        gyroscopeSensorType = gyroscopeSensorType,
+        accelerometerSensorDelay = sensorDelay,
+        gyroscopeSensorDelay = sensorDelay,
+        accuracyChangedListener = { _, sensorType, accuracy ->
+            notifyAccuracyChanged(sensorType, accuracy)
+        },
+        measurementListener = { _, measurement ->
 
-                if (accelerometerFusedProcessor.process(measurement)) {
-                    val poseTransformation = accelerometerFusedProcessor.poseTransformation
-                    notifyPose(
-                        measurement.timestamp,
-                        poseTransformation
-                    )
-                }
+            if (accelerometerFusedProcessor.process(measurement)) {
+                val poseTransformation = accelerometerFusedProcessor.poseTransformation
+                notifyPose(
+                    measurement.timestamp,
+                    poseTransformation
+                )
             }
-        )
+        }
+    )
 
     /**
      * Measurement syncer for internal [attitudeProcessor].

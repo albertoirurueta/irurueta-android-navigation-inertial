@@ -26,6 +26,9 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Gyroscop
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.AccelerometerDoubleFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.NoneZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
@@ -131,11 +134,13 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
+        val zuptSettings = ZuptSettings()
         val processor = AccelerometerDoubleFusedECEFAbsolutePoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = true,
-            processorListener = processorListener
+            processorListener = processorListener,
+            zuptSettings = zuptSettings
         )
 
         // check
@@ -143,6 +148,7 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         assertSame(initialVelocity, processor.initialVelocity)
         assertTrue(processor.estimatePoseTransformation)
         assertSame(processorListener, processor.processorListener)
+        assertSame(zuptSettings, processor.zuptSettings)
         assertNotNull(processor.initialEcefFrame)
         assertNotNull(processor.initialNedFrame)
         assertNotNull(processor.previousEcefFrame)
@@ -191,6 +197,11 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             processor.attitudePanicCounterThreshold
         )
         assertTrue(processor.adjustGravityNorm)
+
+        val zuptProcessor: ZuptProcessor<AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement>? =
+            processor.getPrivateProperty("zuptProcessor")
+        requireNotNull(zuptProcessor)
+        assertTrue(zuptProcessor is NoneZuptProcessor)
     }
 
     @Test
@@ -1700,9 +1711,12 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             "inverseEcefRotation"
         )
         requireNotNull(inverseEcefRotation2)
-        assertTrue(inverseEcefRotation.equals(inverseEcefRotation2,
-            ABSOLUTE_ERROR
-        ))
+        assertTrue(
+            inverseEcefRotation.equals(
+                inverseEcefRotation2,
+                ABSOLUTE_ERROR
+            )
+        )
 
         val localDiffPosition = InhomogeneousPoint3D()
         inverseEcefRotation.rotate(ecefDiffPosition, localDiffPosition)
@@ -1725,19 +1739,22 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         )
         requireNotNull(poseTransformation2)
         assertTrue(
-            poseTransformation.asMatrix().equals(poseTransformation2.asMatrix(),
+            poseTransformation.asMatrix().equals(
+                poseTransformation2.asMatrix(),
                 ABSOLUTE_ERROR
             )
         )
 
         val distance = ecefDiffPosition.distanceTo(InhomogeneousPoint3D())
         val distance2 = localDiffPosition.distanceTo(InhomogeneousPoint3D())
-        assertEquals(distance, distance2,
+        assertEquals(
+            distance, distance2,
             ABSOLUTE_ERROR
         )
 
         val distance3 = Utils.normF(poseTransformation.translation)
-        assertEquals(distance, distance3,
+        assertEquals(
+            distance, distance3,
             ABSOLUTE_ERROR
         )
 
@@ -1997,9 +2014,12 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
             "inverseEcefRotation"
         )
         requireNotNull(inverseEcefRotation2)
-        assertTrue(inverseEcefRotation.equals(inverseEcefRotation2,
-            ABSOLUTE_ERROR
-        ))
+        assertTrue(
+            inverseEcefRotation.equals(
+                inverseEcefRotation2,
+                ABSOLUTE_ERROR
+            )
+        )
 
         val localDiffPosition = InhomogeneousPoint3D()
         inverseEcefRotation.rotate(ecefDiffPosition, localDiffPosition)
@@ -2022,19 +2042,22 @@ class AccelerometerDoubleFusedECEFAbsolutePoseProcessorTest {
         )
         requireNotNull(poseTransformation2)
         assertTrue(
-            poseTransformation.asMatrix().equals(poseTransformation2.asMatrix(),
+            poseTransformation.asMatrix().equals(
+                poseTransformation2.asMatrix(),
                 ABSOLUTE_ERROR
             )
         )
 
         val distance = ecefDiffPosition.distanceTo(InhomogeneousPoint3D())
         val distance2 = localDiffPosition.distanceTo(InhomogeneousPoint3D())
-        assertEquals(distance, distance2,
+        assertEquals(
+            distance, distance2,
             ABSOLUTE_ERROR
         )
 
         val distance3 = Utils.normF(poseTransformation.translation)
-        assertEquals(distance, distance3,
+        assertEquals(
+            distance, distance3,
             ABSOLUTE_ERROR
         )
 

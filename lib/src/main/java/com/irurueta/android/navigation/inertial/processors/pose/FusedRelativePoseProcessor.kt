@@ -22,6 +22,8 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
 import com.irurueta.android.navigation.inertial.collectors.measurements.GravitySensorMeasurement
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.LeveledRelativeAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessorBuilder
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.navigation.inertial.calibration.SpeedTriad
 
 /**
@@ -31,10 +33,12 @@ import com.irurueta.navigation.inertial.calibration.SpeedTriad
  *
  * @property initialSpeed initial device speed in body coordinates.
  * @property processorListener listener to notify new poses.
+ * @property zuptSettings settings for ZUPT (Zero Velocity Update) evaluation.
  */
 class FusedRelativePoseProcessor(
     initialSpeed: SpeedTriad = SpeedTriad(),
-    processorListener: OnProcessedListener? = null
+    processorListener: OnProcessedListener? = null,
+    val zuptSettings: ZuptSettings = ZuptSettings()
 ) : BaseFusedRelativePoseProcessor<GravitySensorMeasurement, AccelerometerGravityAndMagnetometerSyncedSensorMeasurement>(
     initialSpeed,
     processorListener
@@ -44,6 +48,15 @@ class FusedRelativePoseProcessor(
      * measurements to estimate current relative device attitude.
      */
     override val attitudeProcessor = LeveledRelativeAttitudeProcessor()
+
+    /**
+     * Computes scores to determine whether ZUPT (Zero Velocity Update) must be performed to reset
+     * velocity.
+     */
+    private val zuptProcessor =
+        ZuptProcessorBuilder<AccelerometerGravityAndGyroscopeSyncedSensorMeasurement>(
+            zuptSettings
+        ).build()
 
     /**
      * Processes provided synced measurement to estimate current attitude and position.
@@ -63,7 +76,8 @@ class FusedRelativePoseProcessor(
                 accelerometerMeasurement,
                 gravityMeasurement,
                 gyroscopeMeasurement,
-                timestamp
+                timestamp,
+                zuptProcessor.process(syncedMeasurement)
             )
         } else {
             false
@@ -77,13 +91,18 @@ class FusedRelativePoseProcessor(
      * @param gravityMeasurement gravity measurement.
      * @param gyroscopeMeasurement gyroscope measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
+     * @param zuptScore Value between 0.0 and 1.0 that indicates the likeliness to apply a Zero
+     * Velocity Update, where 0.0 indicates no likeliness and 1.0 indicates full likeliness of a
+     * ZUPT. Likeliness, is used to weight velocity updates where a score of 1.0 resets velocity to
+     * zero and a score of 0.0 keeps expected velocity update.
      * @return true if new pose is estimated, false otherwise.
      */
     private fun process(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
         gravityMeasurement: GravitySensorMeasurement,
         gyroscopeMeasurement: GyroscopeSensorMeasurement,
-        timestamp: Long
+        timestamp: Long,
+        zuptScore: Double
     ): Boolean {
         return if (processAttitude(
                 gravityMeasurement,
@@ -91,7 +110,7 @@ class FusedRelativePoseProcessor(
                 timestamp
             )
         ) {
-            processPose(accelerometerMeasurement, timestamp)
+            processPose(accelerometerMeasurement, timestamp, zuptScore)
         } else {
             false
         }

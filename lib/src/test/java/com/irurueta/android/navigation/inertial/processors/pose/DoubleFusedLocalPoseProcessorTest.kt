@@ -26,6 +26,9 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Gyroscop
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorMeasurement
 import com.irurueta.android.navigation.inertial.processors.attitude.BaseDoubleFusedGeomagneticAttitudeProcessor
 import com.irurueta.android.navigation.inertial.processors.attitude.DoubleFusedGeomagneticAttitudeProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.NoneZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.navigation.inertial.toNEDPosition
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
@@ -131,11 +134,13 @@ class DoubleFusedLocalPoseProcessorTest {
     fun constructor_whenAllParameters_returnsExpectedValues() {
         val initialLocation = getLocation()
         val initialVelocity = getVelocity()
+        val zuptSettings = ZuptSettings()
         val processor = DoubleFusedLocalPoseProcessor(
             initialLocation,
             initialVelocity,
             estimatePoseTransformation = true,
-            processorListener = processorListener
+            processorListener = processorListener,
+            zuptSettings
         )
 
         // check
@@ -143,6 +148,7 @@ class DoubleFusedLocalPoseProcessorTest {
         assertSame(initialVelocity, processor.initialVelocity)
         assertTrue(processor.estimatePoseTransformation)
         assertSame(processorListener, processor.processorListener)
+        assertSame(zuptSettings, processor.zuptSettings)
         assertNotNull(processor.initialEcefFrame)
         assertNotNull(processor.initialNedFrame)
         assertNotNull(processor.previousEcefFrame)
@@ -191,6 +197,11 @@ class DoubleFusedLocalPoseProcessorTest {
             processor.attitudePanicCounterThreshold
         )
         assertTrue(processor.adjustGravityNorm)
+
+        val zuptProcessor: ZuptProcessor<AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorMeasurement>? =
+            processor.getPrivateProperty("zuptProcessor")
+        requireNotNull(zuptProcessor)
+        assertTrue(zuptProcessor is NoneZuptProcessor)
     }
 
     @Test

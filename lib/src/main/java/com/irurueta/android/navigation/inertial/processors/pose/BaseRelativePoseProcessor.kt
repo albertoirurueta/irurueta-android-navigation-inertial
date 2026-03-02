@@ -156,11 +156,16 @@ abstract class BaseRelativePoseProcessor(
      *
      * @param accelerometerMeasurement accelerometer measurement.
      * @param timestamp timestamp when all measurements are assumed to occur.
+     * @param zuptScore Value between 0.0 and 1.0 that indicates the likeliness to apply a Zero
+     * Velocity Update, where 0.0 indicates no likeliness and 1.0 indicates full likeliness of a
+     * ZUPT. Likeliness, is used to weight velocity updates where a score of 1.0 resets velocity to
+     * zero and a score of 0.0 keeps expected velocity update.
      * @return true if new pose is processed, false otherwise.
      */
     protected fun processPose(
         accelerometerMeasurement: AccelerometerSensorMeasurement,
-        timestamp: Long
+        timestamp: Long,
+        zuptScore: Double = 0.0
     ): Boolean {
         if (!processTimeInterval(timestamp)) {
             return false
@@ -202,9 +207,10 @@ abstract class BaseRelativePoseProcessor(
         val oldVy = previousSpeed.valueY
         val oldVz = previousSpeed.valueZ
 
-        val newVx = oldVx + ax * timeIntervalSeconds
-        val newVy = oldVy + ay * timeIntervalSeconds
-        val newVz = oldVz + az * timeIntervalSeconds
+        val score = 1.0 - zuptScore
+        val newVx = score * (oldVx + ax * timeIntervalSeconds)
+        val newVy = score * (oldVy + ay * timeIntervalSeconds)
+        val newVz = score * (oldVz + az * timeIntervalSeconds)
         currentSpeed.setValueCoordinates(newVx, newVy, newVz)
 
         // Update position

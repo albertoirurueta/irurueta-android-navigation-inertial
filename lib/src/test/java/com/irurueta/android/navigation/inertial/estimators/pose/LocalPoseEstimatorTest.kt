@@ -43,6 +43,7 @@ import com.irurueta.android.navigation.inertial.processors.pose.AccelerometerFus
 import com.irurueta.android.navigation.inertial.processors.pose.AttitudeLocalPoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.DoubleFusedLocalPoseProcessor
 import com.irurueta.android.navigation.inertial.processors.pose.FusedLocalPoseProcessor
+import com.irurueta.android.navigation.inertial.processors.pose.zupt.ZuptSettings
 import com.irurueta.android.testutils.getPrivateProperty
 import com.irurueta.android.testutils.setPrivateProperty
 import com.irurueta.geometry.EuclideanTransformation3D
@@ -134,6 +135,7 @@ class LocalPoseEstimatorTest {
         assertNull(estimator.poseAvailableListener)
         assertNull(estimator.accuracyChangedListener)
         assertTrue(estimator.adjustGravityNorm)
+        assertNotNull(estimator.zuptSettings)
     }
 
     @Test
@@ -144,6 +146,7 @@ class LocalPoseEstimatorTest {
             MedianAveragingFilter<AccelerationUnit, Acceleration, AccelerationTriad>()
         val worldMagneticModel = WorldMagneticModel()
         val timestamp = Date()
+        val zuptSettings = ZuptSettings()
         val estimator = LocalPoseEstimator(
             context,
             initialLocation,
@@ -163,7 +166,8 @@ class LocalPoseEstimatorTest {
             useDoubleFusedAttitudeProcessor = false,
             estimatePoseTransformation = true,
             poseAvailableListener,
-            accuracyChangedListener
+            accuracyChangedListener,
+            zuptSettings = zuptSettings
         )
 
         // check
@@ -193,6 +197,32 @@ class LocalPoseEstimatorTest {
         assertSame(poseAvailableListener, estimator.poseAvailableListener)
         assertSame(accuracyChangedListener, estimator.accuracyChangedListener)
         assertTrue(estimator.adjustGravityNorm)
+        assertSame(zuptSettings, estimator.zuptSettings)
+
+        val fusedProcessor: FusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("fusedProcessor")
+        requireNotNull(fusedProcessor)
+        assertSame(zuptSettings, fusedProcessor.zuptSettings)
+
+        val accelerometerFusedProcessor: AccelerometerFusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("accelerometerFusedProcessor")
+        requireNotNull(accelerometerFusedProcessor)
+        assertSame(zuptSettings, accelerometerFusedProcessor.zuptSettings)
+
+        val doubleFusedProcessor: DoubleFusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("doubleFusedProcessor")
+        requireNotNull(doubleFusedProcessor)
+        assertSame(zuptSettings, doubleFusedProcessor.zuptSettings)
+
+        val accelerometerDoubleFusedProcessor: AccelerometerDoubleFusedLocalPoseProcessor? =
+            estimator.getPrivateProperty("accelerometerDoubleFusedProcessor")
+        requireNotNull(accelerometerDoubleFusedProcessor)
+        assertSame(zuptSettings, accelerometerDoubleFusedProcessor.zuptSettings)
+
+        val attitudeProcessor: AttitudeLocalPoseProcessor? =
+            estimator.getPrivateProperty("attitudeProcessor")
+        requireNotNull(attitudeProcessor)
+        assertSame(zuptSettings, attitudeProcessor.zuptSettings)
     }
 
     @Test

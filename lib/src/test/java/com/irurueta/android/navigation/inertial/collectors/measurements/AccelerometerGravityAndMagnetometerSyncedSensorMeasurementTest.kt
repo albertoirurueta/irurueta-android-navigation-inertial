@@ -126,6 +126,16 @@ class AccelerometerGravityAndMagnetometerSyncedSensorMeasurementTest {
     }
 
     @Test
+    fun class_implementsRequiredInstances() {
+        val syncedMeasurement = AccelerometerGravityAndMagnetometerSyncedSensorMeasurement()
+
+        assertTrue(SyncedSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithAccelerometerSensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithGravitySensorMeasurement::class.isInstance(syncedMeasurement))
+        assertTrue(WithMagnetometerSensorMeasurement::class.isInstance(syncedMeasurement))
+    }
+
+    @Test
     fun accelerometerMeasurement_setsExpectedValue() {
         val syncedMeasurement = AccelerometerGravityAndMagnetometerSyncedSensorMeasurement()
 
