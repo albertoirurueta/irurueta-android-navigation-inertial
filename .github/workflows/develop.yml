@@ -3,7 +3,14 @@ name: Develop
 on:
   push:
     branches: [ develop ]
+  # Build, tests and lint also run on pull requests; Sonar, Pages and publishing stay push-only.
+  pull_request:
+    branches: [ develop, main ]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   checks: write
@@ -94,6 +101,7 @@ jobs:
           category: android-lint-app
 
       - name: Run SonarCloud analysis
+        if: github.event_name != 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -141,12 +149,14 @@ jobs:
       #     if [ "$size" -gt 900000 ]; then echo "::warning::site over 900,000 KiB"; fi
 
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs/build/site
 
       # A plain snapshot publish: libraryVersion on develop is expected to be a -SNAPSHOT string.
       - name: Publish snapshot to Maven Central
+        if: github.event_name != 'pull_request'
         run: ./gradlew lib:publishToMavenCentral --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
@@ -158,6 +168,7 @@ jobs:
   deploy-docs:
     name: Deploy docs to GitHub Pages
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pages: write

@@ -59,6 +59,10 @@ android {
         compose = true
         buildConfig = true
     }
+    lint {
+        // SARIF output is uploaded to GitHub code scanning by the CI workflows
+        sarifReport = true
+    }
 }
 
 sonar {

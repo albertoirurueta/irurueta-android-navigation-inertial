@@ -57,6 +57,10 @@ android {
             excludes.add("META-INF/LICENSE.md")
         }
     }
+    lint {
+        // SARIF output is uploaded to GitHub code scanning by the CI workflows
+        sarifReport = true
+    }
 }
 kotlin {
     compilerOptions {
