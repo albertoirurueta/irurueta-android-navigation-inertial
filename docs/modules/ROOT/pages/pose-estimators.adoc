@@ -1,0 +1,78 @@
+= Pose estimators
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+WARNING: Pose estimation from consumer IMU sensors drifts quickly because position is obtained by integrating
+accelerations twice. These estimators are experimental; use them together with
+xref:zupt.adoc[ZUPT] and calibrated sensors, and validate results for your use case.
+
+Pose estimators (package `estimators.pose`) estimate a 6DOF (Degrees of Freedom) pose: attitude plus position (and
+velocity). Internally they synchronize accelerometer, gyroscope and either the Android attitude sensor or
+gravity/magnetometer sensors with a synced collector, and run a pose processor from `processors.pose`.
+
+[cols="2,3,3",options="header"]
+|===
+|Estimator
+|Frame
+|Initial state
+
+|`LocalPoseEstimator`
+|Absolute attitude and position using local plane navigation.
+|`initialLocation` (required `Location`) and `initialVelocity` (`NEDVelocity`, zero by default).
+
+|`EcefAbsolutePoseEstimator`
+|Absolute attitude and position using ECEF (Earth-Centered, Earth-Fixed) navigation.
+|`initialLocation` (required `Location`) and `initialVelocity` (`NEDVelocity`, zero by default).
+
+|`RelativePoseEstimator`
+|Relative attitude and position respect to the start of the estimator.
+|`initialSpeed` (`SpeedTriad`, zero by default) and an optional `location` used for gravity.
+|===
+
+== Attitude source
+
+`useAttitudeSensor`:: `true` (default) to use the Android attitude (rotation vector) sensor; `false` to fuse
+accelerometer/gravity, gyroscope and magnetometer to estimate attitude. Most of the options below are ignored when
+it is `true`.
+`useAccelerometerForAttitudeEstimation`:: `true` to also use the accelerometer for leveling, `false` (default) to use
+the gravity sensor for leveling. The accelerometer is always used for device motion.
+`useDoubleFusedAttitudeProcessor`:: in absolute estimators, use the double fused geomagnetic attitude (default
+`true`).
+`useAccurateLevelingProcessor`, `useAccurateRelativeGyroscopeAttitudeProcessor`:: select the accurate leveling and
+Runge-Kutta gyroscope integration variants (both `true` by default).
+`useWorldMagneticModel`, `worldMagneticModel`, `timestamp`:: magnetic declination correction for absolute
+estimators.
+`accelerometerSensorType`, `gyroscopeSensorType`, `magnetometerSensorType`, `accelerometerAveragingFilter`:: as in
+xref:attitude-estimators.adoc[attitude estimators]. The documentation suggests avoiding non-calibrated
+accelerometers and gyroscopes for pose estimation, although the uncalibrated types are the defaults.
+`zuptSettings`:: ZUPT configuration (see xref:zupt.adoc[ZUPT]); defaults to no ZUPT.
+
+`LocalPoseEstimator` and `EcefAbsolutePoseEstimator` also expose tuning properties for the attitude fusion, such as
+`useIndirectAttitudeInterpolation`, `attitudeInterpolationValue`, `attitudeIndirectInterpolationWeight`,
+`attitudeOutlierThreshold`, `attitudeOutlierPanicThreshold` and `attitudePanicCounterThreshold`.
+
+== Results
+
+* `LocalPoseEstimator` and `EcefAbsolutePoseEstimator` notify `OnPoseAvailableListener.onPoseAvailable(estimator,
+  currentFrame, previousFrame, initialFrame, timestamp, poseTransformation)`, where the frames are `ECEFFrame`s
+  containing position, velocity and attitude, and `poseTransformation` is an optional `EuclideanTransformation3D`
+  with the leveled attitude and translation since start, in ENU coordinates (enabled with
+  `estimatePoseTransformation`).
+* `RelativePoseEstimator` notifies `onPoseAvailable(estimator, timestamp, poseTransformation)` with an
+  `EuclideanTransformation3D`.
+
+[source,kotlin]
+----
+val estimator = LocalPoseEstimator(
+    context,
+    initialLocation = location,
+    estimatePoseTransformation = true,
+    zuptSettings = ZuptSettings(processorType = ZuptProcessorType.ADAPTIVE),
+    poseAvailableListener = { _, currentFrame, _, _, timestamp, transformation ->
+        // currentFrame: ECEFFrame with position, velocity and attitude
+    }
+)
+estimator.start()
+// ...
+estimator.stop()
+----

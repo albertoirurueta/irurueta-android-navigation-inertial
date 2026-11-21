@@ -1,0 +1,102 @@
+= Architecture
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+All library code lives in the `lib/` Gradle module under the package `com.irurueta.android.navigation.inertial`.
+The repository also contains a sample application in `app/` (see xref:sample-app.adoc[Sample app]).
+
+== Layers
+
+[mermaid]
+....
+flowchart TB
+    EST["estimators\nattitude, pose"] --> PROC["processors\nattitude, pose, zupt, filters"]
+    EST --> COL["collectors\nsingle and synced sensors"]
+    CAL["calibration\nintervals, noise, builder"] --> COL
+    COL --> MEAS["collectors.measurements\nconverters, interpolators"]
+    PROC --> MEAS
+    PROC --> NAV["irurueta-navigation\nirurueta-navigation-inertial(-extra)"]
+    CAL --> NAV
+....
+
+* *Estimators* are the high-level, Android-aware entry points: they own collectors, wire them to processors and
+  expose `start()` / `stop()` plus listeners.
+* *Processors* contain the algorithms and work on measurements only, without touching `SensorManager`.
+* *Collectors* read Android sensors and produce measurements; synced collectors combine several sensors.
+* *Calibration* classes detect static/dynamic intervals and solve calibration or estimate noise, delegating the
+  numerical work to the `irurueta-navigation-inertial` libraries.
+
+== Packages
+
+[cols="2,5",options="header"]
+|===
+|Package (relative to `com.irurueta.android.navigation.inertial`)
+|Contents
+
+|(root)
+|Services and helpers: `LocationService`, `LocationPermissionService`, `SensorAvailabilityService`,
+`BatteryTemperatureService`, `GravityHelper` (gravity at a location), `ENUtoNEDConverter`, `QuaternionHelper`,
+`DisplayOrientationHelper` and location extension functions.
+
+|`collectors`
+|Single-sensor collectors (`AccelerometerSensorCollector`, `GyroscopeSensorCollector`,
+`MagnetometerSensorCollector`, `GravitySensorCollector`, `AttitudeSensorCollector`), synced collectors such as
+`AccelerometerGyroscopeAndMagnetometerSyncedSensorCollector`, the base classes `SensorCollector` and
+`SyncedSensorCollector`, and `SensorDelay`.
+
+|`collectors.measurements`
+|Measurement types (`AccelerometerSensorMeasurement`, `GyroscopeSensorMeasurement`, ...), synced measurement types,
+sensor type enums (`SensorType`, `AccelerometerSensorType`, `GyroscopeSensorType`, `MagnetometerSensorType`,
+`AttitudeSensorType`), `SensorAccuracy` and `SensorCoordinateSystem`.
+
+|`collectors.converters`
+|Converters from `SensorEvent` to measurements, between ENU and NED coordinate systems, to triads and to norms.
+
+|`collectors.interpolators`
+|Interpolators used by synced collectors to align measurements of different sensors in time.
+
+|`calibration`
+|Static-interval calibrators for accelerometer, gyroscope and magnetometer (see xref:calibration.adoc[Calibration]).
+
+|`calibration.intervals`
+|Interval detectors (`AccelerometerIntervalDetector`, `GyroscopeIntervalDetector`, `MagnetometerIntervalDetector`)
+and their `Status`.
+
+|`calibration.intervals.measurements`
+|Generators of calibration measurements from static and dynamic intervals.
+
+|`calibration.noise`
+|Noise and norm estimators and processors (`AccelerometerNoiseEstimator`, `GyroscopeNoiseEstimator`,
+`MagnetometerNoiseEstimator`, `GravityNormEstimator`, ...) and `StopMode`.
+
+|`calibration.builder`
+|Internal builders of accelerometer, gyroscope and magnetometer calibrators.
+
+|`processors.filters`
+|Averaging filters used to estimate gravity from accelerometer samples: `LowPassAveragingFilter`,
+`MeanAveragingFilter`, `MedianAveragingFilter`.
+
+|`processors.attitude`
+|Attitude, leveling and gravity processors, including Kalman attitude processors.
+
+|`processors.attitude.kalman`
+|Building blocks of the Kalman attitude filters: gyroscope predictor, accelerometer and magnetometer correctors,
+phi-matrix estimators, process-noise covariance integrators and external-acceleration covariance estimators
+(`SabatiniExternalAccelerationCovarianceMatrixEstimator`, `SuhExternalAccelerationCovarianceMatrixEstimator`).
+
+|`processors.pose`
+|ECEF absolute, local plane and relative pose processors.
+
+|`processors.pose.zupt`
+|ZUPT processors and settings (see xref:zupt.adoc[ZUPT]).
+
+|`estimators.attitude`
+|Attitude estimators (see xref:attitude-estimators.adoc[Attitude estimators]).
+
+|`estimators.pose`
+|Pose estimators (see xref:pose-estimators.adoc[Pose estimators]).
+
+|`old`
+|Earlier implementation of collectors, calibration, processors and estimators that is still present in the source
+tree. The sample app does not import it; prefer the packages above.
+|===

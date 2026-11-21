@@ -19,7 +19,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 2
-        versionName = "1.1.0"
+        versionName = "1.1.0-SNAPSHOT"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -58,6 +58,10 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+    lint {
+        // SARIF output is uploaded to GitHub code scanning by the CI workflows
+        sarifReport = true
     }
 }
 

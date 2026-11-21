@@ -1,0 +1,119 @@
+= Calibration
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+Low-cost IMU sensors have biases, scaling factors and cross-coupling errors. The `calibration` package collects
+measurements on the device and solves those parameters, using the calibration algorithms of the
+`irurueta-navigation-inertial` libraries. All calibrators convert device ENU measurements into local plane NED
+coordinates, so every x-y-z value they report refers to NED.
+
+== Static interval calibrators
+
+These calibrators detect periods when the device remains static (and, for gyroscope calibration, the dynamic
+periods between them) using the accelerometer, generate calibration measurements from those intervals and solve
+the calibration once enough measurements are available.
+
+[cols="2,3",options="header"]
+|===
+|Calibrator
+|Calibrates
+
+|`StaticIntervalAccelerometerCalibrator`
+|Accelerometer, from averaged measurements of static intervals.
+
+|`StaticIntervalGyroscopeCalibrator`
+|Gyroscope: orientation is determined from the gravity vector at the end of static intervals and gyroscope
+measurements are integrated during dynamic ones.
+
+|`StaticIntervalMagnetometerCalibrator`
+|Magnetometer, from measurements collected during static intervals detected with the accelerometer.
+
+|`StaticIntervalAccelerometerAndGyroscopeCalibrator`
+|Accelerometer and gyroscope together.
+
+|`StaticIntervalAccelerometerGyroscopeAndMagnetometerCalibrator`
+|Accelerometer, gyroscope and magnetometer together.
+
+|`SingleSensorStaticIntervalAccelerometerCalibrator`
+|Accelerometer only, using a single sensor. Its documentation notes that it usually does not yield good results
+and recommends `StaticIntervalAccelerometerCalibrator` instead.
+
+|`SingleSensorStaticIntervalMagnetometerCalibrator`
+|Magnetometer only (no accelerometer needed), detecting periods of constant magnetic field. Its documentation
+recommends `StaticIntervalMagnetometerCalibrator` instead for better results.
+|===
+
+=== Lifecycle
+
+[mermaid]
+....
+stateDiagram-v2
+    [*] --> Initializing: start()
+    Initializing --> Collecting: initialization completed
+    Collecting --> Collecting: static or dynamic interval detected
+    Collecting --> Ready: enough measurements
+    Ready --> Solving: automatic or calibrate()
+    Solving --> Completed
+    Initializing --> Failed: excessive movement or unreliable sensor
+    Completed --> [*]
+....
+
+1. `start()` begins collecting sensor data. During *initialization* the device must be kept static so that the
+   base noise level of the accelerometer can be measured.
+2. Once initialized, static and dynamic intervals are detected (`OnStaticIntervalDetectedListener`,
+   `OnDynamicIntervalDetectedListener`); intervals that are too short or too long are skipped
+   (`OnStaticIntervalSkippedListener`, `OnDynamicIntervalSkippedListener`).
+3. When `requiredMeasurements` have been generated, `OnReadyToSolveCalibrationListener` is notified. If
+   `solveCalibrationWhenEnoughMeasurements` is `true` (default) the calibration is solved automatically; otherwise
+   call `calibrate()`, which throws `IllegalStateException` if the calibrator is running or not ready.
+4. `OnCalibrationSolvingStartedListener`, `OnCalibrationCompletedListener` and `OnStoppedListener` report the end of
+   the process. Errors are reported through `OnErrorListener` with a `CalibratorErrorReason`:
+   `SUDDEN_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION`,
+   `OVERALL_EXCESSIVE_MOVEMENT_DETECTED_DURING_INITIALIZATION` or `UNRELIABLE_SENSOR`.
+
+Interval detection can be tuned with `windowSize`, `initialStaticSamples`, `thresholdFactor`,
+`instantaneousNoiseLevelFactor` and `baseNoiseLevelAbsoluteThreshold`.
+
+=== Results
+
+After completion, estimated parameters are exposed as properties, for example
+`estimatedAccelerometerBiasX/Y/Z`, `estimatedAccelerometerSx/Sy/Sz`, cross-coupling terms
+(`estimatedAccelerometerMxy`, ...), `estimatedAccelerometerCovariance`, `estimatedAccelerometerMse`; the gyroscope
+equivalents (`estimatedGyroscopeBiasX`, `estimatedGyroscopeMg`, ...) and magnetometer ones
+(`estimatedMagnetometerHardIronX/Y/Z`, `estimatedMagnetometerMm`, ...).
+
+[source,kotlin]
+----
+val calibrator = StaticIntervalAccelerometerCalibrator(
+    context,
+    calibrationCompletedListener = { c ->
+        val biasX = c.estimatedAccelerometerBiasX
+        val biasY = c.estimatedAccelerometerBiasY
+        val biasZ = c.estimatedAccelerometerBiasZ
+    },
+    errorListener = { _, reason -> /* CalibratorErrorReason */ }
+)
+calibrator.start()
+----
+
+== Interval detectors
+
+`AccelerometerIntervalDetector`, `GyroscopeIntervalDetector` and `MagnetometerIntervalDetector` (package
+`calibration.intervals`) can be used on their own to know whether the device is moving. After an initialization
+phase that measures sensor noise while static, they use accumulated averages during static intervals and windowed
+averages during dynamic intervals. Their `Status` goes through `IDLE`, `INITIALIZING`, `INITIALIZATION_COMPLETED`,
+`STATIC_INTERVAL`, `DYNAMIC_INTERVAL` and `FAILED`.
+
+== Noise estimators
+
+The `calibration.noise` package estimates sensor noise and measurement norms while the device remains static:
+
+* `AccelerometerNoiseEstimator`, `GyroscopeNoiseEstimator`, `MagnetometerNoiseEstimator` -- per-axis average,
+  variance, standard deviation and PSD (`psdX`, `rootPsdX`, `averageNoisePsd`, `noiseRootPsdNorm`, ...).
+* `AccelerometerNormEstimator`, `GravityNormEstimator`, `GyroscopeNormEstimator`, `MagnetometerNormEstimator` --
+  statistics of the measurement norm.
+
+They stop according to `StopMode`: `MAX_SAMPLES_ONLY`, `MAX_DURATION_ONLY` or `MAX_SAMPLES_OR_DURATION` (default),
+using `maxSamples` and `maxDurationMillis`. Results are notified through `OnEstimationCompletedListener`. The
+estimated noise values can be passed to the Kalman attitude estimators (`gyroscopeNoisePsd`,
+`accelerometerNoiseStandardDeviation`, ...) and to the adaptive ZUPT settings.

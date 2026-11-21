@@ -1,0 +1,67 @@
+= irurueta-android-navigation-inertial
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+WARNING: This library is *experimental and under active development*. Public APIs may change between versions
+without notice, and some estimators are still being tuned. Do not rely on it for safety-critical navigation.
+
+*irurueta-android-navigation-inertial* is an Android library (Kotlin, `minSdk` 26) that provides services and
+estimators to support *inertial navigation* using the IMU sensors of an Android device: accelerometer, gyroscope,
+magnetometer, and the derived Android gravity and rotation-vector sensors.
+
+It builds on top of the pure-Java navigation libraries `com.irurueta:irurueta-navigation`,
+`com.irurueta:irurueta-navigation-inertial` and `com.irurueta:irurueta-navigation-inertial-extra` (exposed as `api`
+dependencies), and adds the Android-specific part: reading sensors through `SensorManager`, synchronizing
+measurements of several sensors, converting them from Android's ENU device coordinates to NED, and running
+attitude and pose estimators on them in real time.
+
+== What the library offers
+
+* *Sensor collectors* -- collect measurements of a single sensor, or synchronize several sensors (for example
+  accelerometer + gyroscope + magnetometer) into one timestamped measurement. See
+  xref:sensor-collectors.adoc[Sensor collectors].
+* *Calibration and noise estimation* -- detect static and dynamic intervals and solve accelerometer, gyroscope and
+  magnetometer calibration parameters, or estimate sensor noise while the device stays still. See
+  xref:calibration.adoc[Calibration].
+* *Attitude estimators* -- leveling (roll and pitch), relative gyroscope attitude, geomagnetic absolute attitude,
+  fused and double-fused attitude, and Kalman-filter based attitude. See
+  xref:attitude-estimators.adoc[Attitude estimators].
+* *Pose estimators* -- 6DOF (attitude + position) estimation in ECEF, local plane or relative frames. See
+  xref:pose-estimators.adoc[Pose estimators].
+* *ZUPT (Zero Velocity Update)* -- detection of stationary periods to limit velocity drift in pose estimation. See
+  xref:zupt.adoc[ZUPT].
+* *Helpers and services* -- location, location permissions, sensor availability, battery temperature, gravity at a
+  location, ENU/NED conversion and quaternion helpers. See xref:architecture.adoc[Architecture].
+
+== Core concept
+
+Every high-level estimator follows the same pipeline: it owns one or more collectors that receive Android
+`SensorEvent`s, converts them into library measurements, feeds them to a processor that implements the actual
+algorithm, and notifies the result to a listener supplied by the application.
+
+[mermaid]
+....
+flowchart LR
+    S["Android sensors\n(SensorManager)"] --> C["Collectors\nsingle or synced"]
+    C --> P["Processors\nattitude, pose, ZUPT"]
+    P --> E["Estimators\nstart / stop"]
+    E --> L["Application listener\nattitude or pose"]
+    LOC["Location (optional)"] -.-> P
+....
+
+Estimators are created with an Android `Context`, started with `start()` and stopped with `stop()`; results are
+delivered through `fun interface` listeners such as `OnAttitudeAvailableListener` or `OnPoseAvailableListener`.
+
+== Coordinate systems
+
+Android reports sensor values in an ENU (East, North, Up) device coordinate system, whereas the navigation
+algorithms work in NED (North, East, Down). The library converts between both (`ENUtoNEDConverter`,
+`SensorCoordinateSystem.ENU` / `SensorCoordinateSystem.NED`), and attitude listeners report quaternions and Euler
+angles respect to NED.
+
+== Next steps
+
+* xref:installation.adoc[Getting started] -- add the Gradle dependency and the required permissions.
+* xref:architecture.adoc[Architecture] -- package layout.
+* xref:sample-app.adoc[Sample app] -- try every estimator on a device.
+* xref:reference.adoc[Reference] -- API documentation and quality reports.

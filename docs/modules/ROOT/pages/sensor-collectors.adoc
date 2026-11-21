@@ -1,0 +1,113 @@
+= Sensor collectors
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+Collectors (package `com.irurueta.android.navigation.inertial.collectors`) register with Android's `SensorManager`,
+turn each `SensorEvent` into a library measurement and notify it to a listener. Estimators use them internally, but
+they can also be used directly to record or process raw sensor data.
+
+== Single-sensor collectors
+
+All of them extend `SensorCollector` and have no internal buffer.
+
+[cols="2,3",options="header"]
+|===
+|Collector
+|Sensor types (enum and default)
+
+|`AccelerometerSensorCollector`
+|`AccelerometerSensorType`: `ACCELEROMETER`, `ACCELEROMETER_UNCALIBRATED` (default)
+
+|`GyroscopeSensorCollector`
+|`GyroscopeSensorType`: `GYROSCOPE`, `GYROSCOPE_UNCALIBRATED` (default)
+
+|`MagnetometerSensorCollector`
+|`MagnetometerSensorType`: `MAGNETOMETER`, `MAGNETOMETER_UNCALIBRATED` (default)
+
+|`GravitySensorCollector`
+|Android gravity sensor
+
+|`AttitudeSensorCollector`
+|`AttitudeSensorType`: `ABSOLUTE_ATTITUDE` (rotation vector), `RELATIVE_ATTITUDE` (game rotation vector)
+|===
+
+Common members of `SensorCollector`:
+
+* `sensor` and `sensorAvailable` -- the Android sensor used and whether the device has it.
+* `start(startTimestamp)` -- registers the listener; returns `false` if the collector is already running, the sensor
+  is not available or registration fails.
+* `stop()` -- unregisters the listener.
+* `running`, `numberOfProcessedMeasurements`, `mostRecentTimestamp`.
+* `measurementListener` (`OnMeasurementListener`) and `accuracyChangedListener` (`OnAccuracyChangedListener`).
+  The measurement instance passed to the listener might be reused between consecutive calls.
+
+The sampling rate is selected with `SensorDelay`: `FASTEST` (default), `GAME`, `UI` and `NORMAL`, mapped to the
+corresponding `SensorManager.SENSOR_DELAY_*` constants.
+
+[source,kotlin]
+----
+val collector = AccelerometerSensorCollector(
+    context,
+    sensorType = AccelerometerSensorType.ACCELEROMETER_UNCALIBRATED,
+    sensorDelay = SensorDelay.FASTEST,
+    measurementListener = { _, measurement ->
+        // AccelerometerSensorMeasurement
+    }
+)
+if (collector.sensorAvailable) {
+    collector.start()
+}
+----
+
+== Synced collectors
+
+Synced collectors extend `SyncedSensorCollector`. They temporarily buffer the measurements of several sensors for
+`windowNanoseconds` (default `200_000_000` ns, that is 200 ms) and emit one synchronized measurement per sample of a
+*primary sensor*. Measurement values of the secondary sensors are interpolated by default
+(`interpolationEnabled = true`), using the interpolators in `collectors.interpolators`.
+
+Available combinations:
+
+* `AccelerometerAndGyroscopeSyncedSensorCollector`
+* `AccelerometerAndMagnetometerSyncedSensorCollector`
+* `AccelerometerGyroscopeAndMagnetometerSyncedSensorCollector`
+* `AccelerometerGravityAndGyroscopeSyncedSensorCollector`
+* `AccelerometerGravityAndMagnetometerSyncedSensorCollector`
+* `AccelerometerGravityGyroscopeAndMagnetometerSyncedSensorCollector`
+* `GravityAndGyroscopeSyncedSensorCollector`
+* `GravityAndMagnetometerSyncedSensorCollector`
+* `GravityGyroscopeAndMagnetometerSyncedSensorCollector`
+* `AttitudeAndAccelerometerSyncedSensorCollector`
+* `AttitudeAccelerometerAndGyroscopeSyncedSensorCollector`
+
+Each produces the matching synced measurement in `collectors.measurements` (for example
+`AccelerometerGyroscopeAndMagnetometerSyncedSensorMeasurement`), which exposes its parts through the
+`WithAccelerometerSensorMeasurement`, `WithGyroscopeSensorMeasurement`, `WithMagnetometerSensorMeasurement`,
+`WithGravitySensorMeasurement` and `WithAttitudeSensorMeasurement` interfaces.
+
+[source,kotlin]
+----
+val collector = AccelerometerGyroscopeAndMagnetometerSyncedSensorCollector(
+    context,
+    primarySensor = AccelerometerGyroscopeAndMagnetometerSyncedSensorCollector.PrimarySensor.GYROSCOPE,
+    measurementListener = { _, measurement ->
+        val accelerometer = measurement.accelerometerMeasurement
+        val gyroscope = measurement.gyroscopeMeasurement
+        val magnetometer = measurement.magnetometerMeasurement
+    }
+)
+collector.start()
+----
+
+== Measurements and converters
+
+Measurements keep the raw values, the optional bias reported by uncalibrated sensors, the timestamp, the
+`SensorAccuracy` and the `SensorCoordinateSystem` (`ENU` as reported by Android, or `NED`).
+The `collectors.converters` package provides, per sensor type:
+
+* `*SensorEventMeasurementConverter` -- `SensorEvent` to measurement.
+* `*SensorMeasurementCoordinateSystemConverter` -- ENU to NED and back (also `QuaternionCoordinateSystemConverter`
+  for attitudes).
+* `*SensorMeasurementTriadConverter` -- measurement to a `Triad` of the navigation library, taking any available
+  bias into account.
+* `*SensorMeasurementNormConverter` -- measurement to its norm.

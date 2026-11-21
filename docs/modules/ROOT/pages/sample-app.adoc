@@ -1,0 +1,76 @@
+= Sample app
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+The `app/` module (application id `com.irurueta.android.navigation.inertial.app`, `minSdk` 26) is a demo
+application that runs the library's attitude and pose estimators on a real device. It is not published; build and
+install it from source:
+
+[source,bash]
+----
+./gradlew :app:installDebug
+----
+
+== How it works
+
+`MainActivity` shows a scrollable list of buttons. Each button opens one estimator activity with a particular
+configuration passed as `Intent` extras (for example accelerometer or gravity for leveling, calibrated or
+uncalibrated sensor types, low-pass / mean / median averaging filter, accurate leveling or accurate gyroscope
+integration, World Magnetic Model on or off).
+
+Every estimator activity renders the estimated attitude on a 3D cube (`CubeTextureView` from
+`com.irurueta:irurueta-android-gl-cube`) and shows roll, pitch and yaw values. Activities that need a location
+(geomagnetic, fused, Kalman absolute, accurate leveling, leveled relative and pose activities) obtain it with the
+library's `LocationService`.
+
+[cols="2,2",options="header"]
+|===
+|Activity
+|Library estimator demonstrated
+
+|`LevelingEstimatorActivity`
+|`LevelingEstimator`
+
+|`AccurateLevelingEstimatorActivity`
+|`AccurateLevelingEstimator`
+
+|`RelativeGyroscopeAttitudeEstimatorActivity`
+|`RelativeGyroscopeAttitudeEstimator`
+
+|`AccurateRelativeGyroscopeAttitudeEstimatorActivity`
+|`AccurateRelativeGyroscopeAttitudeEstimator`
+
+|`LeveledRelativeAttitudeEstimatorActivity`
+|`LeveledRelativeAttitudeEstimator`
+
+|`GeomagneticAttitudeEstimatorActivity`
+|`GeomagneticAttitudeEstimator`
+
+|`FusedGeomagneticAttitudeEstimatorActivity`
+|`FusedGeomagneticAttitudeEstimator`
+
+|`DoubleFusedGeomagneticAttitudeEstimatorActivity`
+|`DoubleFusedGeomagneticAttitudeEstimator`
+
+|`AttitudeEstimatorActivity`
+|`AttitudeEstimator`
+
+|`KalmanRelativeAttitudeActivity`
+|`KalmanRelativeAttitudeEstimator`
+
+|`KalmanAbsoluteAttitudeActivity`
+|`KalmanAbsoluteAttitudeEstimator`
+
+|`PoseEstimatorActivity`
+|`EcefAbsolutePoseEstimator`
+
+|`LocalPoseEstimatorActivity`
+|`LocalPoseEstimator`
+
+|`RelativePoseEstimatorActivity`
+|`RelativePoseEstimator`
+|===
+
+The activity sources in `app/src/main/java/com/irurueta/android/navigation/inertial/` are a good reference for
+wiring an estimator, its listeners and the location lookup in a real `Activity`. See also
+xref:ui/index.adoc[User interface].

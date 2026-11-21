@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.publish)
 }
 
-val libraryVersion = "1.1.0"
+val libraryVersion = "1.1.0-SNAPSHOT"
 
 android {
     namespace = "com.irurueta.android.navigation.inertial"
@@ -56,6 +56,10 @@ android {
             excludes.add("META-INF/LICENSE-notice.md")
             excludes.add("META-INF/LICENSE.md")
         }
+    }
+    lint {
+        // SARIF output is uploaded to GitHub code scanning by the CI workflows
+        sarifReport = true
     }
 }
 kotlin {

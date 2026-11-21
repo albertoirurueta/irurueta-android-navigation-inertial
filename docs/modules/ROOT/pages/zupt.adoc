@@ -1,0 +1,148 @@
+= ZUPT (Zero Velocity Update)
+:stem: latexmath
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+Integrating accelerometer measurements accumulates velocity errors even when the device is not moving. A ZUPT
+(Zero Velocity Update) detects periods in which the device is stationary and resets (or attenuates) the estimated
+velocity. The package `processors.pose.zupt` implements ZUPT processors that the
+xref:pose-estimators.adoc[pose estimators] use through their `zuptSettings` parameter.
+
+== How a ZUPT score is computed
+
+A `ZuptProcessor` keeps a sliding window of accelerometer (and, when available, gyroscope) measurements of
+`windowNanoseconds` (default `200_000_000` ns, 200 ms) and computes their average magnitude and variance. Its
+`process(syncedMeasurement)` method returns a score between `0.0` (no ZUPT) and `1.0` (apply ZUPT), also exposed as
+`zuptScore`; `processNonSoft(syncedMeasurement)` returns `true` when the score is greater than `0.5`. Gyroscope
+variance is only taken into account when the synced measurement contains a gyroscope measurement.
+
+The expected gravity is computed for `location` when one is provided, otherwise standard Earth gravity
+(`SensorManager.GRAVITY_EARTH`) is used.
+
+== Processor types
+
+`ZuptSettings.processorType` (`ZuptProcessorType`) selects the processor built by `ZuptProcessorBuilder`:
+
+[cols="1,4",options="header"]
+|===
+|Type
+|Behaviour
+
+|`NONE` (default)
+|`NoneZuptProcessor`: ZUPT is never applied.
+
+|`NON_ADAPTIVE`
+|`NonAdaptiveZuptProcessor`: score is `1.0` when the average accelerometer magnitude differs from gravity by less than
+`gravityThreshold` and the accelerometer (and gyroscope) variances are below the fixed thresholds
+`accelerometerVarianceThreshold` and `gyroscopeVarianceThreshold`; `0.0` otherwise.
+
+|`ADAPTIVE`
+|`AdaptiveZuptProcessor`: same rule, but the variance thresholds are relative to the sensor noise:
+`accelerometerNoiseVariance * accelerometerFactor` and `gyroscopeNoiseVariance * gyroscopeFactor`.
+
+|`SOFT`
+|`SoftZuptProcessor`: a continuous score combining gravity, accelerometer-variance and gyroscope-variance scores with
+configurable weights.
+|===
+
+=== Soft score
+
+With stem:[\bar{a}] the windowed average accelerometer magnitude, stem:[g] the expected gravity,
+stem:[\sigma_a^2] and stem:[\sigma_\omega^2] the accelerometer and gyroscope variances, and
+stem:[\mathrm{clamp}] limiting a value to the range from 0 to 1:
+
+[stem]
+++++
+s_g = \mathrm{clamp}\left(1 - \frac{|\bar{a} - g|}{n_g}\right), \quad
+s_a = \mathrm{clamp}\left(1 - \frac{\sigma_a^2}{n_a}\right), \quad
+s_\omega = \mathrm{clamp}\left(1 - \frac{\sigma_\omega^2}{n_\omega}\right)
+++++
+
+[stem]
+++++
+s = \frac{w_g s_g + w_a s_a + w_\omega s_\omega}{w_g + w_a + w_\omega}
+++++
+
+where stem:[n_g, n_a, n_\omega] are `gravityNormalizationFactor`, `accelerometerNormalizationFactor` and
+`gyroscopeNormalizationFactor`, and stem:[w_g, w_a, w_\omega] are `gravityWeight`, `accelerometerWeight` and
+`gyroscopeWeight`. Without gyroscope data the gyroscope term is dropped from both sums.
+
+== Effect on velocity
+
+Pose processors weight the predicted velocity with the ZUPT score stem:[s]:
+
+[stem]
+++++
+\mathbf{v}_k = (1 - s)\,\hat{\mathbf{v}}_k
+++++
+
+so a score of `1.0` resets velocity to zero and a score of `0.0` keeps the predicted velocity stem:[\hat{\mathbf{v}}_k].
+
+== Settings and defaults
+
+[cols="2,1,3",options="header"]
+|===
+|`ZuptSettings` parameter
+|Default
+|Used by
+
+|`windowNanoseconds`
+|`200_000_000`
+|all
+
+|`gravityThreshold`
+|0.2 m/s²
+|non-adaptive, adaptive
+
+|`accelerometerVarianceThreshold`
+|0.02 (m/s²)²
+|non-adaptive
+
+|`gyroscopeVarianceThreshold`
+|2e-4 (rad/s)²
+|non-adaptive
+
+|`accelerometerNoiseVariance`
+|1.6e-3 (m/s²)²
+|adaptive
+
+|`gyroscopeNoiseVariance`
+|2.5e-5 (rad/s)²
+|adaptive
+
+|`accelerometerFactor`
+|3.0
+|adaptive
+
+|`gyroscopeFactor`
+|4.0
+|adaptive
+
+|`gravityWeight`, `accelerometerWeight`, `gyroscopeWeight`
+|0.3, 0.4, 0.3
+|soft
+
+|`gravityNormalizationFactor`, `accelerometerNormalizationFactor`, `gyroscopeNormalizationFactor`
+|0.3, 0.03, 3e-4
+|soft
+
+|`location`
+|`null`
+|all (expected gravity)
+
+|`processorType`
+|`NONE`
+|-
+|===
+
+Noise variances for the adaptive processor can be measured with the noise estimators described in
+xref:calibration.adoc[Calibration].
+
+[source,kotlin]
+----
+val zuptSettings = ZuptSettings(
+    location = location,
+    processorType = ZuptProcessorType.SOFT
+)
+val estimator = RelativePoseEstimator(context, zuptSettings = zuptSettings)
+----
