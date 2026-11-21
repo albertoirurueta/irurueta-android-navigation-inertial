@@ -26,7 +26,7 @@ import com.irurueta.android.navigation.inertial.app.R
 import com.irurueta.android.navigation.inertial.collectors.measurements.AccelerometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.old.estimators.attitude.KalmanRelativeAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.KalmanRelativeAttitudeEstimator
 import com.irurueta.geometry.*
 import kotlin.math.sqrt
 
@@ -77,17 +77,14 @@ class KalmanRelativeAttitudeActivity : AppCompatActivity() {
                 ?: GyroscopeSensorType.GYROSCOPE_UNCALIBRATED
         }
 
-        setContentView(com.irurueta.android.navigation.inertial.app.R.layout.activity_kalman_relative_attitude_estimator)
-        cubeView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.cube)
-        rollView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll)
-        pitchView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch)
-        yawView = findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw)
-        rollStandardDeviationView =
-            findViewById(com.irurueta.android.navigation.inertial.app.R.id.roll_accuracy)
-        pitchStandardDeviationView =
-            findViewById(com.irurueta.android.navigation.inertial.app.R.id.pitch_accuracy)
-        yawStandardDeviationView =
-            findViewById(com.irurueta.android.navigation.inertial.app.R.id.yaw_accuracy)
+        setContentView(R.layout.activity_kalman_relative_attitude_estimator)
+        cubeView = findViewById(R.id.cube)
+        rollView = findViewById(R.id.roll)
+        pitchView = findViewById(R.id.pitch)
+        yawView = findViewById(R.id.yaw)
+        rollStandardDeviationView = findViewById(R.id.roll_accuracy)
+        pitchStandardDeviationView = findViewById(R.id.pitch_accuracy)
+        yawStandardDeviationView = findViewById(R.id.yaw_accuracy)
 
         val cubeView = cubeView ?: return
         cubeView.onSurfaceChangedListener = object : CubeTextureView.OnSurfaceChangedListener {
@@ -102,7 +99,6 @@ class KalmanRelativeAttitudeActivity : AppCompatActivity() {
         attitudeEstimator = KalmanRelativeAttitudeEstimator(
             this,
             SensorDelay.GAME,
-            startOffsetEnabled = false,
             accelerometerSensorType,
             gyroscopeSensorType,
             estimateCoordinateTransformation = false,

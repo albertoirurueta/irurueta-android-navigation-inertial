@@ -29,7 +29,7 @@ import com.irurueta.android.navigation.inertial.collectors.measurements.Accelero
 import com.irurueta.android.navigation.inertial.collectors.measurements.GyroscopeSensorType
 import com.irurueta.android.navigation.inertial.collectors.measurements.MagnetometerSensorType
 import com.irurueta.android.navigation.inertial.collectors.SensorDelay
-import com.irurueta.android.navigation.inertial.old.estimators.attitude.KalmanAbsoluteAttitudeEstimator
+import com.irurueta.android.navigation.inertial.estimators.attitude.KalmanAbsoluteAttitudeEstimator
 import com.irurueta.geometry.PinholeCamera
 import com.irurueta.geometry.PinholeCameraIntrinsicParameters
 import com.irurueta.geometry.Point3D
@@ -203,7 +203,6 @@ class KalmanAbsoluteAttitudeActivity : AppCompatActivity() {
             this,
             location,
             sensorDelay = SensorDelay.GAME,
-            startOffsetEnabled = false,
             accelerometerSensorType,
             gyroscopeSensorType,
             magnetometerSensorType,
