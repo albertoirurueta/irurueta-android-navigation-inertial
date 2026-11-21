@@ -1,0 +1,59 @@
+= User interface
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+The library module has no user interface of its own. The repository's sample app (`app/`) is built with Android
+Views: a launcher `MainActivity` with one button per estimator configuration, and one activity per estimator that
+draws the estimated attitude on a 3D cube (`CubeTextureView`) together with roll, pitch and yaw text views. See
+xref:sample-app.adoc[Sample app] for the purpose of each screen.
+
+== Screens
+
+[cols="2,3,2",options="header"]
+|===
+|Screen
+|Purpose
+|Entry point
+
+|`MainActivity`
+|Launcher listing every estimator configuration as a button.
+|Launcher activity
+
+|`LevelingEstimatorActivity`, `AccurateLevelingEstimatorActivity`
+|Leveling (roll and pitch) demos.
+|`MainActivity` buttons
+
+|`RelativeGyroscopeAttitudeEstimatorActivity`, `AccurateRelativeGyroscopeAttitudeEstimatorActivity`,
+`LeveledRelativeAttitudeEstimatorActivity`, `KalmanRelativeAttitudeActivity`
+|Relative attitude demos.
+|`MainActivity` buttons
+
+|`GeomagneticAttitudeEstimatorActivity`, `FusedGeomagneticAttitudeEstimatorActivity`,
+`DoubleFusedGeomagneticAttitudeEstimatorActivity`, `AttitudeEstimatorActivity`, `KalmanAbsoluteAttitudeActivity`
+|Absolute attitude demos.
+|`MainActivity` buttons
+
+|`PoseEstimatorActivity`, `LocalPoseEstimatorActivity`, `RelativePoseEstimatorActivity`
+|Pose estimation demos.
+|`MainActivity` buttons
+|===
+
+== Components
+
+[cols="2,3,2",options="header"]
+|===
+|Component
+|Purpose
+|Used by
+
+|`CubeTextureView` (`com.irurueta:irurueta-android-gl-cube`)
+|Renders a 3D cube oriented with the estimated attitude.
+|Every estimator activity
+|===
+
+== Accessibility
+
+The project's `.ui-quality.yml` sets `accessibility: report`: accessibility violations are listed by the UI tests
+but never fail them.
+
+See xref:ui/navigation.adoc[Navigation flows] for how screens are reached.

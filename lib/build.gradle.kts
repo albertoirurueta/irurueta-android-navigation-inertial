@@ -9,7 +9,7 @@ plugins {
     alias(libs.plugins.publish)
 }
 
-val libraryVersion = "1.1.0"
+val libraryVersion = "1.1.0-SNAPSHOT"
 
 android {
     namespace = "com.irurueta.android.navigation.inertial"

@@ -1,0 +1,103 @@
+= Getting started
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+WARNING: The library is experimental. Pin an exact version and expect API changes between versions.
+
+== Requirements
+
+* Android `minSdk` 26 (the library is compiled against `compileSdk` 36).
+* Java/Kotlin JVM target 17.
+* A device with the sensors required by the estimator you use (at least an accelerometer; gyroscope and
+  magnetometer for most attitude and pose estimators). `SensorAvailabilityService.hasSensor(SensorType)` can be used
+  to check availability at runtime.
+
+== Gradle dependency
+
+The library is published to Maven Central with coordinates `com.irurueta:irurueta-android-navigation-inertial`.
+No release has been published yet while the library is experimental; check
+https://central.sonatype.com/artifact/com.irurueta/irurueta-android-navigation-inertial[Maven Central] for the
+versions actually published.
+
+Make sure `mavenCentral()` is among your repositories, then add the dependency.
+
+Latest release (Kotlin DSL):
+
+.Kotlin DSL (`build.gradle.kts`)
+[source,kotlin]
+----
+dependencies {
+    implementation("com.irurueta:irurueta-android-navigation-inertial:1.1.0")
+}
+----
+
+Latest release (Groovy DSL):
+
+.Groovy DSL (`build.gradle`)
+[source,groovy]
+----
+dependencies {
+    implementation 'com.irurueta:irurueta-android-navigation-inertial:1.1.0'
+}
+----
+
+The library exposes `com.irurueta:irurueta-navigation`, `com.irurueta:irurueta-navigation-inertial` and
+`com.irurueta:irurueta-navigation-inertial-extra` as `api` dependencies, so their types (for example `Quaternion`,
+`ECEFFrame`, `NEDVelocity`, `AccelerationTriad`) are available to your code transitively.
+
+== Permissions
+
+The library manifest declares the following permissions, which are merged into your application:
+
+[cols="2,3",options="header"]
+|===
+|Permission
+|Why
+
+|`INTERNET`
+|Required by the Google Play Services fused location provider.
+
+|`ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`, `ACCESS_BACKGROUND_LOCATION`
+|Used by `LocationService`. A location is optional for most attitude estimators (it improves gravity and magnetic
+declination accuracy) and required by `LocalPoseEstimator` and `EcefAbsolutePoseEstimator`.
+
+|`HIGH_SAMPLING_RATE_SENSORS`
+|Allows high sensor sampling rates, such as those requested with `SensorDelay.FASTEST`.
+|===
+
+Location permissions are runtime permissions: `LocationPermissionService` can check and request them.
+
+== First estimator
+
+The following example, based on the estimator constructors in the library, estimates a leveled absolute attitude
+with accelerometer and magnetometer:
+
+[source,kotlin]
+----
+val estimator = GeomagneticAttitudeEstimator(
+    context,
+    sensorDelay = SensorDelay.FASTEST,
+    attitudeAvailableListener = { _, attitude, timestamp, roll, pitch, yaw, _ ->
+        // attitude is a Quaternion respect to NED; roll, pitch and yaw are in radians
+    }
+)
+
+estimator.start()
+// ...
+estimator.stop()
+----
+
+`start()` returns `true` when the underlying sensor collectors started successfully and `false` otherwise, and
+throws `IllegalStateException` if the estimator is already running. Continue with xref:attitude-estimators.adoc[Attitude estimators] and
+xref:pose-estimators.adoc[Pose estimators] for the other options.
+
+== Building from source
+
+[source,bash]
+----
+git clone https://github.com/albertoirurueta/irurueta-android-navigation-inertial.git
+cd irurueta-android-navigation-inertial
+./gradlew :lib:assembleRelease      # build the library
+./gradlew :lib:testDebugUnitTest    # run unit tests
+./gradlew :app:installDebug         # install the sample app on a connected device
+----

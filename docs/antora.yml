@@ -1,0 +1,5 @@
+name: irurueta-android-navigation-inertial
+version: 1.1.0
+title: irurueta-android-navigation-inertial
+nav:
+  - modules/ROOT/nav.adoc

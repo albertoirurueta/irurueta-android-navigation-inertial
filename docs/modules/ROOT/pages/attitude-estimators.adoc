@@ -1,0 +1,133 @@
+= Attitude estimators
+:stem: latexmath
+
+NOTE: This documentation was generated with the assistance of AI. Please report any inaccuracies.
+
+Attitude estimators (package `estimators.attitude`) estimate the orientation of the device. All of them follow
+the same pattern:
+
+* constructor taking an Android `Context`, a `SensorDelay`, the sensor types to use and listeners;
+* `start(startTimestamp)` returns `true` if the underlying collectors started, and throws
+  `IllegalStateException` if the estimator is already running; `stop()` stops it; `running` reports the state;
+* results are delivered through an `OnAttitudeAvailableListener` (or `OnLevelingAvailableListener` for leveling
+  estimators) with the attitude as a `Quaternion` respect to NED, a timestamp in nanoseconds (same time base as
+  `SystemClock.elapsedRealtimeNanos()`), and optionally Euler angles in radians (`estimateEulerAngles`, enabled by
+  default) and a `CoordinateTransformation` (`estimateCoordinateTransformation`, disabled by default);
+* sensor accuracy changes are notified through `OnAccuracyChangedListener`.
+
+== Choosing an estimator
+
+[cols="3,2,4",options="header"]
+|===
+|Estimator
+|Sensors
+|What it estimates
+
+|`LevelingEstimator`
+|Accelerometer or gravity
+|Roll and pitch only (no yaw). May become unreliable when the device is vertical (pitch close to 90 degrees).
+
+|`AccurateLevelingEstimator`
+|Accelerometer or gravity
+|Roll and pitch only, more accurate than `LevelingEstimator` by taking device location into account, at the cost of
+higher CPU load.
+
+|`RelativeGyroscopeAttitudeEstimator`
+|Gyroscope
+|Attitude relative to the start attitude, by integrating gyroscope data.
+
+|`AccurateRelativeGyroscopeAttitudeEstimator`
+|Gyroscope
+|Same as above using Runge-Kutta integration for greater accuracy.
+
+|`LeveledRelativeAttitudeEstimator`
+|Accelerometer or gravity + gyroscope
+|Leveled attitude where only yaw is relative to the start instant.
+
+|`GeomagneticAttitudeEstimator`
+|Accelerometer or gravity + magnetometer
+|Leveled absolute attitude: roll and pitch from accelerometer/gravity, yaw from the magnetometer. No gyroscope.
+
+|`FusedGeomagneticAttitudeEstimator`
+|Accelerometer or gravity + magnetometer + gyroscope
+|Absolute attitude fusing the geomagnetic attitude with the relative attitude from the gyroscope.
+
+|`DoubleFusedGeomagneticAttitudeEstimator`
+|Accelerometer or gravity + magnetometer + gyroscope
+|Absolute attitude fusing the geomagnetic attitude with the *leveled* relative attitude from the gyroscope.
+
+|`KalmanRelativeAttitudeEstimator`
+|Accelerometer + gyroscope
+|Leveled relative attitude (yaw relative to start) using a Kalman filter.
+
+|`KalmanAbsoluteAttitudeEstimator`
+|Accelerometer + gyroscope + magnetometer
+|Absolute attitude using a Kalman filter.
+
+|`AttitudeEstimator`
+|Android rotation vector sensors
+|Absolute attitude with `AttitudeSensorType.ABSOLUTE_ATTITUDE` (Android combines accelerometer and magnetometer), or
+leveled attitude with arbitrary yaw with `AttitudeSensorType.RELATIVE_ATTITUDE` (no magnetometer).
+|===
+
+== Common options
+
+`useAccelerometer`:: `true` (default) to estimate gravity from the accelerometer, `false` to use the Android gravity
+sensor for leveling.
+`accelerometerSensorType`, `gyroscopeSensorType`, `magnetometerSensorType`:: calibrated or uncalibrated variants;
+the uncalibrated ones are the default.
+`accelerometerAveragingFilter`:: filter used to obtain gravity from accelerometer samples when `useAccelerometer` is
+`true`: `LowPassAveragingFilter` (default, first-order IIR), `MeanAveragingFilter` (FIR mean) or
+`MedianAveragingFilter`.
+`location`:: optional device location. When provided, gravity is computed for that location (`GravityHelper`);
+otherwise default Earth gravity is used.
+`adjustGravityNorm`:: adjusts the gravity norm to the standard one, or to the norm at the provided location. Without
+a location it should only be enabled close to sea level.
+`useWorldMagneticModel`, `worldMagneticModel`, `timestamp`:: for geomagnetic estimators, adjust the yaw angle by the
+magnetic declination given by the World Magnetic Model at the provided location and timestamp.
+`useAccurateLevelingEstimation` (geomagnetic), `useAccurateLevelingEstimator` and `useAccurateRelativeGyroscopeAttitudeEstimator` (leveled relative, fused and double fused):: select the accurate variants of
+the internal leveling and gyroscope integration.
+
+Default sampling rates differ: `LeveledRelativeAttitudeEstimator`, `FusedGeomagneticAttitudeEstimator`,
+`DoubleFusedGeomagneticAttitudeEstimator` and `KalmanAbsoluteAttitudeEstimator` default to `SensorDelay.GAME`; the
+other attitude estimators default to `SensorDelay.FASTEST`.
+
+== Low-pass averaging filter
+
+The default `LowPassAveragingFilter` is a first-order IIR filter that follows
+
+[stem]
+++++
+y_k = a \, x_k + b \, y_{k-1}, \qquad a = 1 - b
+++++
+
+where stem:[x_k] is the new accelerometer sample and stem:[y_k] the estimated gravity.
+
+== Kalman estimators
+
+`KalmanRelativeAttitudeEstimator` and `KalmanAbsoluteAttitudeEstimator` use a gyroscope predictor and accelerometer
+(and, for the absolute one, magnetometer) correctors from `processors.attitude.kalman`. They accept noise
+parameters that can be obtained during calibration or with the noise estimators (see
+xref:calibration.adoc[Calibration]):
+
+* `gyroscopeNoisePsd` -- gyroscope noise PSD (Power Spectral Density);
+* `accelerometerNoiseStandardDeviation` -- in m/s²;
+* `magnetometerNoiseStandardDeviation` -- in Tesla (absolute estimator only);
+* `minimumUnreliableDurationSeconds` -- minimum duration during which the attitude is reported as unreliable when
+  numerical instability of the Kalman filter is detected;
+* `estimateCovariances` -- whether to estimate covariances.
+
+== Example
+
+[source,kotlin]
+----
+val estimator = DoubleFusedGeomagneticAttitudeEstimator(
+    context,
+    location = location,                  // optional
+    useWorldMagneticModel = true,
+    attitudeAvailableListener = { _, attitude, timestamp, roll, pitch, yaw, _ ->
+        // attitude respect to NED
+    }
+)
+estimator.start()
+----

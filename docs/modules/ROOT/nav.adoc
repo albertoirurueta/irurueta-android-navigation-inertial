@@ -1,0 +1,13 @@
+* xref:index.adoc[Overview]
+* xref:installation.adoc[Getting started]
+* xref:architecture.adoc[Architecture]
+* Features
+** xref:sensor-collectors.adoc[Sensor collectors]
+** xref:calibration.adoc[Calibration]
+** xref:attitude-estimators.adoc[Attitude estimators]
+** xref:pose-estimators.adoc[Pose estimators]
+** xref:zupt.adoc[ZUPT]
+* xref:sample-app.adoc[Sample app]
+* xref:ui/index.adoc[User interface]
+** xref:ui/navigation.adoc[Navigation flows]
+* xref:reference.adoc[Reference]
